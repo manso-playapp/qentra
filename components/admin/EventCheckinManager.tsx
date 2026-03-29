@@ -4,6 +4,11 @@ import jsQR from 'jsqr'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { evaluateGuestAccess, formatGuestTypeAccessPolicy } from '@/lib/access-policy'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { getErrorMessage } from '@/lib/errors'
 import { supabase } from '@/lib/supabase'
 import type { Checkin, Event, EventBranding, Guest, GuestType, InvitationToken } from '@/types'
@@ -1025,6 +1030,473 @@ export default function EventCheckinManager({
               Desarrollado por Qentra
             </p>
           </footer>
+        </div>
+      </main>
+    )
+  }
+
+  if (isDoorMode) {
+    return (
+      <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.16),transparent_24%),linear-gradient(180deg,#09111b_0%,#101b2a_28%,#eef3f7_28%,#eef3f7_100%)] px-4 py-5 text-slate-950 sm:px-6">
+        <div className="mx-auto max-w-[1600px] space-y-6">
+          <section className="rounded-[34px] border border-slate-800 bg-slate-950/96 px-6 py-6 text-white shadow-[0_28px_90px_rgba(2,8,23,0.42)]">
+            <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.34em] text-sky-300">Control de ingreso</p>
+                <h1 className="admin-heading mt-4 text-5xl leading-none text-white">Puesto de puerta</h1>
+                <p className="mt-4 max-w-3xl text-base leading-7 text-slate-300">
+                  Superficie táctica para seguridad y recepción. Prioriza lectura rápida, validación inmediata y excepciones supervisadas sin contaminar la pantalla pública.
+                </p>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
+                <div className="rounded-[26px] border border-white/10 bg-white/[0.06] px-5 py-4">
+                  <p className="text-xs uppercase tracking-[0.28em] text-slate-400">Evento</p>
+                  <p className="mt-2 text-2xl font-semibold text-white">{event.name}</p>
+                  <p className="mt-2 text-sm text-slate-300">{formatEventDate(event.event_date)} · {event.start_time}</p>
+                </div>
+                <div className="rounded-[26px] border border-sky-400/20 bg-sky-400/10 px-5 py-4 text-right">
+                  <p className="text-xs uppercase tracking-[0.28em] text-sky-200/80">Hora actual</p>
+                  <p className="mt-2 text-5xl font-semibold leading-none text-white">{formatClock(now)}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-5 flex flex-wrap gap-3">
+              <Button asChild variant="outline" className="border-white/10 bg-white/5 text-white hover:bg-white/10 hover:text-white">
+                <Link href={`/admin/events/${event.id}/check-in`}>Abrir vista admin</Link>
+              </Button>
+              <Button asChild variant="outline" className="border-sky-400/20 bg-sky-400/10 text-sky-100 hover:bg-sky-400/15 hover:text-white">
+                <Link href={`/admin/events/${event.id}/guests`}>Abrir directorio</Link>
+              </Button>
+              <Button asChild variant="outline" className="border-amber-400/20 bg-amber-400/10 text-amber-100 hover:bg-amber-400/15 hover:text-white">
+                <Link href={`/totem/${event.id}`}>Ver totem</Link>
+              </Button>
+            </div>
+          </section>
+
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <Card className="border-slate-800 bg-slate-950 text-white">
+              <CardContent className="p-5">
+                <p className="text-[11px] uppercase tracking-[0.3em] text-slate-400">Dentro del evento</p>
+                <p className="mt-4 text-4xl font-semibold">{doorMetrics.checkedInGuests}</p>
+                <p className="mt-3 text-sm leading-6 text-slate-300">
+                  {doorMetrics.insidePeople} personas estimadas con acompañantes incluidos.
+                </p>
+              </CardContent>
+            </Card>
+            <Card className="border-emerald-200 bg-emerald-50">
+              <CardContent className="p-5">
+                <p className="text-[11px] uppercase tracking-[0.3em] text-emerald-700/80">Esperados</p>
+                <p className="mt-4 text-4xl font-semibold text-emerald-950">{doorMetrics.expectedPeople}</p>
+                <p className="mt-3 text-sm leading-6 text-emerald-900">
+                  {doorMetrics.remainingExpectedPeople} todavía no ingresaron.
+                </p>
+              </CardContent>
+            </Card>
+            <Card className="border-amber-200 bg-amber-50">
+              <CardContent className="p-5">
+                <p className="text-[11px] uppercase tracking-[0.3em] text-amber-700/80">Pendientes y confirmados</p>
+                <p className="mt-4 text-4xl font-semibold text-amber-950">{doorMetrics.pendingGuests + doorMetrics.confirmedGuests}</p>
+                <p className="mt-3 text-sm leading-6 text-amber-900">
+                  {doorMetrics.pendingGuests} pendientes y {doorMetrics.confirmedGuests} confirmados sin check-in.
+                </p>
+              </CardContent>
+            </Card>
+            <Card className="border-sky-200 bg-sky-50">
+              <CardContent className="p-5">
+                <p className="text-[11px] uppercase tracking-[0.3em] text-sky-700/80">Base restringida</p>
+                <p className="mt-4 text-4xl font-semibold text-sky-950">{doorMetrics.cancelledGuests}</p>
+                <p className="mt-3 text-sm leading-6 text-sky-900">
+                  Cancelados o no habilitados en la base actual. Refresh automático cada {LIVE_REFRESH_INTERVAL_MS / 1000}s.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(360px,0.85fr)]">
+            <section className="space-y-6">
+              <div className={`rounded-[32px] border p-6 shadow-[0_18px_70px_rgba(15,23,42,0.12)] ${statusTone.shell}`}>
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div>
+                    <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] ${statusTone.badge}`}>
+                      {statusTone.eyebrow}
+                    </span>
+                    <h2 className="mt-4 text-4xl font-semibold">{statusSummary.title}</h2>
+                    <p className="mt-3 max-w-3xl text-base leading-7 opacity-90">{statusSummary.detail}</p>
+                  </div>
+                  <div className={`rounded-[24px] px-4 py-3 text-sm font-medium ${statusTone.badge}`}>
+                    {scannerActive ? 'Cámara activa' : 'Cámara en espera'}
+                  </div>
+                </div>
+
+                <div className="mt-5 grid gap-3 md:grid-cols-3">
+                  <div className={`rounded-[24px] px-4 py-3 ${statusTone.badge}`}>
+                    <p className="text-xs uppercase tracking-[0.18em] opacity-80">Base activa</p>
+                    <p className="mt-2 text-2xl font-semibold">{doorMetrics.activeGuests}</p>
+                  </div>
+                  <div className={`rounded-[24px] px-4 py-3 ${statusTone.badge}`}>
+                    <p className="text-xs uppercase tracking-[0.18em] opacity-80">Por ingresar</p>
+                    <p className="mt-2 text-2xl font-semibold">{doorMetrics.remainingExpectedPeople}</p>
+                  </div>
+                  <div className={`rounded-[24px] px-4 py-3 ${statusTone.badge}`}>
+                    <p className="text-xs uppercase tracking-[0.18em] opacity-80">Últimos movimientos</p>
+                    <p className="mt-2 text-2xl font-semibold">{recentCheckins.length}</p>
+                  </div>
+                </div>
+              </div>
+
+              <Card className="overflow-hidden bg-card">
+                <CardHeader className="flex-row items-start justify-between gap-4">
+                  <div>
+                    <CardDescription>Scanner principal</CardDescription>
+                    <CardTitle>Lector de QR y validación directa</CardTitle>
+                    <CardDescription>
+                      Flujo principal de puerta. Lee el QR que el invitado muestra en su celular y valida duplicados, horario y vigencia antes del ingreso.
+                    </CardDescription>
+                  </div>
+                  <div className="flex flex-wrap gap-3">
+                    <Button type="button" onClick={startScanner} disabled={processingCheckin}>
+                      {scannerActive ? 'Reiniciar cámara' : 'Abrir cámara'}
+                    </Button>
+                    {scannerActive && (
+                      <Button type="button" variant="outline" onClick={stopScanner}>
+                        Detener
+                      </Button>
+                    )}
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-5">
+                  <div className="overflow-hidden rounded-[28px] border border-border/70 bg-black shadow-inner">
+                    <video
+                      ref={videoRef}
+                      muted
+                      playsInline
+                      className="aspect-[16/10] w-full object-cover"
+                    />
+                  </div>
+                  <canvas ref={canvasRef} className="hidden" />
+
+                  {!scannerSupported && (
+                    <div className="rounded-[24px] border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                      Este navegador no soporta acceso a cámara para el scanner.
+                    </div>
+                  )}
+
+                  {scannerMessage && (
+                    <div className="rounded-[24px] border border-sky-200 bg-sky-50 p-4 text-sm text-sky-800">
+                      {scannerMessage}
+                    </div>
+                  )}
+
+                  <form onSubmit={consumeAccess} className="space-y-4 rounded-[28px] border border-border/70 bg-secondary/55 p-5">
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">Entrada manual de acceso</p>
+                      <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                        Fallback para token copiado o `qr_data` cuando no se puede usar cámara.
+                      </p>
+                    </div>
+                    <Textarea
+                      id="access-input"
+                      value={accessInput}
+                      onChange={(eventInput) => setAccessInput(eventInput.target.value)}
+                      rows={5}
+                      className="font-mono"
+                      placeholder='qentra_xxx o {"kind":"qentra_guest_access","token":"qentra_xxx",...}'
+                    />
+                    <Button type="submit" className="w-full" disabled={processingCheckin}>
+                      {processingCheckin ? 'Validando acceso...' : 'Validar acceso manual'}
+                    </Button>
+                  </form>
+
+                  {status && (
+                    <div
+                      className={`rounded-[24px] border p-4 ${
+                        status.kind === 'success'
+                          ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+                          : status.kind === 'warning'
+                          ? 'border-amber-200 bg-amber-50 text-amber-800'
+                          : 'border-rose-200 bg-rose-50 text-rose-800'
+                      }`}
+                    >
+                      <h3 className="font-semibold">{status.title}</h3>
+                      <p className="mt-1 text-sm">{status.detail}</p>
+                    </div>
+                  )}
+
+                  {overrideContext && (
+                    <div className="rounded-[28px] border border-fuchsia-200 bg-fuchsia-50 p-5">
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                          <h3 className="text-base font-semibold text-fuchsia-950">Excepción supervisada</h3>
+                          <p className="mt-1 text-sm leading-6 text-fuchsia-900">
+                            Usa este flujo solo si seguridad decide permitir el acceso pese a la advertencia o restricción.
+                          </p>
+                        </div>
+                        <Badge variant="outline" className="border-fuchsia-200 bg-white/80 text-fuchsia-800">
+                          {overrideContext.decisionCode === 'already_checked_in' ? 'Reingreso' : 'Fuera de horario'}
+                        </Badge>
+                      </div>
+
+                      <div className="mt-4 grid gap-4 md:grid-cols-2">
+                        <div>
+                          <p className="text-sm font-semibold text-fuchsia-950">PIN de seguridad</p>
+                          <Input
+                            id="override-pin"
+                            type="password"
+                            value={overridePin}
+                            onChange={(eventInput) => setOverridePin(eventInput.target.value)}
+                            className="mt-2 border-fuchsia-200 bg-white text-slate-900"
+                            placeholder="PIN de override"
+                          />
+                        </div>
+
+                        <div>
+                          <p className="text-sm font-semibold text-fuchsia-950">Motivo</p>
+                          <Input
+                            id="override-reason"
+                            value={overrideReason}
+                            onChange={(eventInput) => setOverrideReason(eventInput.target.value)}
+                            className="mt-2 border-fuchsia-200 bg-white text-slate-900"
+                            placeholder="Ej: validado por jefe de seguridad"
+                          />
+                        </div>
+                      </div>
+
+                      {overrideSupervisorRequired && (
+                        <div className="mt-4">
+                          <p className="text-sm font-semibold text-fuchsia-950">PIN de supervisor</p>
+                          <Input
+                            id="override-supervisor-pin"
+                            type="password"
+                            value={overrideSupervisorPin}
+                            onChange={(eventInput) => setOverrideSupervisorPin(eventInput.target.value)}
+                            className="mt-2 border-fuchsia-200 bg-white text-slate-900"
+                            placeholder="Segundo control"
+                          />
+                        </div>
+                      )}
+
+                      <div className="mt-4 rounded-[22px] border border-fuchsia-200 bg-white/70 p-4 text-sm text-fuchsia-950">
+                        {overridePolicyLoading
+                          ? 'Cargando política de excepción...'
+                          : !overridePinConfigured
+                          ? 'La excepción no está configurada en este entorno. Define QENTRA_SECURITY_OVERRIDE_PIN para habilitarla.'
+                          : overrideSupervisorRequired
+                          ? 'Este entorno exige doble control: PIN de override y PIN de supervisor.'
+                          : 'Este entorno exige PIN de override y motivo operativo.'}
+                      </div>
+
+                      {overrideError && (
+                        <div className="mt-4 rounded-[22px] border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+                          {overrideError}
+                        </div>
+                      )}
+
+                      <div className="mt-4 flex flex-wrap gap-3">
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          onClick={applySecurityOverride}
+                          disabled={overrideProcessing || overridePolicyLoading || !overridePinConfigured}
+                        >
+                          {overrideProcessing ? 'Validando excepción...' : 'Autorizar excepción'}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => {
+                            setOverrideContext(null)
+                            setOverridePin('')
+                            setOverrideSupervisorPin('')
+                            setOverrideReason('')
+                            setOverrideError(null)
+                          }}
+                        >
+                          Cancelar excepción
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card className="bg-card">
+                <CardHeader className="flex-row items-start justify-between gap-4">
+                  <div>
+                    <CardDescription>Fallback operativo</CardDescription>
+                    <CardTitle>Directorio de invitados</CardTitle>
+                    <CardDescription>
+                      Búsqueda manual por nombre, email o teléfono cuando el invitado no presenta QR o el scanner falla.
+                    </CardDescription>
+                  </div>
+                  <Button type="button" variant="outline" size="sm" onClick={fetchGuestDirectory}>
+                    Actualizar directorio
+                  </Button>
+                </CardHeader>
+                <CardContent>
+                  <Input
+                    id="guest-search"
+                    value={guestSearchQuery}
+                    onChange={(eventInput) => setGuestSearchQuery(eventInput.target.value)}
+                    placeholder="Ej: martina, perez, +54..."
+                  />
+
+                  {loadingGuestDirectory ? (
+                    <div className="mt-4 flex h-24 items-center justify-center">
+                      <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-primary"></div>
+                    </div>
+                  ) : filteredGuests.length === 0 ? (
+                    <div className="mt-4 rounded-[24px] border border-dashed border-border bg-secondary/60 p-4 text-sm text-muted-foreground">
+                      No hay invitados que coincidan con la búsqueda.
+                    </div>
+                  ) : (
+                    <div className="mt-4 grid gap-3">
+                      {filteredGuests.map((guest) => (
+                        <div key={guest.id} className="rounded-[24px] border border-border/70 bg-white/80 p-4">
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <p className="font-medium text-foreground">
+                                {guest.first_name} {guest.last_name}
+                              </p>
+                              <div className="mt-1 space-y-1 text-sm text-muted-foreground">
+                                <p>{guest.email || 'Sin email'}</p>
+                                <p>{guest.phone || 'Sin teléfono'}</p>
+                                <p>{guest.guest_types?.name || 'Sin tipo asignado'}</p>
+                                <p>{formatGuestTypeAccessPolicy(guest.guest_types, event.start_time)}</p>
+                              </div>
+                            </div>
+                            <Badge
+                              variant={
+                                guest.status === 'checked_in'
+                                  ? 'info'
+                                  : guest.status === 'confirmed'
+                                  ? 'success'
+                                  : guest.status === 'cancelled'
+                                  ? 'outline'
+                                  : 'warning'
+                              }
+                            >
+                              {guest.status === 'checked_in'
+                                ? 'Check-in'
+                                : guest.status === 'confirmed'
+                                ? 'Confirmado'
+                                : guest.status === 'cancelled'
+                                ? 'Cancelado'
+                                : 'Pendiente'}
+                            </Badge>
+                          </div>
+
+                          <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                            <p className="text-sm text-muted-foreground">
+                              Acompañantes {guest.plus_ones_confirmed}/{guest.plus_ones_allowed}
+                            </p>
+                            <Button
+                              type="button"
+                              variant="success"
+                              size="sm"
+                              onClick={() => handleManualCheckin(guest)}
+                              disabled={manualCheckinGuestId === guest.id}
+                            >
+                              {manualCheckinGuestId === guest.id ? 'Registrando...' : 'Check-in manual'}
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </section>
+
+            <aside className="space-y-6">
+              <Card className="bg-slate-950 text-white">
+                <CardHeader>
+                  <CardDescription className="text-sky-200/70">Monitoreo rápido</CardDescription>
+                  <CardTitle className="text-white">Actividad de puerta</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+                    <div className="rounded-[24px] border border-white/10 bg-white/[0.05] p-4">
+                      <p className="text-xs uppercase tracking-[0.24em] text-slate-400">Ingresos recientes</p>
+                      <p className="mt-3 text-3xl font-semibold text-white">{recentCheckins.length}</p>
+                      <p className="mt-2 text-sm leading-6 text-slate-300">
+                        Último refresh automático cada {LIVE_REFRESH_INTERVAL_MS / 1000}s.
+                      </p>
+                    </div>
+                    <div className="rounded-[24px] border border-white/10 bg-white/[0.05] p-4">
+                      <p className="text-xs uppercase tracking-[0.24em] text-slate-400">No habilitados</p>
+                      <p className="mt-3 text-3xl font-semibold text-white">{doorMetrics.cancelledGuests}</p>
+                      <p className="mt-2 text-sm leading-6 text-slate-300">
+                        Invitados cancelados o fuera de base activa.
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-card">
+                <CardHeader className="flex-row items-start justify-between gap-4">
+                  <div>
+                    <CardDescription>Trazabilidad</CardDescription>
+                    <CardTitle>Actividad reciente</CardTitle>
+                  </div>
+                  <Button type="button" variant="outline" size="sm" onClick={fetchRecentCheckins}>
+                    Actualizar
+                  </Button>
+                </CardHeader>
+                <CardContent>
+                  {loadingRecentCheckins ? (
+                    <div className="flex h-32 items-center justify-center">
+                      <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-primary"></div>
+                    </div>
+                  ) : recentCheckins.length === 0 ? (
+                    <div className="rounded-[24px] border border-dashed border-border bg-secondary/60 p-4 text-sm text-muted-foreground">
+                      Todavía no hay ingresos registrados para este evento.
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {recentCheckins.map((checkin) => (
+                        <div key={checkin.id} className="rounded-[24px] border border-border/70 bg-white/80 p-4">
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <p className="font-medium text-foreground">
+                                {checkin.guests?.first_name} {checkin.guests?.last_name}
+                              </p>
+                              <p className="mt-1 text-sm text-muted-foreground">{formatDateTime(checkin.checkin_time)}</p>
+                            </div>
+                            <Badge variant={checkin.checkin_method === 'qr' ? 'info' : 'outline'}>
+                              {checkin.checkin_method === 'qr' ? 'QR' : 'Manual'}
+                            </Badge>
+                          </div>
+                          {checkin.notes && (
+                            <p className="mt-3 text-sm leading-6 text-muted-foreground">{checkin.notes}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card className="bg-card">
+                <CardHeader>
+                  <CardDescription>Reglas activas</CardDescription>
+                  <CardTitle>Qué bloquea y qué permite</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 text-sm leading-6 text-muted-foreground">
+                  <p>Solo se aceptan accesos del evento actual.</p>
+                  <p>El flujo principal está pensado para leer por cámara el QR que el invitado muestra en puerta.</p>
+                  <p>Si el token está vencido o el invitado fue cancelado, el acceso se rechaza antes del registro.</p>
+                  <p>Si el invitado ya ingresó, el sistema advierte y no habilita un nuevo acceso sin excepción supervisada.</p>
+                  <p>Si el tipo o rol tiene ventana horaria, se bloquea el QR fuera de esa franja.</p>
+                  <p>Solo `ya ingresado` o `fuera de horario` pueden resolverse por excepción con PIN y motivo.</p>
+                  <p>Si existe `QENTRA_SECURITY_SUPERVISOR_PIN`, la excepción exige doble control.</p>
+                  <p>Al validar, se marca `used_at` y se registra una fila en `checkins`.</p>
+                </CardContent>
+              </Card>
+            </aside>
+          </div>
         </div>
       </main>
     )
