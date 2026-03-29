@@ -1,36 +1,63 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Qentra
 
-## Getting Started
+Qentra es una plataforma web para gestion de eventos, invitados y control de acceso.
 
-First, run the development server:
+Estado actual del MVP:
+
+- admin de eventos
+- gestion de invitados y tipos de invitado
+- emision de invitaciones con QR
+- check-in manual y por QR
+- vistas separadas de `admin`, `puerta` y `totem`
+- autenticacion operativa con Supabase Auth
+- envio por email y WhatsApp segun configuracion del entorno
+
+## Stack
+
+- Next.js 16
+- React 19
+- TypeScript
+- Tailwind CSS v4
+- Supabase
+
+## Desarrollo local
+
+Instala dependencias:
+
+```bash
+npm install
+```
+
+Crea tu archivo de entorno a partir de [`/.env.example`](./.env.example).
+
+Corre el proyecto:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Verificaciones:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run lint
+npm run build
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Variables de entorno
 
-## Learn More
+Las variables esperadas estan documentadas en [`/.env.example`](./.env.example).
 
-To learn more about Next.js, take a look at the following resources:
+Entre las mas importantes:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `RESEND_API_KEY`
+- `QENTRA_EMAIL_FROM`
+- `TWILIO_ACCOUNT_SID`
+- `TWILIO_AUTH_TOKEN`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Notas
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Este repo publico no incluye playbooks internos ni handoff operativo.
+- Algunas capacidades dependen de configuracion real de proveedores y de tablas/policies existentes en Supabase.
