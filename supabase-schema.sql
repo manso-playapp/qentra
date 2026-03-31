@@ -51,6 +51,35 @@ CREATE TABLE IF NOT EXISTS delivery_logs (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
+-- Future event templates (editable presets reusable across events)
+CREATE TABLE IF NOT EXISTS event_templates (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  key text UNIQUE NOT NULL,
+  name text NOT NULL,
+  event_type text NOT NULL,
+  description text,
+  is_system boolean NOT NULL DEFAULT false,
+  active boolean NOT NULL DEFAULT true,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS event_template_guest_types (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  template_id uuid NOT NULL REFERENCES event_templates(id) ON DELETE CASCADE,
+  name text NOT NULL,
+  description text,
+  access_policy_label text,
+  access_start_time time,
+  access_end_time time,
+  access_start_day_offset integer NOT NULL DEFAULT 0,
+  access_end_day_offset integer NOT NULL DEFAULT 0,
+  is_active boolean NOT NULL DEFAULT true,
+  sort_order integer NOT NULL DEFAULT 0,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
 -- Guest type access windows
 ALTER TABLE guest_types ADD COLUMN IF NOT EXISTS access_policy_label text;
 ALTER TABLE guest_types ADD COLUMN IF NOT EXISTS access_start_time time;

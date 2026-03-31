@@ -96,8 +96,7 @@ export interface GuestType {
   event_id: string
   name: string
   description?: string
-  max_guests?: number
-  requires_invitation: boolean
+  is_active?: boolean
   access_policy_label?: string
   access_start_time?: string
   access_end_time?: string
@@ -139,27 +138,29 @@ export interface GuestWithType extends Guest {
 
 export interface GuestAccessArtifacts {
   invitationToken: InvitationToken
-  qrCode: GuestQrCode
+  qrCode?: GuestQrCode | null
 }
 
 export interface InvitationToken {
   id: string
-  event_id: string
   guest_id: string
   token: string
   expires_at: string
-  used_at?: string
+  max_uses?: number
+  used_count?: number
+  is_active?: boolean
+  last_used_at?: string
   created_at: string
 }
 
 export interface GuestQrCode {
   id: string
   guest_id: string
-  qr_code_url: string
-  qr_data: string
-  status: 'active' | 'inactive' | 'revoked'
-  created_at: string
-  updated_at: string
+  qr_value: string
+  qr_image_url?: string | null
+  is_active?: boolean
+  generated_at?: string
+  revoked_at?: string | null
 }
 
 export interface Checkin {
@@ -215,8 +216,17 @@ export interface CreateGuestTypeForm {
   event_id: string
   name: string
   description?: string
-  max_guests?: number
-  requires_invitation: boolean
+  access_policy_label?: string
+  access_start_time?: string
+  access_end_time?: string
+  access_start_day_offset?: number
+  access_end_day_offset?: number
+}
+
+export interface UpdateGuestTypeForm {
+  name?: string
+  description?: string
+  is_active?: boolean
   access_policy_label?: string
   access_start_time?: string
   access_end_time?: string

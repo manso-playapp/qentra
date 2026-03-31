@@ -1,6 +1,7 @@
 import { sendGuestAccess } from '@/lib/access-delivery'
 import { persistDeliveryLog } from '@/lib/delivery-logs'
 import { ensureAuthorizedApiAccess } from '@/lib/operator-auth'
+import { getSupabaseAdminClient } from '@/lib/supabase-admin'
 
 export const runtime = 'nodejs'
 
@@ -46,6 +47,52 @@ export async function POST(request: Request) {
       )
     }
 
+    let whatsappConfig:
+      | {
+          fromPhone?: string
+          contentSid?: string
+        }
+      | undefined
+
+    if (body.channel === 'whatsapp' && body.deliveryProfileId) {
+      const adminClient = getSupabaseAdminClient()
+
+      if (!adminClient) {
+        throw new Error('Falta SUPABASE_SERVICE_ROLE_KEY para resolver el canal de WhatsApp.')
+      }
+
+      const { data: deliveryProfile, error: deliveryProfileError } = await adminClient
+        .from('delivery_profiles')
+        .select('name, active, channel_mode, provider_whatsapp, from_phone, whatsapp_content_sid')
+        .eq('id', body.deliveryProfileId)
+        .maybeSingle()
+
+      if (deliveryProfileError) {
+        throw new Error(deliveryProfileError.message)
+      }
+
+      if (!deliveryProfile) {
+        throw new Error('No se encontro el canal de envio asignado para este evento.')
+      }
+
+      if (!deliveryProfile.active) {
+        throw new Error(`El canal ${deliveryProfile.name} esta inactivo.`)
+      }
+
+      if (deliveryProfile.channel_mode === 'email') {
+        throw new Error(`El canal ${deliveryProfile.name} no permite envios por WhatsApp.`)
+      }
+
+      if (deliveryProfile.provider_whatsapp === 'manual') {
+        throw new Error(`El canal ${deliveryProfile.name} esta configurado para WhatsApp manual.`)
+      }
+
+      whatsappConfig = {
+        fromPhone: deliveryProfile.from_phone || undefined,
+        contentSid: deliveryProfile.whatsapp_content_sid || undefined,
+      }
+    }
+
     const result = await sendGuestAccess({
       channel: body.channel,
       recipient: body.recipient,
@@ -54,6 +101,7 @@ export async function POST(request: Request) {
       eventName: body.eventName,
       invitationUrl: body.invitationUrl,
       expiresAt: body.expiresAt,
+      whatsappConfig,
     })
 
     try {

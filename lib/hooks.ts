@@ -1,6 +1,4 @@
 import { useState, useEffect, useCallback } from 'react'
-import QRCode from 'qrcode'
-import { buildGuestAccessQrPayload } from '@/lib/guest-access'
 import { getErrorMessage } from '@/lib/errors'
 import { supabase } from '@/lib/supabase'
 import type {
@@ -19,7 +17,9 @@ import type {
   ApiResponse,
   CreateOperatorForm,
   CreateDeliveryProfileForm,
+  CreateGuestTypeForm,
   UpdateGuestForm,
+  UpdateGuestTypeForm,
   UpdateOperatorForm,
 } from '@/types'
 
@@ -33,23 +33,6 @@ type CreateGuestAccessOptions = {
   eventSlug: string
   eventDate: string
   eventStartTime: string
-}
-
-function buildInvitationExpiry(eventDate: string, eventStartTime: string) {
-  const baseDate = new Date(`${eventDate}T${eventStartTime || '20:00'}:00`)
-
-  if (Number.isNaN(baseDate.getTime())) {
-    const fallback = new Date()
-    fallback.setDate(fallback.getDate() + 7)
-    return fallback.toISOString()
-  }
-
-  baseDate.setHours(baseDate.getHours() + 12)
-  return baseDate.toISOString()
-}
-
-function buildGuestAccessToken() {
-  return `qentra_${crypto.randomUUID().replace(/-/g, '')}`
 }
 
 // Hook para perfiles de delivery
@@ -374,8 +357,8 @@ export function useEvents() {
 }
 
 // Hook para tipos de invitados
-export function useGuestTypes(eventId?: string) {
-  const [guestTypes, setGuestTypes] = useState<GuestType[]>([])
+export function useGuestTypes(eventId?: string, initialGuestTypes: GuestType[] = []) {
+  const [guestTypes, setGuestTypes] = useState<GuestType[]>(initialGuestTypes)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -384,14 +367,16 @@ export function useGuestTypes(eventId?: string) {
 
     try {
       setLoading(true)
-      const { data, error } = await supabase
-        .from('guest_types')
-        .select('*')
-        .eq('event_id', id)
-        .order('created_at', { ascending: true })
+      const response = await fetch(`/api/guest-types?eventId=${id}`)
+      const payload = (await response.json().catch(() => null)) as
+        | { data?: GuestType[]; error?: string }
+        | null
 
-      if (error) throw error
-      setGuestTypes(data || [])
+      if (!response.ok) {
+        throw new Error(payload?.error || 'No se pudieron cargar los tipos de invitado.')
+      }
+
+      setGuestTypes(payload?.data ?? [])
     } catch (error) {
       setError(getErrorMessage(error))
     } finally {
@@ -405,18 +390,90 @@ export function useGuestTypes(eventId?: string) {
     }
   }, [eventId])
 
-  const createGuestType = async (guestTypeData: Omit<GuestType, 'id' | 'created_at' | 'updated_at'>): Promise<ApiResponse<GuestType>> => {
+  const createGuestType = async (
+    guestTypeData: CreateGuestTypeForm
+  ): Promise<ApiResponse<GuestType>> => {
     try {
-      const { data, error } = await supabase
-        .from('guest_types')
-        .insert(guestTypeData)
-        .select()
-        .single()
+      const response = await fetch('/api/guest-types', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(guestTypeData),
+      })
 
-      if (error) throw error
+      const payload = (await response.json().catch(() => null)) as
+        | { data?: GuestType; error?: string }
+        | null
 
-      setGuestTypes(prev => [...prev, data])
-      return { data }
+      if (!response.ok) {
+        throw new Error(payload?.error || 'No se pudo crear el tipo de invitado.')
+      }
+
+      if (!payload?.data) {
+        throw new Error('La API no devolvio el tipo de invitado creado.')
+      }
+
+      setGuestTypes((prev) => [...prev, payload.data as GuestType])
+      return { data: payload.data as GuestType }
+    } catch (error) {
+      return { error: getErrorMessage(error) }
+    }
+  }
+
+  const updateGuestType = async (
+    guestTypeId: string,
+    guestTypeData: UpdateGuestTypeForm
+  ): Promise<ApiResponse<GuestType>> => {
+    try {
+      const response = await fetch(`/api/guest-types/${guestTypeId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(guestTypeData),
+      })
+
+      const payload = (await response.json().catch(() => null)) as
+        | { data?: GuestType; error?: string }
+        | null
+
+      if (!response.ok) {
+        throw new Error(payload?.error || 'No se pudo actualizar el tipo de invitado.')
+      }
+
+      if (!payload?.data) {
+        throw new Error('La API no devolvio el tipo de invitado actualizado.')
+      }
+
+      setGuestTypes((current) =>
+        current.map((guestType) =>
+          guestType.id === guestTypeId ? (payload.data as GuestType) : guestType
+        )
+      )
+
+      return { data: payload.data as GuestType }
+    } catch (error) {
+      return { error: getErrorMessage(error) }
+    }
+  }
+
+  const deleteGuestType = async (guestTypeId: string): Promise<ApiResponse<{ id: string }>> => {
+    try {
+      const response = await fetch(`/api/guest-types/${guestTypeId}`, {
+        method: 'DELETE',
+      })
+
+      const payload = (await response.json().catch(() => null)) as
+        | { data?: { id: string }; error?: string }
+        | null
+
+      if (!response.ok) {
+        throw new Error(payload?.error || 'No se pudo borrar el tipo de invitado.')
+      }
+
+      setGuestTypes((current) => current.filter((guestType) => guestType.id !== guestTypeId))
+      return { data: payload?.data ?? { id: guestTypeId } }
     } catch (error) {
       return { error: getErrorMessage(error) }
     }
@@ -427,13 +484,15 @@ export function useGuestTypes(eventId?: string) {
     loading,
     error,
     fetchGuestTypes,
-    createGuestType
+    createGuestType,
+    updateGuestType,
+    deleteGuestType,
   }
 }
 
 // Hook para invitados
-export function useGuests(eventId?: string) {
-  const [guests, setGuests] = useState<GuestWithType[]>([])
+export function useGuests(eventId?: string, initialGuests: GuestWithType[] = []) {
+  const [guests, setGuests] = useState<GuestWithType[]>(initialGuests)
   const [invitationTokens, setInvitationTokens] = useState<InvitationToken[]>([])
   const [guestQrCodes, setGuestQrCodes] = useState<GuestQrCode[]>([])
   const [loading, setLoading] = useState(false)
@@ -446,25 +505,16 @@ export function useGuests(eventId?: string) {
 
     try {
       setLoading(true)
-      const { data, error } = await supabase
-        .from('guests')
-        .select(`
-          *,
-          guest_types (
-            name,
-            description,
-            access_policy_label,
-            access_start_time,
-            access_end_time,
-            access_start_day_offset,
-            access_end_day_offset
-          )
-        `)
-        .eq('event_id', id)
-        .order('created_at', { ascending: false })
+      const response = await fetch(`/api/guests?eventId=${id}`)
+      const payload = (await response.json().catch(() => null)) as
+        | { data?: GuestWithType[]; error?: string }
+        | null
 
-      if (error) throw error
-      setGuests((data ?? []) as GuestWithType[])
+      if (!response.ok) {
+        throw new Error(payload?.error || 'No se pudieron cargar los invitados.')
+      }
+
+      setGuests(payload?.data ?? [])
     } catch (error) {
       setError(getErrorMessage(error))
     } finally {
@@ -486,31 +536,30 @@ export function useGuests(eventId?: string) {
       const currentGuests = guestList ?? guests
       const guestIds = currentGuests.map((guest) => guest.id)
 
-      const { data: tokenData, error: tokenError } = await supabase
-        .from('invitation_tokens')
-        .select('*')
-        .eq('event_id', eventId)
-        .order('created_at', { ascending: false })
-
-      if (tokenError) throw tokenError
-
-      setInvitationTokens((tokenData ?? []) as InvitationToken[])
-
       if (guestIds.length === 0) {
+        setInvitationTokens([])
         setGuestQrCodes([])
         setAccessError(null)
         return
       }
 
-      const { data: qrData, error: qrError } = await supabase
-        .from('guest_qr_codes')
-        .select('*')
-        .in('guest_id', guestIds)
-        .order('created_at', { ascending: false })
+      const response = await fetch(`/api/guest-access?eventId=${eventId}`)
+      const payload = (await response.json().catch(() => null)) as
+        | {
+            data?: {
+              invitationTokens?: InvitationToken[]
+              guestQrCodes?: GuestQrCode[]
+            }
+            error?: string
+          }
+        | null
 
-      if (qrError) throw qrError
+      if (!response.ok) {
+        throw new Error(payload?.error || 'No se pudieron cargar los accesos emitidos.')
+      }
 
-      setGuestQrCodes((qrData ?? []) as GuestQrCode[])
+      setInvitationTokens(payload?.data?.invitationTokens ?? [])
+      setGuestQrCodes(payload?.data?.guestQrCodes ?? [])
       setAccessError(null)
     } catch (error) {
       setAccessError(getErrorMessage(error))
@@ -527,17 +576,32 @@ export function useGuests(eventId?: string) {
 
   const createGuest = async (guestData: Omit<Guest, 'id' | 'created_at' | 'updated_at'>): Promise<ApiResponse<Guest>> => {
     try {
-      const { data, error } = await supabase
-        .from('guests')
-        .insert(guestData)
-        .select()
-        .single()
+      const response = await fetch('/api/guests', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(guestData),
+      })
 
-      if (error) throw error
+      const payload = (await response.json().catch(() => null)) as
+        | { data?: GuestWithType; error?: string }
+        | null
 
-      // Refetch para obtener los datos completos con guest_types
-      await fetchGuests(eventId)
-      return { data }
+      if (!response.ok) {
+        throw new Error(payload?.error || 'No se pudo crear el invitado.')
+      }
+
+      if (payload?.data) {
+        setGuests((current) => {
+          const nextGuest = payload.data as GuestWithType
+          const deduped = current.filter((guest) => guest.id !== nextGuest.id)
+          return [nextGuest, ...deduped]
+        })
+      }
+
+      void fetchGuests(eventId)
+      return { data: payload?.data as Guest }
     } catch (error) {
       return { error: getErrorMessage(error) }
     }
@@ -549,14 +613,31 @@ export function useGuests(eventId?: string) {
     options?: UpdateGuestOptions
   ): Promise<ApiResponse<Guest>> => {
     try {
-      const { data, error } = await supabase
-        .from('guests')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single()
+      const response = await fetch(`/api/guests/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updates),
+      })
 
-      if (error) throw error
+      const payload = (await response.json().catch(() => null)) as
+        | { data?: GuestWithType; error?: string }
+        | null
+
+      if (!response.ok) {
+        throw new Error(payload?.error || 'No se pudo actualizar el invitado.')
+      }
+
+      if (!payload?.data) {
+        throw new Error('La API no devolvio el invitado actualizado.')
+      }
+
+      const data = payload.data as GuestWithType
+
+      setGuests((current) =>
+        current.map((guest) => (guest.id === id ? data : guest))
+      )
 
       const shouldCreateCheckin =
         updates.status === 'checked_in' &&
@@ -587,11 +668,12 @@ export function useGuests(eventId?: string) {
       }
 
       if (shouldRevokeQrCodes) {
+        const revokedAt = new Date().toISOString()
         const { error: revokeQrError } = await supabase
           .from('guest_qr_codes')
-          .update({ status: 'revoked' })
+          .update({ is_active: false, revoked_at: revokedAt })
           .eq('guest_id', data.id)
-          .eq('status', 'active')
+          .eq('is_active', true)
 
         if (revokeQrError) {
           await fetchGuests(eventId)
@@ -611,67 +693,84 @@ export function useGuests(eventId?: string) {
     }
   }
 
+  const deleteGuest = async (id: string): Promise<ApiResponse<{ id: string }>> => {
+    try {
+      const response = await fetch(`/api/guests/${id}`, {
+        method: 'DELETE',
+      })
+
+      const payload = (await response.json().catch(() => null)) as
+        | { data?: { id: string }; error?: string }
+        | null
+
+      if (!response.ok) {
+        throw new Error(payload?.error || 'No se pudo borrar el invitado.')
+      }
+
+      setGuests((current) => current.filter((guest) => guest.id !== id))
+      setInvitationTokens((current) => current.filter((token) => token.guest_id !== id))
+      setGuestQrCodes((current) => current.filter((qrCode) => qrCode.guest_id !== id))
+
+      return { data: payload?.data ?? { id } }
+    } catch (error) {
+      return { error: getErrorMessage(error) }
+    }
+  }
+
   const createGuestAccess = async (
     guest: Pick<Guest, 'id' | 'event_id' | 'first_name' | 'last_name'>,
     options: CreateGuestAccessOptions
   ): Promise<ApiResponse<GuestAccessArtifacts>> => {
     try {
-      const tokenValue = buildGuestAccessToken()
-      const expiresAt = buildInvitationExpiry(options.eventDate, options.eventStartTime)
-      const qrPayload = buildGuestAccessQrPayload({
-        eventId: guest.event_id,
-        eventSlug: options.eventSlug,
-        guestId: guest.id,
-        guestName: `${guest.first_name} ${guest.last_name}`.trim(),
-        token: tokenValue,
-      })
-
-      const qrCodeUrl = await QRCode.toDataURL(qrPayload, {
-        errorCorrectionLevel: 'M',
-        margin: 1,
-        width: 256,
-      })
-
-      const { data: tokenData, error: tokenError } = await supabase
-        .from('invitation_tokens')
-        .insert({
-          event_id: guest.event_id,
-          guest_id: guest.id,
-          token: tokenValue,
-          expires_at: expiresAt,
-        })
-        .select()
-        .single()
-
-      if (tokenError) throw tokenError
-
-      const { error: revokeQrError } = await supabase
-        .from('guest_qr_codes')
-        .update({ status: 'inactive' })
-        .eq('guest_id', guest.id)
-        .eq('status', 'active')
-
-      if (revokeQrError) throw revokeQrError
-
-      const { data: qrData, error: qrError } = await supabase
-        .from('guest_qr_codes')
-        .insert({
-          guest_id: guest.id,
-          qr_code_url: qrCodeUrl,
-          qr_data: qrPayload,
-          status: 'active',
-        })
-        .select()
-        .single()
-
-      if (qrError) throw qrError
-
-      await fetchGuestAccess()
-      return {
-        data: {
-          invitationToken: tokenData as InvitationToken,
-          qrCode: qrData as GuestQrCode,
+      const response = await fetch('/api/guest-access/issue', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          guestId: guest.id,
+          eventId: guest.event_id,
+          eventSlug: options.eventSlug,
+          eventDate: options.eventDate,
+          eventStartTime: options.eventStartTime,
+          guestName: `${guest.first_name} ${guest.last_name}`.trim(),
+        }),
+      })
+
+      const payload = (await response.json().catch(() => null)) as
+        | {
+            data?: GuestAccessArtifacts
+            error?: string
+          }
+        | null
+
+      if (!response.ok) {
+        throw new Error(payload?.error || 'No se pudo emitir el acceso del invitado.')
+      }
+
+      if (!payload?.data) {
+        throw new Error('La API no devolvio el acceso emitido.')
+      }
+
+      setInvitationTokens((current) => {
+        const nextToken = payload.data!.invitationToken
+        const deduped = current.filter((token) => token.id !== nextToken.id)
+        return [nextToken, ...deduped]
+      })
+
+      if (payload.data?.qrCode) {
+        setGuestQrCodes((current) => {
+          const nextQr = payload.data!.qrCode as GuestQrCode
+          const remaining = current.filter((qrCode) => qrCode.guest_id !== nextQr.guest_id)
+          return [nextQr, ...remaining]
+        })
+      } else {
+        setGuestQrCodes((current) => current.filter((qrCode) => qrCode.guest_id !== guest.id))
+      }
+
+      void fetchGuestAccess()
+      return {
+        data: payload.data,
       }
     } catch (error) {
       return { error: getErrorMessage(error) }
@@ -690,6 +789,7 @@ export function useGuests(eventId?: string) {
     fetchGuestAccess,
     createGuest,
     updateGuest,
+    deleteGuest,
     createGuestAccess
   }
 }

@@ -30,6 +30,18 @@ const EVENT_STATUS_VARIANTS = {
   cancelled: 'danger',
 } as const
 
+function formatChannelMode(mode: DeliveryProfile['channel_mode']) {
+  if (mode === 'hybrid') {
+    return 'Mixto'
+  }
+
+  if (mode === 'email') {
+    return 'Email'
+  }
+
+  return 'WhatsApp'
+}
+
 function formatDate(date: string) {
   return new Intl.DateTimeFormat('es-AR', {
     dateStyle: 'full',
@@ -52,7 +64,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
     supabase.from('event_branding').select('*').eq('event_id', id).maybeSingle(),
     supabase
       .from('guest_types')
-      .select('id, name, description, max_guests, requires_invitation')
+      .select('id, name, description')
       .eq('event_id', id)
       .order('created_at', { ascending: true }),
     supabase.from('delivery_profiles').select('*'),
@@ -103,6 +115,9 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
                 <Badge variant={EVENT_STATUS_VARIANTS[event.status] as 'success' | 'outline' | 'danger'}>
                   {EVENT_STATUS_LABELS[event.status]}
                 </Badge>
+                <Button asChild variant="secondary">
+                  <Link href={`/admin/events/${event.id}/edit`}>Editar</Link>
+                </Button>
                 <Button asChild>
                   <Link href="/admin/events/new">Crear otro evento</Link>
                 </Button>
@@ -158,10 +173,10 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
                   <dd className="mt-1 font-medium text-foreground">{event.contact_phone || 'No configurado'}</dd>
                 </div>
                 <div>
-                  <dt className="text-sm text-muted-foreground">Canal de envio</dt>
+                  <dt className="text-sm text-muted-foreground">Canal asignado</dt>
                   <dd className="mt-1 font-medium text-foreground">
                     {selectedDeliveryProfile
-                      ? `${selectedDeliveryProfile.name} · ${selectedDeliveryProfile.channel_mode}`
+                      ? `${selectedDeliveryProfile.name} · ${formatChannelMode(selectedDeliveryProfile.channel_mode)}`
                       : event.delivery_profile_id || 'Pendiente de definir'}
                   </dd>
                 </div>
@@ -200,18 +215,6 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
                           <p className="mt-1 text-sm text-muted-foreground">
                             {guestType.description?.trim() || 'Sin descripcion adicional.'}
                           </p>
-                        </div>
-                        <div className="flex gap-2 text-xs font-medium">
-                          <span className="rounded-full bg-secondary px-3 py-1 text-secondary-foreground">
-                            Cupo {guestType.max_guests ?? 'sin limite'}
-                          </span>
-                          <span className={`rounded-full px-3 py-1 ${
-                            guestType.requires_invitation
-                              ? 'bg-amber-100 text-amber-800'
-                              : 'bg-emerald-100 text-emerald-800'
-                          }`}>
-                            {guestType.requires_invitation ? 'Requiere invitacion' : 'Libre'}
-                          </span>
                         </div>
                       </div>
                     </div>
@@ -266,16 +269,16 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
               </CardHeader>
               <CardContent className="space-y-3">
                 <p className="text-sm leading-6 text-muted-foreground">
-                  La lógica del evento ya existe. Desde aquí saltas a invitados, check-in, puerta o totem sin duplicar flujos.
+                  La logica del evento ya existe. Desde aqui saltas a invitados, acceso operativo, puerta y pantalla publica sin duplicar flujos.
                 </p>
                 <Button asChild variant="secondary" className="w-full justify-start">
-                  <Link href={`/totem/${event.id}`}>Abrir vista totem</Link>
+                  <Link href={`/totem/${event.id}`}>Abrir pantalla publica</Link>
                 </Button>
                 <Button asChild variant="info" className="w-full justify-start">
-                  <Link href={`/puerta/${event.id}`}>Abrir vista puerta</Link>
+                  <Link href={`/puerta/${event.id}`}>Abrir control de acceso</Link>
                 </Button>
                 <Button asChild variant="success" className="w-full justify-start">
-                  <Link href={`/admin/events/${event.id}/check-in`}>Abrir check-in</Link>
+                  <Link href={`/admin/events/${event.id}/check-in`}>Abrir panel operativo</Link>
                 </Button>
                 <Button asChild variant="outline" className="w-full justify-start">
                   <Link href={`/admin/events/${event.id}/guests`}>Gestionar invitados</Link>

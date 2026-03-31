@@ -12,9 +12,22 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { EVENT_TEMPLATES, type EventTemplateKey, getEventTemplateByKey } from '@/lib/event-templates'
 import { getErrorMessage } from '@/lib/errors'
 import { useDeliveryProfiles, useEvents } from '@/lib/hooks'
 import type { CreateEventForm } from '@/types'
+
+function formatChannelMode(mode: 'email' | 'whatsapp' | 'hybrid') {
+  if (mode === 'hybrid') {
+    return 'Mixto'
+  }
+
+  if (mode === 'email') {
+    return 'Email'
+  }
+
+  return 'WhatsApp'
+}
 
 export default function NewEventPage() {
   const router = useRouter()
@@ -22,6 +35,8 @@ export default function NewEventPage() {
   const { deliveryProfiles, loading: loadingDeliveryProfiles } = useDeliveryProfiles()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [templateKey, setTemplateKey] = useState<EventTemplateKey | ''>('')
+  const selectedTemplate = getEventTemplateByKey(templateKey)
 
   const [formData, setFormData] = useState<CreateEventForm>({
     name: '',
@@ -36,6 +51,20 @@ export default function NewEventPage() {
     contact_phone: '',
     delivery_profile_id: '',
   })
+
+  const handleTemplateChange = (value: string) => {
+    const nextTemplateKey = value as EventTemplateKey | ''
+    setTemplateKey(nextTemplateKey)
+
+    const nextTemplate = getEventTemplateByKey(nextTemplateKey)
+
+    if (nextTemplate) {
+      setFormData((current) => ({
+        ...current,
+        event_type: nextTemplate.eventType,
+      }))
+    }
+  }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
@@ -67,6 +96,32 @@ export default function NewEventPage() {
 
       if (result.error) {
         setError(result.error)
+      } else if (result.data?.id && templateKey) {
+        const response = await fetch('/api/event-templates/apply', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            eventId: result.data.id,
+            templateKey,
+          }),
+        })
+
+        const payload = (await response.json().catch(() => null)) as
+          | { error?: string }
+          | null
+
+        if (!response.ok) {
+          setError(
+            payload?.error ||
+              'El evento se creo, pero no se pudo aplicar la plantilla de tipos.'
+          )
+          router.push(`/admin/events/${result.data.id}/guests`)
+          return
+        }
+
+        router.push(`/admin/events/${result.data.id}/guests`)
       } else {
         router.push('/admin/events')
       }
@@ -91,10 +146,10 @@ export default function NewEventPage() {
                     <Badge variant="outline">Branding acotado por evento</Badge>
                   </div>
                   <h1 className="admin-heading mt-5 text-5xl leading-none text-foreground">
-                    Crea un evento sin mezclar operacion, identidad y delivery.
+                    Crea un evento sin mezclar operacion, identidad y canales.
                   </h1>
                   <p className="mt-4 text-base leading-7 text-muted-foreground">
-                    La estructura del producto queda fija. Lo que personalizaremos por evento despues serán acentos, fondos y branding puntual, no la arquitectura del sistema.
+                    La estructura del producto queda fija. Lo que personalizaremos por evento despues seran acentos, fondos y branding puntual, no la arquitectura del sistema.
                   </p>
                 </div>
 
@@ -151,6 +206,26 @@ export default function NewEventPage() {
                   </div>
 
                   <div>
+                    <Label htmlFor="event-template">Plantilla operativa</Label>
+                    <Select
+                      id="event-template"
+                      value={templateKey}
+                      onChange={(event) => handleTemplateChange(event.target.value)}
+                      className="mt-2"
+                    >
+                      <option value="">Sin plantilla inicial</option>
+                      {EVENT_TEMPLATES.map((template) => (
+                        <option key={template.key} value={template.key}>
+                          {template.label}
+                        </option>
+                      ))}
+                    </Select>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      Preconfigura tipos de invitado y reglas horarias segun el tipo de evento.
+                    </p>
+                  </div>
+
+                  <div>
                     <Label htmlFor="event_type">Tipo de evento</Label>
                     <Select
                       name="event_type"
@@ -166,6 +241,22 @@ export default function NewEventPage() {
                       <option value="private">Privado</option>
                     </Select>
                   </div>
+
+                  {selectedTemplate && (
+                    <div className="rounded-2xl border border-border/80 bg-muted/35 p-4">
+                      <p className="text-sm font-medium text-foreground">
+                        Plantilla seleccionada: {selectedTemplate.label}
+                      </p>
+                      <p className="mt-1 text-sm text-muted-foreground">{selectedTemplate.summary}</p>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {selectedTemplate.guestTypes.map((guestType) => (
+                          <Badge key={guestType.name} variant="outline">
+                            {guestType.name}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   <div className="grid gap-6 md:grid-cols-2">
                     <div>
@@ -257,7 +348,7 @@ export default function NewEventPage() {
                       placeholder="+54 9 351 ..."
                     />
                     <p className="mt-2 text-sm text-slate-300">
-                      Número que ve el invitado. No define por sí solo la infraestructura real de envío.
+                      Numero que ve el invitado. No define por si solo la infraestructura real de envio.
                     </p>
                   </div>
 
@@ -274,7 +365,7 @@ export default function NewEventPage() {
                       <option value="">Sin perfil asignado</option>
                       {deliveryProfiles.map((profile) => (
                         <option key={profile.id} value={profile.id}>
-                          {profile.name} · {profile.channel_mode}
+                          {profile.name} · {formatChannelMode(profile.channel_mode)}
                           {profile.active ? '' : ' · inactivo'}
                         </option>
                       ))}

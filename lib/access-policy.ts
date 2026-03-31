@@ -3,6 +3,7 @@ import type { Event, Guest, GuestType, InvitationToken } from '@/types'
 type AccessDecision = 'allow' | 'warn' | 'deny'
 type AccessCode =
   | 'ok'
+  | 'not_ready'
   | 'cancelled'
   | 'expired'
   | 'already_checked_in'
@@ -137,7 +138,21 @@ export function evaluateGuestAccess({
 }: EvaluateGuestAccessInput): EvaluatedAccess {
   const guestFullName = `${guest.first_name} ${guest.last_name}`.trim()
 
-  if (guest.status === 'cancelled') {
+  if (
+    guest.status === 'pending' ||
+    (guest.status as string) === 'preinvited' ||
+    (guest.status as string) === 'link_sent' ||
+    (guest.status as string) === 'registered'
+  ) {
+    return {
+      decision: 'deny',
+      code: 'not_ready',
+      title: 'Acceso aun no habilitado',
+      detail: `${guestFullName} todavia no tiene el acceso final habilitado.`,
+    }
+  }
+
+  if (guest.status === 'cancelled' || (guest.status as string) === 'rejected') {
     return {
       decision: 'deny',
       code: 'cancelled',

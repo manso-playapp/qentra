@@ -99,7 +99,7 @@ const STATUS_TONE_STYLES = {
   idle: {
     shell: 'border-slate-200 bg-slate-900 text-white',
     badge: 'bg-white/10 text-slate-100',
-    eyebrow: 'Modo puerta',
+    eyebrow: 'Control de acceso',
   },
   scanning: {
     shell: 'border-blue-200 bg-blue-600 text-white',
@@ -632,10 +632,16 @@ export default function EventCheckinManager({
 
     const now = new Date().toISOString()
 
-    if (options?.invitationToken && !options.invitationToken.used_at) {
+    if (options?.invitationToken && !options.invitationToken.last_used_at) {
+      const nextUsedCount = (options.invitationToken.used_count ?? 0) + 1
+      const maxUses = options.invitationToken.max_uses ?? 1
       const { error: tokenUpdateError } = await supabase
         .from('invitation_tokens')
-        .update({ used_at: now })
+        .update({
+          used_count: nextUsedCount,
+          last_used_at: now,
+          is_active: nextUsedCount < maxUses,
+        })
         .eq('id', options.invitationToken.id)
 
       if (tokenUpdateError) {
@@ -647,7 +653,6 @@ export default function EventCheckinManager({
       .from('guests')
       .update({
         status: 'checked_in',
-        plus_ones_confirmed: guest.plus_ones_confirmed || guest.plus_ones_allowed,
       })
       .eq('id', guest.id)
 
@@ -688,7 +693,6 @@ export default function EventCheckinManager({
     const { data: tokenData, error: tokenError } = await supabase
       .from('invitation_tokens')
       .select('*')
-      .eq('event_id', event.id)
       .eq('token', payload.token)
       .maybeSingle()
 
@@ -740,6 +744,15 @@ export default function EventCheckinManager({
         kind: 'error',
         title: 'Invitado inexistente',
         detail: 'La invitacion existe, pero el invitado asociado ya no esta disponible.',
+      })
+      return
+    }
+
+    if ((guestData as { event_id?: string }).event_id !== event.id) {
+      setStatus({
+        kind: 'error',
+        title: 'Acceso invalido',
+        detail: 'La invitacion existe, pero corresponde a otro evento.',
       })
       return
     }
@@ -995,12 +1008,12 @@ export default function EventCheckinManager({
                     {event.name}
                   </h1>
                   <p className="mt-6 max-w-2xl text-xl leading-8 text-white/78 sm:text-2xl">
-                    Bienvenidos. Cuando el ingreso sea autorizado, la identidad del invitado aparecerá aquí de forma temporal.
+                    Bienvenidos. Cada ingreso aprobado se reflejara aqui por unos segundos, sin exponer informacion operativa.
                   </p>
                 </>
               ) : (
                 <>
-                  <p className="text-sm uppercase tracking-[0.34em] text-emerald-200/90">Ingreso autorizado</p>
+                  <p className="text-sm uppercase tracking-[0.34em] text-emerald-200/90">Bienvenida habilitada</p>
                   <div
                     className="mt-8 flex h-[38vh] max-h-[380px] min-h-[240px] w-[38vh] max-w-[380px] min-w-[240px] items-center justify-center rounded-[36px] border border-white/14 text-8xl font-semibold text-white shadow-[0_0_90px_rgba(16,185,129,0.18)]"
                     style={{ background: `linear-gradient(145deg, ${totemAccent}55, rgba(255,255,255,0.08))` }}
@@ -1024,7 +1037,7 @@ export default function EventCheckinManager({
                 className="h-2.5 w-2.5 rounded-full"
                 style={{ backgroundColor: totemSpotlight ? '#34d399' : totemAccent }}
               />
-              {totemSpotlight ? 'Ingreso registrado correctamente' : 'Pantalla pública del evento'}
+              {totemSpotlight ? 'Ingreso registrado correctamente' : 'Pantalla de bienvenida del evento'}
             </div>
             <p className="text-xs uppercase tracking-[0.3em] text-white/40">
               Desarrollado por Qentra
@@ -1043,7 +1056,7 @@ export default function EventCheckinManager({
             <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.34em] text-sky-300">Control de ingreso</p>
-                <h1 className="admin-heading mt-4 text-5xl leading-none text-white">Puesto de puerta</h1>
+                <h1 className="admin-heading mt-4 text-5xl leading-none text-white">Control de acceso</h1>
                 <p className="mt-4 max-w-3xl text-base leading-7 text-slate-300">
                   Superficie táctica para seguridad y recepción. Prioriza lectura rápida, validación inmediata y excepciones supervisadas sin contaminar la pantalla pública.
                 </p>
@@ -1064,13 +1077,13 @@ export default function EventCheckinManager({
 
             <div className="mt-5 flex flex-wrap gap-3">
               <Button asChild variant="outline" className="border-white/10 bg-white/5 text-white hover:bg-white/10 hover:text-white">
-                <Link href={`/admin/events/${event.id}/check-in`}>Abrir vista admin</Link>
+                <Link href={`/admin/events/${event.id}/check-in`}>Abrir panel operativo</Link>
               </Button>
               <Button asChild variant="outline" className="border-sky-400/20 bg-sky-400/10 text-sky-100 hover:bg-sky-400/15 hover:text-white">
-                <Link href={`/admin/events/${event.id}/guests`}>Abrir directorio</Link>
+                <Link href={`/admin/events/${event.id}/guests`}>Ver invitados</Link>
               </Button>
               <Button asChild variant="outline" className="border-amber-400/20 bg-amber-400/10 text-amber-100 hover:bg-amber-400/15 hover:text-white">
-                <Link href={`/totem/${event.id}`}>Ver totem</Link>
+                <Link href={`/totem/${event.id}`}>Ver pantalla publica</Link>
               </Button>
             </div>
           </section>
@@ -1152,7 +1165,7 @@ export default function EventCheckinManager({
                     <CardDescription>Scanner principal</CardDescription>
                     <CardTitle>Lector de QR y validación directa</CardTitle>
                     <CardDescription>
-                      Flujo principal de puerta. Lee el QR que el invitado muestra en su celular y valida duplicados, horario y vigencia antes del ingreso.
+                      Flujo principal de acceso. Lee el QR que el invitado muestra en su celular y valida duplicados, horario y vigencia antes del ingreso.
                     </CardDescription>
                   </div>
                   <div className="flex flex-wrap gap-3">
@@ -1327,7 +1340,7 @@ export default function EventCheckinManager({
                     <CardDescription>Fallback operativo</CardDescription>
                     <CardTitle>Directorio de invitados</CardTitle>
                     <CardDescription>
-                      Búsqueda manual por nombre, email o teléfono cuando el invitado no presenta QR o el scanner falla.
+                      Busqueda manual por nombre, email o telefono cuando el invitado no presenta QR o la camara falla.
                     </CardDescription>
                   </div>
                   <Button type="button" variant="outline" size="sm" onClick={fetchGuestDirectory}>
@@ -1413,7 +1426,7 @@ export default function EventCheckinManager({
               <Card className="bg-slate-950 text-white">
                 <CardHeader>
                   <CardDescription className="text-sky-200/70">Monitoreo rápido</CardDescription>
-                  <CardTitle className="text-white">Actividad de puerta</CardTitle>
+                  <CardTitle className="text-white">Actividad de acceso</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
@@ -1486,7 +1499,7 @@ export default function EventCheckinManager({
                 </CardHeader>
                 <CardContent className="space-y-3 text-sm leading-6 text-muted-foreground">
                   <p>Solo se aceptan accesos del evento actual.</p>
-                  <p>El flujo principal está pensado para leer por cámara el QR que el invitado muestra en puerta.</p>
+                  <p>El flujo principal esta pensado para leer por camara el QR que el invitado muestra al ingresar.</p>
                   <p>Si el token está vencido o el invitado fue cancelado, el acceso se rechaza antes del registro.</p>
                   <p>Si el invitado ya ingresó, el sistema advierte y no habilita un nuevo acceso sin excepción supervisada.</p>
                   <p>Si el tipo o rol tiene ventana horaria, se bloquea el QR fuera de esa franja.</p>

@@ -5,6 +5,7 @@ import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { formatGuestTypeAccessPolicy } from '@/lib/access-policy'
 import { useGuestTypes, useGuests } from '@/lib/hooks'
+import { buildAbsoluteAppUrl } from '@/lib/public-url'
 import type {
   CreateGuestForm,
   CreateGuestTypeForm,
@@ -15,10 +16,13 @@ import type {
   InvitationToken,
   GuestQrCode,
   UpdateGuestForm,
+  UpdateGuestTypeForm,
 } from '@/types'
 
 type EventGuestsManagerProps = {
   event: Pick<Event, 'id' | 'name' | 'slug' | 'max_capacity' | 'event_date' | 'start_time' | 'delivery_profile_id'>
+  initialGuestTypes?: GuestType[]
+  initialGuests?: GuestWithType[]
 }
 
 type GuestFormState = {
@@ -34,14 +38,14 @@ type GuestFormState = {
 type GuestTypeFormState = {
   name: string
   description: string
-  max_guests: string
-  requires_invitation: boolean
   access_policy_label: string
   access_start_time: string
   access_end_time: string
   access_start_day_offset: string
   access_end_day_offset: string
 }
+
+type GuestTypeEditFormState = GuestTypeFormState
 
 type GuestEditFormState = {
   guest_type_id: string
@@ -82,8 +86,6 @@ const INITIAL_GUEST_FORM: GuestFormState = {
 const INITIAL_GUEST_TYPE_FORM: GuestTypeFormState = {
   name: '',
   description: '',
-  max_guests: '',
-  requires_invitation: true,
   access_policy_label: '',
   access_start_time: '',
   access_end_time: '',
@@ -139,8 +141,19 @@ function createGuestEditForm(guest: GuestWithType): GuestEditFormState {
   }
 }
 
-export default function EventGuestsManager({ event }: EventGuestsManagerProps) {
-  const { guestTypes, loading: guestTypesLoading, error: guestTypesError, createGuestType } = useGuestTypes(event.id)
+export default function EventGuestsManager({
+  event,
+  initialGuestTypes = [],
+  initialGuests = [],
+}: EventGuestsManagerProps) {
+  const {
+    guestTypes,
+    loading: guestTypesLoading,
+    error: guestTypesError,
+    createGuestType,
+    updateGuestType,
+    deleteGuestType,
+  } = useGuestTypes(event.id, initialGuestTypes)
   const {
     guests,
     invitationTokens,
@@ -151,8 +164,11 @@ export default function EventGuestsManager({ event }: EventGuestsManagerProps) {
     accessError,
     createGuest,
     updateGuest,
+    deleteGuest,
     createGuestAccess,
-  } = useGuests(event.id)
+  } = useGuests(event.id, initialGuests)
+  const visibleGuestTypes = guestTypes
+  const visibleGuests = guests
 
   const [guestForm, setGuestForm] = useState<GuestFormState>(INITIAL_GUEST_FORM)
   const [guestTypeForm, setGuestTypeForm] = useState<GuestTypeFormState>(INITIAL_GUEST_TYPE_FORM)
@@ -160,6 +176,11 @@ export default function EventGuestsManager({ event }: EventGuestsManagerProps) {
   const [guestTypeSubmitError, setGuestTypeSubmitError] = useState<string | null>(null)
   const [guestSubmitting, setGuestSubmitting] = useState(false)
   const [guestTypeSubmitting, setGuestTypeSubmitting] = useState(false)
+  const [editingGuestTypeId, setEditingGuestTypeId] = useState<string | null>(null)
+  const [editGuestTypeForm, setEditGuestTypeForm] = useState<GuestTypeEditFormState | null>(null)
+  const [guestTypeActionError, setGuestTypeActionError] = useState<string | null>(null)
+  const [guestTypeActionNotice, setGuestTypeActionNotice] = useState<string | null>(null)
+  const [guestTypeActionLoadingId, setGuestTypeActionLoadingId] = useState<string | null>(null)
   const [editingGuestId, setEditingGuestId] = useState<string | null>(null)
   const [editGuestForm, setEditGuestForm] = useState<GuestEditFormState | null>(null)
   const [guestRowActionError, setGuestRowActionError] = useState<string | null>(null)
@@ -168,7 +189,7 @@ export default function EventGuestsManager({ event }: EventGuestsManagerProps) {
   const [guestAccessActionLoadingId, setGuestAccessActionLoadingId] = useState<string | null>(null)
   const [copiedInvitationGuestId, setCopiedInvitationGuestId] = useState<string | null>(null)
   const [deliveryLoadingKey, setDeliveryLoadingKey] = useState<string | null>(null)
-  const selectedGuestTypeId = guestForm.guest_type_id || guestTypes[0]?.id || ''
+  const selectedGuestTypeId = guestForm.guest_type_id || visibleGuestTypes[0]?.id || ''
   const latestInvitationTokenByGuestId = useMemo(() => {
     const map = new Map<string, InvitationToken>()
 
@@ -194,10 +215,10 @@ export default function EventGuestsManager({ event }: EventGuestsManagerProps) {
   }, [guestQrCodes])
 
   const totals = useMemo(() => {
-    const pending = guests.filter((guest) => guest.status === 'pending').length
-    const confirmed = guests.filter((guest) => guest.status === 'confirmed' || guest.status === 'checked_in').length
-    const checkedIn = guests.filter((guest) => guest.status === 'checked_in').length
-    const reservedSeats = guests.length + guests.reduce((sum, guest) => sum + guest.plus_ones_confirmed, 0)
+    const pending = visibleGuests.filter((guest) => guest.status === 'pending').length
+    const confirmed = visibleGuests.filter((guest) => guest.status === 'confirmed' || guest.status === 'checked_in').length
+    const checkedIn = visibleGuests.filter((guest) => guest.status === 'checked_in').length
+    const reservedSeats = visibleGuests.length + visibleGuests.reduce((sum, guest) => sum + guest.plus_ones_confirmed, 0)
 
     return {
       pending,
@@ -206,7 +227,22 @@ export default function EventGuestsManager({ event }: EventGuestsManagerProps) {
       reservedSeats,
       remainingCapacity: Math.max(event.max_capacity - reservedSeats, 0),
     }
-  }, [event.max_capacity, guests])
+  }, [event.max_capacity, visibleGuests])
+
+  const guestCountByGuestTypeId = useMemo(() => {
+    const map = new Map<string, number>()
+
+    for (const guest of visibleGuests) {
+      map.set(guest.guest_type_id, (map.get(guest.guest_type_id) ?? 0) + 1)
+    }
+
+    return map
+  }, [visibleGuests])
+
+  const activeGuestTypesCount = useMemo(
+    () => visibleGuestTypes.filter((guestType) => guestType.is_active !== false).length,
+    [visibleGuestTypes]
+  )
 
   const handleGuestInputChange = (
     eventInput: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -230,6 +266,23 @@ export default function EventGuestsManager({ event }: EventGuestsManagerProps) {
     }))
   }
 
+  const handleEditGuestTypeInputChange = (
+    eventInput: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = eventInput.target
+
+    setEditGuestTypeForm((current) => {
+      if (!current) {
+        return current
+      }
+
+      return {
+        ...current,
+        [name]: value,
+      }
+    })
+  }
+
   const handleCreateGuestType = async (submitEvent: React.FormEvent<HTMLFormElement>) => {
     submitEvent.preventDefault()
     setGuestTypeSubmitting(true)
@@ -239,8 +292,6 @@ export default function EventGuestsManager({ event }: EventGuestsManagerProps) {
       event_id: event.id,
       name: guestTypeForm.name.trim(),
       description: trimOptionalValue(guestTypeForm.description),
-      max_guests: parseOptionalInteger(guestTypeForm.max_guests),
-      requires_invitation: guestTypeForm.requires_invitation,
       access_policy_label: trimOptionalValue(guestTypeForm.access_policy_label),
       access_start_time: trimOptionalValue(guestTypeForm.access_start_time),
       access_end_time: trimOptionalValue(guestTypeForm.access_end_time),
@@ -265,6 +316,98 @@ export default function EventGuestsManager({ event }: EventGuestsManagerProps) {
     }
 
     setGuestTypeSubmitting(false)
+  }
+
+  const createGuestTypeEditForm = (guestType: GuestType): GuestTypeEditFormState => ({
+    name: guestType.name,
+    description: guestType.description ?? '',
+    access_policy_label: guestType.access_policy_label ?? '',
+    access_start_time: guestType.access_start_time ?? '',
+    access_end_time: guestType.access_end_time ?? '',
+    access_start_day_offset: String(guestType.access_start_day_offset ?? 0),
+    access_end_day_offset: String(guestType.access_end_day_offset ?? 0),
+  })
+
+  const startEditingGuestType = (guestType: GuestType) => {
+    setEditingGuestTypeId(guestType.id)
+    setEditGuestTypeForm(createGuestTypeEditForm(guestType))
+    setGuestTypeActionError(null)
+    setGuestTypeActionNotice(null)
+  }
+
+  const cancelEditingGuestType = () => {
+    setEditingGuestTypeId(null)
+    setEditGuestTypeForm(null)
+    setGuestTypeActionError(null)
+    setGuestTypeActionNotice(null)
+  }
+
+  const saveGuestTypeUpdates = async (guestTypeId: string) => {
+    if (!editGuestTypeForm) {
+      return
+    }
+
+    setGuestTypeActionLoadingId(guestTypeId)
+    setGuestTypeActionError(null)
+    setGuestTypeActionNotice(null)
+
+    const payload: UpdateGuestTypeForm = {
+      name: editGuestTypeForm.name.trim(),
+      description: trimOptionalValue(editGuestTypeForm.description),
+      access_policy_label: trimOptionalValue(editGuestTypeForm.access_policy_label),
+      access_start_time: trimOptionalValue(editGuestTypeForm.access_start_time),
+      access_end_time: trimOptionalValue(editGuestTypeForm.access_end_time),
+      access_start_day_offset: parseOptionalInteger(editGuestTypeForm.access_start_day_offset),
+      access_end_day_offset: parseOptionalInteger(editGuestTypeForm.access_end_day_offset),
+    }
+
+    const result = await updateGuestType(guestTypeId, payload)
+
+    if (result.error) {
+      setGuestTypeActionError(result.error)
+    } else {
+      setEditingGuestTypeId(null)
+      setEditGuestTypeForm(null)
+      setGuestTypeActionNotice('Tipo de invitado actualizado correctamente.')
+    }
+
+    setGuestTypeActionLoadingId(null)
+  }
+
+  const toggleGuestTypeActiveState = async (guestType: GuestType, nextActive: boolean) => {
+    setGuestTypeActionLoadingId(guestType.id)
+    setGuestTypeActionError(null)
+    setGuestTypeActionNotice(null)
+
+    const result = await updateGuestType(guestType.id, { is_active: nextActive })
+
+    if (result.error) {
+      setGuestTypeActionError(result.error)
+    } else {
+      setGuestTypeActionNotice(
+        nextActive
+          ? `Tipo ${guestType.name} reactivado.`
+          : `Tipo ${guestType.name} desactivado.`
+      )
+    }
+
+    setGuestTypeActionLoadingId(null)
+  }
+
+  const removeGuestType = async (guestType: GuestType) => {
+    setGuestTypeActionLoadingId(guestType.id)
+    setGuestTypeActionError(null)
+    setGuestTypeActionNotice(null)
+
+    const result = await deleteGuestType(guestType.id)
+
+    if (result.error) {
+      setGuestTypeActionError(result.error)
+    } else {
+      setGuestTypeActionNotice(`Tipo ${guestType.name} borrado correctamente.`)
+    }
+
+    setGuestTypeActionLoadingId(null)
   }
 
   const handleCreateGuest = async (submitEvent: React.FormEvent<HTMLFormElement>) => {
@@ -354,7 +497,7 @@ export default function EventGuestsManager({ event }: EventGuestsManagerProps) {
     }
 
     const result = await updateGuest(guestId, payload, {
-      previousStatus: guests.find((guest) => guest.id === guestId)?.status,
+      previousStatus: visibleGuests.find((guest) => guest.id === guestId)?.status,
       checkinMethod: 'manual',
       checkinNotes: 'Registro desde Qentra Admin',
     })
@@ -364,6 +507,7 @@ export default function EventGuestsManager({ event }: EventGuestsManagerProps) {
     } else {
       setEditingGuestId(null)
       setEditGuestForm(null)
+      setGuestRowActionNotice('Datos del invitado actualizados correctamente.')
     }
 
     setGuestRowActionLoadingId(null)
@@ -406,19 +550,36 @@ export default function EventGuestsManager({ event }: EventGuestsManagerProps) {
 
     if (result.error) {
       setGuestRowActionError(result.error)
+    } else {
+      setGuestRowActionNotice(
+        result.data?.qrCode
+          ? `Acceso final emitido para ${guest.first_name} ${guest.last_name}. Ya puedes abrir la invitacion o enviarla por email/WhatsApp.`
+          : `Link de gestion emitido para ${guest.first_name} ${guest.last_name}. El QR final se habilitara cuando el acceso quede listo.`
+      )
     }
 
     setGuestAccessActionLoadingId(null)
   }
 
-  const buildAbsoluteInvitationUrl = (token: string, guestName?: string) => {
-    const invitationPath = buildInvitationPath(token, guestName)
+  const removeGuest = async (guest: GuestWithType) => {
+    setGuestRowActionLoadingId(guest.id)
+    setGuestRowActionError(null)
+    setGuestRowActionNotice(null)
 
-    if (typeof window === 'undefined') {
-      return invitationPath
+    const result = await deleteGuest(guest.id)
+
+    if (result.error) {
+      setGuestRowActionError(result.error)
+    } else {
+      setGuestRowActionNotice(`Invitado ${guest.first_name} ${guest.last_name} borrado correctamente.`)
     }
 
-    return new URL(invitationPath, window.location.origin).toString()
+    setGuestRowActionLoadingId(null)
+  }
+
+  const buildAbsoluteInvitationUrl = (token: string, guestName?: string) => {
+    const invitationPath = buildInvitationPath(token, guestName)
+    return buildAbsoluteAppUrl(invitationPath)
   }
 
   const buildShareMessage = (guest: GuestWithType, token: InvitationToken) => {
@@ -542,7 +703,7 @@ export default function EventGuestsManager({ event }: EventGuestsManagerProps) {
       <div className="mb-8 grid gap-4 md:grid-cols-4">
         <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
           <p className="text-sm text-gray-500">Invitados cargados</p>
-          <p className="mt-2 text-2xl font-semibold text-gray-900">{guests.length}</p>
+          <p className="mt-2 text-2xl font-semibold text-gray-900">{visibleGuests.length}</p>
           <p className="mt-1 text-sm text-gray-600">Registros manuales actuales</p>
         </div>
 
@@ -571,10 +732,10 @@ export default function EventGuestsManager({ event }: EventGuestsManagerProps) {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-semibold text-gray-900">Tipos de invitado</h2>
-                <p className="mt-1 text-sm text-gray-600">Primero define las categorias que luego podras asignar.</p>
+                <p className="mt-1 text-sm text-gray-600">Primero define las categorias que luego podras asignar. Luego podras reutilizar esta logica en plantillas de evento.</p>
               </div>
               <span className="rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-700">
-                {guestTypes.length} activos
+                {activeGuestTypesCount} activos
               </span>
             </div>
 
@@ -584,39 +745,212 @@ export default function EventGuestsManager({ event }: EventGuestsManagerProps) {
               </div>
             )}
 
+            {guestTypeActionError && (
+              <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                {guestTypeActionError}
+              </div>
+            )}
+
+            {guestTypeActionNotice && (
+              <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+                {guestTypeActionNotice}
+              </div>
+            )}
+
             {guestTypesLoading ? (
               <div className="mt-4 flex h-32 items-center justify-center">
                 <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-blue-600"></div>
               </div>
-            ) : guestTypes.length === 0 ? (
+            ) : visibleGuestTypes.length === 0 ? (
               <div className="mt-4 rounded-lg border border-dashed border-gray-200 bg-gray-50 p-5 text-sm text-gray-600">
                 Todavia no hay tipos creados. Crea al menos uno para habilitar el alta manual de invitados.
               </div>
             ) : (
               <div className="mt-4 grid gap-3 md:grid-cols-2">
-                {guestTypes.map((guestType) => (
+                {visibleGuestTypes.map((guestType) => (
                   <div key={guestType.id} className="rounded-lg border border-gray-200 p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <h3 className="font-medium text-gray-900">{guestType.name}</h3>
-                        <p className="mt-1 text-sm text-gray-600">
-                          {guestType.description?.trim() || 'Sin descripcion adicional.'}
-                        </p>
+                    {editingGuestTypeId === guestType.id && editGuestTypeForm ? (
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <h3 className="font-medium text-gray-900">Editando tipo</h3>
+                            <p className="mt-1 text-sm text-gray-600">{guestType.name}</p>
+                          </div>
+                          <span
+                            className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                              guestType.is_active === false
+                                ? 'bg-gray-100 text-gray-700'
+                                : 'bg-emerald-100 text-emerald-800'
+                            }`}
+                          >
+                            {guestType.is_active === false ? 'Inactivo' : 'Activo'}
+                          </span>
+                        </div>
+
+                        <div className="grid gap-4 md:grid-cols-2">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">Nombre</label>
+                            <input
+                              name="name"
+                              value={editGuestTypeForm.name}
+                              onChange={handleEditGuestTypeInputChange}
+                              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">Etiqueta de acceso</label>
+                            <input
+                              name="access_policy_label"
+                              value={editGuestTypeForm.access_policy_label}
+                              onChange={handleEditGuestTypeInputChange}
+                              placeholder="Ej: Despues de las 00:00"
+                              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">Hora desde</label>
+                            <input
+                              name="access_start_time"
+                              type="time"
+                              value={editGuestTypeForm.access_start_time}
+                              onChange={handleEditGuestTypeInputChange}
+                              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">Hora hasta</label>
+                            <input
+                              name="access_end_time"
+                              type="time"
+                              value={editGuestTypeForm.access_end_time}
+                              onChange={handleEditGuestTypeInputChange}
+                              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">Offset inicio</label>
+                            <input
+                              name="access_start_day_offset"
+                              type="number"
+                              value={editGuestTypeForm.access_start_day_offset}
+                              onChange={handleEditGuestTypeInputChange}
+                              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">Offset fin</label>
+                            <input
+                              name="access_end_day_offset"
+                              type="number"
+                              value={editGuestTypeForm.access_end_day_offset}
+                              onChange={handleEditGuestTypeInputChange}
+                              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">Descripcion</label>
+                          <textarea
+                            name="description"
+                            rows={3}
+                            value={editGuestTypeForm.description}
+                            onChange={handleEditGuestTypeInputChange}
+                            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                          />
+                        </div>
+
+                        <div className="flex flex-wrap gap-3">
+                          <button
+                            type="button"
+                            onClick={() => saveGuestTypeUpdates(guestType.id)}
+                            disabled={guestTypeActionLoadingId === guestType.id}
+                            className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            {guestTypeActionLoadingId === guestType.id ? 'Guardando...' : 'Guardar cambios'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={cancelEditingGuestType}
+                            disabled={guestTypeActionLoadingId === guestType.id}
+                            className="inline-flex items-center rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            Cancelar
+                          </button>
+                        </div>
                       </div>
-                      <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                        guestType.requires_invitation
-                          ? 'bg-amber-100 text-amber-800'
-                          : 'bg-emerald-100 text-emerald-800'
-                      }`}>
-                        {guestType.requires_invitation ? 'Con invitacion' : 'Libre'}
-                      </span>
-                    </div>
-                    <p className="mt-3 text-sm text-gray-500">
-                      Cupo: {guestType.max_guests ?? 'sin limite'}
-                    </p>
-                    <p className="mt-2 text-sm text-gray-500">
-                      Acceso: {formatGuestTypeAccessPolicy(guestType, event.start_time)}
-                    </p>
+                    ) : (
+                      <>
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h3 className="font-medium text-gray-900">{guestType.name}</h3>
+                              <span
+                                className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                                  guestType.is_active === false
+                                    ? 'bg-gray-100 text-gray-700'
+                                    : 'bg-emerald-100 text-emerald-800'
+                                }`}
+                              >
+                                {guestType.is_active === false ? 'Inactivo' : 'Activo'}
+                              </span>
+                            </div>
+                            <p className="mt-1 text-sm text-gray-600">
+                              {guestType.description?.trim() || 'Sin descripcion adicional.'}
+                            </p>
+                          </div>
+                          <div className="rounded-lg bg-gray-50 px-3 py-2 text-right text-sm text-gray-600">
+                            <p className="text-xs uppercase tracking-wide text-gray-500">Invitados</p>
+                            <p className="mt-1 font-medium text-gray-900">
+                              {guestCountByGuestTypeId.get(guestType.id) ?? 0}
+                            </p>
+                          </div>
+                        </div>
+                        <p className="mt-2 text-sm text-gray-500">
+                          Acceso: {formatGuestTypeAccessPolicy(guestType, event.start_time)}
+                        </p>
+                        <div className="mt-4 flex flex-wrap gap-3">
+                          <button
+                            type="button"
+                            onClick={() => startEditingGuestType(guestType)}
+                            disabled={guestTypeActionLoadingId === guestType.id}
+                            className="inline-flex items-center rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-sm font-medium text-sky-700 hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            Editar
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              toggleGuestTypeActiveState(guestType, guestType.is_active === false)
+                            }
+                            disabled={guestTypeActionLoadingId === guestType.id}
+                            className="inline-flex items-center rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-800 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            {guestTypeActionLoadingId === guestType.id
+                              ? 'Guardando...'
+                              : guestType.is_active === false
+                              ? 'Reactivar'
+                              : 'Desactivar'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => removeGuestType(guestType)}
+                            disabled={
+                              guestTypeActionLoadingId === guestType.id ||
+                              (guestCountByGuestTypeId.get(guestType.id) ?? 0) > 0
+                            }
+                            className="inline-flex items-center rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            Borrar
+                          </button>
+                        </div>
+                        {(guestCountByGuestTypeId.get(guestType.id) ?? 0) > 0 && (
+                          <p className="mt-3 text-xs text-gray-500">
+                            No se puede borrar mientras tenga invitados asociados. Si quieres retirarlo del uso futuro, desactivalo.
+                          </p>
+                        )}
+                      </>
+                    )}
                   </div>
                 ))}
               </div>
@@ -630,7 +964,7 @@ export default function EventGuestsManager({ event }: EventGuestsManagerProps) {
                 <p className="mt-1 text-sm text-gray-600">Vista operativa para confirmar, revisar contactos y capacidad.</p>
               </div>
               <span className="rounded-full bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700">
-                {guests.length} registros
+                {visibleGuests.length} registros
               </span>
             </div>
 
@@ -644,7 +978,7 @@ export default function EventGuestsManager({ event }: EventGuestsManagerProps) {
               <div className="mt-4 flex h-40 items-center justify-center">
                 <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-blue-600"></div>
               </div>
-            ) : guests.length === 0 ? (
+            ) : visibleGuests.length === 0 ? (
               <div className="mt-4 rounded-lg border border-dashed border-gray-200 bg-gray-50 p-5 text-sm text-gray-600">
                 Todavia no hay invitados cargados para este evento.
               </div>
@@ -660,7 +994,7 @@ export default function EventGuestsManager({ event }: EventGuestsManagerProps) {
                     {guestRowActionNotice}
                   </div>
                 )}
-                {guests.map((guest) => (
+                {visibleGuests.map((guest) => (
                   <div key={guest.id} className="rounded-lg border border-gray-200 p-4">
                     {editingGuestId === guest.id && editGuestForm ? (
                       <div className="space-y-4">
@@ -735,7 +1069,7 @@ export default function EventGuestsManager({ event }: EventGuestsManagerProps) {
                               onChange={handleEditGuestInputChange}
                               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                             >
-                              {guestTypes.map((guestType) => (
+                              {visibleGuestTypes.map((guestType) => (
                                 <option key={guestType.id} value={guestType.id}>
                                   {guestType.name}
                                 </option>
@@ -828,6 +1162,11 @@ export default function EventGuestsManager({ event }: EventGuestsManagerProps) {
                         {(() => {
                           const latestToken = latestInvitationTokenByGuestId.get(guest.id)
                           const latestQrCode = latestGuestQrByGuestId.get(guest.id)
+                          const hasRenderableQr = Boolean(
+                            latestQrCode?.is_active && latestQrCode?.qr_image_url
+                          )
+                          const accessReady =
+                            guest.status === 'confirmed' || guest.status === 'checked_in'
 
                           return (
                             <>
@@ -870,21 +1209,29 @@ export default function EventGuestsManager({ event }: EventGuestsManagerProps) {
                               <div>
                                 <p className="text-xs uppercase tracking-wide text-gray-500">Acceso digital</p>
                                 <p className="mt-1 text-sm font-medium text-gray-900">
-                                  {latestToken ? 'Invitacion emitida' : 'Sin invitacion emitida'}
+                                  {hasRenderableQr
+                                    ? 'QR final habilitado'
+                                    : latestToken
+                                    ? 'Link de gestion emitido'
+                                    : 'Sin invitacion emitida'}
                                 </p>
                               </div>
                               <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                                latestQrCode?.status === 'active'
+                                hasRenderableQr
                                   ? 'bg-emerald-100 text-emerald-800'
-                                  : latestQrCode?.status === 'revoked'
+                                  : latestQrCode?.revoked_at
                                   ? 'bg-red-100 text-red-700'
+                                  : latestQrCode?.is_active
+                                  ? 'bg-amber-100 text-amber-800'
                                   : 'bg-gray-100 text-gray-700'
                               }`}>
-                                {latestQrCode?.status === 'active'
+                                {hasRenderableQr
                                   ? 'QR activo'
-                                  : latestQrCode?.status === 'revoked'
+                                  : latestQrCode?.revoked_at
                                   ? 'QR revocado'
-                                  : latestQrCode?.status === 'inactive'
+                                  : latestQrCode?.is_active
+                                  ? 'QR pendiente'
+                                  : latestQrCode
                                   ? 'QR inactivo'
                                   : 'Sin QR'}
                               </span>
@@ -904,7 +1251,9 @@ export default function EventGuestsManager({ event }: EventGuestsManagerProps) {
                               </p>
                               <p>
                                 Uso:{' '}
-                                {latestToken?.used_at ? `Utilizado ${formatDateTime(latestToken.used_at)}` : 'Sin registrar'}
+                                {latestToken?.last_used_at
+                                  ? `Utilizado ${formatDateTime(latestToken.last_used_at)}`
+                                  : 'Sin registrar'}
                               </p>
                               <p>
                                 Invitacion:{' '}
@@ -921,13 +1270,18 @@ export default function EventGuestsManager({ event }: EventGuestsManagerProps) {
                                   'No disponible'
                                 )}
                               </p>
+                              {!accessReady && latestToken && (
+                                <p className="text-amber-700">
+                                  El QR final se habilita cuando el invitado confirma asistencia y queda listo para ingresar.
+                                </p>
+                              )}
                             </div>
                           </div>
 
                           <div className="flex items-center justify-center rounded-lg border border-gray-200 bg-white p-3">
-                            {latestQrCode?.qr_code_url ? (
+                            {latestQrCode?.qr_image_url ? (
                               <Image
-                                src={latestQrCode.qr_code_url}
+                                src={latestQrCode.qr_image_url}
                                 alt={`QR de acceso para ${guest.first_name} ${guest.last_name}`}
                                 width={104}
                                 height={104}
@@ -977,7 +1331,7 @@ export default function EventGuestsManager({ event }: EventGuestsManagerProps) {
                                 disabled={deliveryLoadingKey === `${guest.id}:whatsapp`}
                                 className="inline-flex items-center rounded-md border border-emerald-300 bg-emerald-100 px-3 py-2 text-sm font-medium text-emerald-800 hover:bg-emerald-200 disabled:cursor-not-allowed disabled:opacity-60"
                               >
-                                {deliveryLoadingKey === `${guest.id}:whatsapp` ? 'Enviando WhatsApp...' : 'Enviar WhatsApp'}
+                                {deliveryLoadingKey === `${guest.id}:whatsapp` ? 'Enviando WhatsApp...' : 'Enviar WhatsApp real'}
                               </button>
                               <Link
                                 href={buildInvitationPath(latestToken.token, `${guest.first_name} ${guest.last_name}`)}
@@ -999,7 +1353,7 @@ export default function EventGuestsManager({ event }: EventGuestsManagerProps) {
                                 onClick={() => openWhatsAppShare(guest, latestToken)}
                                 className="inline-flex items-center rounded-md border border-emerald-200 bg-white px-3 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-50"
                               >
-                                Compartir WhatsApp
+                                Compartir manualmente
                               </button>
                               <button
                                 type="button"
@@ -1041,6 +1395,14 @@ export default function EventGuestsManager({ event }: EventGuestsManagerProps) {
                             className="inline-flex items-center rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
                           >
                             Editar
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => removeGuest(guest)}
+                            disabled={guestRowActionLoadingId === guest.id}
+                            className="inline-flex items-center rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            Borrar
                           </button>
                         </div>
                             </>
@@ -1088,22 +1450,6 @@ export default function EventGuestsManager({ event }: EventGuestsManagerProps) {
                   onChange={handleGuestTypeInputChange}
                   className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                   placeholder="Notas internas para el equipo"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="guest-type-max-guests" className="block text-sm font-medium text-gray-700">
-                  Cupo sugerido
-                </label>
-                <input
-                  id="guest-type-max-guests"
-                  name="max_guests"
-                  type="number"
-                  min="1"
-                  value={guestTypeForm.max_guests}
-                  onChange={handleGuestTypeInputChange}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                  placeholder="Opcional"
                 />
               </div>
 
@@ -1190,22 +1536,6 @@ export default function EventGuestsManager({ event }: EventGuestsManagerProps) {
                 </p>
               </div>
 
-              <label className="flex items-start gap-3 rounded-lg border border-gray-200 p-4">
-                <input
-                  type="checkbox"
-                  name="requires_invitation"
-                  checked={guestTypeForm.requires_invitation}
-                  onChange={handleGuestTypeInputChange}
-                  className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <div>
-                  <span className="block text-sm font-medium text-gray-900">Requiere invitacion</span>
-                  <span className="mt-1 block text-sm text-gray-600">
-                    Activalo para categorias que no deberian ingresar sin validacion previa.
-                  </span>
-                </div>
-              </label>
-
               {guestTypeSubmitError && (
                 <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
                   Error al crear tipo: {guestTypeSubmitError}
@@ -1266,15 +1596,15 @@ export default function EventGuestsManager({ event }: EventGuestsManagerProps) {
                   id="guest-type-id"
                   name="guest_type_id"
                   required
-                  disabled={guestTypes.length === 0}
+                  disabled={visibleGuestTypes.length === 0}
                   value={selectedGuestTypeId}
                   onChange={handleGuestInputChange}
                   className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:bg-gray-100"
                 >
-                  {guestTypes.length === 0 ? (
+                  {visibleGuestTypes.length === 0 ? (
                     <option value="">Primero crea un tipo</option>
                   ) : (
-                    guestTypes.map((guestType) => (
+                    visibleGuestTypes.map((guestType) => (
                       <option key={guestType.id} value={guestType.id}>
                         {guestType.name}
                       </option>
@@ -1351,7 +1681,7 @@ export default function EventGuestsManager({ event }: EventGuestsManagerProps) {
 
               <button
                 type="submit"
-                disabled={guestSubmitting || guestTypes.length === 0}
+                disabled={guestSubmitting || visibleGuestTypes.length === 0}
                 className="inline-flex w-full items-center justify-center rounded-md bg-blue-600 px-4 py-3 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {guestSubmitting ? 'Guardando invitado...' : 'Crear invitado'}

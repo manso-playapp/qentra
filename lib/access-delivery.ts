@@ -1,5 +1,12 @@
 type DeliveryChannel = 'email' | 'whatsapp'
 
+type WhatsAppConfig = {
+  fromPhone?: string
+  messagingServiceSid?: string
+  contentSid?: string
+  allowFreeform?: boolean
+}
+
 export type AccessDeliveryPayload = {
   channel: DeliveryChannel
   recipient: string
@@ -8,6 +15,7 @@ export type AccessDeliveryPayload = {
   eventName: string
   invitationUrl: string
   expiresAt: string
+  whatsappConfig?: WhatsAppConfig
 }
 
 type DeliveryResult = {
@@ -111,10 +119,12 @@ async function sendWithResend(payload: AccessDeliveryPayload): Promise<DeliveryR
 async function sendWithTwilioWhatsApp(payload: AccessDeliveryPayload): Promise<DeliveryResult> {
   const accountSid = process.env.TWILIO_ACCOUNT_SID
   const authToken = process.env.TWILIO_AUTH_TOKEN
-  const from = process.env.TWILIO_WHATSAPP_FROM
-  const messagingServiceSid = process.env.TWILIO_MESSAGING_SERVICE_SID
-  const contentSid = process.env.TWILIO_WHATSAPP_CONTENT_SID
-  const allowFreeform = process.env.TWILIO_WHATSAPP_ALLOW_FREEFORM === 'true'
+  const from = payload.whatsappConfig?.fromPhone?.trim() || process.env.TWILIO_WHATSAPP_FROM
+  const messagingServiceSid =
+    payload.whatsappConfig?.messagingServiceSid?.trim() || process.env.TWILIO_MESSAGING_SERVICE_SID
+  const contentSid = payload.whatsappConfig?.contentSid?.trim() || process.env.TWILIO_WHATSAPP_CONTENT_SID
+  const allowFreeform =
+    payload.whatsappConfig?.allowFreeform ?? (process.env.TWILIO_WHATSAPP_ALLOW_FREEFORM === 'true')
 
   if (!accountSid || !authToken || (!from && !messagingServiceSid)) {
     throw new Error('Falta configurar credenciales base de Twilio para envio real de WhatsApp.')

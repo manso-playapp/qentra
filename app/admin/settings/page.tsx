@@ -105,7 +105,7 @@ const OPERATOR_ROLE_OPTIONS: Array<{
   label: string
 }> = [
   { value: 'admin', label: 'Admin' },
-  { value: 'door', label: 'Door' },
+  { value: 'door', label: 'Puerta' },
   { value: 'security_supervisor', label: 'Supervisor' },
 ]
 
@@ -114,10 +114,22 @@ function trimOptionalValue(value: string) {
   return trimmed ? trimmed : undefined
 }
 
+function formatChannelMode(mode: DeliveryProfile['channel_mode']) {
+  if (mode === 'hybrid') {
+    return 'Mixto'
+  }
+
+  if (mode === 'email') {
+    return 'Email'
+  }
+
+  return 'WhatsApp'
+}
+
 function HealthBadge({ ready }: { ready: boolean }) {
   return (
     <Badge variant={ready ? 'success' : 'warning'}>
-      {ready ? 'Listo' : 'Falta configurar'}
+      {ready ? 'Listo' : 'Pendiente'}
     </Badge>
   )
 }
@@ -631,13 +643,13 @@ export default function SettingsPage() {
 
               {operatorAccessEmailPayload && (
                 <StatusNotice tone="info">
-                  <p className="font-semibold">Link de acceso enviado</p>
+                  <p className="font-semibold">Enlace de acceso enviado</p>
                   <p className="mt-1">{operatorAccessEmailPayload.email}</p>
                   <p className="mt-3 text-sm">
-                    Proveedor: {operatorAccessEmailPayload.provider}
+                    Canal: {operatorAccessEmailPayload.provider}
                   </p>
                   <p className="mt-1 text-xs text-cyan-800">
-                    ID externo: {operatorAccessEmailPayload.external_id || 'No informado'}
+                    Referencia externa: {operatorAccessEmailPayload.external_id || 'No informada'}
                   </p>
                   <div className="mt-3 flex flex-wrap gap-3">
                     <Button
@@ -731,8 +743,8 @@ export default function SettingsPage() {
                           }}
                         >
                           {sendingAccessLinkId === operatorProfile.user_id
-                            ? 'Enviando link...'
-                            : 'Enviar link por email'}
+                            ? 'Enviando enlace...'
+                            : 'Enviar enlace por email'}
                         </Button>
                         <Button
                           type="button"
@@ -744,8 +756,8 @@ export default function SettingsPage() {
                           }}
                         >
                           {generatingAccessLinkId === operatorProfile.user_id
-                            ? 'Generando link...'
-                            : 'Generar link de acceso'}
+                            ? 'Generando enlace...'
+                            : 'Generar enlace de acceso'}
                         </Button>
                         <Button
                           type="button"
@@ -776,8 +788,8 @@ export default function SettingsPage() {
                           }}
                         >
                           {resettingPasswordId === operatorProfile.user_id
-                            ? 'Reseteando...'
-                            : 'Password temporal'}
+                            ? 'Generando clave...'
+                            : 'Clave temporal'}
                         </Button>
                       </div>
 
@@ -803,7 +815,7 @@ export default function SettingsPage() {
                   </CardTitle>
                   <CardDescription>Canales disponibles para asignar en eventos.</CardDescription>
                 </div>
-                <Badge variant="outline">{deliveryProfiles.length} perfiles</Badge>
+                <Badge variant="outline">{deliveryProfiles.length} canales</Badge>
               </CardHeader>
               <CardContent>
 
@@ -829,7 +841,7 @@ export default function SettingsPage() {
                           </p>
                         </div>
                         <div className="flex flex-wrap gap-2 text-xs font-medium">
-                          <Badge variant="info">{profile.channel_mode}</Badge>
+                          <Badge variant="info">{formatChannelMode(profile.channel_mode)}</Badge>
                           <Badge variant={profile.active ? 'success' : 'outline'}>
                             {profile.active ? 'Activo' : 'Inactivo'}
                           </Badge>
@@ -858,7 +870,7 @@ export default function SettingsPage() {
                     Ultimos envios
                   </CardTitle>
                   <CardDescription>
-                    Auditoria basica de envios reales por proveedor.
+                    Historial basico de envios reales por canal.
                   </CardDescription>
                 </div>
                 <Button type="button" variant="outline" size="sm" onClick={() => fetchDeliveryLogs()}>
@@ -888,12 +900,12 @@ export default function SettingsPage() {
                             {log.channel} · {log.recipient}
                           </p>
                           <p className="mt-1 text-sm text-muted-foreground">
-                            Event {log.event_id} · Guest {log.guest_id}
+                            Evento {log.event_id} · Invitado {log.guest_id}
                           </p>
                         </div>
                         <div className="flex flex-wrap gap-2 text-xs font-medium">
                           <Badge variant={log.status === 'sent' ? 'success' : 'danger'}>{log.status}</Badge>
-                          <Badge variant="outline">{log.provider || 'sin provider'}</Badge>
+                          <Badge variant="outline">{log.provider || 'sin canal'}</Badge>
                         </div>
                       </div>
 
@@ -919,7 +931,7 @@ export default function SettingsPage() {
                   Crear operador
                 </CardTitle>
                 <CardDescription className="text-slate-300">
-                  Alta de usuario en Supabase Auth y siembra de roles en `operator_profiles`.
+                  Alta de usuario con permisos para admin, puerta y supervision.
                 </CardDescription>
               </CardHeader>
 
@@ -953,7 +965,7 @@ export default function SettingsPage() {
                 </div>
 
                 <div>
-                  <Label htmlFor="operator-password" className="text-white">Password inicial</Label>
+                  <Label htmlFor="operator-password" className="text-white">Clave inicial</Label>
                   <Input
                     id="operator-password"
                     name="password"
@@ -962,7 +974,7 @@ export default function SettingsPage() {
                     value={operatorForm.password}
                     onChange={handleOperatorInputChange}
                     className="mt-2 border-white/10 bg-white/[0.06] text-white placeholder:text-slate-400"
-                    placeholder="Password temporal"
+                    placeholder="Clave temporal"
                   />
                 </div>
 
@@ -1045,7 +1057,7 @@ export default function SettingsPage() {
                     onChange={handleDeliveryInputChange}
                     className="mt-2"
                   >
-                    <option value="hybrid">Hibrido</option>
+                    <option value="hybrid">Mixto</option>
                     <option value="email">Email</option>
                     <option value="whatsapp">WhatsApp</option>
                   </Select>
@@ -1084,7 +1096,7 @@ export default function SettingsPage() {
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
-                    <Label htmlFor="from-email">From email</Label>
+                    <Label htmlFor="from-email">Email emisor</Label>
                     <Input
                       id="from-email"
                       name="from_email"
@@ -1096,7 +1108,7 @@ export default function SettingsPage() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="from-phone">From phone</Label>
+                    <Label htmlFor="from-phone">Telefono emisor</Label>
                     <Input
                       id="from-phone"
                       name="from_phone"

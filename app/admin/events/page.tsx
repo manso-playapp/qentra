@@ -151,6 +151,9 @@ export default function EventsPage() {
                     <Button asChild variant="warm">
                       <Link href={`/admin/events/${event.id}`}>Ver ficha</Link>
                     </Button>
+                    <Button asChild variant="secondary">
+                      <Link href={`/admin/events/${event.id}/edit`}>Editar</Link>
+                    </Button>
                     <Button asChild variant="outline">
                       <Link href={`/admin/events/${event.id}/guests`}>Invitados</Link>
                     </Button>

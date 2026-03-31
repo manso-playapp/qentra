@@ -29,8 +29,8 @@ export default async function TotemPage({ params }: TotemPageProps) {
     return (
       <main className="min-h-screen bg-[linear-gradient(180deg,#0f172a_0%,#111827_20%,#f8fafc_20%,#f8fafc_100%)] px-4 py-8 sm:px-6">
         <div className="mx-auto max-w-5xl rounded-[28px] border border-red-200 bg-white p-8 shadow-xl">
-          <p className="text-sm font-semibold uppercase tracking-[0.24em] text-red-600">Totem</p>
-          <h1 className="mt-4 text-3xl font-semibold text-slate-900">No se pudo abrir el totem</h1>
+          <p className="text-sm font-semibold uppercase tracking-[0.24em] text-red-600">Pantalla publica</p>
+          <h1 className="mt-4 text-3xl font-semibold text-slate-900">No se pudo abrir la pantalla de bienvenida</h1>
           <p className="mt-3 text-sm leading-6 text-slate-600">
             Verifica la conexion con Supabase y vuelve a intentarlo.
           </p>
