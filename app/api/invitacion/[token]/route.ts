@@ -2,7 +2,7 @@ import QRCode from 'qrcode'
 import { buildGuestAccessQrPayload } from '@/lib/guest-access'
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
 import { buildGuestFullName } from '@/lib/guest-schema'
-import { parseInvitationDetails, serializeInvitationDetails } from '@/lib/invitation-response'
+import { serializeInvitationDetails } from '@/lib/invitation-response'
 
 export const runtime = 'nodejs'
 
@@ -59,7 +59,7 @@ export async function POST(request: Request, context: RouteContext) {
 
     const { data: guest, error: guestError } = await adminClient
       .from('guests')
-      .select('id, event_id, status, notes')
+      .select('id, event_id, status, notes, payment_status')
       .eq('id', invitationToken.guest_id)
       .maybeSingle()
 
@@ -92,9 +92,7 @@ export async function POST(request: Request, context: RouteContext) {
     const companionNames = body.companionNames?.trim() || ''
     const dietaryRequirements = body.dietaryRequirements?.trim() || ''
     const observations = body.observations?.trim() || ''
-    const existingInvitationDetails = parseInvitationDetails(guest.notes)
-    const paymentStatus =
-      body.paymentStatus ?? existingInvitationDetails.paymentStatus ?? 'not_required'
+    const paymentStatus = body.paymentStatus ?? guest.payment_status ?? 'not_required'
 
     if (!firstName || !lastName) {
       return Response.json({ error: 'Completa nombre y apellido.' }, { status: 400 })
@@ -116,7 +114,6 @@ export async function POST(request: Request, context: RouteContext) {
       dietaryRequirements,
       companionNames,
       observations,
-      paymentStatus,
     })
 
     const nextGuestStatus =
@@ -136,6 +133,7 @@ export async function POST(request: Request, context: RouteContext) {
         phone,
         document_number: attendanceResponse === 'confirmed' ? dni : null,
         notes: specialRequests || null,
+        payment_status: paymentStatus,
         status: nextGuestStatus,
         updated_at: new Date().toISOString(),
       })

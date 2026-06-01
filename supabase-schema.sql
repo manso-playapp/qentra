@@ -1,6 +1,12 @@
 -- Qentra Database Schema
 -- Ejecutar en Supabase SQL Editor
 
+-- paymentStatus migrado de notes (texto serializado) a columna propia.
+-- Migration: add_payment_status_to_guests (2026-06-01)
+ALTER TABLE guests
+  ADD COLUMN IF NOT EXISTS payment_status text NOT NULL DEFAULT 'not_required'
+  CHECK (payment_status IN ('not_required','pending','approved'));
+
 -- Enable RLS on all tables
 ALTER TABLE events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE event_branding ENABLE ROW LEVEL SECURITY;

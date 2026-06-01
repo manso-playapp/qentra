@@ -1,6 +1,6 @@
 import QRCode from 'qrcode'
 import { buildGuestAccessQrPayload } from '@/lib/guest-access'
-import { isInvitationAccessReady, parseInvitationDetails } from '@/lib/invitation-response'
+import { isInvitationAccessReady } from '@/lib/invitation-response'
 import { ensureAuthorizedApiAccess } from '@/lib/operator-auth'
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
 
@@ -62,7 +62,7 @@ export async function POST(request: Request) {
     const expiresAt = buildInvitationExpiry(body.eventDate, body.eventStartTime)
     const { data: guestData, error: guestError } = await adminClient
       .from('guests')
-      .select('status, notes')
+      .select('status, notes, payment_status')
       .eq('id', body.guestId)
       .single()
 
@@ -98,8 +98,10 @@ export async function POST(request: Request) {
     if (revokeQrError) {
       throw revokeQrError
     }
-    const invitationDetails = parseInvitationDetails(guestData?.notes)
-    const accessReady = isInvitationAccessReady(guestData?.status, invitationDetails.paymentStatus)
+    const accessReady = isInvitationAccessReady(
+      guestData?.status,
+      (guestData?.payment_status ?? 'not_required') as 'not_required' | 'pending' | 'approved'
+    )
     let qrData = null
 
     if (accessReady) {

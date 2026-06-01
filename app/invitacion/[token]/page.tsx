@@ -102,7 +102,7 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
 
   const { data: guest } = await supabase
     .from('guests')
-    .select('id, event_id, first_name, last_name, email, phone, status, document_number, notes')
+    .select('id, event_id, first_name, last_name, email, phone, status, document_number, notes, payment_status')
     .eq('id', invitationToken.guest_id)
     .maybeSingle()
 
@@ -121,6 +121,10 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
       ])
     : [{ data: null }, { data: null }]
   const invitationDetails = parseInvitationDetails(guest?.notes)
+  const paymentStatus = (guest?.payment_status ?? 'not_required') as
+    | 'not_required'
+    | 'pending'
+    | 'approved'
 
   const fallbackGuestName = [guest?.first_name, guest?.last_name].filter(Boolean).join(' ').trim()
   const guestDisplayName = resolvedSearchParams?.guest?.trim() || fallbackGuestName
@@ -136,7 +140,7 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
   const invitationResponseForForm =
     invitationResponse === 'checked_in' ? 'confirmed' : invitationResponse
 
-  const accessReady = isInvitationAccessReady(guest?.status, invitationDetails.paymentStatus)
+  const accessReady = isInvitationAccessReady(guest?.status, paymentStatus)
   const qrPayload = buildGuestAccessQrPayload({
     eventId: guest?.event_id,
     eventSlug: event?.slug,
@@ -190,7 +194,7 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
         label: 'Gestion en revision',
         title: 'Tu acceso aun no esta listo para ingresar',
         detail:
-          invitationDetails.paymentStatus === 'pending'
+          paymentStatus === 'pending'
             ? 'Tu asistencia fue registrada, pero el acceso final quedara habilitado cuando se confirme el pago.'
             : 'Tu asistencia fue registrada. Falta una validacion final para habilitar el QR de ingreso.',
         tone: 'border-amber-200 bg-amber-50 text-amber-950',
