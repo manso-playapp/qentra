@@ -6,6 +6,7 @@ type AccessCode =
   | 'ok'
   | 'not_ready'
   | 'cancelled'
+  | 'duplicate'
   | 'expired'
   | 'already_checked_in'
   | 'outside_window'
@@ -166,6 +167,15 @@ export function evaluateGuestAccess({
       code: 'cancelled',
       title: 'Acceso bloqueado',
       detail: `${guestFullName} figura como invitado cancelado.`,
+    }
+  }
+
+  if (guest.status === 'duplicate') {
+    return {
+      decision: 'deny',
+      code: 'duplicate',
+      title: 'Acceso bloqueado',
+      detail: `${guestFullName} figura como invitado duplicado.`,
     }
   }
 

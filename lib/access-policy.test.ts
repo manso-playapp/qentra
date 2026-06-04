@@ -67,6 +67,12 @@ describe('evaluateGuestAccess — guest status branches', () => {
     expect(result.code).toBe('cancelled')
   })
 
+  it('denies a duplicate guest at the door', () => {
+    const result = evaluateGuestAccess(withStatus('duplicate'))
+    expect(result.decision).toBe('deny')
+    expect(result.code).toBe('duplicate')
+  })
+
   it('allows when there is no guest type (no time restriction)', () => {
     const result = evaluateGuestAccess(withStatus('enabled', { guestType: null }))
     expect(result.decision).toBe('allow')
