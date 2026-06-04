@@ -1,6 +1,6 @@
 import type { Guest, GuestWithType } from '@/types'
 
-type DbGuestStatus =
+export type DbGuestStatus =
   | 'preinvited'
   | 'link_sent'
   | 'registered'

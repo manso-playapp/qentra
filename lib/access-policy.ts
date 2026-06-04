@@ -1,4 +1,5 @@
 import type { Event, Guest, GuestType, InvitationToken } from '@/types'
+import type { DbGuestStatus } from '@/lib/guest-schema'
 
 type AccessDecision = 'allow' | 'warn' | 'deny'
 type AccessCode =
@@ -18,7 +19,14 @@ type EvaluatedAccess = {
 
 type EvaluateGuestAccessInput = {
   event: Pick<Event, 'event_date' | 'start_time'>
-  guest: Pick<Guest, 'first_name' | 'last_name' | 'status'>
+  // status arrives in either vocabulary depending on the call path: the domain
+  // value (`Guest['status']`, post-normalizeGuestStatus) or the raw DB value
+  // (`DbGuestStatus`, e.g. when the caller passes an un-normalized row). The
+  // union is the honest input contract and lets us branch on both without casts.
+  // Reconciling these vocabularies upstream is tracked as QEN-007.
+  guest: Pick<Guest, 'first_name' | 'last_name'> & {
+    status: Guest['status'] | DbGuestStatus
+  }
   guestType?: Pick<
     GuestType,
     | 'name'
@@ -140,9 +148,9 @@ export function evaluateGuestAccess({
 
   if (
     guest.status === 'pending' ||
-    (guest.status as string) === 'preinvited' ||
-    (guest.status as string) === 'link_sent' ||
-    (guest.status as string) === 'registered'
+    guest.status === 'preinvited' ||
+    guest.status === 'link_sent' ||
+    guest.status === 'registered'
   ) {
     return {
       decision: 'deny',
@@ -152,7 +160,7 @@ export function evaluateGuestAccess({
     }
   }
 
-  if (guest.status === 'cancelled' || (guest.status as string) === 'rejected') {
+  if (guest.status === 'cancelled' || guest.status === 'rejected') {
     return {
       decision: 'deny',
       code: 'cancelled',
