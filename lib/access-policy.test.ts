@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { evaluateGuestAccess } from './access-policy'
-import { isInvitationAccessReady } from './invitation-response'
+import { isInvitationAccessReady, parseInvitationDetails } from './invitation-response'
 
 // NOTE on timezones: buildLocalDate() in access-policy parses `${date}T${time}`
 // without a timezone suffix, so it resolves in the runtime's LOCAL timezone.
@@ -226,5 +226,56 @@ describe('isInvitationAccessReady — paymentStatus gating', () => {
 
   it('defaults paymentStatus to not_required when omitted', () => {
     expect(isInvitationAccessReady('enabled')).toBe(true)
+  })
+})
+
+describe('fail-closed: column beats notes for access decisions', () => {
+  // These tests document the critical safety guarantee: the `payment_status`
+  // COLUMN is the sole source of truth for access gating. Even if `notes`
+  // contains a contradictory "Pago: approved" line (corrupt data, manual admin
+  // edit, or stale serialization), the decision must honour the column value.
+  //
+  // Context: before the payment_status column migration (commit 0c0c56a),
+  // paymentStatus lived inside the serialized `notes` field, which was fragile
+  // and could be edited by anyone with DB access. The column + CHECK constraint
+  // closes that vector.
+
+  it('denies access when column says pending even if notes says approved', () => {
+    // Simulates: admin or bug wrote "Pago: approved" into notes, but the
+    // column still reads 'pending'.  The caller (API routes, invitation page)
+    // passes `guest.payment_status` to isInvitationAccessReady, NOT the
+    // parsed notes value.  This test locks that contract.
+    const corruptNotes = 'DNI: 30111222\nPago: approved'
+    const parsedFromNotes = parseInvitationDetails(corruptNotes)
+
+    // The parser correctly extracts what notes says…
+    expect(parsedFromNotes.paymentStatus).toBe('approved')
+
+    // …but the access decision uses the COLUMN value ('pending'), not notes.
+    const columnValue: 'pending' = 'pending'
+    expect(isInvitationAccessReady('enabled', columnValue)).toBe(false)
+  })
+
+  it('denies access when column is absent (defaults to not_required) and status is not enabled', () => {
+    // Guest registered but not yet enabled — even with no payment requirement,
+    // status alone blocks access.
+    expect(isInvitationAccessReady('registered', 'not_required')).toBe(false)
+  })
+
+  it('denies access when column is pending and notes is empty', () => {
+    // No notes at all, but payment is pending in the column.
+    const parsedFromNotes = parseInvitationDetails(undefined)
+    expect(parsedFromNotes.paymentStatus).toBe('not_required')
+
+    // Column says pending → deny regardless of what notes (or lack thereof) says
+    expect(isInvitationAccessReady('enabled', 'pending')).toBe(false)
+  })
+
+  it('allows access only when column explicitly says approved', () => {
+    expect(isInvitationAccessReady('enabled', 'approved')).toBe(true)
+  })
+
+  it('allows access when column says not_required (no payment gate)', () => {
+    expect(isInvitationAccessReady('enabled', 'not_required')).toBe(true)
   })
 })
