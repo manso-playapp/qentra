@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { ExternalLink, Save } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import ImageUpload from '@/components/admin/ImageUpload'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -142,41 +143,35 @@ export default function BrandingForm({ eventId, eventName, branding }: BrandingF
                 </div>
               </div>
 
-              <div>
-                <Label htmlFor="logo_url">Logo (URL)</Label>
-                <Input
-                  id="logo_url"
-                  value={form.logo_url}
-                  onChange={(event) => update('logo_url', event.target.value)}
-                  placeholder="https://.../logo.png"
-                  className="mt-2"
-                />
-              </div>
+              <ImageUpload
+                label="Logo"
+                hint="PNG, JPG, WEBP o SVG. Hasta 5 MB."
+                value={form.logo_url}
+                onChange={(url) => update('logo_url', url)}
+                bucket="event-assets"
+                folder={eventId}
+                fileLabel="logo"
+              />
 
-              <div>
-                <Label htmlFor="cover_image_url">Portada de la invitación (URL)</Label>
-                <Input
-                  id="cover_image_url"
-                  value={form.cover_image_url}
-                  onChange={(event) => update('cover_image_url', event.target.value)}
-                  placeholder="https://.../portada.jpg"
-                  className="mt-2"
-                />
-              </div>
+              <ImageUpload
+                label="Portada de la invitación"
+                hint="Se ve de fondo en la cabecera de la invitación."
+                value={form.cover_image_url}
+                onChange={(url) => update('cover_image_url', url)}
+                bucket="event-assets"
+                folder={eventId}
+                fileLabel="cover"
+              />
 
-              <div>
-                <Label htmlFor="background_image_url">Fondo del tótem (URL)</Label>
-                <Input
-                  id="background_image_url"
-                  value={form.background_image_url}
-                  onChange={(event) => update('background_image_url', event.target.value)}
-                  placeholder="https://.../fondo.jpg"
-                  className="mt-2"
-                />
-                <p className="mt-2 text-xs leading-5 text-muted-foreground">
-                  Si lo dejás vacío, el tótem usa la portada de la invitación.
-                </p>
-              </div>
+              <ImageUpload
+                label="Fondo del tótem"
+                hint="Si lo dejás vacío, el tótem usa la portada de la invitación."
+                value={form.background_image_url}
+                onChange={(url) => update('background_image_url', url)}
+                bucket="event-assets"
+                folder={eventId}
+                fileLabel="background"
+              />
             </CardContent>
           </Card>
 
