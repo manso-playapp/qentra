@@ -6,6 +6,10 @@ import { getSupabaseAdminClient } from '@/lib/supabase-admin'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import type { Event, GuestType, GuestWithType } from '@/types'
 
+export const metadata = {
+  title: 'Invitados',
+}
+
 type EventGuestsPageProps = {
   params: Promise<{ id: string }>
 }

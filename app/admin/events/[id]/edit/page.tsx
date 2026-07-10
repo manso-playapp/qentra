@@ -4,6 +4,10 @@ import EditEventForm from '@/components/admin/EditEventForm'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import type { Event } from '@/types'
 
+export const metadata = {
+  title: 'Editar',
+}
+
 type EditEventPageProps = {
   params: Promise<{ id: string }>
 }

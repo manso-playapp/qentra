@@ -15,7 +15,10 @@ const fraunces = Fraunces({
 })
 
 export const metadata: Metadata = {
-  title: 'Qentra',
+  title: {
+    default: 'Qentra',
+    template: '%s · Qentra',
+  },
   description: 'Event management platform',
 }
 

@@ -7,6 +7,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import type { DeliveryProfile, Event, EventBranding, GuestType } from '@/types'
 
+export const metadata = {
+  title: 'Detalle',
+}
+
 type EventDetailPageProps = {
   params: Promise<{ id: string }>
 }

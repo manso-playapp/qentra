@@ -1,6 +1,10 @@
 import Link from 'next/link'
 import AdminLayout from '@/components/admin/AdminLayout'
 
+export const metadata = {
+  title: 'Invitados',
+}
+
 export default function GuestsPage() {
   return (
     <AdminLayout>

@@ -5,6 +5,10 @@ import { sanitizeNextPath } from '@/lib/operator-auth'
 import { isMissingAuthSessionError } from '@/lib/supabase-auth-errors'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 
+export const metadata = {
+  title: 'Acceso',
+}
+
 type AccessPageProps = {
   searchParams: Promise<{
     error?: string

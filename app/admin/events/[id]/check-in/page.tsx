@@ -4,6 +4,10 @@ import EventCheckinManager from '@/components/admin/EventCheckinManager'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import type { Event } from '@/types'
 
+export const metadata = {
+  title: 'Check-in',
+}
+
 type EventCheckinPageProps = {
   params: Promise<{ id: string }>
 }

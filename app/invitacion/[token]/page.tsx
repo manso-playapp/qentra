@@ -9,6 +9,10 @@ import { isInvitationAccessReady, parseInvitationDetails } from '@/lib/invitatio
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 
+export const metadata = {
+  title: 'Invitación',
+}
+
 type InvitationPageProps = {
   params: Promise<{ token: string }>
   searchParams?: Promise<{ guest?: string }>

@@ -2,6 +2,10 @@ import type { ReactNode } from 'react'
 import RoleAccessDeniedNotice from '@/components/auth/RoleAccessDeniedNotice'
 import { requireAuthorizedPageAccess } from '@/lib/operator-auth'
 
+export const metadata = {
+  title: 'Panel',
+}
+
 type AdminProtectedLayoutProps = {
   children: ReactNode
 }
