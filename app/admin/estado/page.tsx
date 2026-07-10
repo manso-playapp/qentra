@@ -133,8 +133,8 @@ export default function MvpStatusPage() {
                   </h2>
                   <p className="mt-4 text-base leading-7 text-muted-foreground">
                     {summary.done} features funcionando, {summary.partial} a medias y {summary.todo} sin
-                    empezar. Lo que falta para cerrar es acotado: foto del invitado, editor de branding y
-                    los estados del totem.
+                    empezar. El alcance del MVP está cerrado: branding, foto del invitado y tótem
+                    quedaron listos. Lo que queda es probarlo end-to-end y pulir los dos partials.
                   </p>
                 </div>
               </div>

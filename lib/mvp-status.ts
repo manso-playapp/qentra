@@ -53,11 +53,10 @@ export const MVP_FEATURES: MvpFeature[] = [
     id: 'branding',
     title: 'Branding del evento',
     module: 'admin',
-    status: 'partial',
+    status: 'done',
     detail:
-      'El branding se lee y se renderiza en invitacion, totem y detalle del evento. El modelo y el consumo ya existen.',
-    gap: 'No hay UI ni API para editarlo: hoy hay que cargar event_branding a mano en la base.',
-    evidence: ['app/admin/events/[id]/page.tsx', 'app/totem/[id]/page.tsx'],
+      'Editor con colores, logo, portada y fondo (subida a Storage) y los mensajes del totem. Se aplica de verdad en invitacion y totem, con preview de la invitacion.',
+    evidence: ['components/admin/BrandingForm.tsx', 'app/api/event-branding/route.ts', 'app/api/uploads/route.ts'],
   },
   {
     id: 'alta-invitados',
@@ -99,9 +98,10 @@ export const MVP_FEATURES: MvpFeature[] = [
     id: 'foto',
     title: 'Foto del invitado',
     module: 'guest',
-    status: 'todo',
-    detail: 'Sin implementar. El bucket guest-photos existe en el SQL pero no lo consume nadie.',
-    gap: 'Falta el upload en el formulario de invitacion, el guardado en Storage y el campo en el modelo de invitado.',
+    status: 'done',
+    detail:
+      'El invitado sube su foto (o selfie con camara) al confirmar. Subida autorizada por token, guardada en el bucket privado guest-photos, visible en el admin y en el spotlight del totem.',
+    evidence: ['app/api/invitacion/[token]/photo/route.ts', 'components/invitation/InvitationResponseForm.tsx'],
   },
   {
     id: 'qr',
@@ -118,7 +118,7 @@ export const MVP_FEATURES: MvpFeature[] = [
     module: 'checkin',
     status: 'done',
     detail:
-      'Escaneo por camara con jsQR, mas ingreso manual del token. Disponible en el panel y en la vista de puerta.',
+      'Escaneo por camara con jsQR mas ingreso manual del token. El registro ahora SI persiste: el codigo escribia contra columnas inexistentes y ningun check-in se guardaba (tabla siempre vacia). Alineado al esquema real.',
     evidence: ['components/admin/EventCheckinManager.tsx', 'app/puerta/[id]/page.tsx'],
   },
   {
@@ -154,18 +154,17 @@ export const MVP_FEATURES: MvpFeature[] = [
     module: 'checkin',
     status: 'done',
     detail:
-      'Actualiza el estado del invitado, inserta en checkins con el metodo usado y consume el token de invitacion.',
-    evidence: ['components/admin/EventCheckinManager.tsx'],
+      'Actualiza el estado del invitado, inserta en checkins (result, checked_in_at, metodo) y consume el token. Verificado insert+lectura contra la base real.',
+    evidence: ['components/admin/EventCheckinManager.tsx', 'lib/hooks.ts'],
   },
   {
     id: 'totem',
     title: 'Totem: idle y respuesta visual',
     module: 'totem',
-    status: 'partial',
+    status: 'done',
     detail:
-      'La pantalla idle con branding funciona, muestra el ultimo ingreso aprobado y vuelve sola a idle a los 6 segundos.',
-    gap: 'Faltan los estados validando y error: hoy el totem es un display pasivo que hace polling, no valida ni muestra rechazos.',
-    evidence: ['app/totem/[id]/page.tsx', 'components/admin/EventCheckinManager.tsx'],
+      'Pantalla de bienvenida con branding; muestra el ingreso aprobado con la FOTO del invitado al instante via Realtime (con polling de respaldo) y vuelve sola a idle. Por diseno solo celebra aprobaciones; los rechazos quedan en la puerta.',
+    evidence: ['app/api/events/[id]/checkin-feed/route.ts', 'components/admin/EventCheckinManager.tsx'],
   },
 ]
 
@@ -200,6 +199,12 @@ export const BEYOND_MVP: { title: string; detail: string }[] = [
 /** Deuda conocida. No bloquea el MVP, pero conviene tenerla a la vista. */
 export const TECH_DEBT: { title: string; detail: string; severity: 'alta' | 'media' | 'baja' }[] = [
   {
+    title: 'Tipos TS escritos contra un esquema imaginado',
+    detail:
+      'branding y check-in declaraban columnas inexistentes (banner_url; checkin_time/checkin_method): rompian en runtime sin que el build lo viera. Ya corregidos, pero conviene verificar el resto de los tipos contra las columnas reales de Supabase de una.',
+    severity: 'alta',
+  },
+  {
     title: 'supabase-schema.sql no crea las tablas nucleo',
     detail:
       'Solo aplica RLS y policies: asume que las 8 tablas ya existen en Supabase. Levantar el proyecto de cero hoy no es reproducible.',
@@ -227,25 +232,25 @@ export const TECH_DEBT: { title: string; detail: string; severity: 'alta' | 'med
   },
 ]
 
-/** Lo minimo para poder declarar el MVP cerrado. */
+/** Con el alcance del MVP cerrado, lo que sigue: probarlo de verdad y pulir. */
 export const NEXT_STEPS: { order: number; title: string; detail: string; featureId: string }[] = [
   {
     order: 1,
-    title: 'Foto del invitado',
-    detail: 'Es lo unico del MVP que no tiene una sola linea escrita. Upload en la invitacion y guardado en Storage.',
-    featureId: 'foto',
+    title: 'Prueba real end-to-end en produccion',
+    detail: 'Cargar invitado, confirmar con foto, escanear el QR en la puerta y ver el spotlight en el totem. Cada pieza se verifico contra la base, pero el flujo completo con camara nunca se corrio (el check-in estaba roto hasta ahora).',
+    featureId: 'checkin-web',
   },
   {
     order: 2,
-    title: 'Editor de branding',
-    detail: 'El consumo ya existe en toda la app. Falta solo el formulario y la API para escribir event_branding.',
-    featureId: 'branding',
+    title: 'Habilitar Realtime en checkins',
+    detail: 'Agregar la tabla checkins a la publicacion supabase_realtime para que el spotlight del totem sea instantaneo. Sin esto funciona igual, pero con la demora del polling.',
+    featureId: 'totem',
   },
   {
     order: 3,
-    title: 'Estados validando y error en el totem',
-    detail: 'Convertir el display pasivo en una pantalla que refleje el resultado de la validacion.',
-    featureId: 'totem',
+    title: 'Aforo por categoria y exponer los 7 estados',
+    detail: 'Los dos partials que no bloquean el MVP: control de cupo por categoria en el check-in, y mostrar link_sent/duplicate en el panel.',
+    featureId: 'validacion-categoria',
   },
 ]
 
