@@ -29,30 +29,8 @@ export default function EventsPage() {
       <div className="px-4 py-6 sm:px-0">
         <Card className="bg-admin-panel">
           <CardContent className="p-8">
-            <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-              <div className="max-w-2xl">
-                <p className="text-[11px] uppercase tracking-[0.34em] text-muted-foreground">
-                  Agenda operativa
-                </p>
-                <h2 className="admin-heading mt-3 text-5xl leading-none text-foreground">
-                  Eventos listos para producir, recibir y controlar.
-                </h2>
-                <p className="mt-4 text-base leading-7 text-muted-foreground">
-                  El tablero de agenda queda sobre la nueva base visual del sistema: más consistente, menos manual y preparado para branding por evento donde haga falta.
-                </p>
-              </div>
-
-              <div className="flex flex-wrap gap-3">
-                <Button asChild variant="outline">
-                  <Link href="/admin/settings">Revisar canales</Link>
-                </Button>
-                <Button asChild>
-                  <Link href="/admin/events/new">Nuevo evento</Link>
-                </Button>
-              </div>
-            </div>
-
-            <div className="mt-8 grid gap-4 md:grid-cols-3">
+            {/* El titulo y el CTA viven en el header del layout: aca solo el pulso de la agenda. */}
+            <div className="grid gap-4 md:grid-cols-3">
             {[
               { label: 'Eventos activos', value: String(activeEvents), tone: 'bg-emerald-50 text-emerald-900' },
               { label: 'Eventos cancelados', value: String(cancelledEvents), tone: 'bg-rose-50 text-rose-900' },

@@ -2,9 +2,8 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { CalendarRange, LayoutDashboard, Settings2, Sparkles, Users2 } from 'lucide-react'
+import { CalendarRange, GaugeCircle, LayoutDashboard, Settings2, Sparkles } from 'lucide-react'
 import type { ReactNode } from 'react'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
@@ -27,16 +26,16 @@ const ADMIN_NAV_ITEMS = [
     icon: CalendarRange,
   },
   {
-    href: '/admin/guests',
-    label: 'Invitados',
-    description: 'Directorios y acceso',
-    icon: Users2,
-  },
-  {
     href: '/admin/settings',
     label: 'Configuracion',
     description: 'Canales y usuarios',
     icon: Settings2,
+  },
+  {
+    href: '/admin/estado',
+    label: 'Estado del MVP',
+    description: 'Avance del producto',
+    icon: GaugeCircle,
   },
 ] as const
 
@@ -48,32 +47,92 @@ function isNavItemActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`)
 }
 
-function getPageEyebrow(pathname: string) {
+type PageHeader = {
+  eyebrow: string
+  title: string
+  description: string
+  /** Acciones del header. Una seccion nunca ofrece la accion que ya estas ejecutando. */
+  actions: { href: string; label: string; variant?: 'outline' }[]
+}
+
+// El h1 tiene que decir donde estas parado. Antes era siempre "Centro de
+// operaciones" y el titulo real quedaba enterrado en la primera Card.
+function getPageHeader(pathname: string): PageHeader {
+  if (pathname.includes('/branding')) {
+    const eventId = pathname.split('/')[3]
+    return {
+      eyebrow: 'Ficha del evento',
+      title: 'Branding del evento',
+      description: 'Colores, logo, portada y los textos que ven el invitado y el tótem.',
+      actions: [{ href: `/admin/events/${eventId}`, label: 'Volver al evento', variant: 'outline' }],
+    }
+  }
+
   if (pathname.startsWith('/admin/events/new')) {
-    return 'Nuevo evento'
+    return {
+      eyebrow: 'Agenda operativa',
+      title: 'Nuevo evento',
+      description: 'Definí fecha, lugar, cupo y canal de envío. Después vas a poder cargar invitados y emitir accesos.',
+      actions: [{ href: '/admin/events', label: 'Volver a eventos', variant: 'outline' }],
+    }
   }
 
   if (pathname.startsWith('/admin/events/')) {
-    return 'Ficha del evento'
+    return {
+      eyebrow: 'Ficha del evento',
+      title: 'Evento',
+      description: 'Invitados, accesos, check-in y branding de este evento.',
+      actions: [{ href: '/admin/events', label: 'Volver a eventos', variant: 'outline' }],
+    }
   }
 
   if (pathname.startsWith('/admin/events')) {
-    return 'Agenda operativa'
+    return {
+      eyebrow: 'Agenda operativa',
+      title: 'Eventos',
+      description: 'Todos los eventos cargados, con su estado y su avance de acreditación.',
+      actions: [{ href: '/admin/events/new', label: 'Nuevo evento' }],
+    }
   }
 
   if (pathname.startsWith('/admin/settings')) {
-    return 'Canales y permisos'
+    return {
+      eyebrow: 'Canales y permisos',
+      title: 'Configuración',
+      description: 'Operadores, roles, proveedores de envío y salud de los canales.',
+      actions: [],
+    }
+  }
+
+  if (pathname.startsWith('/admin/estado')) {
+    return {
+      eyebrow: 'Producto',
+      title: 'Estado del MVP',
+      description: 'Qué está construido, qué está a medias y qué falta para cerrar el alcance.',
+      actions: [],
+    }
   }
 
   if (pathname.startsWith('/admin/guests')) {
-    return 'Recepcion y directorios'
+    return {
+      eyebrow: 'Recepción',
+      title: 'Invitados',
+      description: 'Los invitados se gestionan dentro de cada evento.',
+      actions: [{ href: '/admin/events', label: 'Ir a eventos', variant: 'outline' }],
+    }
   }
 
-  return 'Backoffice operativo'
+  return {
+    eyebrow: 'Backoffice operativo',
+    title: 'Centro de operaciones',
+    description: 'El pulso de tu próximo evento: invitados cargados, accesos emitidos y gente que ya entró.',
+    actions: [{ href: '/admin/events/new', label: 'Nuevo evento' }],
+  }
 }
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname()
+  const header = getPageHeader(pathname)
 
   return (
     <div className="admin-shell">
@@ -98,25 +157,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 <p className="mt-4 text-sm leading-6 text-slate-300">
                   La misma base de sistema para operar agenda, delivery y acceso sin quedar atados a una sola superficie visual.
                 </p>
-              </CardContent>
-            </Card>
-
-            <Card className="mt-6 border-white/10 bg-white/[0.045] text-white shadow-none">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-[11px] uppercase tracking-[0.3em] text-sky-200/70">
-                      Estado actual
-                    </p>
-                    <p className="mt-3 text-sm font-semibold text-white">Base operativa activa</p>
-                    <p className="mt-1 text-xs leading-5 text-slate-300">
-                      Admin, puerta, totem, invitaciones y delivery listos para trabajo real.
-                    </p>
-                  </div>
-                  <Badge variant="success" className="border-emerald-300/15 bg-emerald-300/15 text-emerald-100">
-                    Activo
-                  </Badge>
-                </div>
               </CardContent>
             </Card>
 
@@ -176,24 +216,25 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
               <div>
                 <p className="text-[11px] uppercase tracking-[0.32em] text-muted-foreground">
-                  {getPageEyebrow(pathname)}
+                  {header.eyebrow}
                 </p>
                 <h1 className="admin-heading mt-3 text-4xl leading-none text-foreground">
-                  Centro de operaciones
+                  {header.title}
                 </h1>
                 <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">
-                  Sistema visual unificado para operar eventos y, cuando corresponda, vestir cada experiencia con branding propio sin romper consistencia.
+                  {header.description}
                 </p>
               </div>
 
-              <div className="flex flex-wrap gap-3">
-                <Button asChild>
-                  <Link href="/admin/events/new">Nuevo evento</Link>
-                </Button>
-                <Button asChild variant="outline">
-                  <Link href="/admin/settings">Revisar entorno</Link>
-                </Button>
-              </div>
+              {header.actions.length > 0 && (
+                <div className="flex flex-wrap gap-3">
+                  {header.actions.map((action) => (
+                    <Button key={action.href} asChild variant={action.variant}>
+                      <Link href={action.href}>{action.label}</Link>
+                    </Button>
+                  ))}
+                </div>
+              )}
             </div>
           </header>
 
