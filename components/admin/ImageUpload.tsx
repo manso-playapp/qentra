@@ -11,10 +11,14 @@ type ImageUploadProps = {
   hint?: string
   value: string
   onChange: (url: string) => void
-  bucket: 'event-assets' | 'guest-photos'
-  folder: string
-  /** Identifica el archivo dentro de la carpeta (ej. 'logo', 'cover'). */
-  fileLabel: string
+  /** Endpoint de subida. Por defecto la API admin; el invitado usa la ruta por token. */
+  uploadUrl?: string
+  /** Campos extra que espera el endpoint (bucket/folder/label para /api/uploads). */
+  fields?: Record<string, string>
+  /** 'user' abre la camara frontal en mobile (util para selfie del invitado). */
+  capture?: 'user' | 'environment'
+  /** 'round' para avatares (foto de persona); 'square' por defecto. */
+  shape?: 'round' | 'square'
 }
 
 export default function ImageUpload({
@@ -22,9 +26,10 @@ export default function ImageUpload({
   hint,
   value,
   onChange,
-  bucket,
-  folder,
-  fileLabel,
+  uploadUrl = '/api/uploads',
+  fields = {},
+  capture,
+  shape = 'square',
 }: ImageUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
@@ -36,11 +41,11 @@ export default function ImageUpload({
     try {
       const body = new FormData()
       body.append('file', file)
-      body.append('bucket', bucket)
-      body.append('folder', folder)
-      body.append('label', fileLabel)
+      for (const [key, fieldValue] of Object.entries(fields)) {
+        body.append(key, fieldValue)
+      }
 
-      const response = await fetch('/api/uploads', { method: 'POST', body })
+      const response = await fetch(uploadUrl, { method: 'POST', body })
       const payload = (await response.json().catch(() => null)) as
         | { data?: { url: string }; error?: string }
         | null
@@ -63,7 +68,11 @@ export default function ImageUpload({
       <Label>{label}</Label>
 
       <div className="mt-2 flex items-center gap-4">
-        <div className="flex size-20 flex-none items-center justify-center overflow-hidden rounded-2xl border border-border bg-white/70">
+        <div
+          className={`flex size-20 flex-none items-center justify-center overflow-hidden border border-border bg-white/70 ${
+            shape === 'round' ? 'rounded-full' : 'rounded-2xl'
+          }`}
+        >
           {value ? (
             // Las URLs vienen de Storage (publicas o firmadas), fuera del config de next/image.
             // eslint-disable-next-line @next/next/no-img-element
@@ -103,6 +112,7 @@ export default function ImageUpload({
         ref={inputRef}
         type="file"
         accept="image/png,image/jpeg,image/webp,image/svg+xml"
+        capture={capture}
         className="hidden"
         onChange={(event) => {
           const file = event.target.files?.[0]

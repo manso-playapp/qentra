@@ -167,6 +167,8 @@ export interface Guest {
   last_name: string
   email?: string
   phone?: string
+  /** Foto del invitado. URL firmada del bucket privado guest-photos. */
+  photo_url?: string | null
   status: 'pending' | 'confirmed' | 'checked_in' | 'cancelled'
   plus_ones_allowed: number
   plus_ones_confirmed: number

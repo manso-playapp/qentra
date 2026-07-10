@@ -1173,6 +1173,20 @@ export default function EventGuestsManager({
                         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                           <div>
                             <div className="flex flex-wrap items-center gap-2">
+                              {guest.photo_url ? (
+                                // Foto del invitado (URL firmada de guest-photos). Plain img: la URL
+                                // firmada esta fuera del config de next/image.
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img
+                                  src={guest.photo_url}
+                                  alt={`Foto de ${guest.first_name} ${guest.last_name}`}
+                                  className="size-9 flex-none rounded-full border border-gray-200 object-cover"
+                                />
+                              ) : (
+                                <span className="flex size-9 flex-none items-center justify-center rounded-full border border-gray-200 bg-gray-100 text-xs font-semibold text-gray-500">
+                                  {`${guest.first_name?.[0] ?? ''}${guest.last_name?.[0] ?? ''}`.toUpperCase() || '?'}
+                                </span>
+                              )}
                               <h3 className="font-medium text-gray-900">
                                 {guest.first_name} {guest.last_name}
                               </h3>

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import ImageUpload from '@/components/admin/ImageUpload'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -21,6 +22,7 @@ type InvitationResponseFormProps = {
     companionNames: string
     dietaryRequirements: string
     observations: string
+    photoUrl: string
   }
 }
 
@@ -38,6 +40,7 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
   const [companionNames, setCompanionNames] = useState(initialData.companionNames)
   const [dietaryRequirements, setDietaryRequirements] = useState(initialData.dietaryRequirements)
   const [observations, setObservations] = useState(initialData.observations)
+  const [photoUrl, setPhotoUrl] = useState(initialData.photoUrl)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
@@ -169,6 +172,18 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
 
       {isConfirming && (
         <>
+          <div className="rounded-[24px] border border-border bg-white/70 p-4">
+            <ImageUpload
+              label="Tu foto"
+              hint="Se usa para validar tu identidad en el ingreso. Podés sacártela con la cámara."
+              value={photoUrl}
+              onChange={setPhotoUrl}
+              uploadUrl={`/api/invitacion/${token}/photo`}
+              capture="user"
+              shape="round"
+            />
+          </div>
+
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <Label htmlFor="invitation-dni">DNI</Label>

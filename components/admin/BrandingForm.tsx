@@ -148,9 +148,7 @@ export default function BrandingForm({ eventId, eventName, branding }: BrandingF
                 hint="PNG, JPG, WEBP o SVG. Hasta 5 MB."
                 value={form.logo_url}
                 onChange={(url) => update('logo_url', url)}
-                bucket="event-assets"
-                folder={eventId}
-                fileLabel="logo"
+                fields={{ bucket: 'event-assets', folder: eventId, label: 'logo' }}
               />
 
               <ImageUpload
@@ -158,9 +156,7 @@ export default function BrandingForm({ eventId, eventName, branding }: BrandingF
                 hint="Se ve de fondo en la cabecera de la invitación."
                 value={form.cover_image_url}
                 onChange={(url) => update('cover_image_url', url)}
-                bucket="event-assets"
-                folder={eventId}
-                fileLabel="cover"
+                fields={{ bucket: 'event-assets', folder: eventId, label: 'cover' }}
               />
 
               <ImageUpload
@@ -168,9 +164,7 @@ export default function BrandingForm({ eventId, eventName, branding }: BrandingF
                 hint="Si lo dejás vacío, el tótem usa la portada de la invitación."
                 value={form.background_image_url}
                 onChange={(url) => update('background_image_url', url)}
-                bucket="event-assets"
-                folder={eventId}
-                fileLabel="background"
+                fields={{ bucket: 'event-assets', folder: eventId, label: 'background' }}
               />
             </CardContent>
           </Card>

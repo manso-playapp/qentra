@@ -20,6 +20,7 @@ type DbGuestRow = {
   last_name: string
   email?: string | null
   phone?: string | null
+  photo_url?: string | null
   status?: string | null
   notes?: string | null
   created_at: string
@@ -72,6 +73,7 @@ export function normalizeGuestRecord(row: DbGuestRow): GuestWithType {
     last_name: row.last_name,
     email: row.email ?? undefined,
     phone: row.phone ?? undefined,
+    photo_url: row.photo_url ?? null,
     status: normalizeGuestStatus(row.status),
     plus_ones_allowed: 0,
     plus_ones_confirmed: 0,

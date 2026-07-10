@@ -107,7 +107,7 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
 
   const { data: guest } = await supabase
     .from('guests')
-    .select('id, event_id, first_name, last_name, email, phone, status, document_number, notes, payment_status')
+    .select('id, event_id, first_name, last_name, email, phone, status, document_number, notes, payment_status, photo_url')
     .eq('id', invitationToken.guest_id)
     .maybeSingle()
 
@@ -347,6 +347,7 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
                       companionNames: invitationDetails.companionNames,
                       dietaryRequirements: invitationDetails.dietaryRequirements,
                       observations: invitationDetails.observations,
+                      photoUrl: guest?.photo_url || '',
                     }}
                   />
                 </div>
