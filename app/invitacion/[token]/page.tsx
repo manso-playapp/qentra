@@ -8,6 +8,7 @@ import { normalizeGuestStatus } from '@/lib/guest-schema'
 import { isInvitationAccessReady, parseInvitationDetails } from '@/lib/invitation-response'
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { SURFACE_BRANDING_COLUMNS, type SurfaceBranding } from '@/types'
 
 export const metadata = {
   title: 'Invitación',
@@ -110,7 +111,7 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
     .eq('id', invitationToken.guest_id)
     .maybeSingle()
 
-  const [{ data: event }, { data: branding }] = guest?.event_id
+  const [{ data: event }, brandingResponse] = guest?.event_id
     ? await Promise.all([
         supabase
           .from('events')
@@ -119,11 +120,19 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
           .maybeSingle(),
         supabase
           .from('event_branding')
-          .select('primary_color, secondary_color, logo_url, banner_url')
+          .select(SURFACE_BRANDING_COLUMNS)
           .eq('event_id', guest.event_id)
           .maybeSingle(),
       ])
-    : [{ data: null }, { data: null }]
+    : [{ data: null }, { data: null, error: null }]
+
+  // El error del branding se descartaba: un select invalido dejaba la invitacion
+  // en los colores por defecto sin que nadie se enterara.
+  if (brandingResponse.error) {
+    console.error('[invitacion] no se pudo cargar el branding del evento', brandingResponse.error)
+  }
+
+  const branding = (brandingResponse.data ?? null) as SurfaceBranding | null
   const invitationDetails = parseInvitationDetails(guest?.notes)
   const paymentStatus = (guest?.payment_status ?? 'not_required') as
     | 'not_required'
@@ -161,6 +170,8 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
 
   const primaryColor = branding?.primary_color || '#8b5e3c'
   const secondaryColor = branding?.secondary_color || '#f1e8da'
+  // La invitacion prefiere la portada; si el evento solo cargo fondo, lo reusa.
+  const coverImage = branding?.cover_image_url || branding?.background_image_url
   const invitationUsed =
     Boolean(invitationToken.last_used_at) ||
     (invitationToken.used_count ?? 0) > 0 ||
@@ -235,8 +246,8 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
         <section
           className="relative overflow-hidden rounded-[36px] border border-black/5 px-6 py-7 text-white shadow-[0_28px_90px_rgba(15,23,42,0.16)] sm:px-8 sm:py-8"
           style={{
-            background: branding?.banner_url
-              ? `linear-gradient(135deg, rgba(15,23,42,0.62), rgba(15,23,42,0.78)), url(${branding.banner_url}) center/cover no-repeat`
+            background: coverImage
+              ? `linear-gradient(135deg, rgba(15,23,42,0.62), rgba(15,23,42,0.78)), url(${coverImage}) center/cover no-repeat`
               : `linear-gradient(135deg, ${primaryColor} 0%, #1f2937 100%)`,
           }}
         >

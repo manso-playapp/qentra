@@ -11,11 +11,11 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { getErrorMessage } from '@/lib/errors'
 import { supabase } from '@/lib/supabase'
-import type { Checkin, Event, EventBranding, Guest, GuestType, InvitationToken } from '@/types'
+import type { Checkin, Event, Guest, GuestType, InvitationToken, SurfaceBranding } from '@/types'
 
 type EventCheckinManagerProps = {
   event: Pick<Event, 'id' | 'name' | 'slug' | 'event_date' | 'start_time'>
-  branding?: Pick<EventBranding, 'primary_color' | 'secondary_color' | 'logo_url' | 'banner_url'> | null
+  branding?: SurfaceBranding | null
   mode?: 'admin' | 'door' | 'totem'
 }
 
@@ -956,6 +956,12 @@ export default function EventCheckinManager({
   if (isTotemMode) {
     const totemAccent = branding?.primary_color || '#b55330'
     const totemSecondary = branding?.secondary_color || '#182433'
+    // El totem prefiere su propio fondo; si el evento solo cargo portada, la reusa.
+    const totemBackground = branding?.background_image_url || branding?.cover_image_url
+    const welcomeMessage =
+      branding?.welcome_message ||
+      'Bienvenidos. Cada ingreso aprobado se reflejara aqui por unos segundos, sin exponer informacion operativa.'
+    const approvedMessage = branding?.approved_message || 'Bienvenida habilitada'
     const spotlightNameParts = totemSpotlight?.fullName.split(' ').filter(Boolean) ?? []
     const spotlightInitials = totemSpotlight
       ? getGuestInitials(spotlightNameParts[0], spotlightNameParts[1])
@@ -965,8 +971,8 @@ export default function EventCheckinManager({
       <main
         className="min-h-screen overflow-hidden px-6 py-6 text-white sm:px-10"
         style={{
-          background: branding?.banner_url
-            ? `linear-gradient(180deg, rgba(10,15,24,0.55), rgba(10,15,24,0.78)), url(${branding.banner_url}) center/cover no-repeat`
+          background: totemBackground
+            ? `linear-gradient(180deg, rgba(10,15,24,0.55), rgba(10,15,24,0.78)), url(${totemBackground}) center/cover no-repeat`
             : `radial-gradient(circle at top left, ${totemAccent}55, transparent 28%), radial-gradient(circle at top right, ${totemSecondary}60, transparent 32%), linear-gradient(180deg, ${totemSecondary} 0%, #090d14 100%)`,
         }}
       >
@@ -1008,12 +1014,12 @@ export default function EventCheckinManager({
                     {event.name}
                   </h1>
                   <p className="mt-6 max-w-2xl text-xl leading-8 text-white/78 sm:text-2xl">
-                    Bienvenidos. Cada ingreso aprobado se reflejara aqui por unos segundos, sin exponer informacion operativa.
+                    {welcomeMessage}
                   </p>
                 </>
               ) : (
                 <>
-                  <p className="text-sm uppercase tracking-[0.34em] text-emerald-200/90">Bienvenida habilitada</p>
+                  <p className="text-sm uppercase tracking-[0.34em] text-emerald-200/90">{approvedMessage}</p>
                   <div
                     className="mt-8 flex h-[38vh] max-h-[380px] min-h-[240px] w-[38vh] max-w-[380px] min-w-[240px] items-center justify-center rounded-[36px] border border-white/14 text-8xl font-semibold text-white shadow-[0_0_90px_rgba(16,185,129,0.18)]"
                     style={{ background: `linear-gradient(145deg, ${totemAccent}55, rgba(255,255,255,0.08))` }}

@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import EventCheckinManager from '@/components/admin/EventCheckinManager'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
-import type { Event, EventBranding } from '@/types'
+import { SURFACE_BRANDING_COLUMNS, type Event, type SurfaceBranding } from '@/types'
 
 type TotemPageProps = {
   params: Promise<{ id: string }>
@@ -18,12 +18,18 @@ export default async function TotemPage({ params }: TotemPageProps) {
       .maybeSingle(),
     supabase
       .from('event_branding')
-      .select('primary_color, secondary_color, logo_url, banner_url')
+      .select(SURFACE_BRANDING_COLUMNS)
       .eq('event_id', id)
       .maybeSingle(),
   ])
 
   const { data, error } = eventResponse
+
+  // Un branding roto no debe romper la pantalla, pero tampoco desaparecer en
+  // silencio: sin esto, un select invalido dejaba el totem en colores default.
+  if (brandingResponse.error) {
+    console.error('[totem] no se pudo cargar el branding del evento', brandingResponse.error)
+  }
 
   if (error) {
     return (
@@ -46,7 +52,7 @@ export default async function TotemPage({ params }: TotemPageProps) {
   return (
     <EventCheckinManager
       event={data as Pick<Event, 'id' | 'name' | 'slug' | 'event_date' | 'start_time'>}
-      branding={(brandingResponse.data ?? null) as Pick<EventBranding, 'primary_color' | 'secondary_color' | 'logo_url' | 'banner_url'> | null}
+      branding={(brandingResponse.data ?? null) as SurfaceBranding | null}
       mode="totem"
     />
   )

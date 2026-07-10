@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { Mail, Palette, ScanLine, ShieldCheck, Tv, Users2 } from 'lucide-react'
 import AdminLayout from '@/components/admin/AdminLayout'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -232,8 +233,18 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
           <aside className="space-y-6">
             <Card className="event-theme-surface">
               <CardHeader>
-                <CardDescription>Personalizacion controlada</CardDescription>
-                <CardTitle>Branding</CardTitle>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <CardDescription>Personalización por evento</CardDescription>
+                    <CardTitle>Branding</CardTitle>
+                  </div>
+                  <Button asChild size="sm" variant="outline">
+                    <Link href={`/admin/events/${event.id}/branding`}>
+                      <Palette className="size-4" />
+                      Editar
+                    </Link>
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
 
@@ -253,9 +264,9 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
                   </div>
 
                   <div className="space-y-2 text-sm text-muted-foreground">
-                    <p>Tipografia libre: no. Base fija del sistema.</p>
                     <p>Logo: {branding.logo_url ? 'Configurado' : 'Pendiente'}</p>
-                    <p>Banner: {branding.banner_url ? 'Configurado' : 'Pendiente'}</p>
+                    <p>Portada de invitación: {branding.cover_image_url ? 'Configurada' : 'Pendiente'}</p>
+                    <p>Fondo del tótem: {branding.background_image_url ? 'Configurado' : 'Pendiente'}</p>
                   </div>
                 </div>
               ) : (
@@ -268,28 +279,66 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
 
             <Card className="bg-admin-panel">
               <CardHeader>
-                <CardDescription>Superficies operativas</CardDescription>
-                <CardTitle>Siguiente bloque</CardTitle>
+                <CardDescription>Superficies del evento</CardDescription>
+                <CardTitle>Las pantallas que ve cada uno</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <p className="text-sm leading-6 text-muted-foreground">
-                  La logica del evento ya existe. Desde aqui saltas a invitados, acceso operativo, puerta y pantalla publica sin duplicar flujos.
-                </p>
-                <Button asChild variant="secondary" className="w-full justify-start">
-                  <Link href={`/totem/${event.id}`}>Abrir pantalla publica</Link>
-                </Button>
-                <Button asChild variant="info" className="w-full justify-start">
-                  <Link href={`/puerta/${event.id}`}>Abrir control de acceso</Link>
-                </Button>
-                <Button asChild variant="success" className="w-full justify-start">
-                  <Link href={`/admin/events/${event.id}/check-in`}>Abrir panel operativo</Link>
-                </Button>
-                <Button asChild variant="outline" className="w-full justify-start">
-                  <Link href={`/admin/events/${event.id}/guests`}>Gestionar invitados</Link>
-                </Button>
-                <Button asChild variant="ghost" className="w-full justify-start">
-                  <Link href="/admin/events">Volver al listado</Link>
-                </Button>
+              <CardContent className="space-y-2">
+                {[
+                  {
+                    href: `/admin/events/${event.id}/invitacion/preview`,
+                    icon: Mail,
+                    label: 'Invitación',
+                    detail: 'Lo que recibe el invitado',
+                    external: true,
+                  },
+                  {
+                    href: `/totem/${event.id}`,
+                    icon: Tv,
+                    label: 'Tótem',
+                    detail: 'Pantalla de bienvenida en el salón',
+                    external: true,
+                  },
+                  {
+                    href: `/puerta/${event.id}`,
+                    icon: ShieldCheck,
+                    label: 'Puerta',
+                    detail: 'Control de acceso en el ingreso',
+                    external: true,
+                  },
+                  {
+                    href: `/admin/events/${event.id}/check-in`,
+                    icon: ScanLine,
+                    label: 'Check-in',
+                    detail: 'Panel operativo de acreditación',
+                    external: false,
+                  },
+                  {
+                    href: `/admin/events/${event.id}/guests`,
+                    icon: Users2,
+                    label: 'Invitados',
+                    detail: 'Alta, estados, QR y envíos',
+                    external: false,
+                  },
+                ].map((surface) => {
+                  const Icon = surface.icon
+
+                  return (
+                    <Link
+                      key={surface.href}
+                      href={surface.href}
+                      target={surface.external ? '_blank' : undefined}
+                      className="flex items-center gap-3 rounded-2xl border border-border/70 bg-white/70 px-4 py-3 transition hover:bg-white"
+                    >
+                      <span className="rounded-xl border border-border/70 bg-white p-2">
+                        <Icon className="size-4 text-muted-foreground" />
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block text-sm font-semibold text-foreground">{surface.label}</span>
+                        <span className="block text-xs text-muted-foreground">{surface.detail}</span>
+                      </span>
+                    </Link>
+                  )
+                })}
               </CardContent>
             </Card>
           </aside>

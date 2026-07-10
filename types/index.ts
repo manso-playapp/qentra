@@ -19,18 +19,70 @@ export interface Event {
   updated_at: string
 }
 
+/**
+ * Espejo de la tabla `event_branding`.
+ *
+ * Antes declaraba `banner_url`, `font_family` y `custom_css`: ninguna existe en
+ * la base. Las superficies pedian `banner_url` en el select, PostgREST devolvia
+ * 400, y como el error se descartaba el branding quedaba en null y todo caia al
+ * color por defecto. Cualquier campo que se agregue aca tiene que existir en la
+ * tabla.
+ */
 export interface EventBranding {
   id: string
   event_id: string
   primary_color: string
   secondary_color: string
-  logo_url?: string
-  banner_url?: string
-  font_family?: string
-  custom_css?: string
+  logo_url?: string | null
+  /** Portada de la invitacion. */
+  cover_image_url?: string | null
+  /** Fondo del totem y de la puerta. */
+  background_image_url?: string | null
+  totem_idle_video_url?: string | null
+  welcome_message?: string | null
+  approved_message?: string | null
+  assistance_message?: string | null
+  invalid_message?: string | null
+  return_to_idle_seconds?: number | null
   created_at: string
   updated_at: string
 }
+
+/**
+ * Lo que las superficies publicas (totem, puerta, invitacion) necesitan del
+ * branding. Un solo lugar donde mirar cuando se cambia el select.
+ */
+export type SurfaceBranding = Pick<
+  EventBranding,
+  | 'primary_color'
+  | 'secondary_color'
+  | 'logo_url'
+  | 'cover_image_url'
+  | 'background_image_url'
+  | 'welcome_message'
+  | 'approved_message'
+>
+
+/** Columnas exactas a pedir para poblar `SurfaceBranding`. */
+export const SURFACE_BRANDING_COLUMNS =
+  'primary_color, secondary_color, logo_url, cover_image_url, background_image_url, welcome_message, approved_message'
+
+/** Campos que el editor de branding puede escribir. */
+export type UpdateEventBrandingForm = Partial<
+  Pick<
+    EventBranding,
+    | 'primary_color'
+    | 'secondary_color'
+    | 'logo_url'
+    | 'cover_image_url'
+    | 'background_image_url'
+    | 'welcome_message'
+    | 'approved_message'
+    | 'assistance_message'
+    | 'invalid_message'
+    | 'return_to_idle_seconds'
+  >
+>
 
 export interface DeliveryProfile {
   id: string
