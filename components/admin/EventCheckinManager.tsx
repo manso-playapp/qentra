@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { getErrorMessage } from '@/lib/errors'
 import { supabase } from '@/lib/supabase'
-import type { Checkin, Event, Guest, GuestType, InvitationToken, SurfaceBranding } from '@/types'
+import type { Checkin, CheckinMethod, Event, Guest, GuestType, InvitationToken, SurfaceBranding } from '@/types'
 
 type EventCheckinManagerProps = {
   event: Pick<Event, 'id' | 'name' | 'slug' | 'event_date' | 'start_time'>
@@ -21,7 +21,7 @@ type EventCheckinManagerProps = {
 
 type AccessPayload = {
   token: string
-  source: Checkin['checkin_method']
+  source: CheckinMethod
 }
 
 type CheckinStatus =
@@ -42,20 +42,21 @@ type CheckinStatus =
     }
 
 type CheckinWithGuest = Checkin & {
-  guests?: Pick<Guest, 'first_name' | 'last_name' | 'status'> | null
+  guests?: Pick<Guest, 'first_name' | 'last_name' | 'status' | 'photo_url'> | null
 }
 
 type TotemSpotlight = {
   id: string
   fullName: string
   checkinTime: string
+  photoUrl?: string | null
 }
 
 type OverrideableAccessCode = 'already_checked_in' | 'outside_window'
 
 type OverrideContext = {
   guest: SearchableGuest
-  source: Checkin['checkin_method']
+  source: CheckinMethod
   invitationToken?: InvitationToken
   decisionCode: OverrideableAccessCode
 }
@@ -253,25 +254,18 @@ export default function EventCheckinManager({
   const fetchRecentCheckins = useCallback(async () => {
     try {
       setLoadingRecentCheckins(true)
-      const { data, error } = await supabase
-        .from('checkins')
-        .select(`
-          *,
-          guests (
-            first_name,
-            last_name,
-            status
-          )
-        `)
-        .eq('event_id', event.id)
-        .order('checkin_time', { ascending: false })
-        .limit(10)
+      // Via endpoint servidor (service role): RLS oculta guests al cliente anonimo,
+      // asi que el join desde el navegador devolvia nombre y foto vacios.
+      const response = await fetch(`/api/events/${event.id}/checkin-feed`)
+      const payload = (await response.json().catch(() => null)) as
+        | { data?: CheckinWithGuest[]; error?: string }
+        | null
 
-      if (error) {
-        throw error
+      if (!response.ok) {
+        throw new Error(payload?.error || 'No se pudo cargar la actividad.')
       }
 
-      setRecentCheckins((data ?? []) as CheckinWithGuest[])
+      setRecentCheckins(payload?.data ?? [])
     } catch (error) {
       setStatus({
         kind: 'error',
@@ -346,6 +340,30 @@ export default function EventCheckinManager({
     }
   }, [fetchGuestDirectory, fetchRecentCheckins, isTotemMode])
 
+  // Realtime: el totem muestra el spotlight en el instante en que la puerta
+  // acredita a alguien, sin esperar al proximo poll. El intervalo de arriba
+  // queda como respaldo por si Realtime no esta habilitado en la tabla checkins.
+  useEffect(() => {
+    if (!isTotemMode) {
+      return
+    }
+
+    const channel = supabase
+      .channel(`totem-checkins-${event.id}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'checkins', filter: `event_id=eq.${event.id}` },
+        () => {
+          void fetchRecentCheckins()
+        }
+      )
+      .subscribe()
+
+    return () => {
+      void supabase.removeChannel(channel)
+    }
+  }, [isTotemMode, event.id, fetchRecentCheckins])
+
   useEffect(() => {
     const clockTimer = window.setInterval(() => {
       setNow(new Date())
@@ -376,7 +394,8 @@ export default function EventCheckinManager({
     setTotemSpotlight({
       id: latestCheckin.id,
       fullName: `${latestCheckin.guests?.first_name || ''} ${latestCheckin.guests?.last_name || ''}`.trim() || 'Invitado autorizado',
-      checkinTime: latestCheckin.checkin_time,
+      checkinTime: latestCheckin.checked_in_at,
+      photoUrl: latestCheckin.guests?.photo_url ?? null,
     })
 
     if (spotlightTimeoutRef.current !== null) {
@@ -566,7 +585,7 @@ export default function EventCheckinManager({
 
   const registerGuestCheckin = useCallback(async (
     guest: SearchableGuest,
-    source: Checkin['checkin_method'],
+    source: CheckinMethod,
     options?: {
       invitationToken?: InvitationToken
       note?: string
@@ -581,7 +600,7 @@ export default function EventCheckinManager({
       .select('*')
       .eq('event_id', event.id)
       .eq('guest_id', guest.id)
-      .order('checkin_time', { ascending: false })
+      .order('checked_in_at', { ascending: false })
       .limit(1)
       .maybeSingle()
 
@@ -594,7 +613,7 @@ export default function EventCheckinManager({
       guest,
       guestType: guest.guest_types,
       invitationToken: options?.invitationToken,
-      lastCheckinTime: lastCheckinData?.checkin_time ?? null,
+      lastCheckinTime: lastCheckinData?.checked_in_at ?? null,
     })
 
     const overrideApproved =
@@ -665,9 +684,10 @@ export default function EventCheckinManager({
       .insert({
         guest_id: guest.id,
         event_id: event.id,
-        checkin_time: now,
-        checkin_method: source,
-        notes: options?.override
+        checked_in_at: now,
+        result: 'approved',
+        device_name: source,
+        reason: options?.override
           ? `Override ${options.override.code}: ${options.override.reason}`
           : options?.note ?? (source === 'qr' ? 'Check-in desde QR en admin' : 'Check-in manual desde admin'),
       })
@@ -1021,10 +1041,20 @@ export default function EventCheckinManager({
                 <>
                   <p className="text-sm uppercase tracking-[0.34em] text-emerald-200/90">{approvedMessage}</p>
                   <div
-                    className="mt-8 flex h-[38vh] max-h-[380px] min-h-[240px] w-[38vh] max-w-[380px] min-w-[240px] items-center justify-center rounded-[36px] border border-white/14 text-8xl font-semibold text-white shadow-[0_0_90px_rgba(16,185,129,0.18)]"
+                    className="mt-8 flex h-[38vh] max-h-[380px] min-h-[240px] w-[38vh] max-w-[380px] min-w-[240px] items-center justify-center overflow-hidden rounded-[36px] border border-white/14 text-8xl font-semibold text-white shadow-[0_0_90px_rgba(16,185,129,0.18)]"
                     style={{ background: `linear-gradient(145deg, ${totemAccent}55, rgba(255,255,255,0.08))` }}
                   >
-                    {spotlightInitials}
+                    {totemSpotlight.photoUrl ? (
+                      // Foto del invitado (URL firmada de guest-photos), fuera del config de next/image.
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={totemSpotlight.photoUrl}
+                        alt={totemSpotlight.fullName}
+                        className="size-full object-cover"
+                      />
+                    ) : (
+                      spotlightInitials
+                    )}
                   </div>
                   <h2 className="admin-heading mt-8 text-6xl leading-none text-white sm:text-7xl">
                     {totemSpotlight.fullName}
@@ -1482,14 +1512,14 @@ export default function EventCheckinManager({
                               <p className="font-medium text-foreground">
                                 {checkin.guests?.first_name} {checkin.guests?.last_name}
                               </p>
-                              <p className="mt-1 text-sm text-muted-foreground">{formatDateTime(checkin.checkin_time)}</p>
+                              <p className="mt-1 text-sm text-muted-foreground">{formatDateTime(checkin.checked_in_at)}</p>
                             </div>
-                            <Badge variant={checkin.checkin_method === 'qr' ? 'info' : 'outline'}>
-                              {checkin.checkin_method === 'qr' ? 'QR' : 'Manual'}
+                            <Badge variant={checkin.device_name === 'qr' ? 'info' : 'outline'}>
+                              {checkin.device_name === 'qr' ? 'QR' : 'Manual'}
                             </Badge>
                           </div>
-                          {checkin.notes && (
-                            <p className="mt-3 text-sm leading-6 text-muted-foreground">{checkin.notes}</p>
+                          {checkin.reason && (
+                            <p className="mt-3 text-sm leading-6 text-muted-foreground">{checkin.reason}</p>
                           )}
                         </div>
                       ))}
@@ -2034,18 +2064,18 @@ export default function EventCheckinManager({
                         <p className="font-medium text-gray-900">
                           {checkin.guests?.first_name} {checkin.guests?.last_name}
                         </p>
-                        <p className="mt-1 text-sm text-gray-600">{formatDateTime(checkin.checkin_time)}</p>
+                        <p className="mt-1 text-sm text-gray-600">{formatDateTime(checkin.checked_in_at)}</p>
                       </div>
                       <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                        checkin.checkin_method === 'qr'
+                        checkin.device_name === 'qr'
                           ? 'bg-blue-100 text-blue-800'
                           : 'bg-gray-100 text-gray-700'
                       }`}>
-                        {checkin.checkin_method === 'qr' ? 'QR' : 'Manual'}
+                        {checkin.device_name === 'qr' ? 'QR' : 'Manual'}
                       </span>
                     </div>
-                    {checkin.notes && (
-                      <p className="mt-3 text-sm text-gray-600">{checkin.notes}</p>
+                    {checkin.reason && (
+                      <p className="mt-3 text-sm text-gray-600">{checkin.reason}</p>
                     )}
                   </div>
                 ))}

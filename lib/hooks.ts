@@ -13,7 +13,7 @@ import type {
   InvitationToken,
   GuestQrCode,
   GuestAccessArtifacts,
-  Checkin,
+  CheckinMethod,
   ApiResponse,
   CreateOperatorForm,
   CreateDeliveryProfileForm,
@@ -25,7 +25,7 @@ import type {
 
 type UpdateGuestOptions = {
   previousStatus?: Guest['status']
-  checkinMethod?: Checkin['checkin_method']
+  checkinMethod?: CheckinMethod
   checkinNotes?: string
 }
 
@@ -653,9 +653,10 @@ export function useGuests(eventId?: string, initialGuests: GuestWithType[] = [])
           .insert({
             guest_id: data.id,
             event_id: data.event_id,
-            checkin_time: new Date().toISOString(),
-            checkin_method: options?.checkinMethod ?? 'manual',
-            notes: options?.checkinNotes,
+            checked_in_at: new Date().toISOString(),
+            result: 'approved',
+            device_name: options?.checkinMethod ?? 'manual',
+            reason: options?.checkinNotes ?? null,
           })
 
         if (checkinError) {

@@ -217,14 +217,28 @@ export interface GuestQrCode {
   revoked_at?: string | null
 }
 
+/** Cómo se hizo el check-in. Se persiste en la columna `device_name`. */
+export type CheckinMethod = 'qr' | 'manual' | 'totem'
+
+/**
+ * Espejo de la tabla `checkins`.
+ *
+ * El tipo anterior declaraba columnas inexistentes (`checkin_time`,
+ * `checkin_method`, `notes`, `verified_by`): por eso TODO insert de check-in
+ * fallaba con 400 y la tabla quedaba siempre vacía. La tabla real registra el
+ * resultado del acceso (`result`/`reason`), no solo ingresos exitosos.
+ */
 export interface Checkin {
   id: string
-  guest_id: string
   event_id: string
-  checkin_time: string
-  checkin_method: 'qr' | 'manual' | 'totem'
-  verified_by?: string
-  notes?: string
+  guest_id: string
+  qr_code_id?: string | null
+  operator_user_id?: string | null
+  /** Guardamos acá el método (qr/manual/totem). */
+  device_name?: string | null
+  result: 'approved' | 'denied'
+  reason?: string | null
+  checked_in_at: string
   created_at: string
 }
 
