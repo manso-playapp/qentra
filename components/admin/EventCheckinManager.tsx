@@ -3,7 +3,7 @@
 import jsQR from 'jsqr'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
-import { evaluateGuestAccess, formatGuestTypeAccessPolicy } from '@/lib/access-policy'
+import { formatGuestTypeAccessPolicy } from '@/lib/access-policy'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { getErrorMessage } from '@/lib/errors'
 import { supabase } from '@/lib/supabase'
-import type { Checkin, CheckinMethod, Event, Guest, GuestType, InvitationToken, SurfaceBranding } from '@/types'
+import type { Checkin, CheckinMethod, Event, Guest, GuestType, SurfaceBranding } from '@/types'
 
 type EventCheckinManagerProps = {
   event: Pick<Event, 'id' | 'name' | 'slug' | 'event_date' | 'start_time'>
@@ -55,10 +55,21 @@ type TotemSpotlight = {
 type OverrideableAccessCode = 'already_checked_in' | 'outside_window'
 
 type OverrideContext = {
-  guest: SearchableGuest
+  token?: string
+  guestId?: string
   source: CheckinMethod
-  invitationToken?: InvitationToken
   decisionCode: OverrideableAccessCode
+}
+
+// Respuesta del endpoint de check-in del servidor.
+type CheckinResult = {
+  outcome: 'registered' | 'blocked'
+  kind: 'success' | 'warning' | 'error'
+  title: string
+  detail: string
+  guest?: { first_name: string; last_name: string }
+  overrideable?: boolean
+  decisionCode?: string
 }
 
 type SearchableGuest = Pick<
@@ -90,9 +101,6 @@ const LIVE_REFRESH_INTERVAL_MS = 15000
 const TOTEM_REFRESH_INTERVAL_MS = 5000
 const TOTEM_SPOTLIGHT_DURATION_MS = 6000
 
-function isOverrideableDecision(code: string): code is OverrideableAccessCode {
-  return code === 'already_checked_in' || code === 'outside_window'
-}
 
 const STATUS_TONE_STYLES = {
   idle: {
@@ -282,34 +290,20 @@ export default function EventCheckinManager({
   const fetchGuestDirectory = useCallback(async () => {
     try {
       setLoadingGuestDirectory(true)
-      const { data, error } = await supabase
-        .from('guests')
-        .select(`
-          id,
-          event_id,
-          first_name,
-          last_name,
-          email,
-          phone,
-          status,
-          guest_types (
-            name,
-            access_policy_label,
-            access_start_time,
-            access_end_time,
-            access_start_day_offset,
-            access_end_day_offset
-          )
-        `)
-        .eq('event_id', event.id)
-        .order('last_name', { ascending: true })
-        .order('first_name', { ascending: true })
+      // Via endpoint servidor (service role): RLS oculta guests al cliente.
+      const response = await fetch(`/api/guests?eventId=${event.id}`)
+      const payload = (await response.json().catch(() => null)) as
+        | { data?: SearchableGuestRow[]; error?: string }
+        | null
 
-      if (error) {
-        throw error
+      if (!response.ok) {
+        throw new Error(payload?.error || 'No se pudo cargar el directorio.')
       }
 
-      setGuestDirectory(((data ?? []) as SearchableGuestRow[]).map(normalizeSearchableGuest))
+      const sorted = (payload?.data ?? []).sort((a, b) =>
+        `${a.last_name} ${a.first_name}`.localeCompare(`${b.last_name} ${b.first_name}`)
+      )
+      setGuestDirectory(sorted.map(normalizeSearchableGuest))
     } catch (error) {
       setStatus({
         kind: 'error',
@@ -581,207 +575,64 @@ export default function EventCheckinManager({
     }
   }, [processingCheckin, scannerActive, status])
 
-  const registerGuestCheckin = useCallback(async (
-    guest: SearchableGuest,
-    source: CheckinMethod,
-    options?: {
-      invitationToken?: InvitationToken
-      note?: string
-      override?: {
-        code: OverrideableAccessCode
-        reason: string
-      }
-    }
-  ) => {
-    const { data: lastCheckinData, error: lastCheckinError } = await supabase
-      .from('checkins')
-      .select('*')
-      .eq('event_id', event.id)
-      .eq('guest_id', guest.id)
-      .order('checked_in_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()
-
-    if (lastCheckinError) {
-      throw lastCheckinError
-    }
-
-    const accessDecision = evaluateGuestAccess({
-      event,
-      guest,
-      guestType: guest.guest_types,
-      invitationToken: options?.invitationToken,
-      lastCheckinTime: lastCheckinData?.checked_in_at ?? null,
+  // Valida y registra el check-in en el servidor (service role). El cliente ya
+  // no lee/escribe invitation_tokens, guests ni checkins: RLS se lo bloqueaba.
+  const submitCheckin = useCallback(async (params: {
+    token?: string
+    guestId?: string
+    source: CheckinMethod
+    override?: { code: OverrideableAccessCode; reason: string }
+  }) => {
+    const response = await fetch(`/api/events/${event.id}/checkin`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        token: params.token,
+        guestId: params.guestId,
+        method: params.source,
+        override: params.override,
+      }),
     })
 
-    const overrideApproved =
-      Boolean(options?.override) &&
-      isOverrideableDecision(accessDecision.code) &&
-      options?.override?.code === accessDecision.code
+    const payload = (await response.json().catch(() => null)) as
+      | { data?: CheckinResult; error?: string }
+      | null
 
-    if (accessDecision.decision !== 'allow' && !overrideApproved) {
+    if (!response.ok || !payload?.data) {
+      throw new Error(payload?.error || 'No se pudo validar el acceso.')
+    }
+
+    const result = payload.data
+
+    if (result.outcome === 'registered') {
+      setOverrideContext(null)
       setOverrideError(null)
-      setStatus({
-        kind: accessDecision.decision === 'warn' ? 'warning' : 'error',
-        title: accessDecision.title,
-        detail: accessDecision.detail,
-      })
-
-      if (isOverrideableDecision(accessDecision.code) && !isTotemMode) {
-        setOverrideContext({
-          guest,
-          source,
-          invitationToken: options?.invitationToken,
-          decisionCode: accessDecision.code,
-        })
-      } else {
-        setOverrideContext(null)
-      }
-
+      setOverridePin('')
+      setOverrideSupervisorPin('')
+      setOverrideReason('')
+      setStatus({ kind: 'success', title: result.title, detail: result.detail })
+      await Promise.all([fetchRecentCheckins(), fetchGuestDirectory()])
       return
     }
 
-    setOverrideContext(null)
-    setOverrideError(null)
-    setOverridePin('')
-    setOverrideSupervisorPin('')
-    setOverrideReason('')
+    setStatus({ kind: result.kind, title: result.title, detail: result.detail })
 
-    const now = new Date().toISOString()
-
-    if (options?.invitationToken && !options.invitationToken.last_used_at) {
-      const nextUsedCount = (options.invitationToken.used_count ?? 0) + 1
-      const maxUses = options.invitationToken.max_uses ?? 1
-      const { error: tokenUpdateError } = await supabase
-        .from('invitation_tokens')
-        .update({
-          used_count: nextUsedCount,
-          last_used_at: now,
-          is_active: nextUsedCount < maxUses,
-        })
-        .eq('id', options.invitationToken.id)
-
-      if (tokenUpdateError) {
-        throw tokenUpdateError
-      }
-    }
-
-    const { error: guestUpdateError } = await supabase
-      .from('guests')
-      .update({
-        status: 'checked_in',
+    if (result.overrideable && result.decisionCode && !isTotemMode) {
+      setOverrideContext({
+        token: params.token,
+        guestId: params.guestId,
+        source: params.source,
+        decisionCode: result.decisionCode as OverrideableAccessCode,
       })
-      .eq('id', guest.id)
-
-    if (guestUpdateError) {
-      throw guestUpdateError
+    } else {
+      setOverrideContext(null)
     }
-
-    const { error: checkinInsertError } = await supabase
-      .from('checkins')
-      .insert({
-        guest_id: guest.id,
-        event_id: event.id,
-        checked_in_at: now,
-        result: 'approved',
-        device_name: source,
-        reason: options?.override
-          ? `Override ${options.override.code}: ${options.override.reason}`
-          : options?.note ?? (source === 'qr' ? 'Check-in desde QR en admin' : 'Check-in manual desde admin'),
-      })
-
-    if (checkinInsertError) {
-      throw checkinInsertError
-    }
-
-    setStatus({
-      kind: 'success',
-      title: options?.override ? 'Override aplicado' : 'Check-in registrado',
-      detail: options?.override
-        ? `${guest.first_name} ${guest.last_name} ingreso por excepcion supervisada.`
-        : `${guest.first_name} ${guest.last_name} ingreso correctamente al evento.`,
-    })
-
-    await Promise.all([fetchRecentCheckins(), fetchGuestDirectory()])
-  }, [event, fetchGuestDirectory, fetchRecentCheckins, isTotemMode])
+  }, [event.id, fetchGuestDirectory, fetchRecentCheckins, isTotemMode])
 
   const processAccessString = useCallback(async (rawValue: string) => {
     const payload = parseAccessInput(rawValue)
-
-    const { data: tokenData, error: tokenError } = await supabase
-      .from('invitation_tokens')
-      .select('*')
-      .eq('token', payload.token)
-      .maybeSingle()
-
-    if (tokenError) {
-      throw tokenError
-    }
-
-    if (!tokenData) {
-      setStatus({
-        kind: 'error',
-        title: 'Acceso invalido',
-        detail: 'No existe una invitacion para este evento con el token ingresado.',
-      })
-      return
-    }
-
-    const invitationToken = tokenData as InvitationToken
-
-    const { data: guestData, error: guestError } = await supabase
-      .from('guests')
-      .select(`
-        id,
-        event_id,
-        first_name,
-        last_name,
-        email,
-        phone,
-        status,
-        guest_types (
-          name,
-          access_policy_label,
-          access_start_time,
-          access_end_time,
-          access_start_day_offset,
-          access_end_day_offset
-        )
-      `)
-      .eq('id', invitationToken.guest_id)
-      .maybeSingle()
-
-    if (guestError) {
-      throw guestError
-    }
-
-    if (!guestData) {
-      setStatus({
-        kind: 'error',
-        title: 'Invitado inexistente',
-        detail: 'La invitacion existe, pero el invitado asociado ya no esta disponible.',
-      })
-      return
-    }
-
-    if ((guestData as { event_id?: string }).event_id !== event.id) {
-      setStatus({
-        kind: 'error',
-        title: 'Acceso invalido',
-        detail: 'La invitacion existe, pero corresponde a otro evento.',
-      })
-      return
-    }
-
-    await registerGuestCheckin(
-      normalizeSearchableGuest(guestData as SearchableGuestRow),
-      payload.source,
-      {
-        invitationToken,
-        note: payload.source === 'qr' ? 'Check-in desde QR en admin' : 'Check-in manual desde admin',
-      }
-    )
-  }, [event.id, registerGuestCheckin])
+    await submitCheckin({ token: payload.token, source: payload.source })
+  }, [submitCheckin])
 
   const consumeAccess = async (submitEvent: React.FormEvent<HTMLFormElement>) => {
     submitEvent.preventDefault()
@@ -897,9 +748,7 @@ export default function EventCheckinManager({
     setOverrideError(null)
 
     try {
-      await registerGuestCheckin(guest, 'manual', {
-        note: 'Check-in manual desde busqueda de recepcion',
-      })
+      await submitCheckin({ guestId: guest.id, source: 'manual' })
     } catch (error) {
       setStatus({
         kind: 'error',
@@ -952,11 +801,10 @@ export default function EventCheckinManager({
         throw new Error(payload?.error || 'No se pudo validar el override.')
       }
 
-      await registerGuestCheckin(overrideContext.guest, overrideContext.source, {
-        invitationToken: overrideContext.invitationToken,
-        note: overrideContext.source === 'qr'
-          ? 'Check-in desde QR en admin'
-          : 'Check-in manual desde admin',
+      await submitCheckin({
+        token: overrideContext.token,
+        guestId: overrideContext.guestId,
+        source: overrideContext.source,
         override: {
           code: overrideContext.decisionCode,
           reason: overrideReason.trim(),
