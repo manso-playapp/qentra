@@ -16,7 +16,7 @@ export function buildGuestAccessQrPayload({
   issuedAt = new Date().toISOString(),
 }: GuestAccessPayloadInput) {
   return JSON.stringify({
-    kind: 'qentra_guest_access',
+    kind: 'alista_guest_access',
     eventId,
     eventSlug,
     guestId,

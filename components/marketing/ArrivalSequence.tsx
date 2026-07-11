@@ -30,7 +30,7 @@ const STEPS = [
  */
 export function ArrivalSequence() {
   return (
-    <div className="relative rounded-[2rem] border border-border/70 bg-card p-6 shadow-[0_28px_80px_rgba(69,46,24,0.12)] sm:p-8">
+    <div className="relative rounded-[2rem] border border-border/70 bg-card p-6 shadow-[0_28px_80px_rgba(22,33,90,0.14)] sm:p-8">
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
         El recorrido de cada invitado
       </p>

@@ -54,7 +54,7 @@ export default function AccessLoginForm({ nextPath }: AccessLoginFormProps) {
           value={email}
           onChange={(eventInput) => setEmail(eventInput.target.value)}
           className="mt-2 block w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-sm text-white outline-none ring-0 placeholder:text-slate-500 focus:border-cyan-400"
-          placeholder="operador@qentra.com"
+          placeholder="operador@alista.com"
         />
       </div>
 

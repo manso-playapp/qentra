@@ -16,11 +16,11 @@ export default function OperatorAuthConfigNotice({
         </h1>
         <p className="mt-4 text-sm leading-6 text-slate-300">
           La vista de {areaLabel} quedo protegida, pero el entorno no tiene definida
-          `QENTRA_OPERATOR_PASSWORD`.
+          `ALISTA_OPERATOR_PASSWORD`.
         </p>
         <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-950/70 p-4 text-sm text-slate-300">
-          Define `QENTRA_OPERATOR_PASSWORD` y, opcionalmente,
-          `QENTRA_OPERATOR_SESSION_SECRET` en el entorno antes de usar esta superficie
+          Define `ALISTA_OPERATOR_PASSWORD` y, opcionalmente,
+          `ALISTA_OPERATOR_SESSION_SECRET` en el entorno antes de usar esta superficie
           en produccion.
         </div>
       </div>

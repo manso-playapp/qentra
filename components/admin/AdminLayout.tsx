@@ -2,10 +2,17 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { CalendarRange, GaugeCircle, LayoutDashboard, Settings2, Sparkles } from 'lucide-react'
-import type { ReactNode } from 'react'
+import {
+  CalendarRange,
+  GaugeCircle,
+  LayoutDashboard,
+  LogOut,
+  PanelLeft,
+  PanelLeftClose,
+  Settings2,
+} from 'lucide-react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 
 interface AdminLayoutProps {
@@ -133,32 +140,62 @@ function getPageHeader(pathname: string): PageHeader {
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname()
   const header = getPageHeader(pathname)
+  const [collapsed, setCollapsed] = useState(false)
+  // Arranca en false para que server y cliente hidraten igual; la preferencia
+  // guardada se aplica recien despues de montar.
+  const skipPersist = useRef(true)
+
+  useEffect(() => {
+    if (window.localStorage.getItem('alista-admin-sidebar-collapsed') === '1') {
+      // Aplicar la preferencia guardada tras montar mantiene la hidratacion SSR
+      // consistente (server y primer render de cliente arrancan expandidos).
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setCollapsed(true)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (skipPersist.current) {
+      skipPersist.current = false
+      return
+    }
+    window.localStorage.setItem('alista-admin-sidebar-collapsed', collapsed ? '1' : '0')
+  }, [collapsed])
 
   return (
     <div className="admin-shell">
       <div className="relative mx-auto flex min-h-screen max-w-[1720px] flex-col px-4 py-4 lg:flex-row lg:gap-6 lg:px-6">
-        <aside className="lg:sticky lg:top-4 lg:h-[calc(100vh-2rem)] lg:w-[312px] lg:flex-none">
-          <div className="flex h-full flex-col rounded-[32px] border border-white/10 bg-admin-navy p-6 text-white shadow-[0_24px_80px_rgba(24,36,51,0.22)]">
-            <Card className="border-white/10 bg-white/[0.06] text-white shadow-none backdrop-blur">
-              <CardContent className="p-5">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-[11px] uppercase tracking-[0.34em] text-orange-200/80">
-                      Qentra Admin
-                    </p>
-                    <Link href="/admin" className="admin-heading mt-4 block text-[2.15rem] leading-none text-white">
-                      Control de eventos
-                    </Link>
-                  </div>
-                  <span className="rounded-full bg-white/10 p-2">
-                    <Sparkles className="size-4 text-orange-200" />
-                  </span>
-                </div>
-                <p className="mt-4 text-sm leading-6 text-slate-300">
-                  La misma base de sistema para operar agenda, delivery y acceso sin quedar atados a una sola superficie visual.
-                </p>
-              </CardContent>
-            </Card>
+        <aside
+          className={cn(
+            'lg:sticky lg:top-4 lg:h-[calc(100vh-2rem)] lg:flex-none lg:transition-[width] lg:duration-300',
+            collapsed ? 'lg:w-[92px]' : 'lg:w-[312px]'
+          )}
+        >
+          <div
+            className={cn(
+              'flex h-full flex-col rounded-[32px] border border-white/10 bg-admin-navy text-white shadow-[0_24px_80px_rgba(24,36,51,0.22)]',
+              collapsed ? 'p-4' : 'p-6'
+            )}
+          >
+            <div className={cn('flex items-center gap-2', collapsed ? 'flex-col' : 'justify-between')}>
+              <Link href="/admin" className="inline-flex" aria-label="Alista, inicio">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={collapsed ? '/alista-mark.svg' : '/alista-logo-white.svg'}
+                  alt="Alista"
+                  className={collapsed ? 'h-10 w-auto' : 'h-8 w-auto'}
+                />
+              </Link>
+              <button
+                type="button"
+                onClick={() => setCollapsed((value) => !value)}
+                aria-label={collapsed ? 'Expandir menú' : 'Replegar menú'}
+                title={collapsed ? 'Expandir menú' : 'Replegar menú'}
+                className="grid size-9 flex-none place-items-center rounded-xl border border-white/10 bg-white/5 text-slate-300 transition hover:bg-white/10 hover:text-white"
+              >
+                {collapsed ? <PanelLeft className="size-4" /> : <PanelLeftClose className="size-4" />}
+              </button>
+            </div>
 
             <nav className="mt-8 flex-1 space-y-2">
               {ADMIN_NAV_ITEMS.map((item) => {
@@ -169,14 +206,16 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                   <Link
                     key={item.href}
                     href={item.href}
+                    title={collapsed ? item.label : undefined}
                     className={cn(
-                      'group flex items-center justify-between rounded-[26px] border px-4 py-4 transition',
+                      'group flex items-center rounded-[26px] border transition',
+                      collapsed ? 'justify-center p-3' : 'justify-between px-4 py-4',
                       active
-                        ? 'border-orange-300/30 bg-orange-300/12 text-white shadow-[0_12px_32px_rgba(184,79,45,0.18)]'
+                        ? 'border-sky-400/30 bg-sky-400/15 text-white shadow-[0_12px_32px_rgba(0,156,221,0.18)]'
                         : 'border-white/8 bg-white/[0.03] text-slate-200 hover:border-white/12 hover:bg-white/[0.06]'
                     )}
                   >
-                    <div className="flex items-center gap-3">
+                    <div className={cn('flex items-center', !collapsed && 'gap-3')}>
                       <span
                         className={cn(
                           'rounded-2xl border p-2.5',
@@ -185,34 +224,48 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                       >
                         <Icon className="size-4" />
                       </span>
-                      <div>
-                        <p className="text-sm font-semibold">{item.label}</p>
-                        <p className={cn('mt-1 text-xs', active ? 'text-orange-100/80' : 'text-slate-400')}>
-                          {item.description}
-                        </p>
-                      </div>
+                      {!collapsed && (
+                        <div>
+                          <p className="text-sm font-semibold">{item.label}</p>
+                          <p className={cn('mt-1 text-xs', active ? 'text-sky-200/80' : 'text-slate-400')}>
+                            {item.description}
+                          </p>
+                        </div>
+                      )}
                     </div>
-                    <span className={cn(
-                      'text-xs font-semibold uppercase tracking-[0.24em]',
-                      active ? 'text-orange-200' : 'text-slate-500 group-hover:text-slate-300'
-                    )}>
-                      go
-                    </span>
+                    {!collapsed && (
+                      <span
+                        className={cn(
+                          'text-xs font-semibold uppercase tracking-[0.24em]',
+                          active ? 'text-sky-300' : 'text-slate-500 group-hover:text-slate-300'
+                        )}
+                      >
+                        go
+                      </span>
+                    )}
                   </Link>
                 )
               })}
             </nav>
 
             <form action="/acceso/logout" method="post" className="mt-6">
-              <Button type="submit" variant="outline" className="w-full border-white/10 bg-white/5 text-slate-100 hover:bg-white/10 hover:text-white">
-                Cerrar sesion
+              <Button
+                type="submit"
+                variant="outline"
+                title={collapsed ? 'Cerrar sesión' : undefined}
+                className={cn(
+                  'w-full border-white/10 bg-white/5 text-slate-100 hover:bg-white/10 hover:text-white',
+                  collapsed && 'px-0'
+                )}
+              >
+                {collapsed ? <LogOut className="size-4" /> : 'Cerrar sesion'}
               </Button>
             </form>
           </div>
         </aside>
 
         <div className="min-w-0 flex-1">
-          <header className="rounded-[32px] border border-border/70 bg-admin-panel px-6 py-5 shadow-[0_20px_60px_rgba(86,62,38,0.08)] backdrop-blur">
+          <header className="rounded-[32px] border border-border/70 bg-admin-panel px-6 py-5 shadow-[0_20px_60px_rgba(22,33,90,0.08)] backdrop-blur">
             <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
               <div>
                 <p className="text-[11px] uppercase tracking-[0.32em] text-muted-foreground">

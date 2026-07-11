@@ -18,7 +18,11 @@ export type OperatorAccessEmailDeliveryResult = {
 
 function resolveRecoveryRedirect(requestUrl: string | URL) {
   const url = typeof requestUrl === 'string' ? new URL(requestUrl) : requestUrl
-  return process.env.QENTRA_OPERATOR_RECOVERY_REDIRECT_URL?.trim() || `${url.origin}/acceso`
+  return (
+    process.env.ALISTA_OPERATOR_RECOVERY_REDIRECT_URL?.trim() ||
+    process.env.QENTRA_OPERATOR_RECOVERY_REDIRECT_URL?.trim() ||
+    `${url.origin}/acceso`
+  )
 }
 
 function formatRolesLabel(roles: string[] | null | undefined) {
@@ -33,7 +37,7 @@ function buildOperatorAccessText(payload: OperatorAccessLinkData, roles: string[
   return [
     `Hola ${payload.full_name || payload.email},`,
     '',
-    'Tu acceso operativo a Qentra ya esta listo.',
+    'Tu acceso operativo a Alista ya esta listo.',
     `Roles: ${formatRolesLabel(roles)}`,
     `Abre este enlace para definir o recuperar tu acceso: ${payload.action_link}`,
     `Si el enlace no abre correctamente, entra luego por: ${payload.redirect_to}`,
@@ -45,7 +49,7 @@ function buildOperatorAccessHtml(payload: OperatorAccessLinkData, roles: string[
     <div style="font-family: Georgia, serif; background:#f8fafc; padding:32px; color:#0f172a;">
       <div style="max-width:680px; margin:0 auto; background:#ffffff; border:1px solid #e2e8f0; border-radius:24px; overflow:hidden;">
         <div style="padding:32px; background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%); color:#ffffff;">
-          <p style="margin:0; font-size:12px; letter-spacing:0.28em; text-transform:uppercase; color:#7dd3fc;">Qentra Access</p>
+          <p style="margin:0; font-size:12px; letter-spacing:0.28em; text-transform:uppercase; color:#7dd3fc;">Alista Access</p>
           <h1 style="margin:16px 0 0; font-size:34px; line-height:1.15;">Acceso operativo listo</h1>
           <p style="margin:16px 0 0; font-size:15px; line-height:1.7; color:rgba(255,255,255,0.82);">
             Usa este enlace para definir o recuperar tu acceso a admin, puerta o totem.
@@ -128,10 +132,10 @@ export async function sendOperatorAccessEmail(
   roles: string[] | null | undefined
 ): Promise<OperatorAccessEmailDeliveryResult> {
   const apiKey = process.env.RESEND_API_KEY
-  const from = process.env.QENTRA_EMAIL_FROM
+  const from = process.env.ALISTA_EMAIL_FROM ?? process.env.QENTRA_EMAIL_FROM
 
   if (!apiKey || !from) {
-    throw new Error('Falta configurar RESEND_API_KEY o QENTRA_EMAIL_FROM para envio real de email.')
+    throw new Error('Falta configurar RESEND_API_KEY o ALISTA_EMAIL_FROM para envio real de email.')
   }
 
   const response = await fetch('https://api.resend.com/emails', {
@@ -143,7 +147,7 @@ export async function sendOperatorAccessEmail(
     body: JSON.stringify({
       from,
       to: [payload.email],
-      subject: 'Tu acceso operativo a Qentra',
+      subject: 'Tu acceso operativo a Alista',
       html: buildOperatorAccessHtml(payload, roles),
       text: buildOperatorAccessText(payload, roles),
     }),

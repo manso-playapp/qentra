@@ -925,9 +925,9 @@ export default function SettingsPage() {
           <aside className="space-y-6">
             <Card className="bg-admin-navy text-white">
               <CardHeader>
-                <CardDescription className="text-orange-200/80">Alta operativa</CardDescription>
+                <CardDescription className="text-sky-300/80">Alta operativa</CardDescription>
                 <CardTitle className="flex items-center gap-2 text-white">
-                  <UserPlus className="size-4 text-orange-200" />
+                  <UserPlus className="size-4 text-sky-300" />
                   Crear operador
                 </CardTitle>
                 <CardDescription className="text-slate-300">
@@ -960,7 +960,7 @@ export default function SettingsPage() {
                     value={operatorForm.email}
                     onChange={handleOperatorInputChange}
                     className="mt-2 border-white/10 bg-white/[0.06] text-white placeholder:text-slate-400"
-                    placeholder="operador@qentra.com"
+                    placeholder="operador@alista.com"
                   />
                 </div>
 
@@ -1044,7 +1044,7 @@ export default function SettingsPage() {
                     value={deliveryForm.name}
                     onChange={handleDeliveryInputChange}
                     className="mt-2"
-                    placeholder="Canal principal Qentra"
+                    placeholder="Canal principal Alista"
                   />
                 </div>
 

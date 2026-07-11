@@ -241,7 +241,7 @@ export default function EditEventForm({ event }: EditEventFormProps) {
           <div className="space-y-6">
             <Card className="bg-admin-navy text-white">
               <CardHeader>
-                <CardDescription className="text-orange-200/80">Datos operativos</CardDescription>
+                <CardDescription className="text-sky-300/80">Datos operativos</CardDescription>
                 <CardTitle className="text-white">Contacto, canal y estado</CardTitle>
               </CardHeader>
               <CardContent className="space-y-5">

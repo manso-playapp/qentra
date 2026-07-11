@@ -47,7 +47,7 @@ function buildEmailHtml(payload: AccessDeliveryPayload) {
     <div style="font-family: Georgia, serif; background:#f8fafc; padding:32px; color:#0f172a;">
       <div style="max-width:680px; margin:0 auto; background:#ffffff; border:1px solid #e2e8f0; border-radius:24px; overflow:hidden;">
         <div style="padding:32px; background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%); color:#ffffff;">
-          <p style="margin:0; font-size:12px; letter-spacing:0.28em; text-transform:uppercase; color:#7dd3fc;">Qentra Access</p>
+          <p style="margin:0; font-size:12px; letter-spacing:0.28em; text-transform:uppercase; color:#7dd3fc;">Alista Access</p>
           <h1 style="margin:16px 0 0; font-size:36px; line-height:1.15;">${payload.guestFirstName}, tu acceso ya esta listo</h1>
           <p style="margin:16px 0 0; font-size:15px; line-height:1.7; color:rgba(255,255,255,0.82);">
             Presenta el QR desde tu celular en la puerta del evento.
@@ -79,7 +79,10 @@ function buildEmailHtml(payload: AccessDeliveryPayload) {
 
 // Codigo de pais movil por defecto para numeros sin prefijo internacional.
 // Argentina es 549 (54 + 9 de movil). Configurable por si cambia el mercado.
-const DEFAULT_MOBILE_COUNTRY_CODE = process.env.QENTRA_DEFAULT_PHONE_COUNTRY?.trim() || '549'
+const DEFAULT_MOBILE_COUNTRY_CODE =
+  process.env.ALISTA_DEFAULT_PHONE_COUNTRY?.trim() ||
+  process.env.QENTRA_DEFAULT_PHONE_COUNTRY?.trim() ||
+  '549'
 
 /**
  * Lleva un telefono a formato E.164 (+549...).
@@ -120,10 +123,10 @@ function normalizeWhatsAppRecipient(phone: string) {
 
 async function sendWithResend(payload: AccessDeliveryPayload): Promise<DeliveryResult> {
   const apiKey = process.env.RESEND_API_KEY
-  const from = process.env.QENTRA_EMAIL_FROM
+  const from = process.env.ALISTA_EMAIL_FROM ?? process.env.QENTRA_EMAIL_FROM
 
   if (!apiKey || !from) {
-    throw new Error('Falta configurar RESEND_API_KEY o QENTRA_EMAIL_FROM para envio real de email.')
+    throw new Error('Falta configurar RESEND_API_KEY o ALISTA_EMAIL_FROM para envio real de email.')
   }
 
   const response = await fetch('https://api.resend.com/emails', {

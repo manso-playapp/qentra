@@ -34,11 +34,9 @@ export function SiteFooter() {
       <div className="mx-auto w-full max-w-6xl px-6 py-14">
         <div className="grid gap-10 md:grid-cols-[1.4fr_repeat(3,1fr)]">
           <div className="max-w-xs">
-            <Link href="/" className="flex items-center gap-2.5">
-              <span className="grid size-8 place-items-center rounded-xl bg-primary text-primary-foreground font-display text-lg font-semibold leading-none">
-                Q
-              </span>
-              <span className="font-display text-xl font-semibold tracking-tight">Qentra</span>
+            <Link href="/" className="flex items-center" aria-label="Alista, inicio">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/alista-logo.svg" alt="Alista" className="h-7 w-auto" />
             </Link>
             <p className="mt-4 text-sm leading-6 text-muted-foreground">
               Plataforma de experiencia de invitados. Convertí cada interacción previa en una
@@ -66,7 +64,7 @@ export function SiteFooter() {
         </div>
 
         <div className="mt-12 flex flex-col gap-3 border-t border-border/60 pt-6 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-          <p>© {new Date().getFullYear()} Qentra. Todo listo para que puedas estar presente.</p>
+          <p>© {new Date().getFullYear()} Alista. Todo listo para que el anfitrión pueda estar presente.</p>
           <div className="flex gap-5">
             <Link href="/privacidad" className="hover:text-foreground">
               Privacidad

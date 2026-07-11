@@ -27,11 +27,19 @@ type AuthorizedPageAccessResult =
     }
 
 function getSecurityOverridePin() {
-  return process.env.QENTRA_SECURITY_OVERRIDE_PIN?.trim() ?? ''
+  return (
+    process.env.ALISTA_SECURITY_OVERRIDE_PIN?.trim() ??
+    process.env.QENTRA_SECURITY_OVERRIDE_PIN?.trim() ??
+    ''
+  )
 }
 
 function getSecuritySupervisorPin() {
-  return process.env.QENTRA_SECURITY_SUPERVISOR_PIN?.trim() ?? ''
+  return (
+    process.env.ALISTA_SECURITY_SUPERVISOR_PIN?.trim() ??
+    process.env.QENTRA_SECURITY_SUPERVISOR_PIN?.trim() ??
+    ''
+  )
 }
 
 function safeCompareStrings(left: string, right: string) {

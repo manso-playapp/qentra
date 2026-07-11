@@ -1,4 +1,4 @@
-// Core types for Qentra platform
+// Core types for Alista platform
 
 export interface Event {
   id: string

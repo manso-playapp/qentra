@@ -4,10 +4,18 @@ import { Button } from '@/components/ui/button'
 import { ArrivalSequence } from '@/components/marketing/ArrivalSequence'
 
 export const metadata = {
-  title: { absolute: 'Qentra · Prepará cada llegada. Viví el momento.' },
+  title: { absolute: 'Alista · Llegá al evento con todo preparado.' },
   description:
-    'Gestioná invitaciones, confirmaciones y accesos desde un solo lugar. Convertí la información de tus invitados en una recepción más clara, fluida y personal.',
+    'Gestioná invitaciones, confirmaciones y accesos desde un solo lugar. Detectá pendientes antes, coordiná a tu equipo y recibí sin depender de planillas, mensajes ni decisiones de último momento.',
 }
+
+const PROBLEMS = [
+  'Datos incompletos',
+  'Acompañantes sin registrar',
+  'Accesos sin definir',
+  'Necesidades no contempladas',
+  'Equipo sin contexto',
+]
 
 const CAPABILITIES = [
   {
@@ -41,6 +49,14 @@ const FLOW = [
   { step: 'Aprendé', note: 'Cada evento mejora el siguiente.' },
 ]
 
+const RESULTS = [
+  'Información centralizada en un solo lugar.',
+  'Pendientes visibles antes del evento.',
+  'Roles y criterios claros para el equipo.',
+  'Accesos y excepciones preparados de antemano.',
+  'Visibilidad sin convertir al anfitrión en operador.',
+]
+
 export default function HomePage() {
   return (
     <>
@@ -52,18 +68,19 @@ export default function HomePage() {
               Plataforma de experiencia de invitados
             </span>
             <h1 className="mt-6 font-display text-[2.75rem] font-semibold leading-[1.05] tracking-[-0.03em] text-foreground sm:text-6xl">
-              Prepará cada llegada.
+              Llegá al evento
               <br />
-              <span className="text-primary">Viví el momento.</span>
+              <span className="text-brand-cyan">con todo preparado.</span>
             </h1>
             <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground">
-              Gestioná invitaciones, confirmaciones y accesos desde un solo lugar. Convertí la
-              información de tus invitados en una recepción más clara, fluida y personal.
+              Gestioná invitaciones, confirmaciones y accesos desde un solo lugar. Detectá
+              pendientes antes, coordiná a tu equipo y recibí sin depender de planillas, mensajes ni
+              decisiones de último momento.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
               <Button asChild size="lg">
-                <Link href="/demo">
-                  Solicitar demo
+                <Link href="/admin">
+                  Preparar un evento
                   <ArrowRight className="size-4" />
                 </Link>
               </Button>
@@ -93,6 +110,17 @@ export default function HomePage() {
               momento: cuando los invitados ya están llegando.
             </p>
           </div>
+
+          <ul className="mt-10 flex flex-wrap gap-3">
+            {PROBLEMS.map((problem) => (
+              <li
+                key={problem}
+                className="rounded-full border border-border/70 bg-card px-4 py-2 text-sm font-medium text-muted-foreground"
+              >
+                {problem}
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 
@@ -113,7 +141,7 @@ export default function HomePage() {
             return (
               <div
                 key={cap.title}
-                className="rounded-3xl border border-border/70 bg-card p-6 shadow-[0_18px_50px_rgba(69,46,24,0.06)]"
+                className="rounded-3xl border border-border/70 bg-card p-6 shadow-[0_18px_50px_rgba(22,33,90,0.08)]"
               >
                 <span className="grid size-11 place-items-center rounded-2xl bg-event-surface text-primary ring-1 ring-primary/15">
                   <Icon className="size-5" strokeWidth={1.75} />
@@ -128,7 +156,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Flujo */}
+      {/* Mecanismo / Flujo */}
       <section className="border-t border-border/60 bg-secondary/30">
         <div className="mx-auto w-full max-w-6xl px-6 py-20">
           <div className="max-w-2xl">
@@ -159,14 +187,56 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Cierre */}
+      {/* Resultado */}
+      <section className="mx-auto w-full max-w-6xl px-6 py-20">
+        <div className="grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+          <div className="max-w-md">
+            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-primary">
+              El resultado
+            </p>
+            <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+              Lo que cambia cuando preparás antes.
+            </h2>
+            <p className="mt-5 text-lg leading-relaxed text-muted-foreground">
+              Un equipo preparado y una recepción clara, sin decisiones improvisadas ni consultas de
+              último momento.
+            </p>
+          </div>
+
+          <ul className="grid gap-4 sm:grid-cols-2">
+            {RESULTS.map((result) => (
+              <li
+                key={result}
+                className="flex items-start gap-3 rounded-2xl border border-border/70 bg-card p-5"
+              >
+                <span
+                  aria-hidden
+                  className="mt-1 grid size-5 shrink-0 place-items-center rounded-full bg-primary/10 text-primary"
+                >
+                  <svg viewBox="0 0 24 24" className="size-3.5" fill="none" strokeWidth={3}>
+                    <path
+                      d="M20 6 9 17l-5-5"
+                      stroke="currentColor"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </span>
+                <p className="text-sm leading-6 text-foreground">{result}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      {/* Cierre humano */}
       <section className="mx-auto w-full max-w-6xl px-6 py-24">
         <div className="overflow-hidden rounded-[2.5rem] bg-admin-navy px-8 py-16 text-center text-white sm:px-16">
           <h2 className="mx-auto max-w-2xl font-display text-3xl font-semibold tracking-tight sm:text-4xl">
             Recibir mejor empieza mucho antes de la llegada.
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-white/70">
-            Todo listo para que puedas estar presente para las personas que recibís.
+            Todo listo para que el anfitrión pueda estar presente.
           </p>
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
             <Button asChild size="lg">

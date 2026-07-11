@@ -499,7 +499,7 @@ export default function EventGuestsManager({
     const result = await updateGuest(guestId, payload, {
       previousStatus: visibleGuests.find((guest) => guest.id === guestId)?.status,
       checkinMethod: 'manual',
-      checkinNotes: 'Registro desde Qentra Admin',
+      checkinNotes: 'Registro desde Alista Admin',
     })
 
     if (result.error) {
@@ -527,7 +527,7 @@ export default function EventGuestsManager({
     const result = await updateGuest(guest.id, payload, {
       previousStatus: guest.status,
       checkinMethod: 'manual',
-      checkinNotes: 'Registro desde Qentra Admin',
+      checkinNotes: 'Registro desde Alista Admin',
     })
 
     if (result.error) {

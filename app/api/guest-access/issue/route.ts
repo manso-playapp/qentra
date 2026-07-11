@@ -27,7 +27,7 @@ function buildInvitationExpiry(eventDate: string, eventStartTime: string) {
 }
 
 function buildGuestAccessToken() {
-  return `qentra_${crypto.randomUUID().replace(/-/g, '')}`
+  return `alista_${crypto.randomUUID().replace(/-/g, '')}`
 }
 
 export const runtime = 'nodejs'

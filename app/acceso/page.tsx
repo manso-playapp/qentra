@@ -60,7 +60,7 @@ export default async function AccessPage({ searchParams }: AccessPageProps) {
       <div className="mx-auto grid max-w-5xl gap-6 lg:grid-cols-[minmax(0,1.1fr)_380px]">
         <section className="rounded-[32px] border border-white/10 bg-white/5 p-8 shadow-2xl shadow-black/30 backdrop-blur">
           <p className="text-sm font-semibold uppercase tracking-[0.28em] text-cyan-300">
-            Qentra Access
+            Alista Access
           </p>
           <h1 className="mt-4 max-w-xl text-4xl font-semibold leading-tight text-white">
             Acceso operativo para admin, puerta y totem

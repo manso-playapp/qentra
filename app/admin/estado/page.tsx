@@ -185,7 +185,7 @@ export default function MvpStatusPage() {
               {NEXT_STEPS.map((step) => (
                 <div key={step.featureId} className="rounded-[24px] border border-white/10 bg-white/6 p-4">
                   <div className="flex items-center gap-3">
-                    <span className="flex size-7 flex-none items-center justify-center rounded-full bg-orange-300/20 text-xs font-semibold text-orange-100">
+                    <span className="flex size-7 flex-none items-center justify-center rounded-full bg-sky-400/20 text-xs font-semibold text-sky-200">
                       {step.order}
                     </span>
                     <p className="text-sm font-semibold text-white">{step.title}</p>
@@ -326,7 +326,7 @@ export default function MvpStatusPage() {
           <CardContent className="flex flex-col gap-4 p-8 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-start gap-4">
               <span className="rounded-2xl bg-white/10 p-3">
-                <Target className="size-5 text-orange-200" />
+                <Target className="size-5 text-sky-300" />
               </span>
               <div className="max-w-2xl">
                 <p className="admin-heading text-2xl leading-tight text-white">

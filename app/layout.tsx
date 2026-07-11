@@ -1,23 +1,17 @@
 import type { Metadata } from 'next'
-import { Fraunces, Manrope } from 'next/font/google'
+import { Nunito } from 'next/font/google'
 import './globals.css'
 
-const manrope = Manrope({
+const nunito = Nunito({
   subsets: ['latin'],
   display: 'swap',
-  variable: '--font-manrope',
-})
-
-const fraunces = Fraunces({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-fraunces',
+  variable: '--font-nunito',
 })
 
 export const metadata: Metadata = {
   title: {
-    default: 'Qentra',
-    template: '%s · Qentra',
+    default: 'Alista',
+    template: '%s · Alista',
   },
   description: 'Event management platform',
 }
@@ -28,7 +22,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="es" className={`${manrope.variable} ${fraunces.variable}`}>
+    <html lang="es" className={`${nunito.variable}`}>
       <body className="font-sans antialiased">{children}</body>
     </html>
   )

@@ -920,7 +920,7 @@ export default function EventCheckinManager({
               {totemSpotlight ? 'Ingreso registrado correctamente' : 'Pantalla de bienvenida del evento'}
             </div>
             <p className="text-xs uppercase tracking-[0.3em] text-white/40">
-              Desarrollado por Qentra
+              Desarrollado por Alista
             </p>
           </footer>
         </div>
@@ -1095,7 +1095,7 @@ export default function EventCheckinManager({
                       onChange={(eventInput) => setAccessInput(eventInput.target.value)}
                       rows={5}
                       className="font-mono"
-                      placeholder='qentra_xxx o {"kind":"qentra_guest_access","token":"qentra_xxx",...}'
+                      placeholder='alista_xxx o {"kind":"alista_guest_access","token":"alista_xxx",...}'
                     />
                     <Button type="submit" className="w-full" disabled={processingCheckin}>
                       {processingCheckin ? 'Validando acceso...' : 'Validar acceso manual'}
@@ -1174,7 +1174,7 @@ export default function EventCheckinManager({
                         {overridePolicyLoading
                           ? 'Cargando política de excepción...'
                           : !overridePinConfigured
-                          ? 'La excepción no está configurada en este entorno. Define QENTRA_SECURITY_OVERRIDE_PIN para habilitarla.'
+                          ? 'La excepción no está configurada en este entorno. Define ALISTA_SECURITY_OVERRIDE_PIN para habilitarla.'
                           : overrideSupervisorRequired
                           ? 'Este entorno exige doble control: PIN de override y PIN de supervisor.'
                           : 'Este entorno exige PIN de override y motivo operativo.'}
@@ -1381,7 +1381,7 @@ export default function EventCheckinManager({
                   <p>Si el invitado ya ingresó, el sistema advierte y no habilita un nuevo acceso sin excepción supervisada.</p>
                   <p>Si el tipo o rol tiene ventana horaria, se bloquea el QR fuera de esa franja.</p>
                   <p>Solo `ya ingresado` o `fuera de horario` pueden resolverse por excepción con PIN y motivo.</p>
-                  <p>Si existe `QENTRA_SECURITY_SUPERVISOR_PIN`, la excepción exige doble control.</p>
+                  <p>Si existe `ALISTA_SECURITY_SUPERVISOR_PIN`, la excepción exige doble control.</p>
                   <p>Al validar, se marca `used_at` y se registra una fila en `checkins`.</p>
                 </CardContent>
               </Card>
@@ -1605,7 +1605,7 @@ export default function EventCheckinManager({
                 onChange={(eventInput) => setAccessInput(eventInput.target.value)}
                 rows={isTotemMode ? 5 : 8}
                 className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-3 font-mono text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                placeholder='qentra_xxx o {"kind":"qentra_guest_access","token":"qentra_xxx",...}'
+                placeholder='alista_xxx o {"kind":"alista_guest_access","token":"alista_xxx",...}'
               />
             </div>
 
@@ -1696,7 +1696,7 @@ export default function EventCheckinManager({
                   {overridePolicyLoading
                     ? 'Cargando politica de override...'
                     : !overridePinConfigured
-                    ? 'Override no configurado en este entorno. Define QENTRA_SECURITY_OVERRIDE_PIN para habilitar excepciones.'
+                    ? 'Override no configurado en este entorno. Define ALISTA_SECURITY_OVERRIDE_PIN para habilitar excepciones.'
                     : overrideSupervisorRequired
                     ? 'Este entorno exige doble control: PIN de override y PIN de supervisor.'
                     : 'Este entorno exige PIN de override y motivo operativo.'}
@@ -1867,7 +1867,7 @@ export default function EventCheckinManager({
               <p>Si el invitado ya ingreso, el sistema advierte y no habilita un nuevo acceso.</p>
               <p>Si el tipo o rol tiene ventana horaria, se bloquea el QR fuera de esa franja.</p>
               <p>Solo `ya ingresado` o `fuera de horario` pueden resolverse por override con PIN y motivo; `cancelado`, `vencido` o `invalido` no.</p>
-              <p>Si el entorno define `QENTRA_SECURITY_SUPERVISOR_PIN`, el override exige doble control.</p>
+              <p>Si el entorno define `ALISTA_SECURITY_SUPERVISOR_PIN`, el override exige doble control.</p>
               <p>Al validar, se marca `used_at` y se registra una fila en `checkins`.</p>
               <p>Tambien se puede operar check-in manual desde la busqueda de invitados.</p>
             </div>

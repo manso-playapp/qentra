@@ -2,8 +2,8 @@
 @import 'tw-animate-css';
 
 @theme inline {
-  --font-sans: var(--font-manrope);
-  --font-display: var(--font-fraunces);
+  --font-sans: var(--font-nunito);
+  --font-display: var(--font-nunito);
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -28,6 +28,10 @@
   --color-admin-panel-strong: var(--admin-panel-strong);
   --color-event-accent: var(--event-accent);
   --color-event-surface: var(--event-surface);
+  --color-brand-cyan: var(--brand-cyan);
+  --color-brand-navy: var(--brand-navy);
+  --color-brand-pink: var(--brand-pink);
+  --color-brand-powder: var(--brand-powder);
 
   --radius-sm: calc(var(--radius) - 8px);
   --radius-md: calc(var(--radius) - 4px);
@@ -37,33 +41,38 @@
 
 :root {
   --radius: 1.5rem;
-  --background: #f3ecdf;
-  --foreground: #1d1713;
-  --card: rgba(255, 251, 244, 0.92);
-  --card-foreground: #1d1713;
-  --popover: #fffaf2;
-  --popover-foreground: #1d1713;
-  --primary: #b55330;
-  --primary-foreground: #fff7f2;
-  --secondary: #ebe2d3;
-  --secondary-foreground: #31261d;
-  --muted: #ede6d8;
-  --muted-foreground: #736455;
-  --accent: #efe8da;
-  --accent-foreground: #2d241c;
-  --destructive: #c24141;
-  --border: rgba(73, 55, 38, 0.14);
-  --input: rgba(103, 81, 58, 0.16);
-  --ring: rgba(181, 83, 48, 0.34);
+  --background: #f4f8fb;
+  --foreground: #16213f;
+  --card: rgba(255, 255, 255, 0.94);
+  --card-foreground: #16213f;
+  --popover: #ffffff;
+  --popover-foreground: #16213f;
+  --primary: #213480;
+  --primary-foreground: #ffffff;
+  --secondary: #e4eef4;
+  --secondary-foreground: #22305f;
+  --muted: #e9f0f6;
+  --muted-foreground: #5c6b86;
+  --accent: #e3f1fb;
+  --accent-foreground: #17285a;
+  --destructive: #d8455a;
+  --border: rgba(33, 52, 128, 0.14);
+  --input: rgba(33, 52, 128, 0.18);
+  --ring: rgba(0, 156, 221, 0.45);
 
-  --admin-navy: #172231;
-  --admin-panel: rgba(255, 251, 244, 0.82);
-  --admin-panel-strong: #fffdf8;
+  --admin-navy: #141d47;
+  --admin-panel: rgba(255, 255, 255, 0.82);
+  --admin-panel-strong: #ffffff;
 
-  --event-accent: #b55330;
-  --event-accent-foreground: #fff8f3;
-  --event-surface: rgba(181, 83, 48, 0.08);
-  --event-glow: rgba(181, 83, 48, 0.16);
+  --event-accent: #009cdd;
+  --event-accent-foreground: #ffffff;
+  --event-surface: rgba(0, 156, 221, 0.1);
+  --event-glow: rgba(0, 156, 221, 0.18);
+
+  --brand-cyan: #009cdd;
+  --brand-navy: #213480;
+  --brand-pink: #f23c6e;
+  --brand-powder: #bbd4de;
 }
 
 * {
@@ -77,9 +86,9 @@ html {
 body {
   min-height: 100vh;
   background:
-    radial-gradient(circle at top left, rgba(181, 83, 48, 0.12), transparent 22%),
-    radial-gradient(circle at top right, rgba(23, 34, 49, 0.1), transparent 28%),
-    linear-gradient(180deg, #f8f1e7 0%, var(--background) 100%);
+    radial-gradient(circle at top left, rgba(0, 156, 221, 0.12), transparent 22%),
+    radial-gradient(circle at top right, rgba(33, 52, 128, 0.1), transparent 28%),
+    linear-gradient(180deg, #ffffff 0%, var(--background) 100%);
   color: var(--foreground);
 }
 
@@ -101,8 +110,8 @@ body {
 }
 
 .admin-heading {
-  font-family: var(--font-fraunces), serif;
-  letter-spacing: -0.04em;
+  font-family: var(--font-nunito), sans-serif;
+  letter-spacing: -0.02em;
 }
 
 .event-theme-surface {

@@ -1,5 +1,6 @@
 const PUBLIC_APP_URL =
   process.env.NEXT_PUBLIC_APP_URL?.trim().replace(/\/+$/, '') ||
+  process.env.ALISTA_PUBLIC_APP_URL?.trim().replace(/\/+$/, '') ||
   process.env.QENTRA_PUBLIC_APP_URL?.trim().replace(/\/+$/, '') ||
   ''
 

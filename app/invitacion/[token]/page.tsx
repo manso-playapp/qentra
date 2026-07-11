@@ -267,7 +267,7 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
                 {branding?.logo_url ? (
                   <Image
                     src={branding.logo_url}
-                    alt={`Logo de ${event?.name || 'Qentra'}`}
+                    alt={`Logo de ${event?.name || 'Alista'}`}
                     width={96}
                     height={96}
                     unoptimized
@@ -447,7 +447,7 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
                 {accessReady ? (
                   <a
                     href={qrCodeUrl}
-                    download={`qentra-${event?.slug || 'acceso'}-${invitationToken.token.slice(-6)}.png`}
+                    download={`alista-${event?.slug || 'acceso'}-${invitationToken.token.slice(-6)}.png`}
                     className="inline-flex w-full items-center justify-center rounded-full px-5 py-3 text-sm font-semibold text-white transition hover:brightness-[0.97]"
                     style={{ backgroundColor: primaryColor }}
                   >
@@ -476,7 +476,7 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
         </section>
 
         <footer className="pb-2 text-center text-xs uppercase tracking-[0.28em] text-slate-500">
-          Desarrollado por Qentra
+          Desarrollado por Alista
         </footer>
       </div>
     </main>

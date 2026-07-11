@@ -94,7 +94,7 @@ export default function TestSupabase() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-8">
       <div className="rounded-lg border border-gray-200 p-8 max-w-2xl w-full">
-        <h2 className="text-2xl font-bold mb-6">Estado Qentra Database</h2>
+        <h2 className="text-2xl font-bold mb-6">Estado Alista Database</h2>
 
         {/* Connection Status */}
         <div className={`mb-6 p-4 rounded-lg ${connectionOk ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
@@ -156,7 +156,7 @@ export default function TestSupabase() {
           <ol className="list-decimal list-inside space-y-1 text-sm text-gray-700">
             {!allTablesExist && <li>Crear tablas faltantes en Supabase</li>}
             <li>Ejecutar políticas RLS (ver supabase-schema.sql)</li>
-            <li>Crear primer módulo: Qentra Admin</li>
+            <li>Crear primer módulo: Alista Admin</li>
             <li>Implementar autenticación de usuarios</li>
           </ol>
         </div>

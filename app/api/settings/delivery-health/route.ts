@@ -40,11 +40,17 @@ export async function GET() {
   }
 
   const serviceRoleConfigured = Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY?.trim())
-  const recoveryRedirectConfigured = Boolean(process.env.QENTRA_OPERATOR_RECOVERY_REDIRECT_URL?.trim())
+  const recoveryRedirectConfigured = Boolean(
+    process.env.ALISTA_OPERATOR_RECOVERY_REDIRECT_URL?.trim() ||
+      process.env.QENTRA_OPERATOR_RECOVERY_REDIRECT_URL?.trim()
+  )
 
   const guestEmailMissing = [
     ...missingWhenEmpty('RESEND_API_KEY', process.env.RESEND_API_KEY),
-    ...missingWhenEmpty('QENTRA_EMAIL_FROM', process.env.QENTRA_EMAIL_FROM),
+    ...missingWhenEmpty(
+      'ALISTA_EMAIL_FROM',
+      process.env.ALISTA_EMAIL_FROM ?? process.env.QENTRA_EMAIL_FROM
+    ),
   ]
 
   const operatorAccessEmailMissing = [
