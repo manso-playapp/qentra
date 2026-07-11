@@ -70,8 +70,6 @@ type SearchableGuest = Pick<
   | 'email'
   | 'phone'
   | 'status'
-  | 'plus_ones_allowed'
-  | 'plus_ones_confirmed'
 > & {
   guest_types?: Pick<
     GuestType,
@@ -294,8 +292,6 @@ export default function EventCheckinManager({
           email,
           phone,
           status,
-          plus_ones_allowed,
-          plus_ones_confirmed,
           guest_types (
             name,
             access_policy_label,
@@ -517,8 +513,10 @@ export default function EventCheckinManager({
     const confirmedGuests = guestDirectory.filter((guest) => guest.status === 'confirmed')
     const pendingGuests = guestDirectory.filter((guest) => guest.status === 'pending')
     const cancelledGuests = guestDirectory.length - activeGuests.length
-    const expectedPeople = activeGuests.reduce((total, guest) => total + 1 + guest.plus_ones_confirmed, 0)
-    const insidePeople = checkedInGuests.reduce((total, guest) => total + 1 + guest.plus_ones_confirmed, 0)
+    // Los acompañantes no viven como columnas en guests (se registran en notes
+    // desde la invitacion), asi que aca cada invitado cuenta como una persona.
+    const expectedPeople = activeGuests.length
+    const insidePeople = checkedInGuests.length
 
     return {
       activeGuests: activeGuests.length,
@@ -741,8 +739,6 @@ export default function EventCheckinManager({
         email,
         phone,
         status,
-        plus_ones_allowed,
-        plus_ones_confirmed,
         guest_types (
           name,
           access_policy_label,
@@ -1437,9 +1433,6 @@ export default function EventCheckinManager({
                           </div>
 
                           <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-                            <p className="text-sm text-muted-foreground">
-                              Acompañantes {guest.plus_ones_confirmed}/{guest.plus_ones_allowed}
-                            </p>
                             <Button
                               type="button"
                               variant="success"
@@ -2001,10 +1994,7 @@ export default function EventCheckinManager({
                       </span>
                     </div>
 
-                    <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-                      <p className="text-sm text-gray-500">
-                        Acompanantes {guest.plus_ones_confirmed}/{guest.plus_ones_allowed}
-                      </p>
+                    <div className="mt-4 flex flex-wrap items-center justify-end gap-3">
                       <button
                         type="button"
                         onClick={() => handleManualCheckin(guest)}
