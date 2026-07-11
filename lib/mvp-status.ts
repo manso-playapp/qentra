@@ -199,10 +199,10 @@ export const BEYOND_MVP: { title: string; detail: string }[] = [
 /** Deuda conocida. No bloquea el MVP, pero conviene tenerla a la vista. */
 export const TECH_DEBT: { title: string; detail: string; severity: 'alta' | 'media' | 'baja' }[] = [
   {
-    title: 'Tipos TS escritos contra un esquema imaginado',
+    title: 'Tipos TS vs esquema real: auditados',
     detail:
-      'branding y check-in declaraban columnas inexistentes (banner_url; checkin_time/checkin_method): rompian en runtime sin que el build lo viera. Ya corregidos, pero conviene verificar el resto de los tipos contra las columnas reales de Supabase de una.',
-    severity: 'alta',
+      'Se barrieron las 11 tablas y todos los select/insert/update contra las columnas reales. Corregidos: branding (banner_url), check-in (checkin_time/method, nunca persistia) y directorio (plus_ones). Runtime limpio. Quedan campos virtuales en el tipo Guest (special_requests=notes, plus_ones no se persisten) documentados; los acompañantes como dato estructurado siguen sin modelar.',
+    severity: 'media',
   },
   {
     title: 'supabase-schema.sql no crea las tablas nucleo',

@@ -158,6 +158,18 @@ export interface GuestType {
   updated_at: string
 }
 
+/**
+ * Invitado. OJO: no todos los campos son columnas de la tabla `guests`.
+ * Columnas reales: id, event_id, guest_type_id, first_name, last_name,
+ * full_name, phone, email, document_number, photo_url, status, notes,
+ * payment_status, created_manually, created_by_user_id, created_at, updated_at.
+ *
+ * Campos VIRTUALES (no consultar por nombre en un select/insert, romperia):
+ * - `special_requests`: alias de la columna `notes` (mapeado en la capa de API).
+ * - `plus_ones_allowed` / `plus_ones_confirmed`: NO se persisten (hoy 0 fijo);
+ *   los acompañantes viven serializados dentro de `notes`.
+ * - `user_id`: no existe; la columna real es `created_by_user_id`.
+ */
 export interface Guest {
   id: string
   event_id: string
@@ -242,16 +254,25 @@ export interface Checkin {
   created_at: string
 }
 
+/**
+ * Espejo de la tabla `totem_sessions`.
+ *
+ * El tipo anterior declaraba columnas que no existen (totem_id, session_start,
+ * total_scans, status...). La tabla real modela el estado visual del totem por
+ * ingreso. Hoy la tabla no se usa (el totem lee el feed de checkins), pero si
+ * se implementa, este tipo tiene que coincidir con estas columnas.
+ */
 export interface TotemSession {
   id: string
   event_id: string
-  totem_id: string
-  session_start: string
-  session_end?: string
-  total_scans: number
-  status: 'active' | 'completed' | 'error'
+  triggered_by_checkin_id?: string | null
+  screen_state: string
+  guest_display_name?: string | null
+  guest_photo_url?: string | null
+  message_text?: string | null
+  started_at: string
+  ends_at?: string | null
   created_at: string
-  updated_at: string
 }
 
 // Form types
