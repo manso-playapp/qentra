@@ -255,6 +255,8 @@ export default function EventCheckinManager({
   const animationFrameRef = useRef<number | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const lastTotemCheckinIdRef = useRef<string | null>(null)
+  const totemBaselineInitializedRef = useRef(false)
+  const initialCheckinLoadDoneRef = useRef(false)
   const spotlightTimeoutRef = useRef<number | null>(null)
 
   const fetchRecentCheckins = useCallback(async () => {
@@ -272,6 +274,9 @@ export default function EventCheckinManager({
       }
 
       setRecentCheckins(payload?.data ?? [])
+      // Marca que el primer fetch resolvio, para que el spotlight del totem
+      // distinga "lista vacia inicial" de "todavia no cargamos".
+      initialCheckinLoadDoneRef.current = true
     } catch (error) {
       setStatus({
         kind: 'error',
@@ -365,21 +370,30 @@ export default function EventCheckinManager({
   }, [isTotemMode])
 
   useEffect(() => {
-    if (!isTotemMode || recentCheckins.length === 0) {
+    if (!isTotemMode) {
+      return
+    }
+
+    // Esperar a que el primer fetch resuelva antes de fijar la baseline. Si
+    // arrancamos con la lista vacia (evento sin ingresos aun), el primer
+    // check-in real tiene que anunciarse, no consumirse como estado inicial.
+    if (!initialCheckinLoadDoneRef.current) {
+      return
+    }
+
+    const latestCheckinId = recentCheckins[0]?.id ?? null
+
+    if (!totemBaselineInitializedRef.current) {
+      totemBaselineInitializedRef.current = true
+      lastTotemCheckinIdRef.current = latestCheckinId
+      return
+    }
+
+    if (!latestCheckinId || latestCheckinId === lastTotemCheckinIdRef.current) {
       return
     }
 
     const latestCheckin = recentCheckins[0]
-
-    if (!lastTotemCheckinIdRef.current) {
-      lastTotemCheckinIdRef.current = latestCheckin.id
-      return
-    }
-
-    if (lastTotemCheckinIdRef.current === latestCheckin.id) {
-      return
-    }
-
     lastTotemCheckinIdRef.current = latestCheckin.id
     setTotemSpotlight({
       id: latestCheckin.id,
