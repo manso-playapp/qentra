@@ -77,8 +77,45 @@ function buildEmailHtml(payload: AccessDeliveryPayload) {
   `.trim()
 }
 
+// Codigo de pais movil por defecto para numeros sin prefijo internacional.
+// Argentina es 549 (54 + 9 de movil). Configurable por si cambia el mercado.
+const DEFAULT_MOBILE_COUNTRY_CODE = process.env.QENTRA_DEFAULT_PHONE_COUNTRY?.trim() || '549'
+
+/**
+ * Lleva un telefono a formato E.164 (+549...).
+ *
+ * Sin esto, un numero guardado como "3425579221" se enviaba tal cual y Twilio
+ * lo interpretaba como +1 (EE.UU.), fallando la entrega. Los numeros que ya
+ * vienen en formato internacional (+...) se respetan.
+ */
+export function toE164(raw: string): string {
+  const trimmed = raw.trim()
+  if (trimmed.startsWith('+')) {
+    return '+' + trimmed.slice(1).replace(/\D/g, '')
+  }
+
+  let digits = trimmed.replace(/\D/g, '')
+  if (digits.startsWith('00')) {
+    return '+' + digits.slice(2)
+  }
+  if (digits.startsWith('0')) {
+    digits = digits.slice(1) // prefijo de larga distancia nacional
+  }
+  if (digits.startsWith('54')) {
+    return '+' + digits
+  }
+  // Sin codigo de pais: asumimos movil del pais por defecto.
+  if (digits.startsWith('9')) {
+    return '+54' + digits
+  }
+  return `+${DEFAULT_MOBILE_COUNTRY_CODE}${digits}`
+}
+
 function normalizeWhatsAppRecipient(phone: string) {
-  return phone.startsWith('whatsapp:') ? phone : `whatsapp:${phone}`
+  if (phone.startsWith('whatsapp:')) {
+    return phone
+  }
+  return `whatsapp:${toE164(phone)}`
 }
 
 async function sendWithResend(payload: AccessDeliveryPayload): Promise<DeliveryResult> {
