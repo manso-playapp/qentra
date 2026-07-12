@@ -13,6 +13,8 @@ const LABELS = {
   dni: 'DNI',
   dietary: 'Menu',
   companions: 'Acompanantes',
+  song: 'Cancion',
+  greeting: 'Saludo',
   observations: 'Observaciones',
   payment: 'Pago',
 }
@@ -64,6 +66,8 @@ describe('parseInvitationDetails — well-formed input', () => {
       `${LABELS.dni}: 30111222`,
       `${LABELS.dietary}: Sin TACC`,
       `${LABELS.companions}: Juan, Maria`,
+      `${LABELS.song}: Despacito`,
+      `${LABELS.greeting}: Feliz cumple`,
       `${LABELS.observations}: Llega tarde`,
       `${LABELS.payment}: approved`,
     ].join('\n')
@@ -72,6 +76,8 @@ describe('parseInvitationDetails — well-formed input', () => {
       dni: '30111222',
       dietaryRequirements: 'Sin TACC',
       companionNames: 'Juan, Maria',
+      song: 'Despacito',
+      greeting: 'Feliz cumple',
       observations: 'Llega tarde',
       paymentStatus: 'approved',
     })
@@ -96,6 +102,8 @@ describe('parseInvitationDetails — defaults and missing fields', () => {
       dni: '',
       dietaryRequirements: '',
       companionNames: '',
+      song: '',
+      greeting: '',
       observations: '',
       paymentStatus: 'not_required',
     })
@@ -106,6 +114,8 @@ describe('parseInvitationDetails — defaults and missing fields', () => {
       dni: '',
       dietaryRequirements: '',
       companionNames: '',
+      song: '',
+      greeting: '',
       observations: '',
       paymentStatus: 'not_required',
     })
@@ -116,6 +126,8 @@ describe('parseInvitationDetails — defaults and missing fields', () => {
       dni: '',
       dietaryRequirements: '',
       companionNames: '',
+      song: '',
+      greeting: '',
       observations: '',
       paymentStatus: 'not_required',
     })
@@ -190,6 +202,8 @@ describe('parseInvitationDetails — round-trip with serializeInvitationDetails'
       dni: '30111222',
       dietaryRequirements: 'Sin TACC',
       companionNames: 'Juan',
+      song: 'Despacito',
+      greeting: 'Feliz cumple',
       observations: 'Llega tarde',
       paymentStatus: 'pending' as const,
     }

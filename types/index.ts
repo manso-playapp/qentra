@@ -182,6 +182,21 @@ export interface Guest {
   /** Foto del invitado. URL firmada del bucket privado guest-photos. */
   photo_url?: string | null
   status: 'pending' | 'confirmed' | 'checked_in' | 'cancelled'
+  /**
+   * Estado crudo de la base (7 valores del ciclo real). `status` lo colapsa a 4
+   * para la logica de acceso; este campo lo conserva para mostrarlo en el panel.
+   * Ver normalizeGuestRecord y QEN-007.
+   */
+  db_status?:
+    | 'preinvited'
+    | 'link_sent'
+    | 'registered'
+    | 'enabled'
+    | 'checked_in'
+    | 'rejected'
+    | 'duplicate'
+  /** Estado del pago/aporte. Gatea la emision del acceso (ver isInvitationAccessReady). */
+  payment_status?: 'not_required' | 'pending' | 'approved'
   plus_ones_allowed: number
   plus_ones_confirmed: number
   special_requests?: string
@@ -357,6 +372,7 @@ export interface UpdateGuestForm {
   email?: string
   phone?: string
   status?: Guest['status']
+  payment_status?: Guest['payment_status']
   plus_ones_allowed?: number
   plus_ones_confirmed?: number
   special_requests?: string

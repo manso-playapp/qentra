@@ -6,7 +6,7 @@
 
 export type FeatureStatus = 'done' | 'partial' | 'todo'
 
-export type ModuleKey = 'plataforma' | 'admin' | 'guest' | 'checkin' | 'totem'
+export type ModuleKey = 'plataforma' | 'admin' | 'guest' | 'checkin' | 'totem' | 'pagos'
 
 export interface MvpFeature {
   id: string
@@ -27,6 +27,7 @@ export const MODULES: Record<ModuleKey, { label: string; description: string }> 
   guest: { label: 'Guest', description: 'Invitacion, registro y QR' },
   checkin: { label: 'Check-In', description: 'Puerta y validacion de acceso' },
   totem: { label: 'Totem', description: 'Pantalla de recepcion' },
+  pagos: { label: 'Pagos', description: 'Cobros y monetizacion' },
 }
 
 /** Las 15 features que el playbook define como alcance del MVP. */
@@ -79,10 +80,9 @@ export const MVP_FEATURES: MvpFeature[] = [
     id: 'estados',
     title: 'Estados de invitado',
     module: 'admin',
-    status: 'partial',
+    status: 'done',
     detail:
-      'La base maneja los 7 estados del playbook y el flujo de invitacion los escribe correctamente.',
-    gap: 'El panel los colapsa a 4 estados visibles: link_sent y duplicate no se exponen en la UI.',
+      'La base maneja los 7 estados del playbook y el flujo de invitacion los escribe correctamente. El panel ahora expone los 7 (Sin invitar, Link enviado, Registrado, Habilitado, Ingreso, Rechazado, Duplicado) como badge, en vez de colapsarlos a 4.',
     evidence: ['lib/guest-schema.ts', 'components/admin/EventGuestsManager.tsx'],
   },
   {
@@ -113,12 +113,21 @@ export const MVP_FEATURES: MvpFeature[] = [
     evidence: ['lib/guest-access.ts', 'app/api/guest-access/issue/route.ts'],
   },
   {
+    id: 'conciliacion-pagos',
+    title: 'Conciliacion de pagos (asistida)',
+    module: 'guest',
+    status: 'done',
+    detail:
+      'El admin marca el aporte de cada invitado como sin cobro / pendiente / confirmado desde la ficha. Confirmarlo destraba la emision del acceso (isInvitationAccessReady ya gatea contra la columna payment_status). La pasarela automatica (MercadoPago) sigue pendiente aparte.',
+    evidence: ['app/api/guests/[guestId]/route.ts', 'components/admin/EventGuestsManager.tsx'],
+  },
+  {
     id: 'checkin-web',
     title: 'Check-in web con escaneo QR',
     module: 'checkin',
     status: 'done',
     detail:
-      'Escaneo por camara con jsQR mas ingreso manual del token. El registro ahora SI persiste: el codigo escribia contra columnas inexistentes y ningun check-in se guardaba (tabla siempre vacia). Alineado al esquema real.',
+      'Escaneo por camara con jsQR mas ingreso manual del token. Probado end-to-end: invitacion por mail, registro con foto, lectura en la puerta y festejo en el totem, todo funcionando con el registro persistido.',
     evidence: ['components/admin/EventCheckinManager.tsx', 'app/puerta/[id]/page.tsx'],
   },
   {
@@ -132,12 +141,12 @@ export const MVP_FEATURES: MvpFeature[] = [
   },
   {
     id: 'validacion-categoria',
-    title: 'Validacion por categoria',
+    title: 'Validacion por categoria y aforo',
     module: 'checkin',
-    status: 'partial',
-    detail: 'La ventana horaria de cada categoria se aplica al validar el acceso.',
-    gap: 'No hay control de aforo ni cupo por categoria: max_capacity existe en el modelo pero no se valida al ingresar.',
-    evidence: ['lib/access-policy.ts'],
+    status: 'done',
+    detail:
+      'La ventana horaria de cada categoria se aplica al validar el acceso. El aforo TOTAL del evento se valida en la puerta: al llegar al cupo se bloquea el ingreso con override de supervisor (cuenta check-ins aprobados; no descuenta acompañantes porque no se modelan). El cupo por categoria queda fuera de alcance a proposito.',
+    evidence: ['lib/access-policy.ts', 'app/api/events/[id]/checkin/route.ts'],
   },
   {
     id: 'validacion-duplicado',
@@ -165,6 +174,38 @@ export const MVP_FEATURES: MvpFeature[] = [
     detail:
       'Pantalla de bienvenida con branding; muestra el ingreso aprobado con la FOTO del invitado al instante via Realtime (con polling de respaldo) y vuelve sola a idle. Por diseno solo celebra aprobaciones; los rechazos quedan en la puerta.',
     evidence: ['app/api/events/[id]/checkin-feed/route.ts', 'components/admin/EventCheckinManager.tsx'],
+  },
+  {
+    id: 'twilio-numero',
+    title: 'Numero de WhatsApp emisor',
+    module: 'guest',
+    status: 'todo',
+    detail: 'El envio por WhatsApp funciona contra el sandbox de Twilio. El envio manual ("mandar desde mi WhatsApp") ya permite invitar desde el numero propio.',
+    gap: 'Diferido hasta definir el numero emisor: debe ser propio del evento (de la familia en un 15, de la organizacion en otros), no un unico numero de negocio. El emisor deberia ser configurable por evento; para 15s probablemente convenga el envio manual antes que un sender de Twilio.',
+  },
+  {
+    id: 'invitacion-editor',
+    title: 'Backend del disenador de invitacion',
+    module: 'admin',
+    status: 'todo',
+    detail: 'La invitacion toma el branding del evento (colores, logo, portada, mensajes).',
+    gap: 'Falta el backend para disenar y guardar layouts de invitacion a medida, mas alla del branding base.',
+  },
+  {
+    id: 'totem-editor',
+    title: 'Backend del disenador de totem',
+    module: 'totem',
+    status: 'todo',
+    detail: 'El totem usa el branding y los mensajes cargados en el evento.',
+    gap: 'Falta el backend para disenar y guardar la composicion visual del totem a medida.',
+  },
+  {
+    id: 'mercadopago',
+    title: 'Cobros con MercadoPago',
+    module: 'pagos',
+    status: 'todo',
+    detail: 'Sin integracion de pagos todavia.',
+    gap: 'Falta conectar MercadoPago para cobrar entradas o el uso de la plataforma.',
   },
 ]
 
@@ -199,35 +240,9 @@ export const BEYOND_MVP: { title: string; detail: string }[] = [
 /** Deuda conocida. No bloquea el MVP, pero conviene tenerla a la vista. */
 export const TECH_DEBT: { title: string; detail: string; severity: 'alta' | 'media' | 'baja' }[] = [
   {
-    title: 'Tipos TS vs esquema real: auditados',
+    title: 'Guest.status desalineado con la logica real (QEN-007)',
     detail:
-      'Se barrieron las 11 tablas y todos los select/insert/update contra las columnas reales. Corregidos: branding (banner_url), check-in (checkin_time/method, nunca persistia) y directorio (plus_ones). Runtime limpio. Quedan campos virtuales en el tipo Guest (special_requests=notes, plus_ones no se persisten) documentados; los acompañantes como dato estructurado siguen sin modelar.',
-    severity: 'media',
-  },
-  {
-    title: 'supabase-schema.sql no crea las tablas nucleo',
-    detail:
-      'Solo aplica RLS y policies: asume que las 8 tablas ya existen en Supabase. Levantar el proyecto de cero hoy no es reproducible.',
-    severity: 'alta',
-  },
-  {
-    title: 'Vista global de invitados es un placeholder',
-    detail: '/admin/guests muestra un cartel de proximamente. El CRUD real solo vive dentro de cada evento.',
-    severity: 'media',
-  },
-  {
-    title: 'Guest.status desalineado con la logica real',
-    detail: 'El tipo declara 4 estados y el motor de acceso maneja 7. Se sostiene con casts. Trackeado como QEN-007.',
-    severity: 'media',
-  },
-  {
-    title: 'totem_sessions definida pero sin uso',
-    detail: 'La tabla y el tipo existen, pero ninguna sesion de totem se crea ni se consulta.',
-    severity: 'baja',
-  },
-  {
-    title: 'Faltan los documentos base del playbook',
-    detail: 'No existen qentra-product-base.md, qentra-db-schema.md ni qentra-roadmap.md.',
+      'El motor de acceso opera sobre 4 estados canonicos (Guest.status); la base maneja 7. Mitigado: el campo db_status conserva el estado real y el panel ya lo muestra. Falta reconciliar ambos vocabularios en una sola fuente. Detalle en docs/alista-tracker.md.',
     severity: 'baja',
   },
 ]
@@ -236,21 +251,21 @@ export const TECH_DEBT: { title: string; detail: string; severity: 'alta' | 'med
 export const NEXT_STEPS: { order: number; title: string; detail: string; featureId: string }[] = [
   {
     order: 1,
-    title: 'Prueba real end-to-end en produccion',
-    detail: 'Cargar invitado, confirmar con foto, escanear el QR en la puerta y ver el spotlight en el totem. Cada pieza se verifico contra la base, pero el flujo completo con camara nunca se corrio (el check-in estaba roto hasta ahora).',
-    featureId: 'checkin-web',
+    title: 'Numero de WhatsApp productivo',
+    detail: 'El envio por WhatsApp corre contra el sandbox de Twilio. Dar de alta un numero propio aprobado para poder escribirle a cualquier invitado sin opt-in previo.',
+    featureId: 'twilio-numero',
   },
   {
     order: 2,
-    title: 'Habilitar Realtime en checkins',
-    detail: 'Agregar la tabla checkins a la publicacion supabase_realtime para que el spotlight del totem sea instantaneo. Sin esto funciona igual, pero con la demora del polling.',
-    featureId: 'totem',
+    title: 'Backend del disenador de invitacion',
+    detail: 'Poder disenar y guardar layouts de invitacion a medida, mas alla del branding base del evento.',
+    featureId: 'invitacion-editor',
   },
   {
     order: 3,
-    title: 'Aforo por categoria y exponer los 7 estados',
-    detail: 'Los dos partials que no bloquean el MVP: control de cupo por categoria en el check-in, y mostrar link_sent/duplicate en el panel.',
-    featureId: 'validacion-categoria',
+    title: 'Backend del disenador de totem',
+    detail: 'Poder disenar y guardar la composicion visual del totem a medida.',
+    featureId: 'totem-editor',
   },
 ]
 

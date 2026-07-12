@@ -133,6 +133,22 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
   }
 
   const branding = (brandingResponse.data ?? null) as SurfaceBranding | null
+
+  // Config rica de la invitacion (dresscode, "como llegar"). Fetch separado y
+  // defensivo: si la columna config todavia no existe, el error se ignora y
+  // queda null, sin romper el branding ni la invitacion.
+  let invitationConfig: { dresscode?: string; directionsUrl?: string } | null = null
+  if (guest?.event_id) {
+    const { data: cfgRow } = await supabase
+      .from('event_branding')
+      .select('config')
+      .eq('event_id', guest.event_id)
+      .maybeSingle()
+    const raw = (cfgRow as { config?: unknown } | null)?.config
+    if (raw && typeof raw === 'object') {
+      invitationConfig = raw as { dresscode?: string; directionsUrl?: string }
+    }
+  }
   const invitationDetails = parseInvitationDetails(guest?.notes)
   const paymentStatus = (guest?.payment_status ?? 'not_required') as
     | 'not_required'
@@ -307,7 +323,23 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
                   <p className="text-sm text-white/65">Lugar</p>
                   <p className="mt-1 text-lg font-semibold">{event?.venue_name || 'Venue privado'}</p>
                   {event?.venue_address && <p className="mt-2 text-sm leading-6 text-white/75">{event.venue_address}</p>}
+                  {invitationConfig?.directionsUrl && (
+                    <a
+                      href={invitationConfig.directionsUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-2 inline-block text-sm font-semibold text-white underline"
+                    >
+                      Cómo llegar →
+                    </a>
+                  )}
                 </div>
+                {invitationConfig?.dresscode && (
+                  <div>
+                    <p className="text-sm text-white/65">Dresscode</p>
+                    <p className="mt-1 text-lg font-semibold">{invitationConfig.dresscode}</p>
+                  </div>
+                )}
                 <div>
                   <p className="text-sm text-white/65">Vigencia del acceso</p>
                   <p className="mt-1 text-base font-semibold">{formatDateTime(invitationToken.expires_at)}</p>
@@ -346,6 +378,8 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
                       plusOnesConfirmed: 0,
                       companionNames: invitationDetails.companionNames,
                       dietaryRequirements: invitationDetails.dietaryRequirements,
+                      song: invitationDetails.song,
+                      greeting: invitationDetails.greeting,
                       observations: invitationDetails.observations,
                       photoUrl: guest?.photo_url || '',
                     }}
@@ -362,6 +396,8 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
                       <p>DNI: {invitationDetails.dni || 'No informado'}</p>
                       <p>Acompanantes: gestion pendiente para una version posterior</p>
                       <p>Menu: {invitationDetails.dietaryRequirements || 'Sin aclaraciones'}</p>
+                      {invitationDetails.song && <p>Tu cancion: {invitationDetails.song}</p>}
+                      {invitationDetails.greeting && <p>Saludo: {invitationDetails.greeting}</p>}
                     </div>
                   </div>
 

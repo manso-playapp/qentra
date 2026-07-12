@@ -16,6 +16,8 @@ type InvitationResponseBody = {
   plusOnesConfirmed?: number
   companionNames?: string
   dietaryRequirements?: string
+  song?: string
+  greeting?: string
   observations?: string
   paymentStatus?: 'not_required' | 'pending' | 'approved'
 }
@@ -91,6 +93,8 @@ export async function POST(request: Request, context: RouteContext) {
     const plusOnesConfirmed = Math.max(0, body.plusOnesConfirmed ?? 0)
     const companionNames = body.companionNames?.trim() || ''
     const dietaryRequirements = body.dietaryRequirements?.trim() || ''
+    const song = body.song?.trim() || ''
+    const greeting = body.greeting?.trim() || ''
     const observations = body.observations?.trim() || ''
     const paymentStatus = body.paymentStatus ?? guest.payment_status ?? 'not_required'
 
@@ -113,6 +117,8 @@ export async function POST(request: Request, context: RouteContext) {
       dni,
       dietaryRequirements,
       companionNames,
+      song,
+      greeting,
       observations,
     })
 

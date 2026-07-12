@@ -7,7 +7,6 @@ import {
   Copy,
   Mail,
   RefreshCw,
-  Send,
   ShieldCheck,
   Smartphone,
   UserPlus,
@@ -24,7 +23,6 @@ import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import {
   useDeliveryHealth,
-  useDeliveryLogs,
   useDeliveryProfiles,
   useOperatorProfiles,
 } from '@/lib/hooks'
@@ -200,12 +198,6 @@ export default function SettingsPage() {
     error,
     createDeliveryProfile,
   } = useDeliveryProfiles()
-  const {
-    deliveryLogs,
-    loading: loadingDeliveryLogs,
-    error: deliveryLogsError,
-    fetchDeliveryLogs,
-  } = useDeliveryLogs(20)
   const {
     operatorProfiles,
     loading: loadingOperatorProfiles,
@@ -459,13 +451,12 @@ export default function SettingsPage() {
                   <Badge variant="default">Configuracion</Badge>
                   <Badge variant="outline">Canales de envio</Badge>
                   <Badge variant="outline">Operadores</Badge>
-                  <Badge variant="outline">Auditoria</Badge>
                 </div>
                 <h1 className="admin-heading mt-5 text-5xl leading-none text-foreground">
                   Canales, permisos y estado del sistema.
                 </h1>
                 <p className="mt-4 text-base leading-7 text-muted-foreground">
-                  Esta pantalla concentra lo que define si la app puede operar de verdad: canales, usuarios, links de acceso y trazabilidad de envíos.
+                  Esta pantalla concentra lo global: canales de envío, usuarios operadores y links de acceso. La trazabilidad de envíos de cada evento vive dentro del evento.
                 </p>
               </div>
 
@@ -853,66 +844,6 @@ export default function SettingsPage() {
                         <p className="flex items-center gap-2"><Smartphone className="size-4" /> {profile.from_phone || 'No definido'}</p>
                         <p>Telefono de respuesta: {profile.reply_to_phone || 'No definido'}</p>
                         <p>Plantilla de WhatsApp: {profile.whatsapp_content_sid || 'No definido'}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-              </CardContent>
-            </Card>
-
-            <Card className="bg-admin-panel">
-              <CardHeader className="flex-row items-start justify-between gap-4">
-                <div>
-                  <CardDescription>Auditoria</CardDescription>
-                  <CardTitle className="flex items-center gap-2">
-                    <Send className="size-4 text-primary" />
-                    Ultimos envios
-                  </CardTitle>
-                  <CardDescription>
-                    Historial basico de envios reales por canal.
-                  </CardDescription>
-                </div>
-                <Button type="button" variant="outline" size="sm" onClick={() => fetchDeliveryLogs()}>
-                  <RefreshCw className="size-4" />
-                  Actualizar
-                </Button>
-              </CardHeader>
-              <CardContent>
-
-              {deliveryLogsError && (
-                <StatusNotice tone="danger">Error al cargar logs: {deliveryLogsError}</StatusNotice>
-              )}
-
-              {loadingDeliveryLogs ? (
-                <LoadingBlock />
-              ) : deliveryLogs.length === 0 ? (
-                <div className="rounded-[24px] border border-dashed border-border bg-secondary/60 p-5 text-sm text-muted-foreground">
-                  Todavia no hay envios registrados.
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {deliveryLogs.map((log) => (
-                    <div key={log.id} className="rounded-[26px] border border-border/70 bg-white/80 p-4">
-                      <div className="flex flex-wrap items-start justify-between gap-3">
-                        <div>
-                          <p className="font-medium text-foreground">
-                            {log.channel} · {log.recipient}
-                          </p>
-                          <p className="mt-1 text-sm text-muted-foreground">
-                            Evento {log.event_id} · Invitado {log.guest_id}
-                          </p>
-                        </div>
-                        <div className="flex flex-wrap gap-2 text-xs font-medium">
-                          <Badge variant={log.status === 'sent' ? 'success' : 'danger'}>{log.status}</Badge>
-                          <Badge variant="outline">{log.provider || 'sin canal'}</Badge>
-                        </div>
-                      </div>
-
-                      <div className="mt-4 grid gap-2 text-sm text-muted-foreground">
-                        <p>Creado: {new Date(log.created_at).toLocaleString('es-AR')}</p>
-                        <p>ID externo: {log.external_id || 'No informado'}</p>
-                        <p>Error: {log.error_message || 'Sin error'}</p>
                       </div>
                     </div>
                   ))}

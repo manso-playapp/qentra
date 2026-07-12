@@ -14,7 +14,7 @@ import { supabase } from '@/lib/supabase'
 import type { Checkin, CheckinMethod, Event, Guest, GuestType, SurfaceBranding } from '@/types'
 
 type EventCheckinManagerProps = {
-  event: Pick<Event, 'id' | 'name' | 'slug' | 'event_date' | 'start_time'>
+  event: Pick<Event, 'id' | 'name' | 'slug' | 'event_date' | 'start_time' | 'max_capacity'>
   branding?: SurfaceBranding | null
   mode?: 'admin' | 'door' | 'totem'
 }
@@ -52,7 +52,7 @@ type TotemSpotlight = {
   photoUrl?: string | null
 }
 
-type OverrideableAccessCode = 'already_checked_in' | 'outside_window'
+type OverrideableAccessCode = 'already_checked_in' | 'outside_window' | 'event_full'
 
 type OverrideContext = {
   token?: string
@@ -230,6 +230,8 @@ export default function EventCheckinManager({
   const [accessInput, setAccessInput] = useState('')
   const [guestSearchQuery, setGuestSearchQuery] = useState('')
   const [recentCheckins, setRecentCheckins] = useState<CheckinWithGuest[]>([])
+  // Aforo en vivo: total de ingresos aprobados del evento (no solo los 10 del feed).
+  const [approvedCount, setApprovedCount] = useState<number | null>(null)
   const [guestDirectory, setGuestDirectory] = useState<SearchableGuest[]>([])
   const [loadingRecentCheckins, setLoadingRecentCheckins] = useState(true)
   const [loadingGuestDirectory, setLoadingGuestDirectory] = useState(true)
@@ -266,7 +268,7 @@ export default function EventCheckinManager({
       // asi que el join desde el navegador devolvia nombre y foto vacios.
       const response = await fetch(`/api/events/${event.id}/checkin-feed`)
       const payload = (await response.json().catch(() => null)) as
-        | { data?: CheckinWithGuest[]; error?: string }
+        | { data?: CheckinWithGuest[]; approvedCount?: number; error?: string }
         | null
 
       if (!response.ok) {
@@ -274,6 +276,9 @@ export default function EventCheckinManager({
       }
 
       setRecentCheckins(payload?.data ?? [])
+      if (typeof payload?.approvedCount === 'number') {
+        setApprovedCount(payload.approvedCount)
+      }
       // Marca que el primer fetch resolvio, para que el spotlight del totem
       // distinga "lista vacia inicial" de "todavia no cargamos".
       initialCheckinLoadDoneRef.current = true
@@ -537,6 +542,22 @@ export default function EventCheckinManager({
       remainingExpectedPeople: Math.max(expectedPeople - insidePeople, 0),
     }
   }, [guestDirectory])
+
+  // Aforo en vivo: ingresados (check-ins aprobados) contra el cupo del evento.
+  const aforo = useMemo(() => {
+    const capacity = event.max_capacity ?? 0
+    const occupancy = approvedCount ?? 0
+    const hasLimit = capacity > 0
+    return {
+      hasLimit,
+      known: approvedCount !== null,
+      capacity,
+      occupancy,
+      pct: hasLimit ? Math.min(100, Math.round((occupancy / capacity) * 100)) : 0,
+      spotsLeft: hasLimit ? Math.max(capacity - occupancy, 0) : 0,
+      full: hasLimit && occupancy >= capacity,
+    }
+  }, [event.max_capacity, approvedCount])
 
   const statusTone = useMemo(() => {
     if (processingCheckin) {
@@ -1037,7 +1058,7 @@ export default function EventCheckinManager({
                   </div>
                 </div>
 
-                <div className="mt-5 grid gap-3 md:grid-cols-3">
+                <div className={`mt-5 grid gap-3 ${aforo.hasLimit ? 'md:grid-cols-4' : 'md:grid-cols-3'}`}>
                   <div className={`rounded-[24px] px-4 py-3 ${statusTone.badge}`}>
                     <p className="text-xs uppercase tracking-[0.18em] opacity-80">Base activa</p>
                     <p className="mt-2 text-2xl font-semibold">{doorMetrics.activeGuests}</p>
@@ -1046,6 +1067,21 @@ export default function EventCheckinManager({
                     <p className="text-xs uppercase tracking-[0.18em] opacity-80">Por ingresar</p>
                     <p className="mt-2 text-2xl font-semibold">{doorMetrics.remainingExpectedPeople}</p>
                   </div>
+                  {aforo.hasLimit && (
+                    <div
+                      className={`rounded-[24px] px-4 py-3 ${
+                        aforo.full ? 'bg-rose-500/25 text-white ring-1 ring-rose-300/40' : statusTone.badge
+                      }`}
+                    >
+                      <p className="text-xs uppercase tracking-[0.18em] opacity-80">
+                        {aforo.full ? 'Cupo completo' : 'Aforo'}
+                      </p>
+                      <p className="mt-2 text-2xl font-semibold">
+                        {aforo.known ? aforo.occupancy : '—'}
+                        <span className="text-base opacity-70"> / {aforo.capacity}</span>
+                      </p>
+                    </div>
+                  )}
                   <div className={`rounded-[24px] px-4 py-3 ${statusTone.badge}`}>
                     <p className="text-xs uppercase tracking-[0.18em] opacity-80">Últimos movimientos</p>
                     <p className="mt-2 text-2xl font-semibold">{recentCheckins.length}</p>
@@ -1321,13 +1357,36 @@ export default function EventCheckinManager({
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-                    <div className="rounded-[24px] border border-white/10 bg-white/[0.05] p-4">
-                      <p className="text-xs uppercase tracking-[0.24em] text-slate-400">Ingresos recientes</p>
-                      <p className="mt-3 text-3xl font-semibold text-white">{recentCheckins.length}</p>
-                      <p className="mt-2 text-sm leading-6 text-slate-300">
-                        Último refresh automático cada {LIVE_REFRESH_INTERVAL_MS / 1000}s.
-                      </p>
-                    </div>
+                    {aforo.hasLimit ? (
+                      <div className="rounded-[24px] border border-white/10 bg-white/[0.05] p-4">
+                        <p className="text-xs uppercase tracking-[0.24em] text-slate-400">Aforo</p>
+                        <p className="mt-3 text-3xl font-semibold text-white">
+                          {aforo.known ? aforo.occupancy : '—'}
+                          <span className="text-xl text-slate-400"> / {aforo.capacity}</span>
+                        </p>
+                        <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
+                          <div
+                            className={`h-full ${aforo.full ? 'bg-rose-400' : 'bg-emerald-400'}`}
+                            style={{ width: `${aforo.pct}%` }}
+                          />
+                        </div>
+                        <p className="mt-2 text-sm leading-6 text-slate-300">
+                          {aforo.full
+                            ? 'Cupo completo. Los ingresos nuevos requieren autorización.'
+                            : `${aforo.spotsLeft} lugares libres.`}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="rounded-[24px] border border-white/10 bg-white/[0.05] p-4">
+                        <p className="text-xs uppercase tracking-[0.24em] text-slate-400">Ingresados</p>
+                        <p className="mt-3 text-3xl font-semibold text-white">
+                          {aforo.known ? aforo.occupancy : recentCheckins.length}
+                        </p>
+                        <p className="mt-2 text-sm leading-6 text-slate-300">
+                          Sin cupo declarado para este evento.
+                        </p>
+                      </div>
+                    )}
                     <div className="rounded-[24px] border border-white/10 bg-white/[0.05] p-4">
                       <p className="text-xs uppercase tracking-[0.24em] text-slate-400">No habilitados</p>
                       <p className="mt-3 text-3xl font-semibold text-white">{doorMetrics.cancelledGuests}</p>

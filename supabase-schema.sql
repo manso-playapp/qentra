@@ -1,5 +1,144 @@
--- Qentra Database Schema
--- Ejecutar en Supabase SQL Editor
+-- Alista Database Schema
+-- Ejecutar en Supabase SQL Editor. Idempotente: es seguro correrlo varias veces.
+
+-- ============================================================================
+-- TABLAS NUCLEO
+--
+-- CREATE TABLE IF NOT EXISTS: en una base que ya tiene estas tablas no hace
+-- nada; solo aplica al montar el proyecto de cero. La estructura (columnas,
+-- tipos, PK y FK) se reconstruyo desde la base real via la API de PostgREST.
+-- Lo marcado con [inferido] (algunos DEFAULT y UNIQUE) proviene de la logica de
+-- la app y conviene verificarlo contra un dump real antes de un deploy productivo.
+-- ============================================================================
+
+create extension if not exists pgcrypto;
+
+create table if not exists events (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  slug text not null unique,                       -- [inferido] unique
+  event_type text not null,
+  event_date date not null,
+  start_time time,
+  venue_name text,
+  venue_address text,
+  max_capacity integer,
+  status text not null default 'draft',            -- [inferido] default
+  description text,
+  created_by_user_id uuid,
+  contact_phone text,
+  delivery_profile_id text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists guest_types (
+  id uuid primary key default gen_random_uuid(),
+  event_id uuid not null references events (id) on delete cascade,
+  name text not null,
+  description text,
+  color_label text,
+  access_policy_label text,
+  access_start_time time,
+  access_end_time time,
+  access_start_day_offset integer,
+  access_end_day_offset integer,
+  uses_event_capacity boolean not null default true,   -- [inferido] default
+  is_active boolean not null default true,             -- [inferido] default
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists event_branding (
+  id uuid primary key default gen_random_uuid(),
+  event_id uuid not null references events (id) on delete cascade,
+  logo_url text,
+  cover_image_url text,
+  primary_color text,
+  secondary_color text,
+  background_image_url text,
+  totem_idle_video_url text,
+  welcome_message text,
+  approved_message text,
+  assistance_message text,
+  invalid_message text,
+  return_to_idle_seconds integer not null default 8,   -- [inferido] default
+  config jsonb,                                        -- config rica de la invitacion (widgets, dresscode, campos)
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+-- Base existente: agrega la columna config sin romper si ya existe.
+ALTER TABLE event_branding ADD COLUMN IF NOT EXISTS config jsonb;
+
+create table if not exists guests (
+  id uuid primary key default gen_random_uuid(),
+  event_id uuid not null references events (id) on delete cascade,
+  guest_type_id uuid references guest_types (id) on delete set null,
+  first_name text not null,
+  last_name text,
+  full_name text not null,
+  phone text,
+  email text,
+  document_number text,
+  photo_url text,
+  status text not null default 'preinvited',           -- [inferido] default
+  notes text,
+  created_manually boolean not null default true,      -- [inferido] default
+  created_by_user_id uuid,
+  payment_status text not null default 'not_required'
+    check (payment_status in ('not_required', 'pending', 'approved')),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists invitation_tokens (
+  id uuid primary key default gen_random_uuid(),
+  guest_id uuid not null references guests (id) on delete cascade,
+  token text not null unique,                          -- [inferido] unique
+  expires_at timestamptz,
+  max_uses integer not null default 1,                 -- [inferido] default
+  used_count integer not null default 0,               -- [inferido] default
+  is_active boolean not null default true,             -- [inferido] default
+  last_used_at timestamptz,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists guest_qr_codes (
+  id uuid primary key default gen_random_uuid(),
+  guest_id uuid not null references guests (id) on delete cascade,
+  qr_value text not null unique,                       -- [inferido] unique
+  qr_image_url text,
+  is_active boolean not null default true,             -- [inferido] default
+  generated_at timestamptz not null default now(),
+  revoked_at timestamptz
+);
+
+create table if not exists checkins (
+  id uuid primary key default gen_random_uuid(),
+  event_id uuid not null references events (id) on delete cascade,
+  guest_id uuid references guests (id) on delete set null,
+  qr_code_id uuid references guest_qr_codes (id) on delete set null,
+  operator_user_id uuid,
+  device_name text,
+  result text not null,
+  reason text,
+  checked_in_at timestamptz not null default now(),
+  created_at timestamptz not null default now()
+);
+
+create table if not exists totem_sessions (
+  id uuid primary key default gen_random_uuid(),
+  event_id uuid not null references events (id) on delete cascade,
+  triggered_by_checkin_id uuid references checkins (id) on delete set null,
+  screen_state text not null default 'idle',           -- [inferido] default
+  guest_display_name text,
+  guest_photo_url text,
+  message_text text,
+  started_at timestamptz not null default now(),
+  ends_at timestamptz,
+  created_at timestamptz not null default now()
+);
 
 -- paymentStatus migrado de notes (texto serializado) a columna propia.
 -- Migration: add_payment_status_to_guests (2026-06-01)
@@ -16,6 +155,20 @@ ALTER TABLE invitation_tokens ENABLE ROW LEVEL SECURITY;
 ALTER TABLE guest_qr_codes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE checkins ENABLE ROW LEVEL SECURITY;
 ALTER TABLE totem_sessions ENABLE ROW LEVEL SECURITY;
+
+-- Realtime: el totem escucha INSERTs en checkins para el spotlight instantaneo.
+-- Sin esto el spotlight igual funciona, pero con la demora del polling de respaldo.
+-- Migration: enable_realtime_on_checkins (2026-07-12)
+-- Idempotente: no falla si la tabla ya es miembro de la publicacion.
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'checkins'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE checkins;
+  END IF;
+END $$;
 
 CREATE TABLE IF NOT EXISTS delivery_profiles (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),

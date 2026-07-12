@@ -13,7 +13,7 @@ export const runtime = 'nodejs'
 // una invitacion...") y el check-in no podia registrarse. El resto de la app ya
 // hacia las operaciones sensibles por el servidor; el check-in era el outlier.
 
-type OverrideCode = 'already_checked_in' | 'outside_window'
+type OverrideCode = 'already_checked_in' | 'outside_window' | 'event_full'
 
 type CheckinRequestBody = {
   token?: string
@@ -23,7 +23,7 @@ type CheckinRequestBody = {
 }
 
 function isOverrideable(code: string): code is OverrideCode {
-  return code === 'already_checked_in' || code === 'outside_window'
+  return code === 'already_checked_in' || code === 'outside_window' || code === 'event_full'
 }
 
 function firstGuestType(value: unknown) {
@@ -59,7 +59,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
 
   const { data: eventData, error: eventError } = await adminClient
     .from('events')
-    .select('id, event_date, start_time')
+    .select('id, event_date, start_time, max_capacity')
     .eq('id', eventId)
     .maybeSingle()
 
@@ -155,6 +155,14 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     .limit(1)
     .maybeSingle()
 
+  // Ocupacion del evento: personas ya admitidas (check-ins aprobados). Se usa
+  // para validar el aforo total antes de habilitar un ingreso nuevo.
+  const { count: approvedCount } = await adminClient
+    .from('checkins')
+    .select('id', { count: 'exact', head: true })
+    .eq('event_id', eventId)
+    .eq('result', 'approved')
+
   const decision = evaluateGuestAccess({
     event: eventData,
     guest: { first_name: guest.first_name, last_name: guest.last_name, status: guest.status },
@@ -162,6 +170,8 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     guestType: guestType as any,
     invitationToken: invitationToken ? { expires_at: invitationToken.expires_at } : undefined,
     lastCheckinTime: lastCheckin?.checked_in_at ?? null,
+    eventCapacity: eventData.max_capacity,
+    eventOccupancy: approvedCount ?? 0,
   })
 
   const overrideApproved =

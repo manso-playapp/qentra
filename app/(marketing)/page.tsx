@@ -1,86 +1,90 @@
 import Link from 'next/link'
-import { ArrowRight, Bell, ClipboardList, Layers, Users } from 'lucide-react'
+import { ArrowRight, DoorOpen, Link2, Users, Wallet } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { ArrivalSequence } from '@/components/marketing/ArrivalSequence'
+import { EventControlPanel } from '@/components/marketing/EventControlPanel'
+import { FestiveBackdrop } from '@/components/marketing/FestiveBackdrop'
+import { ProductSurfaces } from '@/components/marketing/ProductSurfaces'
+import { FaqSection } from '@/components/marketing/FaqSection'
 
 export const metadata = {
-  title: { absolute: 'Alista · Llegá al evento con todo preparado.' },
+  title: { absolute: 'Alista · Abrí la fiesta sin abrir un problema.' },
   description:
-    'Gestioná invitaciones, confirmaciones y accesos desde un solo lugar. Detectá pendientes antes, coordiná a tu equipo y recibí sin depender de planillas, mensajes ni decisiones de último momento.',
+    'Alista vincula invitación, pago y acceso en fiestas privadas con cupo limitado. Para salones, productores y organizadores que abren fiestas de 15, egresados y celebraciones juveniles con entrada o aporte.',
 }
 
 const PROBLEMS = [
-  'Datos incompletos',
-  'Acompañantes sin registrar',
-  'Accesos sin definir',
-  'Necesidades no contempladas',
-  'Equipo sin contexto',
+  'El alias que circula',
+  'Comprobantes reenviados',
+  'Invitados no contemplados',
+  'Sobrecupo en la puerta',
+  'Puerta sin criterio',
 ]
 
 const CAPABILITIES = [
   {
-    icon: ClipboardList,
-    title: 'Conocer',
-    body: 'Obtené confirmaciones, acompañantes, necesidades y condiciones de acceso desde el primer contacto.',
+    icon: Link2,
+    title: 'Identidad vinculada',
+    body: 'Cada invitación, pago y acceso corresponde a una persona o grupo definido. Nadie entra sin estar contemplado.',
   },
   {
-    icon: Layers,
-    title: 'Organizar',
-    body: 'Convertí esa información en listas, grupos, roles, sectores y credenciales claras.',
-  },
-  {
-    icon: Bell,
-    title: 'Anticipar',
-    body: 'Detectá datos incompletos, duplicados y accesos incompatibles antes de que lleguen.',
+    icon: Wallet,
+    title: 'Pago verificable',
+    body: 'Diseñado para distinguir un pago confirmado de una captura o un comprobante reenviado.',
   },
   {
     icon: Users,
-    title: 'Coordinar',
-    body: 'Dale a cada persona del equipo lo que necesita para actuar sin depender del anfitrión.',
+    title: 'Cupo visible',
+    body: 'El organizador conoce invitados, pagos, confirmaciones e ingresos, sin planillas separadas.',
+  },
+  {
+    icon: DoorOpen,
+    title: 'Puerta resolutiva',
+    body: 'El equipo valida y resuelve excepciones en la puerta, sin depender de la familia.',
   },
 ]
 
 const FLOW = [
-  { step: 'Invitá', note: 'Enviá una invitación que se reconoce.' },
-  { step: 'Confirmá', note: 'La persona confirma en pocos pasos.' },
-  { step: 'Conocé', note: 'Sumás solo la información pertinente.' },
-  { step: 'Prepará', note: 'El equipo llega con criterios claros.' },
-  { step: 'Recibí', note: 'El ingreso es fluido y sin consultas.' },
-  { step: 'Aprendé', note: 'Cada evento mejora el siguiente.' },
+  { step: 'Invitá', note: 'Enviás una invitación que se reconoce.' },
+  { step: 'Identificá', note: 'La persona confirma y suma a sus acompañantes.' },
+  { step: 'Vinculá el pago', note: 'Cada aporte queda asociado a un invitado.' },
+  { step: 'Emití el acceso', note: 'Un QR único cuando el acceso queda habilitado.' },
+  { step: 'Validá', note: 'En la puerta, el equipo valida en segundos.' },
+  { step: 'Registrá', note: 'Cada ingreso cuenta dentro del cupo.' },
 ]
 
 const RESULTS = [
-  'Información centralizada en un solo lugar.',
-  'Pendientes visibles antes del evento.',
-  'Roles y criterios claros para el equipo.',
-  'Accesos y excepciones preparados de antemano.',
-  'Visibilidad sin convertir al anfitrión en operador.',
+  'Cada pago vinculado a una persona real.',
+  'Cupo e ingresos visibles antes y durante la fiesta.',
+  'Menos reclamos y excepciones en la puerta.',
+  'El equipo resuelve sin llamar al organizador.',
+  'La familia celebra, no opera la recepción.',
 ]
 
 export default function HomePage() {
   return (
     <>
       {/* Hero */}
-      <section className="mx-auto w-full max-w-6xl px-6 pb-16 pt-16 sm:pt-24">
-        <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
+      <section className="relative overflow-hidden">
+        <FestiveBackdrop />
+        <div className="relative z-10 mx-auto grid w-full max-w-6xl items-center gap-12 px-6 pb-16 pt-16 sm:pt-24 lg:grid-cols-[1.05fr_0.95fr]">
           <div>
             <span className="inline-flex items-center rounded-full border border-border/70 bg-card px-3 py-1 text-xs font-medium text-muted-foreground">
-              Plataforma de experiencia de invitados
+              Invitación, pago y acceso. Vinculados.
             </span>
             <h1 className="mt-6 font-display text-[2.75rem] font-semibold leading-[1.05] tracking-[-0.03em] text-foreground sm:text-6xl">
-              Llegá al evento
+              Abrí la fiesta
               <br />
-              <span className="text-brand-cyan">con todo preparado.</span>
+              <span className="text-brand-cyan">sin abrir un problema.</span>
             </h1>
             <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground">
-              Gestioná invitaciones, confirmaciones y accesos desde un solo lugar. Detectá
-              pendientes antes, coordiná a tu equipo y recibí sin depender de planillas, mensajes ni
-              decisiones de último momento.
+              Alista vincula cada invitado con su pago y su acceso, para que en la puerta el equipo
+              sepa quién puede entrar y cuánto cupo queda. Pensado para fiestas privadas con entrada
+              o aporte y cupo limitado.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
               <Button asChild size="lg">
-                <Link href="/admin">
-                  Preparar un evento
+                <Link href="/demo">
+                  Solicitar una demostración
                   <ArrowRight className="size-4" />
                 </Link>
               </Button>
@@ -89,11 +93,12 @@ export default function HomePage() {
               </Button>
             </div>
             <p className="mt-6 text-sm text-muted-foreground">
-              Para eventos sociales y corporativos. Sin instalar nada para tus invitados.
+              Fiestas de 15, egresados y celebraciones juveniles. La invitación se abre desde
+              WhatsApp, sin instalar nada.
             </p>
           </div>
 
-          <ArrivalSequence />
+          <EventControlPanel />
         </div>
       </section>
 
@@ -101,13 +106,14 @@ export default function HomePage() {
       <section className="border-y border-border/60 bg-secondary/30">
         <div className="mx-auto w-full max-w-6xl px-6 py-20">
           <div className="max-w-3xl">
-            <h2 className="font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+            <h2 className="text-balance font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
               El problema no empieza en la puerta.
             </h2>
             <p className="mt-5 text-lg leading-relaxed text-muted-foreground">
-              La información suele estar repartida entre planillas, formularios, mensajes y
-              personas. Cuando no se transforma en preparación, las excepciones aparecen en el peor
-              momento: cuando los invitados ya están llegando.
+              En muchas fiestas privadas se cobra una entrada o un aporte por transferencia. El alias
+              y los comprobantes circulan fuera de la lista original, y en la puerta aparecen más
+              personas que las previstas reclamando el ingreso. Una captura demuestra que alguien
+              transfirió, no quién va a entrar ni si queda lugar.
             </p>
           </div>
 
@@ -128,10 +134,10 @@ export default function HomePage() {
       <section className="mx-auto w-full max-w-6xl px-6 py-20">
         <div className="max-w-2xl">
           <p className="text-sm font-semibold uppercase tracking-[0.16em] text-primary">
-            Propuesta de valor
+            La propuesta
           </p>
-          <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-            Conocé antes. Prepará mejor. Recibí con claridad.
+          <h2 className="mt-3 text-balance font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+            Cada pago, una persona. Cada persona, un acceso.
           </h2>
         </div>
 
@@ -156,6 +162,9 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Las tres superficies: invitación, panel/puerta y totem. */}
+      <ProductSurfaces />
+
       {/* Mecanismo / Flujo */}
       <section className="border-t border-border/60 bg-secondary/30">
         <div className="mx-auto w-full max-w-6xl px-6 py-20">
@@ -163,8 +172,8 @@ export default function HomePage() {
             <p className="text-sm font-semibold uppercase tracking-[0.16em] text-primary">
               El recorrido
             </p>
-            <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-              Cada interacción mejora la siguiente.
+            <h2 className="mt-3 text-balance font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+              De la invitación a la puerta, todo conectado.
             </h2>
           </div>
 
@@ -194,12 +203,12 @@ export default function HomePage() {
             <p className="text-sm font-semibold uppercase tracking-[0.16em] text-primary">
               El resultado
             </p>
-            <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-              Lo que cambia cuando preparás antes.
+            <h2 className="mt-3 text-balance font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+              Lo que cambia cuando la apertura está preparada.
             </h2>
             <p className="mt-5 text-lg leading-relaxed text-muted-foreground">
-              Un equipo preparado y una recepción clara, sin decisiones improvisadas ni consultas de
-              último momento.
+              Un equipo que resuelve en la puerta y una familia que puede estar en la fiesta, sin
+              gestionar comprobantes durante la celebración.
             </p>
           </div>
 
@@ -229,14 +238,18 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Preguntas frecuentes: objeciones reales del comprador. */}
+      <FaqSection />
+
       {/* Cierre humano */}
       <section className="mx-auto w-full max-w-6xl px-6 py-24">
         <div className="overflow-hidden rounded-[2.5rem] bg-admin-navy px-8 py-16 text-center text-white sm:px-16">
-          <h2 className="mx-auto max-w-2xl font-display text-3xl font-semibold tracking-tight sm:text-4xl">
-            Recibir mejor empieza mucho antes de la llegada.
+          <h2 className="mx-auto max-w-2xl text-balance font-display text-3xl font-semibold tracking-tight sm:text-4xl">
+            Delegá la puerta. Viví la fiesta.
           </h2>
-          <p className="mx-auto mt-4 max-w-xl text-white/70">
-            Todo listo para que el anfitrión pueda estar presente.
+          <p className="mx-auto mt-4 max-w-xl text-pretty text-white/70">
+            Alista mantiene cada pago, cada persona y cada acceso bajo control. La familia celebra y
+            el equipo sabe a quién recibir.
           </p>
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
             <Button asChild size="lg">
@@ -248,7 +261,7 @@ export default function HomePage() {
               variant="outline"
               className="border-white/25 bg-transparent text-white hover:bg-white/10 hover:text-white"
             >
-              <Link href="/admin">Preparar mi próximo evento</Link>
+              <Link href="/como-funciona">Ver cómo funciona</Link>
             </Button>
           </div>
         </div>

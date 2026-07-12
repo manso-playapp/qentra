@@ -3,13 +3,13 @@ import { ContactForm } from '@/components/marketing/ContactForm'
 export const metadata = {
   title: 'Solicitar demo',
   description:
-    'Contanos qué evento estás organizando y te mostramos cómo preparar cada llegada con Alista.',
+    'Contanos qué fiesta estás organizando y te mostramos cómo vincular invitación, pago y acceso con Alista.',
 }
 
 const EXPECT = [
-  'Una recorrida por el producto según tu tipo de evento.',
-  'Cómo se ordenan invitaciones, confirmaciones y accesos.',
-  'Qué necesitás para empezar a preparar tu próximo evento.',
+  'Una recorrida por el producto según tu tipo de fiesta.',
+  'Cómo se vinculan invitación, pago y acceso en un solo lugar.',
+  'Qué necesitás para preparar la apertura de tu próxima fiesta.',
 ]
 
 export default function DemoPage() {
@@ -20,13 +20,13 @@ export default function DemoPage() {
           <span className="inline-flex items-center rounded-full border border-border/70 bg-card px-3 py-1 text-xs font-medium text-muted-foreground">
             Solicitar demo
           </span>
-          <h1 className="mt-6 font-display text-[2.5rem] font-semibold leading-[1.05] tracking-[-0.03em] text-foreground sm:text-5xl">
-            Preparemos tu próximo evento
+          <h1 className="mt-6 text-balance font-display text-[2.5rem] font-semibold leading-[1.05] tracking-[-0.03em] text-foreground sm:text-5xl">
+            Preparemos la apertura de tu próxima fiesta
             <span className="text-brand-cyan"> juntos.</span>
           </h1>
-          <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground">
-            Dejanos tus datos y te mostramos cómo Alista convierte la información de tus invitados
-            en una recepción más clara, fluida y personal.
+          <p className="mt-6 max-w-xl text-pretty text-lg leading-relaxed text-muted-foreground">
+            Dejanos tus datos y te mostramos cómo Alista vincula cada invitado con su pago y su
+            acceso, para que el equipo sepa quién entra y cuánto cupo queda.
           </p>
 
           <div className="mt-10">

@@ -13,7 +13,7 @@ export default async function TotemPage({ params }: TotemPageProps) {
   const [eventResponse, brandingResponse] = await Promise.all([
     supabase
       .from('events')
-      .select('id, name, slug, event_date, start_time')
+      .select('id, name, slug, event_date, start_time, max_capacity')
       .eq('id', id)
       .maybeSingle(),
     supabase
@@ -51,7 +51,7 @@ export default async function TotemPage({ params }: TotemPageProps) {
 
   return (
     <EventCheckinManager
-      event={data as Pick<Event, 'id' | 'name' | 'slug' | 'event_date' | 'start_time'>}
+      event={data as Pick<Event, 'id' | 'name' | 'slug' | 'event_date' | 'start_time' | 'max_capacity'>}
       branding={(brandingResponse.data ?? null) as SurfaceBranding | null}
       mode="totem"
     />

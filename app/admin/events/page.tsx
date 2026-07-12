@@ -1,18 +1,22 @@
 'use client'
 
 import Link from 'next/link'
-import { Phone, Shield, Users2 } from 'lucide-react'
+import { ArrowRight, CalendarDays, MapPin, Users2 } from 'lucide-react'
 import AdminLayout from '@/components/admin/AdminLayout'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useEvents } from '@/lib/hooks'
 
+const EVENT_TYPE_LABELS: Record<string, string> = {
+  quince: 'Fiesta de 15',
+  wedding: 'Casamiento',
+  corporate: 'Corporativo',
+  private: 'Privado',
+}
+
 export default function EventsPage() {
   const { events, loading, error } = useEvents()
-  const activeEvents = events.filter((event) => event.status === 'active').length
-  const cancelledEvents = events.filter((event) => event.status === 'cancelled').length
-  const totalCapacity = events.reduce((total, event) => total + event.max_capacity, 0)
 
   if (loading) {
     return (
@@ -27,36 +31,18 @@ export default function EventsPage() {
   return (
     <AdminLayout>
       <div className="px-4 py-6 sm:px-0">
-        <Card className="bg-admin-panel">
-          <CardContent className="p-8">
-            {/* El titulo y el CTA viven en el header del layout: aca solo el pulso de la agenda. */}
-            <div className="grid gap-4 md:grid-cols-3">
-            {[
-              { label: 'Eventos activos', value: String(activeEvents), tone: 'bg-emerald-50 text-emerald-900' },
-              { label: 'Eventos cancelados', value: String(cancelledEvents), tone: 'bg-rose-50 text-rose-900' },
-              { label: 'Capacidad acumulada', value: String(totalCapacity), tone: 'bg-white text-[color:var(--admin-ink)]' },
-            ].map((item) => (
-              <div key={item.label} className={`rounded-[24px] border border-border/70 p-5 ${item.tone}`}>
-                <p className="text-[11px] uppercase tracking-[0.3em] opacity-70">{item.label}</p>
-                <p className="mt-4 text-4xl font-semibold">{item.value}</p>
-              </div>
-            ))}
-          </div>
-          </CardContent>
-        </Card>
-
         {error && (
-          <div className="mb-6 mt-6 rounded-2xl border border-rose-200 bg-rose-50 p-4">
+          <div className="mb-6 rounded-2xl border border-rose-200 bg-rose-50 p-4">
             <div className="text-sm text-red-700">
               Error al cargar eventos: {error}
             </div>
           </div>
         )}
 
-        <Card className="mt-6 bg-admin-panel">
+        <Card className="bg-admin-panel">
           <CardHeader>
-            <CardDescription>Agenda completa</CardDescription>
-            <CardTitle className="admin-heading text-3xl">Produccion, recepcion y control por evento</CardTitle>
+            <CardDescription>Agenda</CardDescription>
+            <CardTitle className="admin-heading text-3xl">Elegí un evento para operar</CardTitle>
           </CardHeader>
           <CardContent>
           {events.length === 0 ? (
@@ -74,15 +60,17 @@ export default function EventsPage() {
               {events.map((event) => (
                 <article
                   key={event.id}
-                  className="rounded-[28px] border border-border/70 bg-white/80 p-6 transition hover:-translate-y-1 hover:bg-white"
+                  className="flex flex-col rounded-[28px] border border-border/70 bg-white/80 p-6 transition hover:border-primary/30 hover:bg-white"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
                       <p className="text-[11px] uppercase tracking-[0.3em] text-muted-foreground">
-                        {event.event_type}
+                        {EVENT_TYPE_LABELS[event.event_type] ?? event.event_type}
                       </p>
-                      <h3 className="mt-3 text-2xl font-semibold text-foreground">
-                        {event.name}
+                      <h3 className="mt-2 truncate text-2xl font-semibold text-foreground">
+                        <Link href={`/admin/events/${event.id}`} className="transition-colors hover:text-primary">
+                          {event.name}
+                        </Link>
                       </h3>
                     </div>
                     <Badge
@@ -99,44 +87,36 @@ export default function EventsPage() {
                     </Badge>
                   </div>
 
-                  <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                    <div className="rounded-2xl bg-event-surface px-4 py-3">
-                      <p className="text-[11px] uppercase tracking-[0.26em] text-muted-foreground">Fecha</p>
-                      <p className="mt-2 text-sm font-semibold text-foreground">
-                        {new Date(event.event_date).toLocaleDateString('es-AR')} · {event.start_time}
-                      </p>
-                    </div>
-                    <div className="rounded-2xl bg-stone-100 px-4 py-3">
-                      <p className="text-[11px] uppercase tracking-[0.26em] text-muted-foreground">Capacidad</p>
-                      <p className="mt-2 text-sm font-semibold text-foreground">
-                        {event.max_capacity} invitados
-                      </p>
-                    </div>
+                  <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
+                    <span className="flex items-center gap-2">
+                      <CalendarDays className="size-4 flex-none" />
+                      {new Date(`${event.event_date}T00:00:00`).toLocaleDateString('es-AR')} · {event.start_time}
+                    </span>
+                    <span className="flex items-center gap-2">
+                      <MapPin className="size-4 flex-none" />
+                      {event.venue_name}
+                    </span>
+                    <span className="flex items-center gap-2">
+                      <Users2 className="size-4 flex-none" />
+                      {event.max_capacity} de cupo
+                    </span>
                   </div>
 
-                  <div className="mt-4 grid gap-3 text-sm text-muted-foreground sm:grid-cols-2">
-                    <p className="flex items-center gap-2"><Users2 className="size-4" /> {event.venue_name}</p>
-                    <p className="flex items-center gap-2"><Phone className="size-4" /> {event.contact_phone || 'Pendiente de definir'}</p>
-                  </div>
-
-                  {event.description && (
-                    <p className="mt-4 text-sm leading-6 text-muted-foreground">
-                      {event.description}
-                    </p>
-                  )}
-
-                  <div className="mt-6 flex flex-wrap gap-3">
-                    <Button asChild variant="warm">
-                      <Link href={`/admin/events/${event.id}`}>Ver ficha</Link>
+                  <div className="mt-6 flex flex-wrap items-center gap-2 border-t border-border/60 pt-5">
+                    <Button asChild>
+                      <Link href={`/admin/events/${event.id}`}>
+                        Abrir evento
+                        <ArrowRight className="size-4" />
+                      </Link>
                     </Button>
-                    <Button asChild variant="secondary">
-                      <Link href={`/admin/events/${event.id}/edit`}>Editar</Link>
-                    </Button>
-                    <Button asChild variant="outline">
+                    <Button asChild variant="outline" size="sm">
                       <Link href={`/admin/events/${event.id}/guests`}>Invitados</Link>
                     </Button>
-                    <Button asChild variant="info">
-                      <Link href={`/puerta/${event.id}`}><Shield className="size-4" /> Puerta</Link>
+                    <Button asChild variant="outline" size="sm">
+                      <Link href={`/admin/events/${event.id}/check-in`}>Check-in</Link>
+                    </Button>
+                    <Button asChild variant="outline" size="sm">
+                      <Link href={`/admin/events/${event.id}/edit`}>Editar</Link>
                     </Button>
                   </div>
                 </article>

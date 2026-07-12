@@ -1,52 +1,52 @@
-import { CalendarCheck, ClipboardList, Mail, ScanLine, Users, BarChart3, ShieldCheck } from 'lucide-react'
+import { CalendarCheck, Users, Mail, Wallet, ScanLine, Gauge, ShieldCheck, Sparkles } from 'lucide-react'
 import { PageHero, Section, ClosingCta } from '@/components/marketing/sections'
 
 export const metadata = {
   title: 'Producto',
   description:
-    'Invitaciones, confirmaciones, invitados, accesos, equipo y reportes en un solo lugar. Convertí la información previa en preparación concreta.',
+    'Eventos, invitados, invitaciones, pago vinculado, acceso, cupo, equipo y experiencia. La plataforma que vincula invitación, pago y acceso en fiestas privadas con cupo.',
 }
 
 const MODULES = [
   {
     icon: CalendarCheck,
     title: 'Eventos',
-    body: 'Creá, editá y administrá cada evento con su fecha, lugar, cupo y canal de comunicación.',
+    body: 'Creá y administrá cada fiesta con su fecha, lugar, cupo y tipos de acceso.',
   },
   {
     icon: Users,
-    title: 'Invitados',
-    body: 'Alta manual o importada, categorías, estados y acompañantes. Cada persona con el contexto que hace falta.',
+    title: 'Invitados y acompañantes',
+    body: 'Invitados nominados y sus acompañantes, con categorías, estados y contexto de acceso.',
   },
   {
     icon: Mail,
     title: 'Invitaciones',
-    body: 'Enlaces seguros, RSVP y captura de la información pertinente, sin planillas sueltas ni mensajes cruzados.',
+    body: 'Un enlace seguro que se abre desde WhatsApp, sin instalar nada ni crear una cuenta.',
   },
   {
-    icon: ClipboardList,
-    title: 'Preparación',
-    body: 'Pendientes, inconsistencias y necesidades particulares convertidos en estados accionables antes del evento.',
+    icon: Wallet,
+    title: 'Pago vinculado',
+    body: 'Diseñado para asociar cada aporte a una persona y distinguirlo de una captura reenviada.',
   },
   {
     icon: ScanLine,
-    title: 'Accesos',
-    body: 'Validación de ingreso, check-in y manejo de excepciones, con la lógica sensible resuelta en el backend.',
+    title: 'Acceso y puerta',
+    body: 'QR único por invitado, check-in móvil, búsqueda manual y excepciones con autorización.',
   },
   {
-    icon: Users,
-    title: 'Equipo',
-    body: 'Roles, permisos y vistas según responsabilidad, para que cada persona actúe sin depender del anfitrión.',
+    icon: Gauge,
+    title: 'Cupo en tiempo real',
+    body: 'Aforo, confirmaciones e ingresos a la vista, con la lógica sensible resuelta en el backend.',
   },
   {
-    icon: BarChart3,
-    title: 'Reportes',
-    body: 'Asistencia, estado de confirmaciones, incidencias y aprendizajes básicos para que cada evento mejore el siguiente.',
+    icon: Sparkles,
+    title: 'Experiencia',
+    body: 'Trivia, música, saludos y personalización opcionales, para que la invitación se sienta propia.',
   },
   {
     icon: ShieldCheck,
     title: 'Privacidad',
-    body: 'Se pide solo la información con un uso claro, con consentimiento y control de datos visibles cuando corresponde.',
+    body: 'Se pide solo la información con un uso claro, con consentimiento y cuidado de datos de menores.',
   },
 ]
 
@@ -54,17 +54,17 @@ export default function ProductoPage() {
   return (
     <>
       <PageHero
-        eyebrow="Plataforma de experiencia de invitados"
-        title="Todo lo que necesitás para preparar cada llegada,"
-        highlight="en un solo lugar."
-        description="Alista reúne invitaciones, confirmaciones, invitados, accesos, equipo y reportes. En lugar de acumular datos, los convierte en preparación concreta para recibir con claridad."
+        eyebrow="El producto"
+        title="Invitación, pago y acceso,"
+        highlight="en una sola plataforma."
+        description="Alista reúne el recorrido completo de una fiesta privada con cupo: invitar, identificar, vincular el pago, emitir el acceso y validar en la puerta. La capa de experiencia mantiene el tono personal de la celebración."
         primaryCta={{ href: '/demo', label: 'Solicitar demo' }}
         secondaryCta={{ href: '/como-funciona', label: 'Ver cómo funciona' }}
       />
 
       <Section
         eyebrow="Módulos"
-        title="Una base que acompaña todo el recorrido del invitado."
+        title="Una base que conecta persona, pago, acceso y cupo."
         muted
       >
         <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -88,13 +88,13 @@ export default function ProductoPage() {
 
       <Section
         eyebrow="Cómo pensamos el producto"
-        title="Pedir solo lo que tenga un uso claro."
-        description="Cada dato que se solicita debe convertirse en una acción o una alerta comprensible. Priorizamos pendientes y decisiones reales por sobre paneles decorativos, y mantenemos un lenguaje respetuoso: una persona no es un registro a procesar."
+        title="Cada función refuerza una relación."
+        description="Toda función nueva debe fortalecer al menos una de estas relaciones: invitado e identidad, identidad y pago, pago y acceso, acceso y cupo, o invitación y experiencia. Si no fortalece ninguna, no pertenece al núcleo. No construimos un editor libre ni sumamos plantillas por cantidad: preferimos una operación confiable a un panel decorativo."
       />
 
       <ClosingCta
-        title="Recibir mejor empieza mucho antes de la llegada."
-        description="Todo listo para que el anfitrión pueda estar presente."
+        title="Abrí la fiesta sin abrir un problema."
+        description="Conservá el carácter personal de la celebración mientras profesionalizás su apertura."
       />
     </>
   )

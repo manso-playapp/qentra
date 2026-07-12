@@ -607,6 +607,34 @@ export function useGuests(eventId?: string, initialGuests: GuestWithType[] = [])
     }
   }
 
+  // Alta masiva: un solo insert en el servidor (mucho mas rapido que N requests)
+  // y un refetch para reflejar la lista completa.
+  const bulkCreateGuests = async (
+    guestTypeId: string,
+    rows: { first_name: string; last_name: string; email?: string; phone?: string }[]
+  ): Promise<ApiResponse<{ count: number }>> => {
+    try {
+      const response = await fetch('/api/guests/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ event_id: eventId, guest_type_id: guestTypeId, guests: rows }),
+      })
+
+      const payload = (await response.json().catch(() => null)) as
+        | { count?: number; error?: string }
+        | null
+
+      if (!response.ok) {
+        throw new Error(payload?.error || 'No se pudieron importar los invitados.')
+      }
+
+      await fetchGuests(eventId)
+      return { data: { count: payload?.count ?? rows.length } }
+    } catch (error) {
+      return { error: getErrorMessage(error) }
+    }
+  }
+
   const updateGuest = async (
     id: string,
     updates: UpdateGuestForm,
@@ -789,6 +817,7 @@ export function useGuests(eventId?: string, initialGuests: GuestWithType[] = [])
     fetchGuests,
     fetchGuestAccess,
     createGuest,
+    bulkCreateGuests,
     updateGuest,
     deleteGuest,
     createGuestAccess

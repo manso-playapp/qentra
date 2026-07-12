@@ -13,9 +13,9 @@ const FOOTER_GROUPS = [
   {
     title: 'Para quién',
     links: [
-      { href: '/casos#sociales', label: 'Eventos sociales' },
-      { href: '/casos#corporativos', label: 'Eventos corporativos' },
-      { href: '/casos#escala', label: 'Eventos de escala' },
+      { href: '/casos#fiestas-15', label: 'Fiestas de 15' },
+      { href: '/casos#egresados', label: 'Egresados y recepciones' },
+      { href: '/casos#salones', label: 'Salones y productores' },
     ],
   },
   {
@@ -39,8 +39,8 @@ export function SiteFooter() {
               <img src="/alista-logo.svg" alt="Alista" className="h-7 w-auto" />
             </Link>
             <p className="mt-4 text-sm leading-6 text-muted-foreground">
-              Plataforma de experiencia de invitados. Convertí cada interacción previa en una
-              recepción más clara, fluida y personal.
+              Vinculamos invitación, pago y acceso en fiestas privadas con cupo limitado. Abrí la
+              fiesta sin abrir un problema.
             </p>
           </div>
 
@@ -64,7 +64,7 @@ export function SiteFooter() {
         </div>
 
         <div className="mt-12 flex flex-col gap-3 border-t border-border/60 pt-6 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-          <p>© {new Date().getFullYear()} Alista. Todo listo para que el anfitrión pueda estar presente.</p>
+          <p>© {new Date().getFullYear()} Alista. Cada pago, una persona. Cada persona, un acceso.</p>
           <div className="flex gap-5">
             <Link href="/privacidad" className="hover:text-foreground">
               Privacidad

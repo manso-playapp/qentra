@@ -201,6 +201,57 @@ describe('evaluateGuestAccess — double check-in', () => {
   })
 })
 
+describe('evaluateGuestAccess — aforo total del evento', () => {
+  it('allows when occupancy is below capacity', () => {
+    const result = evaluateGuestAccess(
+      withStatus('enabled', { eventCapacity: 216, eventOccupancy: 100 })
+    )
+    expect(result.decision).toBe('allow')
+    expect(result.code).toBe('ok')
+  })
+
+  it('denies as event_full when occupancy reached capacity', () => {
+    const result = evaluateGuestAccess(
+      withStatus('enabled', { eventCapacity: 216, eventOccupancy: 216 })
+    )
+    expect(result.decision).toBe('deny')
+    expect(result.code).toBe('event_full')
+  })
+
+  it('denies as event_full when occupancy exceeds capacity', () => {
+    const result = evaluateGuestAccess(
+      withStatus('enabled', { eventCapacity: 216, eventOccupancy: 220 })
+    )
+    expect(result.code).toBe('event_full')
+  })
+
+  it.each([undefined, null, 0])('has no limit when capacity is %s', (capacity) => {
+    const result = evaluateGuestAccess(
+      withStatus('enabled', { eventCapacity: capacity, eventOccupancy: 9999 })
+    )
+    expect(result.decision).toBe('allow')
+  })
+
+  it('lets a re-entry warn (already_checked_in) instead of blocking on full', () => {
+    // A guest who already entered is counted; a full event must not re-block them.
+    const result = evaluateGuestAccess(
+      withStatus('enabled', {
+        lastCheckinTime: '2026-08-17T00:30:00',
+        eventCapacity: 216,
+        eventOccupancy: 216,
+      })
+    )
+    expect(result.code).toBe('already_checked_in')
+  })
+
+  it('reports the underlying block before the cupo (aforo is the last gate)', () => {
+    const result = evaluateGuestAccess(
+      withStatus('rejected', { eventCapacity: 216, eventOccupancy: 216 })
+    )
+    expect(result.code).toBe('cancelled')
+  })
+})
+
 describe('isInvitationAccessReady — paymentStatus gating', () => {
   // evaluateGuestAccess does not take paymentStatus directly; payment gates
   // access upstream by deciding whether a guest reaches the "enabled" status.
@@ -252,7 +303,7 @@ describe('fail-closed: column beats notes for access decisions', () => {
     expect(parsedFromNotes.paymentStatus).toBe('approved')
 
     // …but the access decision uses the COLUMN value ('pending'), not notes.
-    const columnValue: 'pending' = 'pending'
+    const columnValue = 'pending' as const
     expect(isInvitationAccessReady('enabled', columnValue)).toBe(false)
   })
 

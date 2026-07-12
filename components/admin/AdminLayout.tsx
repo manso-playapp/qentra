@@ -14,6 +14,7 @@ import {
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { APP_VERSION, APP_VERSION_DATE } from '@/lib/version'
 
 interface AdminLayoutProps {
   children: ReactNode
@@ -124,7 +125,7 @@ function getPageHeader(pathname: string): PageHeader {
     return {
       eyebrow: 'Recepción',
       title: 'Invitados',
-      description: 'Los invitados se gestionan dentro de cada evento.',
+      description: 'Todos los invitados de todos los eventos, con búsqueda y filtros. Para editar o acreditar, entrá al evento.',
       actions: [{ href: '/admin/events', label: 'Ir a eventos', variant: 'outline' }],
     }
   }
@@ -261,6 +262,16 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 {collapsed ? <LogOut className="size-4" /> : 'Cerrar sesion'}
               </Button>
             </form>
+
+            {/* Control de version: que build esta corriendo en este entorno. */}
+            <div className="mt-4 text-center" title={`Version ${APP_VERSION} · ${APP_VERSION_DATE}`}>
+              <p className="text-[11px] font-medium tracking-wide text-slate-400">
+                {collapsed ? `v${APP_VERSION}` : `Alista · v${APP_VERSION}`}
+              </p>
+              {!collapsed && (
+                <p className="mt-0.5 text-[10px] text-slate-500">{APP_VERSION_DATE}</p>
+              )}
+            </div>
           </div>
         </aside>
 

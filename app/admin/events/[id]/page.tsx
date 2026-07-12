@@ -1,10 +1,21 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { Mail, Palette, ScanLine, ShieldCheck, Tv, Users2 } from 'lucide-react'
+import {
+  ArrowRight,
+  ExternalLink,
+  Mail,
+  Palette,
+  Pencil,
+  ScanLine,
+  ShieldCheck,
+  Tv,
+  Users2,
+} from 'lucide-react'
 import AdminLayout from '@/components/admin/AdminLayout'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { getSupabaseAdminClient } from '@/lib/supabase-admin'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import type { DeliveryProfile, Event, EventBranding, GuestType } from '@/types'
 
@@ -55,7 +66,10 @@ function formatDate(date: string) {
 
 export default async function EventDetailPage({ params }: EventDetailPageProps) {
   const { id } = await params
-  const supabase = await createServerSupabaseClient()
+  // Service role: RLS oculta guests/checkins/delivery_profiles al cliente con
+  // cookies (operator-auth no crea sesion de Supabase). La ruta ya esta
+  // protegida por el layout. Fallback al cliente con sesion si falta la key.
+  const supabase = getSupabaseAdminClient() ?? (await createServerSupabaseClient())
 
   const [
     eventResponse,
@@ -116,15 +130,15 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
                 </p>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <Badge variant={EVENT_STATUS_VARIANTS[event.status] as 'success' | 'outline' | 'danger'}>
                   {EVENT_STATUS_LABELS[event.status]}
                 </Badge>
-                <Button asChild variant="secondary">
-                  <Link href={`/admin/events/${event.id}/edit`}>Editar</Link>
-                </Button>
-                <Button asChild>
-                  <Link href="/admin/events/new">Crear otro evento</Link>
+                <Button asChild size="lg">
+                  <Link href={`/admin/events/${event.id}/edit`}>
+                    <Pencil className="size-4" />
+                    Editar datos del evento
+                  </Link>
                 </Button>
               </div>
             </div>
@@ -148,9 +162,167 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
           ))}
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
-          <section className="space-y-6">
+        {/* Paginas publicas: lo que ven invitados y salon. Cada una lleva a su personalizacion. */}
+        <section className="mt-8">
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <h2 className="admin-heading text-2xl text-foreground">Páginas públicas</h2>
+            <p className="text-sm text-muted-foreground">Lo que ven tus invitados y el salón — personalizables</p>
+          </div>
+
+          <div className="mt-4 grid gap-6 lg:grid-cols-2">
+            {/* Invitacion */}
+            <Card className="event-theme-surface">
+              <CardContent className="flex h-full flex-col gap-5 p-6">
+                <div className="flex items-start gap-4">
+                  <span className="grid size-12 flex-none place-items-center rounded-2xl bg-white/70 text-primary ring-1 ring-primary/15">
+                    <Mail className="size-6" strokeWidth={1.75} />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Página pública</p>
+                    <h3 className="admin-heading mt-1 text-2xl text-foreground">Invitación</h3>
+                    <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                      Lo que recibe cada invitado: portada, colores y la experiencia (canción, saludo).
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-2 text-xs">
+                  <span className={`rounded-full px-2.5 py-1 font-medium ${branding?.cover_image_url ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
+                    {branding?.cover_image_url ? 'Portada configurada' : 'Portada pendiente'}
+                  </span>
+                  <span className={`rounded-full px-2.5 py-1 font-medium ${branding ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-600'}`}>
+                    {branding ? 'Colores definidos' : 'Colores por defecto'}
+                  </span>
+                </div>
+
+                <div className="mt-auto flex flex-wrap gap-3">
+                  <Button asChild>
+                    <Link href={`/admin/events/${event.id}/invitacion`}>
+                      <Palette className="size-4" />
+                      Personalizar invitación
+                    </Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Totem */}
             <Card className="bg-admin-panel">
+              <CardContent className="flex h-full flex-col gap-5 p-6">
+                <div className="flex items-start gap-4">
+                  <span className="grid size-12 flex-none place-items-center rounded-2xl bg-event-surface text-primary ring-1 ring-primary/15">
+                    <Tv className="size-6" strokeWidth={1.75} />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Página pública</p>
+                    <h3 className="admin-heading mt-1 text-2xl text-foreground">Tótem</h3>
+                    <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                      La pantalla de bienvenida en el salón: fondo y mensajes que reciben a cada invitado con su foto.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-2 text-xs">
+                  <span className={`rounded-full px-2.5 py-1 font-medium ${branding?.background_image_url ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
+                    {branding?.background_image_url ? 'Fondo configurado' : 'Fondo pendiente'}
+                  </span>
+                  <span className={`rounded-full px-2.5 py-1 font-medium ${branding?.welcome_message ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-600'}`}>
+                    {branding?.welcome_message ? 'Mensajes propios' : 'Mensajes por defecto'}
+                  </span>
+                </div>
+
+                <div className="mt-auto flex flex-wrap gap-3">
+                  <Button asChild>
+                    <Link href={`/admin/events/${event.id}/branding#mensajes-totem`}>
+                      <Palette className="size-4" />
+                      Personalizar
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline">
+                    <Link href={`/totem/${event.id}`} target="_blank">
+                      Ver en vivo
+                      <ExternalLink className="size-4" />
+                    </Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+
+        {/* Operacion: gestion y control de acceso. */}
+        <section className="mt-8">
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <h2 className="admin-heading text-2xl text-foreground">Operación</h2>
+            <p className="text-sm text-muted-foreground">Gestión de invitados y control de acceso</p>
+          </div>
+
+          <div className="mt-4 grid gap-6 lg:grid-cols-2">
+            {/* Gestion de invitados */}
+            <Card className="bg-admin-panel">
+              <CardContent className="flex h-full flex-col gap-5 p-6">
+                <div className="flex items-start gap-4">
+                  <span className="grid size-12 flex-none place-items-center rounded-2xl bg-event-surface text-primary ring-1 ring-primary/15">
+                    <Users2 className="size-6" strokeWidth={1.75} />
+                  </span>
+                  <div className="min-w-0">
+                    <h3 className="admin-heading text-2xl text-foreground">Gestión de invitados</h3>
+                    <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                      Alta manual o masiva, tipos, estados, QR, envíos y conciliación de pagos.
+                    </p>
+                    <p className="mt-2 text-sm font-medium text-foreground">
+                      {guestCount} invitados · {guestTypes.length} tipos
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-auto">
+                  <Button asChild>
+                    <Link href={`/admin/events/${event.id}/guests`}>
+                      Abrir gestión
+                      <ArrowRight className="size-4" />
+                    </Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Puerta / check-in */}
+            <Card className="bg-admin-navy text-white">
+              <CardContent className="flex h-full flex-col gap-5 p-6">
+                <div className="flex items-start gap-4">
+                  <span className="grid size-12 flex-none place-items-center rounded-2xl bg-white/10 text-sky-300 ring-1 ring-white/10">
+                    <ShieldCheck className="size-6" strokeWidth={1.75} />
+                  </span>
+                  <div className="min-w-0">
+                    <h3 className="admin-heading text-2xl text-white">Puerta y check-in</h3>
+                    <p className="mt-1 text-sm leading-6 text-slate-300">
+                      Validación de acceso, aforo en vivo y excepciones en el ingreso.
+                    </p>
+                    <p className="mt-2 text-sm font-medium text-white">{checkinCount} ingresos registrados</p>
+                  </div>
+                </div>
+                <div className="mt-auto flex flex-wrap gap-3">
+                  <Button asChild variant="outline" className="border-white/15 bg-white/5 text-slate-100 hover:bg-white/10 hover:text-white">
+                    <Link href={`/admin/events/${event.id}/check-in`}>
+                      <ScanLine className="size-4" />
+                      Panel de check-in
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline" className="border-white/15 bg-white/5 text-slate-100 hover:bg-white/10 hover:text-white">
+                    <Link href={`/puerta/${event.id}`} target="_blank">
+                      Abrir puerta
+                      <ExternalLink className="size-4" />
+                    </Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+
+        {/* Referencia: datos base y tipos de invitado. */}
+        <div className="mt-8 grid items-start gap-6 lg:grid-cols-2">
+          <Card className="bg-admin-panel">
               <CardHeader>
                 <CardDescription>Base del evento</CardDescription>
                 <CardTitle>Datos del evento</CardTitle>
@@ -228,120 +400,6 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
               )}
               </CardContent>
             </Card>
-          </section>
-
-          <aside className="space-y-6">
-            <Card className="event-theme-surface">
-              <CardHeader>
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <CardDescription>Personalización por evento</CardDescription>
-                    <CardTitle>Branding</CardTitle>
-                  </div>
-                  <Button asChild size="sm" variant="outline">
-                    <Link href={`/admin/events/${event.id}/branding`}>
-                      <Palette className="size-4" />
-                      Editar
-                    </Link>
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-
-              {branding ? (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="rounded-lg border border-border/70 p-3">
-                      <p className="text-xs uppercase tracking-wide text-muted-foreground">Primario</p>
-                      <div className="mt-3 h-12 rounded-md border border-black/5" style={{ backgroundColor: branding.primary_color }} />
-                      <p className="mt-2 font-mono text-xs text-muted-foreground">{branding.primary_color}</p>
-                    </div>
-                    <div className="rounded-lg border border-border/70 p-3">
-                      <p className="text-xs uppercase tracking-wide text-muted-foreground">Secundario</p>
-                      <div className="mt-3 h-12 rounded-md border border-black/5" style={{ backgroundColor: branding.secondary_color }} />
-                      <p className="mt-2 font-mono text-xs text-muted-foreground">{branding.secondary_color}</p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2 text-sm text-muted-foreground">
-                    <p>Logo: {branding.logo_url ? 'Configurado' : 'Pendiente'}</p>
-                    <p>Portada de invitación: {branding.cover_image_url ? 'Configurada' : 'Pendiente'}</p>
-                    <p>Fondo del tótem: {branding.background_image_url ? 'Configurado' : 'Pendiente'}</p>
-                  </div>
-                </div>
-              ) : (
-                <p className="rounded-lg border border-dashed border-border bg-secondary/60 p-4 text-sm text-muted-foreground">
-                  El branding de este evento todavia no fue configurado.
-                </p>
-              )}
-              </CardContent>
-            </Card>
-
-            <Card className="bg-admin-panel">
-              <CardHeader>
-                <CardDescription>Superficies del evento</CardDescription>
-                <CardTitle>Las pantallas que ve cada uno</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {[
-                  {
-                    href: `/admin/events/${event.id}/invitacion/preview`,
-                    icon: Mail,
-                    label: 'Invitación',
-                    detail: 'Lo que recibe el invitado',
-                    external: true,
-                  },
-                  {
-                    href: `/totem/${event.id}`,
-                    icon: Tv,
-                    label: 'Tótem',
-                    detail: 'Pantalla de bienvenida en el salón',
-                    external: true,
-                  },
-                  {
-                    href: `/puerta/${event.id}`,
-                    icon: ShieldCheck,
-                    label: 'Puerta',
-                    detail: 'Control de acceso en el ingreso',
-                    external: true,
-                  },
-                  {
-                    href: `/admin/events/${event.id}/check-in`,
-                    icon: ScanLine,
-                    label: 'Check-in',
-                    detail: 'Panel operativo de acreditación',
-                    external: false,
-                  },
-                  {
-                    href: `/admin/events/${event.id}/guests`,
-                    icon: Users2,
-                    label: 'Invitados',
-                    detail: 'Alta, estados, QR y envíos',
-                    external: false,
-                  },
-                ].map((surface) => {
-                  const Icon = surface.icon
-
-                  return (
-                    <Link
-                      key={surface.href}
-                      href={surface.href}
-                      target={surface.external ? '_blank' : undefined}
-                      className="flex items-center gap-3 rounded-2xl border border-border/70 bg-white/70 px-4 py-3 transition hover:bg-white"
-                    >
-                      <span className="rounded-xl border border-border/70 bg-white p-2">
-                        <Icon className="size-4 text-muted-foreground" />
-                      </span>
-                      <span className="min-w-0">
-                        <span className="block text-sm font-semibold text-foreground">{surface.label}</span>
-                        <span className="block text-xs text-muted-foreground">{surface.detail}</span>
-                      </span>
-                    </Link>
-                  )
-                })}
-              </CardContent>
-            </Card>
-          </aside>
         </div>
       </div>
     </AdminLayout>

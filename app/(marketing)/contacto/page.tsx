@@ -14,13 +14,13 @@ export default function ContactoPage() {
           <span className="inline-flex items-center rounded-full border border-border/70 bg-card px-3 py-1 text-xs font-medium text-muted-foreground">
             Contacto
           </span>
-          <h1 className="mt-6 font-display text-[2.5rem] font-semibold leading-[1.05] tracking-[-0.03em] text-foreground sm:text-5xl">
+          <h1 className="mt-6 text-balance font-display text-[2.5rem] font-semibold leading-[1.05] tracking-[-0.03em] text-foreground sm:text-5xl">
             Hablemos de tu
-            <span className="text-brand-cyan"> operación.</span>
+            <span className="text-brand-cyan"> apertura.</span>
           </h1>
-          <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground">
-            Escribinos y te respondemos con claridad. Ya sea una consulta, una propuesta o una duda
-            sobre cómo preparar un evento, estamos para ayudarte.
+          <p className="mt-6 max-w-xl text-pretty text-lg leading-relaxed text-muted-foreground">
+            Escribinos y te respondemos con claridad. Ya sea una consulta, una propuesta piloto o una
+            duda sobre cómo vincular pago, persona y acceso en tu fiesta, estamos para ayudarte.
           </p>
 
           <div className="mt-10 space-y-4">

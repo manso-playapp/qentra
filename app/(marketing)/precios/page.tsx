@@ -5,38 +5,38 @@ import { PageHero, Section, ClosingCta } from '@/components/marketing/sections'
 export const metadata = {
   title: 'Precios',
   description:
-    'Planes que se adaptan al tipo y la escala de tu evento. Escribinos y armamos una propuesta a medida.',
+    'Planes que se adaptan a cada fiesta y a cada salón. Durante la etapa de pilotos trabajamos acompañados y armamos una propuesta a medida.',
 }
 
 const PLANS = [
   {
-    name: 'Social',
-    forWho: 'Celebraciones y eventos familiares.',
+    name: 'Por evento',
+    forWho: 'Tu primera fiesta con Alista.',
     features: [
       'Invitaciones y confirmaciones',
       'Invitados y acompañantes',
-      'Preparación de pendientes',
-      'Ingreso con check-in',
+      'Pago vinculado a cada persona',
+      'Acceso con QR y check-in',
     ],
     featured: false,
   },
   {
-    name: 'Profesional',
-    forWho: 'Organizadores, productoras y eventos corporativos.',
+    name: 'Salón o productor',
+    forWho: 'Quienes abren varias fiestas al año.',
     features: [
-      'Todo lo de Social',
+      'Todo lo de Por evento',
+      'Configuración reutilizable entre fiestas',
       'Roles y permisos para el equipo',
-      'Accesos y excepciones preparados',
-      'Reportes de asistencia e incidencias',
+      'Cupo, pagos e ingresos a la vista',
     ],
     featured: true,
   },
   {
-    name: 'Escala',
-    forWho: 'Instituciones y operaciones recurrentes.',
+    name: 'Marca blanca',
+    forWho: 'Alista dentro de tu propio servicio.',
     features: [
-      'Todo lo de Profesional',
-      'Base reutilizable entre eventos',
+      'Todo lo de Salón o productor',
+      'Presencia de tu marca en la experiencia',
       'Acompañamiento en la puesta en marcha',
       'Criterios de privacidad a medida',
     ],
@@ -50,8 +50,8 @@ export default function PreciosPage() {
       <PageHero
         eyebrow="Precios"
         title="Un plan para cada"
-        highlight="tipo de evento."
-        description="Cada operación es distinta, así que la propuesta se adapta al tipo y la escala de tu evento. Contanos qué necesitás y armamos algo a medida, sin sorpresas."
+        highlight="tipo de fiesta."
+        description="Cada operación es distinta, así que la propuesta se adapta a la fiesta y al salón. Estamos en etapa de pilotos acompañados: contanos qué necesitás y armamos algo a medida, sin sorpresas."
       />
 
       <Section muted>
@@ -67,13 +67,13 @@ export default function PreciosPage() {
             >
               {plan.featured && (
                 <span className="inline-flex items-center rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground">
-                  Más elegido
+                  Recomendado
                 </span>
               )}
               <h3 className="mt-4 font-display text-2xl font-semibold text-foreground">{plan.name}</h3>
               <p className="mt-2 text-sm text-muted-foreground">{plan.forWho}</p>
               <p className="mt-6 font-display text-lg font-semibold text-foreground">A medida</p>
-              <p className="text-sm text-muted-foreground">según tipo y escala del evento</p>
+              <p className="text-sm text-muted-foreground">según la fiesta y el volumen del salón</p>
               <ul className="mt-6 space-y-3">
                 {plan.features.map((feature) => (
                   <li key={feature} className="flex items-start gap-2 text-sm text-foreground">
@@ -98,8 +98,8 @@ export default function PreciosPage() {
       </Section>
 
       <ClosingCta
-        title="Empecemos por tu próximo evento."
-        description="Contanos qué estás organizando y te mostramos cómo prepararlo con Alista."
+        title="Empecemos por tu próxima fiesta."
+        description="Contanos qué estás organizando y te mostramos cómo preparar la apertura con Alista."
         primary={{ href: '/demo', label: 'Solicitar demo' }}
         secondary={{ href: '/contacto', label: 'Hablar con el equipo' }}
       />

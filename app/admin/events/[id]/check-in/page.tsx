@@ -17,7 +17,7 @@ export default async function EventCheckinPage({ params }: EventCheckinPageProps
   const supabase = await createServerSupabaseClient()
   const { data, error } = await supabase
     .from('events')
-    .select('id, name, slug, event_date, start_time')
+    .select('id, name, slug, event_date, start_time, max_capacity')
     .eq('id', id)
     .maybeSingle()
 
@@ -37,7 +37,7 @@ export default async function EventCheckinPage({ params }: EventCheckinPageProps
 
   return (
     <AdminLayout>
-      <EventCheckinManager event={data as Pick<Event, 'id' | 'name' | 'slug' | 'event_date' | 'start_time'>} />
+      <EventCheckinManager event={data as Pick<Event, 'id' | 'name' | 'slug' | 'event_date' | 'start_time' | 'max_capacity'>} />
     </AdminLayout>
   )
 }

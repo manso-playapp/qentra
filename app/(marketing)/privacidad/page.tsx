@@ -7,26 +7,30 @@ export const metadata = {
 const SECTIONS = [
   {
     title: '1. Qué datos tratamos',
-    body: 'Tratamos únicamente los datos personales necesarios para preparar y operar un evento: datos de contacto, confirmaciones de asistencia, acompañantes, necesidades particulares informadas y datos de acceso. Pedimos solo la información que tiene un uso concreto.',
+    body: 'Tratamos únicamente los datos personales necesarios para vincular a una persona con su pago y su acceso: datos de contacto, confirmaciones de asistencia, acompañantes, información de pago o aporte y datos de acceso. Pedimos solo la información que tiene un uso concreto.',
   },
   {
     title: '2. Para qué los usamos',
-    body: 'Usamos los datos para convertir la información previa en preparación: organizar invitados, anticipar pendientes, coordinar al equipo y gestionar el ingreso. No los usamos para vigilancia ni para elaborar perfiles que excedan esa finalidad.',
+    body: 'Usamos los datos para ordenar la apertura de una fiesta: vincular pago y persona, organizar invitados, respetar el cupo y gestionar el ingreso. No los usamos para vigilancia ni para elaborar perfiles que excedan esa finalidad.',
   },
   {
-    title: '3. Consentimiento y control',
-    body: 'El tratamiento se realiza sobre la base del consentimiento y de la relación con el organizador del evento. Las personas pueden solicitar acceder, rectificar, actualizar o suprimir sus datos.',
+    title: '3. Menores de edad',
+    body: 'Muchas de estas celebraciones involucran a adolescentes. Cuando se tratan datos de menores, lo hacemos con especial cuidado y bajo la responsabilidad del organizador y de las familias, limitando la información a la estrictamente necesaria para el acceso.',
   },
   {
-    title: '4. Conservación y seguridad',
-    body: 'Conservamos los datos por el tiempo necesario para la finalidad del evento y aplicamos medidas técnicas y organizativas razonables. La lógica sensible y las validaciones se resuelven del lado del servidor.',
+    title: '4. Consentimiento y control',
+    body: 'El tratamiento se realiza sobre la base del consentimiento y de la relación con el organizador de la fiesta. Las personas pueden solicitar acceder, rectificar, actualizar o suprimir sus datos.',
   },
   {
-    title: '5. Terceros',
+    title: '5. Conservación y seguridad',
+    body: 'Conservamos los datos por el tiempo necesario para la finalidad de la fiesta y aplicamos medidas técnicas y organizativas razonables. La lógica sensible y las validaciones se resuelven del lado del servidor.',
+  },
+  {
+    title: '6. Terceros',
     body: 'Podemos apoyarnos en proveedores de infraestructura y de envío de comunicaciones para prestar el servicio, sujetos a obligaciones de confidencialidad y seguridad. No vendemos datos personales.',
   },
   {
-    title: '6. Derechos y contacto',
+    title: '7. Derechos y contacto',
     body: 'De acuerdo con la Ley 25.326 de Protección de Datos Personales de Argentina, podés ejercer tus derechos escribiendo a hola@alista.com.ar. La autoridad de control es la Agencia de Acceso a la Información Pública.',
   },
 ]

@@ -6,7 +6,7 @@ export const metadata = {
 const SECTIONS = [
   {
     title: '1. Objeto',
-    body: 'Estos términos regulan el uso de Alista, una plataforma para gestionar invitaciones, confirmaciones y accesos de eventos. Al usar el servicio, aceptás estas condiciones.',
+    body: 'Estos términos regulan el uso de Alista, una plataforma que vincula invitación, pago y acceso en fiestas privadas con cupo limitado. Al usar el servicio, aceptás estas condiciones.',
   },
   {
     title: '2. Uso del servicio',

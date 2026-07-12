@@ -10,6 +10,7 @@ type AccessCode =
   | 'expired'
   | 'already_checked_in'
   | 'outside_window'
+  | 'event_full'
 
 type EvaluatedAccess = {
   decision: AccessDecision
@@ -39,6 +40,10 @@ type EvaluateGuestAccessInput = {
   > | null
   invitationToken?: Pick<InvitationToken, 'expires_at'>
   lastCheckinTime?: string | null
+  /** Cupo total del evento (events.max_capacity). Null/0/undefined = sin limite. */
+  eventCapacity?: number | null
+  /** Personas ya admitidas al evento (check-ins aprobados) antes de este ingreso. */
+  eventOccupancy?: number
   now?: Date
 }
 
@@ -143,6 +148,8 @@ export function evaluateGuestAccess({
   guestType,
   invitationToken,
   lastCheckinTime,
+  eventCapacity,
+  eventOccupancy,
   now = new Date(),
 }: EvaluateGuestAccessInput): EvaluatedAccess {
   const guestFullName = `${guest.first_name} ${guest.last_name}`.trim()
@@ -229,6 +236,23 @@ export function evaluateGuestAccess({
       code: 'outside_window',
       title: 'Acceso fuera de horario',
       detail: `${guestFullName} no esta habilitado${guestTypeLabel} en este momento. ${policyText}`,
+    }
+  }
+
+  // Cupo total: ultima compuerta. Un invitado por lo demas valido no entra si el
+  // evento ya llego a su aforo, salvo autorizacion. Cuenta a las personas ya
+  // admitidas (check-ins aprobados); no descuenta acompañantes (no se modelan).
+  if (
+    typeof eventCapacity === 'number' &&
+    eventCapacity > 0 &&
+    typeof eventOccupancy === 'number' &&
+    eventOccupancy >= eventCapacity
+  ) {
+    return {
+      decision: 'deny',
+      code: 'event_full',
+      title: 'Cupo completo',
+      detail: `El evento alcanzo su cupo de ${eventCapacity} personas. ${guestFullName} necesita autorizacion para ingresar.`,
     }
   }
 

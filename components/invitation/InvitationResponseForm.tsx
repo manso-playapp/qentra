@@ -21,6 +21,8 @@ type InvitationResponseFormProps = {
     plusOnesConfirmed: number
     companionNames: string
     dietaryRequirements: string
+    song: string
+    greeting: string
     observations: string
     photoUrl: string
   }
@@ -39,6 +41,8 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
   const [plusOnesConfirmed, setPlusOnesConfirmed] = useState(String(initialData.plusOnesConfirmed))
   const [companionNames, setCompanionNames] = useState(initialData.companionNames)
   const [dietaryRequirements, setDietaryRequirements] = useState(initialData.dietaryRequirements)
+  const [song, setSong] = useState(initialData.song)
+  const [greeting, setGreeting] = useState(initialData.greeting)
   const [observations, setObservations] = useState(initialData.observations)
   const [photoUrl, setPhotoUrl] = useState(initialData.photoUrl)
   const [loading, setLoading] = useState(false)
@@ -70,6 +74,8 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
           plusOnesConfirmed: isConfirming ? Number.parseInt(plusOnesConfirmed || '0', 10) || 0 : 0,
           companionNames: isConfirming ? companionNames : '',
           dietaryRequirements: isConfirming ? dietaryRequirements : '',
+          song: isConfirming ? song : '',
+          greeting: isConfirming ? greeting : '',
           observations,
         }),
       })
@@ -236,6 +242,29 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
               onChange={(event) => setDietaryRequirements(event.target.value)}
               className="mt-2"
               placeholder="Ej: celiaco, vegetariano, sin restriccion"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="invitation-song">Tu cancion 🎵</Label>
+            <Input
+              id="invitation-song"
+              value={song}
+              onChange={(event) => setSong(event.target.value)}
+              className="mt-2"
+              placeholder="La que no puede faltar en la pista"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="invitation-greeting">Saludo o dedicatoria 💌</Label>
+            <Textarea
+              id="invitation-greeting"
+              rows={3}
+              value={greeting}
+              onChange={(event) => setGreeting(event.target.value)}
+              className="mt-2"
+              placeholder="Un mensaje para quien celebra"
             />
           </div>
         </>

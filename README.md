@@ -1,12 +1,13 @@
-# Qentra
+# Alista
 
-Qentra es una plataforma web para gestion de eventos, invitados y control de acceso.
+Alista es una plataforma web que vincula invitacion, pago y acceso en fiestas
+privadas con cupo limitado (fiestas de 15, egresados y celebraciones juveniles).
+Se ofrece a salones, productores y organizadores.
 
 Estado actual del MVP:
 
-- admin de eventos
-- gestion de invitados y tipos de invitado
-- emision de invitaciones con QR
+- admin de eventos, invitados y tipos de invitado
+- invitaciones con QR unico por invitado
 - check-in manual y por QR
 - vistas separadas de `admin`, `puerta` y `totem`
 - autenticacion operativa con Supabase Auth
@@ -53,7 +54,7 @@ Entre las mas importantes:
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `RESEND_API_KEY`
-- `QENTRA_EMAIL_FROM`
+- `ALISTA_EMAIL_FROM`
 - `TWILIO_ACCOUNT_SID`
 - `TWILIO_AUTH_TOKEN`
 

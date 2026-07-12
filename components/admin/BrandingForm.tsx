@@ -97,7 +97,7 @@ export default function BrandingForm({ eventId, eventName, branding }: BrandingF
     <div className="px-4 py-6 sm:px-0">
       <form onSubmit={handleSubmit} className="grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,1fr)]">
         <div className="space-y-6">
-          <Card className="bg-admin-panel">
+          <Card id="identidad-visual" className="scroll-mt-24 bg-admin-panel">
             <CardHeader>
               <CardDescription>Identidad visual</CardDescription>
               <CardTitle className="admin-heading text-3xl">Colores e imágenes</CardTitle>
@@ -169,7 +169,7 @@ export default function BrandingForm({ eventId, eventName, branding }: BrandingF
             </CardContent>
           </Card>
 
-          <Card className="bg-admin-panel">
+          <Card id="mensajes-totem" className="scroll-mt-24 bg-admin-panel">
             <CardHeader>
               <CardDescription>Textos del tótem</CardDescription>
               <CardTitle className="admin-heading text-3xl">Mensajes de la pantalla</CardTitle>
@@ -291,12 +291,6 @@ export default function BrandingForm({ eventId, eventName, branding }: BrandingF
               </Button>
 
               <div className="grid gap-2">
-                <Button asChild variant="outline" className="w-full">
-                  <Link href={`/admin/events/${eventId}/invitacion/preview`} target="_blank">
-                    <ExternalLink className="size-4" />
-                    Ver invitación
-                  </Link>
-                </Button>
                 <Button asChild variant="outline" className="w-full">
                   <Link href={`/totem/${eventId}`} target="_blank">
                     <ExternalLink className="size-4" />

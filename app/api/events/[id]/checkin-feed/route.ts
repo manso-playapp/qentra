@@ -33,10 +33,11 @@ export async function GET(_request: Request, context: RouteContext) {
 
   const { id: eventId } = await context.params
 
-  const { data, error } = await adminClient
-    .from('checkins')
-    .select(
-      `
+  const [feedResult, countResult] = await Promise.all([
+    adminClient
+      .from('checkins')
+      .select(
+        `
       id,
       event_id,
       guest_id,
@@ -50,16 +51,23 @@ export async function GET(_request: Request, context: RouteContext) {
         photo_url
       )
     `
-    )
-    .eq('event_id', eventId)
-    // Solo ingresos aprobados: el totem celebra, los rechazos quedan en la puerta.
-    .eq('result', 'approved')
-    .order('checked_in_at', { ascending: false })
-    .limit(10)
+      )
+      .eq('event_id', eventId)
+      // Solo ingresos aprobados: el totem celebra, los rechazos quedan en la puerta.
+      .eq('result', 'approved')
+      .order('checked_in_at', { ascending: false })
+      .limit(10),
+    // Total de ingresos aprobados: alimenta el contador de aforo en la puerta.
+    adminClient
+      .from('checkins')
+      .select('id', { count: 'exact', head: true })
+      .eq('event_id', eventId)
+      .eq('result', 'approved'),
+  ])
 
-  if (error) {
-    return Response.json({ error: error.message }, { status: 500 })
+  if (feedResult.error) {
+    return Response.json({ error: feedResult.error.message }, { status: 500 })
   }
 
-  return Response.json({ data: data ?? [] })
+  return Response.json({ data: feedResult.data ?? [], approvedCount: countResult.count ?? 0 })
 }

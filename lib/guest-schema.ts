@@ -22,6 +22,7 @@ type DbGuestRow = {
   phone?: string | null
   photo_url?: string | null
   status?: string | null
+  payment_status?: string | null
   notes?: string | null
   created_at: string
   updated_at: string
@@ -75,6 +76,9 @@ export function normalizeGuestRecord(row: DbGuestRow): GuestWithType {
     phone: row.phone ?? undefined,
     photo_url: row.photo_url ?? null,
     status: normalizeGuestStatus(row.status),
+    db_status: (row.status as DbGuestStatus | null) ?? undefined,
+    payment_status:
+      (row.payment_status as Guest['payment_status'] | null) ?? 'not_required',
     plus_ones_allowed: 0,
     plus_ones_confirmed: 0,
     special_requests: row.notes ?? undefined,

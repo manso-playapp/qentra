@@ -2,6 +2,8 @@ type InvitationDetailsInput = {
   dni?: string
   dietaryRequirements?: string
   companionNames?: string
+  song?: string
+  greeting?: string
   observations?: string
   paymentStatus?: 'not_required' | 'pending' | 'approved'
 }
@@ -10,6 +12,8 @@ export type ParsedInvitationDetails = {
   dni: string
   dietaryRequirements: string
   companionNames: string
+  song: string
+  greeting: string
   observations: string
   paymentStatus: 'not_required' | 'pending' | 'approved'
 }
@@ -18,6 +22,8 @@ const LABELS = {
   dni: 'DNI',
   dietaryRequirements: 'Menu',
   companionNames: 'Acompanantes',
+  song: 'Cancion',
+  greeting: 'Saludo',
   observations: 'Observaciones',
   paymentStatus: 'Pago',
 } as const
@@ -26,6 +32,8 @@ export function serializeInvitationDetails({
   dni,
   dietaryRequirements,
   companionNames,
+  song,
+  greeting,
   observations,
   paymentStatus,
 }: InvitationDetailsInput) {
@@ -33,6 +41,8 @@ export function serializeInvitationDetails({
     { label: LABELS.dni, value: dni?.trim() },
     { label: LABELS.dietaryRequirements, value: dietaryRequirements?.trim() },
     { label: LABELS.companionNames, value: companionNames?.trim() },
+    { label: LABELS.song, value: song?.trim() },
+    { label: LABELS.greeting, value: greeting?.trim() },
     { label: LABELS.observations, value: observations?.trim() },
     {
       label: LABELS.paymentStatus,
@@ -53,6 +63,8 @@ export function parseInvitationDetails(value?: string | null): ParsedInvitationD
     dni: '',
     dietaryRequirements: '',
     companionNames: '',
+    song: '',
+    greeting: '',
     observations: '',
     paymentStatus: 'not_required',
   }
@@ -72,6 +84,16 @@ export function parseInvitationDetails(value?: string | null): ParsedInvitationD
 
     if (line.startsWith(`${LABELS.companionNames}:`)) {
       parsed.companionNames = line.replace(`${LABELS.companionNames}:`, '').trim()
+      continue
+    }
+
+    if (line.startsWith(`${LABELS.song}:`)) {
+      parsed.song = line.replace(`${LABELS.song}:`, '').trim()
+      continue
+    }
+
+    if (line.startsWith(`${LABELS.greeting}:`)) {
+      parsed.greeting = line.replace(`${LABELS.greeting}:`, '').trim()
       continue
     }
 

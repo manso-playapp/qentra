@@ -3,41 +3,41 @@ import { PageHero, ClosingCta } from '@/components/marketing/sections'
 export const metadata = {
   title: 'Casos de uso',
   description:
-    'Eventos sociales, corporativos y de escala. La misma base para preparar cada llegada según el tipo de evento.',
+    'Fiestas de 15, egresados y recepciones, y salones o productores recurrentes. La misma base para vincular invitación, pago y acceso según cada fiesta.',
 }
 
 const CASES = [
   {
-    id: 'sociales',
-    eyebrow: 'Eventos sociales',
+    id: 'fiestas-15',
+    eyebrow: 'Fiestas de 15',
     title: 'Que la familia disfrute, no que opere la puerta.',
-    body: 'Casamientos, cumpleaños y celebraciones donde el anfitrión debería estar con su gente, no resolviendo listas. Alista prepara confirmaciones, acompañantes y necesidades particulares para que la recepción fluya sola.',
+    body: 'La fiesta se cobra por transferencia, el alias circula y en la puerta aparece gente de más. Alista vincula cada aporte con un invitado y prepara acompañantes y accesos, para que la familia esté en la fiesta y no resolviendo comprobantes.',
     points: [
-      'Confirmaciones y acompañantes ordenados desde la invitación.',
-      'Necesidades particulares contempladas antes de la llegada.',
-      'Ingreso sereno, sin planillas ni consultas de último momento.',
+      'Cada pago vinculado a una persona antes de la fiesta.',
+      'Acompañantes y necesidades contemplados desde la invitación.',
+      'Ingreso ordenado, sin sobrecupo ni consultas de último momento.',
     ],
   },
   {
-    id: 'corporativos',
-    eyebrow: 'Eventos corporativos',
-    title: 'Información clara y coordinación en tiempo real.',
-    body: 'Lanzamientos, conferencias y activaciones donde la acreditación tiene que ser prolija y el equipo tiene que estar alineado. Accesos preparados de antemano y criterios compartidos para toda la operación.',
+    id: 'egresados',
+    eyebrow: 'Egresados y recepciones',
+    title: 'Grupos grandes, cobro previo y cupo que hay que respetar.',
+    body: 'Promociones, egresados y recepciones donde el cobro es previo y el aforo importa. Alista ordena la lista, distingue quién pagó y da al equipo criterios claros para abrir sin discusiones.',
     points: [
-      'Accesos y credenciales definidos antes del evento.',
-      'Roles y permisos por responsabilidad para el equipo.',
-      'Coordinación en tiempo real durante la recepción.',
+      'Lista y pagos en un solo lugar, no en planillas separadas.',
+      'Cupo e ingresos visibles en tiempo real.',
+      'Excepciones resueltas con autorización, no bajo presión.',
     ],
   },
   {
-    id: 'escala',
-    eyebrow: 'Eventos de escala',
-    title: 'Preparación que sostiene el volumen.',
-    body: 'Instituciones, productoras y salones que reciben personas de manera recurrente. La misma base reutilizable, con la lógica sensible resuelta en el backend para operar con confianza a mayor volumen.',
+    id: 'salones',
+    eyebrow: 'Salones y productores',
+    title: 'Una apertura repetible en cada fiesta del año.',
+    body: 'Salones, productores y planners que abren decenas de fiestas por temporada y arriesgan su reputación en la puerta. La misma configuración reutilizable evento tras evento, con la lógica sensible resuelta en el backend.',
     points: [
-      'Una base repetible y delegable evento tras evento.',
+      'Una base repetible y delegable, fiesta tras fiesta.',
       'Estados, validación y excepciones resueltos del lado del servidor.',
-      'Aprendizajes que preparan mejor cada nueva edición.',
+      'Un servicio diferencial para incorporar al paquete comercial.',
     ],
   },
 ]
@@ -48,8 +48,8 @@ export default function CasosPage() {
       <PageHero
         eyebrow="Casos de uso"
         title="Un mismo criterio,"
-        highlight="cada tipo de evento."
-        description="Sea una celebración familiar, un evento corporativo o una operación a escala, la idea es la misma: preparar cada llegada antes de que se convierta en un problema en la puerta."
+        highlight="cada tipo de fiesta."
+        description="Sea una fiesta de 15, una recepción de egresados o un salón que abre todos los fines de semana, la idea es la misma: vincular invitación, pago y acceso antes de que la puerta se vuelva un problema."
         primaryCta={{ href: '/demo', label: 'Solicitar demo' }}
       />
 
@@ -64,10 +64,10 @@ export default function CasosPage() {
               <p className="text-sm font-semibold uppercase tracking-[0.16em] text-primary">
                 {item.eyebrow}
               </p>
-              <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+              <h2 className="mt-3 text-balance font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
                 {item.title}
               </h2>
-              <p className="mt-5 text-lg leading-relaxed text-muted-foreground">{item.body}</p>
+              <p className="mt-5 text-pretty text-lg leading-relaxed text-muted-foreground">{item.body}</p>
             </div>
             <ul className="grid gap-4">
               {item.points.map((point) => (
@@ -88,7 +88,7 @@ export default function CasosPage() {
                       />
                     </svg>
                   </span>
-                  <p className="text-sm leading-6 text-foreground">{point}</p>
+                  <p className="text-pretty text-sm leading-6 text-foreground">{point}</p>
                 </li>
               ))}
             </ul>
@@ -97,8 +97,8 @@ export default function CasosPage() {
       ))}
 
       <ClosingCta
-        title="Todo listo para que puedas estar presente."
-        description="Preparar cada llegada es cuidar la experiencia, sea cual sea el evento."
+        title="Abrí la fiesta sin abrir un problema."
+        description="La misma base para vincular invitación, pago y acceso, sea cual sea la celebración."
       />
     </>
   )
