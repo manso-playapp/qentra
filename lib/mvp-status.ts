@@ -61,11 +61,12 @@ export const MVP_FEATURES: MvpFeature[] = [
   },
   {
     id: 'alta-invitados',
-    title: 'Alta manual de invitados',
+    title: 'Alta de invitados (manual, masiva y export)',
     module: 'admin',
     status: 'done',
-    detail: 'Crear, editar, borrar y cambiar estado del invitado desde la ficha del evento.',
-    evidence: ['components/admin/EventGuestsManager.tsx', 'app/api/guests/route.ts'],
+    detail:
+      'Crear, editar, borrar y cambiar estado desde la ficha del evento. Carga masiva pegando una lista (CSV/tab) con insert unico, y export a CSV de todos los invitados con estado, pago y contacto.',
+    evidence: ['components/admin/EventGuestsManager.tsx', 'app/api/guests/bulk/route.ts'],
   },
   {
     id: 'categorias',
@@ -185,11 +186,13 @@ export const MVP_FEATURES: MvpFeature[] = [
   },
   {
     id: 'invitacion-editor',
-    title: 'Backend del disenador de invitacion',
+    title: 'Editor de invitacion (front editor)',
     module: 'admin',
-    status: 'todo',
-    detail: 'La invitacion toma el branding del evento (colores, logo, portada, mensajes).',
-    gap: 'Falta el backend para disenar y guardar layouts de invitacion a medida, mas alla del branding base.',
+    status: 'partial',
+    detail:
+      'Editor dedicado con preview en vivo de dos paneles: aspecto (colores, tipografia, subida de logo/portada/fondo), info (dresscode, como llegar) y widgets opcionales (mensaje, trivia, Spotify) + toggles de campos. El aspecto y las imagenes persisten ya; la invitacion publica muestra dresscode y como llegar.',
+    gap: 'La config rica (widgets, dresscode, tipografia, campos) persiste tras correr ALTER TABLE event_branding ADD COLUMN config jsonb. Falta Spotify real, guardar respuestas de trivia y que los toggles de campos afecten el formulario publico.',
+    evidence: ['components/admin/InvitationEditor.tsx', 'app/api/events/[id]/invitation/route.ts'],
   },
   {
     id: 'totem-editor',
@@ -251,20 +254,20 @@ export const TECH_DEBT: { title: string; detail: string; severity: 'alta' | 'med
 export const NEXT_STEPS: { order: number; title: string; detail: string; featureId: string }[] = [
   {
     order: 1,
-    title: 'Numero de WhatsApp productivo',
-    detail: 'El envio por WhatsApp corre contra el sandbox de Twilio. Dar de alta un numero propio aprobado para poder escribirle a cualquier invitado sin opt-in previo.',
-    featureId: 'twilio-numero',
+    title: 'Persistir la config del editor de invitacion',
+    detail: 'Correr ALTER TABLE event_branding ADD COLUMN IF NOT EXISTS config jsonb para que los widgets, dresscode, tipografia y toggles del editor se guarden (hoy el aspecto y las imagenes ya persisten).',
+    featureId: 'invitacion-editor',
   },
   {
     order: 2,
-    title: 'Backend del disenador de invitacion',
-    detail: 'Poder disenar y guardar layouts de invitacion a medida, mas alla del branding base del evento.',
+    title: 'Terminar el editor de invitacion',
+    detail: 'Spotify real (buscar y sumar temas), guardar respuestas de trivia y que los toggles de campos afecten el formulario publico y su validacion.',
     featureId: 'invitacion-editor',
   },
   {
     order: 3,
-    title: 'Backend del disenador de totem',
-    detail: 'Poder disenar y guardar la composicion visual del totem a medida.',
+    title: 'Editor del totem (dedicado)',
+    detail: 'Su propio editor, distinto al de la invitacion: composicion visual y mensajes del totem con preview en vivo.',
     featureId: 'totem-editor',
   },
 ]
