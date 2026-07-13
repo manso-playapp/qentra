@@ -144,7 +144,7 @@ export default function MvpStatusPage() {
             </CardHeader>
             <CardContent className="space-y-3">
               {NEXT_STEPS.map((step) => (
-                <div key={step.featureId} className="rounded-[24px] border border-white/10 bg-white/6 p-4">
+                <div key={step.order} className="rounded-[24px] border border-white/10 bg-white/6 p-4">
                   <div className="flex items-center gap-3">
                     <span className="flex size-7 flex-none items-center justify-center rounded-full bg-sky-400/20 text-xs font-semibold text-sky-200">
                       {step.order}
