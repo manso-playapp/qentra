@@ -166,19 +166,28 @@ export default function MvpStatusPage() {
               <CardTitle className="admin-heading text-3xl">Deudas</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                {TECH_DEBT.map((item) => (
-                  <div key={item.title} className="rounded-[24px] border border-border/70 bg-white/80 p-5">
-                    <div className="flex items-start justify-between gap-3">
-                      <p className="text-sm font-semibold leading-6 text-foreground">{item.title}</p>
-                      <Badge variant={DEBT_BADGE[item.severity]} className="flex-none">
-                        {item.severity}
-                      </Badge>
+              {TECH_DEBT.length === 0 ? (
+                <div className="flex items-center gap-3 rounded-[24px] border border-emerald-200/80 bg-emerald-50/60 p-5">
+                  <CheckCircle2 className="size-5 flex-none text-emerald-600" />
+                  <p className="text-sm leading-6 text-foreground">
+                    Sin deudas técnicas. Lo que queda son features por hacer, no arreglos.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {TECH_DEBT.map((item) => (
+                    <div key={item.title} className="rounded-[24px] border border-border/70 bg-white/80 p-5">
+                      <div className="flex items-start justify-between gap-3">
+                        <p className="text-sm font-semibold leading-6 text-foreground">{item.title}</p>
+                        <Badge variant={DEBT_BADGE[item.severity]} className="flex-none">
+                          {item.severity}
+                        </Badge>
+                      </div>
+                      <p className="mt-2 text-sm leading-6 text-muted-foreground">{item.detail}</p>
                     </div>
-                    <p className="mt-2 text-sm leading-6 text-muted-foreground">{item.detail}</p>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

@@ -242,12 +242,6 @@ export const BEYOND_MVP: { title: string; detail: string }[] = [
 
 /** Deuda conocida. No bloquea el MVP, pero conviene tenerla a la vista. */
 export const TECH_DEBT: { title: string; detail: string; severity: 'alta' | 'media' | 'baja' }[] = [
-  {
-    title: 'Guest.status desalineado con la logica real (QEN-007)',
-    detail:
-      'El motor de acceso opera sobre 4 estados canonicos (Guest.status); la base maneja 7. Mitigado: el campo db_status conserva el estado real y el panel ya lo muestra. Falta reconciliar ambos vocabularios en una sola fuente. Detalle en docs/alista-tracker.md.',
-    severity: 'baja',
-  },
 ]
 
 /** Con el alcance del MVP cerrado, lo que sigue: probarlo de verdad y pulir. */
