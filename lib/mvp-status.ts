@@ -190,8 +190,8 @@ export const MVP_FEATURES: MvpFeature[] = [
     module: 'admin',
     status: 'partial',
     detail:
-      'Editor dedicado con preview en vivo de dos paneles: aspecto (colores, tipografia, subida de logo/portada/fondo), info (dresscode, como llegar) y widgets opcionales (mensaje, trivia, Spotify) + toggles de campos. El aspecto y las imagenes persisten ya; la invitacion publica muestra dresscode y como llegar.',
-    gap: 'La config rica (widgets, dresscode, tipografia, campos) persiste tras correr ALTER TABLE event_branding ADD COLUMN config jsonb. Falta Spotify real, guardar respuestas de trivia y que los toggles de campos afecten el formulario publico.',
+      'Editor dedicado con preview en vivo de dos paneles: aspecto (colores, tipografia, subida de logo/portada/fondo), info (dresscode, como llegar) y widgets opcionales (mensaje, trivia, Spotify) + toggles de campos. Todo persiste (aspecto e imagenes en columnas; la config rica en event_branding.config). La invitacion publica muestra dresscode y como llegar.',
+    gap: 'Falta Spotify real (buscar y sumar temas), guardar respuestas de trivia y que los toggles de campos afecten el formulario publico y su validacion.',
     evidence: ['components/admin/InvitationEditor.tsx', 'app/api/events/[id]/invitation/route.ts'],
   },
   {
@@ -248,21 +248,21 @@ export const TECH_DEBT: { title: string; detail: string; severity: 'alta' | 'med
 export const NEXT_STEPS: { order: number; title: string; detail: string; featureId: string }[] = [
   {
     order: 1,
-    title: 'Persistir la config del editor de invitacion',
-    detail: 'Correr ALTER TABLE event_branding ADD COLUMN IF NOT EXISTS config jsonb para que los widgets, dresscode, tipografia y toggles del editor se guarden (hoy el aspecto y las imagenes ya persisten).',
+    title: 'Terminar el editor de invitacion',
+    detail: 'Spotify real (buscar y sumar temas a la playlist), guardar respuestas de trivia y que los toggles de campos afecten el formulario publico y su validacion.',
     featureId: 'invitacion-editor',
   },
   {
     order: 2,
-    title: 'Terminar el editor de invitacion',
-    detail: 'Spotify real (buscar y sumar temas), guardar respuestas de trivia y que los toggles de campos afecten el formulario publico y su validacion.',
-    featureId: 'invitacion-editor',
-  },
-  {
-    order: 3,
     title: 'Editor del totem (dedicado)',
     detail: 'Su propio editor, distinto al de la invitacion: composicion visual y mensajes del totem con preview en vivo.',
     featureId: 'totem-editor',
+  },
+  {
+    order: 3,
+    title: 'Numero de WhatsApp productivo',
+    detail: 'El envio por WhatsApp corre contra el sandbox de Twilio. Dar de alta un numero propio aprobado para escribirle a cualquier invitado sin opt-in previo.',
+    featureId: 'twilio-numero',
   },
 ]
 
