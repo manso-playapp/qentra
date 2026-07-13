@@ -18,12 +18,13 @@ export type InvitationConfig = {
   fields: { rsvp: boolean; dni: boolean; menu: boolean; companions: boolean }
 }
 
+// La invitacion usa cover_image_url como su imagen de fondo (columna propia).
+// background_image_url queda para el totem, para que no se pisen.
 export type InvitationVisual = {
   primary_color: string
   secondary_color: string
   logo_url: string
   cover_image_url: string
-  background_image_url: string
 }
 
 type EventInfo = {
@@ -143,9 +144,9 @@ export default function InvitationEditor({
           <ImageUpload
             label="Imagen de fondo"
             hint="Cubre toda la invitación. El contenido va en tarjetas encima."
-            value={visual.background_image_url}
-            onChange={(url) => setVisualField('background_image_url', url)}
-            fields={{ bucket: 'event-assets', folder: eventId, label: 'background' }}
+            value={visual.cover_image_url}
+            onChange={(url) => setVisualField('cover_image_url', url)}
+            fields={{ bucket: 'event-assets', folder: eventId, label: 'invitation-bg' }}
           />
           <ImageUpload
             label="Logo (PNG transparente)"
@@ -202,9 +203,9 @@ export default function InvitationEditor({
             className="relative min-h-[560px] px-4 py-6"
             style={{
               fontFamily: fontStack,
-              ...(visual.background_image_url
+              ...(visual.cover_image_url
                 ? {
-                    backgroundImage: `url(${visual.background_image_url})`,
+                    backgroundImage: `url(${visual.cover_image_url})`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                   }

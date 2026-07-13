@@ -247,8 +247,9 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
   const mapsUrl = buildMapsUrl(event?.venue_address)
   const phoneHref = buildPhoneHref(event?.contact_phone)
   const calendarUrl = buildCalendarUrl(event || {})
-  // Fondo que cubre toda la invitacion; el contenido va en tarjetas encima.
-  const bgImage = branding?.background_image_url || branding?.cover_image_url
+  // Fondo que cubre toda la invitacion (cover_image_url es su columna propia; el
+  // totem usa background_image_url, para que no se pisen). El contenido va en tarjetas.
+  const bgImage = branding?.cover_image_url
 
   return (
     <main

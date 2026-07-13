@@ -90,7 +90,6 @@ export default async function InvitationEditorPage({ params }: { params: Promise
             secondary_color: (brandingRow.secondary_color as string) ?? '#f1e8da',
             logo_url: (brandingRow.logo_url as string) ?? '',
             cover_image_url: (brandingRow.cover_image_url as string) ?? '',
-            background_image_url: (brandingRow.background_image_url as string) ?? '',
           }}
           initialConfig={mergeConfig(brandingRow.config)}
         />

@@ -11,7 +11,6 @@ type PutBody = {
     secondary_color?: string
     logo_url?: string
     cover_image_url?: string
-    background_image_url?: string
   }
   config?: unknown
 }
@@ -46,7 +45,6 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
     secondary_color: HEX.test(v.secondary_color ?? '') ? v.secondary_color! : '#f1e8da',
     logo_url: trimmedOrNull(v.logo_url),
     cover_image_url: trimmedOrNull(v.cover_image_url),
-    background_image_url: trimmedOrNull(v.background_image_url),
   }
 
   const { data: existing } = await adminClient

@@ -69,9 +69,9 @@ function getPageHeader(pathname: string): PageHeader {
   if (pathname.includes('/branding')) {
     const eventId = pathname.split('/')[3]
     return {
-      eyebrow: 'Ficha del evento',
-      title: 'Branding del evento',
-      description: 'Colores, logo, portada y los textos que ven el invitado y el tótem.',
+      eyebrow: 'Personalización',
+      title: 'Marca y tótem',
+      description: 'Colores, logo, fondo y textos del tótem. La invitación se personaliza en su propio editor.',
       actions: [{ href: `/admin/events/${eventId}`, label: 'Volver al evento', variant: 'outline' }],
     }
   }
@@ -89,7 +89,7 @@ function getPageHeader(pathname: string): PageHeader {
     return {
       eyebrow: 'Ficha del evento',
       title: 'Evento',
-      description: 'Invitados, accesos, check-in y branding de este evento.',
+      description: 'Centro de operaciones: páginas públicas (invitación, tótem), invitados y control de acceso.',
       actions: [{ href: '/admin/events', label: 'Volver a eventos', variant: 'outline' }],
     }
   }
@@ -133,7 +133,7 @@ function getPageHeader(pathname: string): PageHeader {
   return {
     eyebrow: 'Backoffice operativo',
     title: 'Centro de operaciones',
-    description: 'El pulso de tu próximo evento: invitados cargados, accesos emitidos y gente que ya entró.',
+    description: 'Tu próximo evento, qué falta para dejarlo listo y acceso directo a operarlo.',
     actions: [{ href: '/admin/events/new', label: 'Nuevo evento' }],
   }
 }

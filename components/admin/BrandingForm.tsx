@@ -152,16 +152,8 @@ export default function BrandingForm({ eventId, eventName, branding }: BrandingF
               />
 
               <ImageUpload
-                label="Portada de la invitación"
-                hint="Se ve de fondo en la cabecera de la invitación."
-                value={form.cover_image_url}
-                onChange={(url) => update('cover_image_url', url)}
-                fields={{ bucket: 'event-assets', folder: eventId, label: 'cover' }}
-              />
-
-              <ImageUpload
                 label="Fondo del tótem"
-                hint="Si lo dejás vacío, el tótem usa la portada de la invitación."
+                hint="La imagen de fondo de la pantalla del tótem. La invitación tiene su propio fondo en su editor."
                 value={form.background_image_url}
                 onChange={(url) => update('background_image_url', url)}
                 fields={{ bucket: 'event-assets', folder: eventId, label: 'background' }}
