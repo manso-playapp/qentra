@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { CalendarDays, Clock, MapPin, Music2, MessageCircle, HelpCircle } from 'lucide-react'
 import ImageUpload from '@/components/admin/ImageUpload'
 
@@ -120,14 +120,6 @@ export default function InvitationEditor({
     }
   }
 
-  const previewCoverStyle = useMemo(
-    () =>
-      visual.cover_image_url
-        ? { backgroundImage: `url(${visual.cover_image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-        : { background: `linear-gradient(135deg, ${primary}, ${secondary})` },
-    [visual.cover_image_url, primary, secondary]
-  )
-
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(340px,420px)]">
       {/* Panel de controles */}
@@ -149,25 +141,18 @@ export default function InvitationEditor({
             </select>
           </Field>
           <ImageUpload
-            label="Logo"
-            hint="PNG, JPG, WEBP o SVG. Hasta 5 MB."
-            value={visual.logo_url}
-            onChange={(url) => setVisualField('logo_url', url)}
-            fields={{ bucket: 'event-assets', folder: eventId, label: 'logo' }}
-          />
-          <ImageUpload
-            label="Portada"
-            hint="Se ve de fondo en la cabecera de la invitación."
-            value={visual.cover_image_url}
-            onChange={(url) => setVisualField('cover_image_url', url)}
-            fields={{ bucket: 'event-assets', folder: eventId, label: 'cover' }}
-          />
-          <ImageUpload
-            label="Fondo"
-            hint="Detrás de la invitación."
+            label="Imagen de fondo"
+            hint="Cubre toda la invitación. El contenido va en tarjetas encima."
             value={visual.background_image_url}
             onChange={(url) => setVisualField('background_image_url', url)}
             fields={{ bucket: 'event-assets', folder: eventId, label: 'background' }}
+          />
+          <ImageUpload
+            label="Logo (PNG transparente)"
+            hint="Se muestra arriba, sobre el fondo. Ideal PNG con fondo transparente."
+            value={visual.logo_url}
+            onChange={(url) => setVisualField('logo_url', url)}
+            fields={{ bucket: 'event-assets', folder: eventId, label: 'logo' }}
           />
         </Section>
 
@@ -214,39 +199,53 @@ export default function InvitationEditor({
         <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-gray-400">Vista previa en vivo</p>
         <div className="mx-auto w-full max-w-[360px] overflow-hidden rounded-[36px] border-4 border-gray-900 bg-white shadow-2xl">
           <div
-            className="min-h-[560px]"
-            style={{ backgroundColor: secondary, fontFamily: fontStack }}
+            className="relative min-h-[560px] px-4 py-6"
+            style={{
+              fontFamily: fontStack,
+              ...(visual.background_image_url
+                ? {
+                    backgroundImage: `url(${visual.background_image_url})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                  }
+                : { background: `linear-gradient(160deg, ${primary}, ${secondary})` }),
+            }}
           >
-            {/* Portada */}
-            <div className="relative h-40" style={previewCoverStyle}>
-              <div className="absolute inset-0 bg-black/10" />
-              {visual.logo_url && (
+            {/* Scrim: legibilidad del logo y separacion de las tarjetas. */}
+            <div className="absolute inset-0 bg-black/15" />
+
+            <div className="relative space-y-4">
+              {/* Logo transparente, arriba, sobre el fondo. */}
+              {visual.logo_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={visual.logo_url} alt="Logo" className="absolute left-1/2 top-4 h-10 -translate-x-1/2 object-contain" />
+                <img src={visual.logo_url} alt="Logo" className="mx-auto h-16 max-w-[70%] object-contain drop-shadow-md" />
+              ) : (
+                <div className="mx-auto flex h-14 w-28 items-center justify-center rounded-lg border border-dashed border-white/70 text-[10px] font-medium text-white/85">
+                  Logo (PNG)
+                </div>
               )}
-            </div>
 
-            <div className="px-5 pb-6">
-              <h2 className="-mt-6 rounded-2xl bg-white px-4 py-3 text-center text-xl font-semibold shadow-sm" style={{ color: primary }}>
-                {event.name || 'Nombre del evento'}
-              </h2>
-
-              <div className="mt-4 space-y-1.5 text-center text-sm text-gray-700">
-                <p className="flex items-center justify-center gap-1.5"><CalendarDays className="size-4" style={{ color: primary }} /> {formatDate(event.event_date)}</p>
-                <p className="flex items-center justify-center gap-1.5"><Clock className="size-4" style={{ color: primary }} /> {event.start_time || 'Hora a definir'}</p>
-                <p className="flex items-center justify-center gap-1.5"><MapPin className="size-4" style={{ color: primary }} /> {event.venue_name || 'Lugar a definir'}</p>
+              {/* Tarjeta: info del evento */}
+              <div className="rounded-2xl bg-white/92 p-4 text-center shadow-lg backdrop-blur-sm">
+                <h2 className="text-xl font-semibold" style={{ color: primary }}>
+                  {event.name || 'Nombre del evento'}
+                </h2>
+                <div className="mt-3 space-y-1.5 text-sm text-gray-700">
+                  <p className="flex items-center justify-center gap-1.5"><CalendarDays className="size-4" style={{ color: primary }} /> {formatDate(event.event_date)}</p>
+                  <p className="flex items-center justify-center gap-1.5"><Clock className="size-4" style={{ color: primary }} /> {event.start_time || 'Hora a definir'}</p>
+                  <p className="flex items-center justify-center gap-1.5"><MapPin className="size-4" style={{ color: primary }} /> {event.venue_name || 'Lugar a definir'}</p>
+                </div>
+                {config.dresscode && (
+                  <p className="mx-auto mt-3 w-fit rounded-full px-3 py-1 text-xs font-medium" style={{ backgroundColor: primary, color: secondary }}>
+                    Dresscode: {config.dresscode}
+                  </p>
+                )}
+                {config.directionsUrl && (
+                  <p className="mt-2 text-xs font-semibold underline" style={{ color: primary }}>Cómo llegar →</p>
+                )}
               </div>
 
-              {config.dresscode && (
-                <p className="mx-auto mt-3 w-fit rounded-full px-3 py-1 text-xs font-medium" style={{ backgroundColor: primary, color: secondary }}>
-                  Dresscode: {config.dresscode}
-                </p>
-              )}
-              {config.directionsUrl && (
-                <p className="mt-2 text-center text-xs font-medium underline" style={{ color: primary }}>Cómo llegar →</p>
-              )}
-
-              {/* Widgets */}
+              {/* Widgets: cada uno su tarjeta. */}
               {config.widgets.song && (
                 <PreviewWidget primary={primary} icon={Music2} title="Sumá tu canción">
                   <div className="rounded-lg bg-black/5 px-3 py-2 text-xs text-gray-500">🔎 Buscar en Spotify…</div>
@@ -263,8 +262,8 @@ export default function InvitationEditor({
                 </PreviewWidget>
               )}
 
-              {/* Formulario funcional */}
-              <div className="mt-5 rounded-2xl bg-white p-4 shadow-sm">
+              {/* Tarjeta: formulario funcional */}
+              <div className="rounded-2xl bg-white/92 p-4 shadow-lg backdrop-blur-sm">
                 {config.fields.rsvp && (
                   <div className="grid grid-cols-2 gap-2">
                     <span className="rounded-lg py-2 text-center text-xs font-semibold text-white" style={{ backgroundColor: primary }}>Confirmar</span>
@@ -335,7 +334,7 @@ function ToggleRow({ icon: Icon, label, desc, on, onToggle }: { icon?: typeof Mu
 
 function PreviewWidget({ primary, icon: Icon, title, children }: { primary: string; icon: typeof Music2; title: string; children: React.ReactNode }) {
   return (
-    <div className="mt-4 rounded-2xl bg-white p-3 shadow-sm">
+    <div className="rounded-2xl bg-white/92 p-3 shadow-lg backdrop-blur-sm">
       <p className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: primary }}>
         <Icon className="size-3.5" /> {title}
       </p>
