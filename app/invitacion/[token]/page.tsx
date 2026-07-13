@@ -1,5 +1,4 @@
 import Image from 'next/image'
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import QRCode from 'qrcode'
 import InvitationResponseForm from '@/components/invitation/InvitationResponseForm'
@@ -186,8 +185,6 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
 
   const primaryColor = branding?.primary_color || '#8b5e3c'
   const secondaryColor = branding?.secondary_color || '#f1e8da'
-  // La invitacion prefiere la portada; si el evento solo cargo fondo, lo reusa.
-  const coverImage = branding?.cover_image_url || branding?.background_image_url
   const invitationUsed =
     Boolean(invitationToken.last_used_at) ||
     (invitationToken.used_count ?? 0) > 0 ||
@@ -250,268 +247,194 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
   const mapsUrl = buildMapsUrl(event?.venue_address)
   const phoneHref = buildPhoneHref(event?.contact_phone)
   const calendarUrl = buildCalendarUrl(event || {})
+  // Fondo que cubre toda la invitacion; el contenido va en tarjetas encima.
+  const bgImage = branding?.background_image_url || branding?.cover_image_url
 
   return (
     <main
-      className="min-h-screen px-4 py-6 text-slate-950 sm:px-6 sm:py-8"
-      style={{
-        background: `radial-gradient(circle at top, ${secondaryColor} 0%, #f8fafc 42%, #ffffff 100%)`,
-      }}
+      className="relative min-h-screen px-4 py-8 text-slate-950 sm:px-6"
+      style={
+        bgImage
+          ? { backgroundImage: `url(${bgImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+          : { background: `linear-gradient(160deg, ${primaryColor} 0%, ${secondaryColor} 100%)` }
+      }
     >
-      <div className="mx-auto max-w-6xl space-y-6">
-        <section
-          className="relative overflow-hidden rounded-[36px] border border-black/5 px-6 py-7 text-white shadow-[0_28px_90px_rgba(15,23,42,0.16)] sm:px-8 sm:py-8"
-          style={{
-            background: coverImage
-              ? `linear-gradient(135deg, rgba(15,23,42,0.62), rgba(15,23,42,0.78)), url(${coverImage}) center/cover no-repeat`
-              : `linear-gradient(135deg, ${primaryColor} 0%, #1f2937 100%)`,
-          }}
-        >
-          <div className="absolute inset-y-0 right-0 w-2/5 bg-[radial-gradient(circle_at_center,_rgba(255,255,255,0.18),_transparent_65%)]" />
-          <div className="relative grid gap-8 lg:grid-cols-[minmax(0,1.15fr)_320px] lg:items-end">
-            <div className="max-w-3xl">
-              <div className="flex flex-wrap items-center gap-3">
-                <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.28em] text-white/80">
-                  Acceso digital
-                </span>
-                <span className={`rounded-full px-3 py-1 text-xs font-semibold ${accessState.pill}`}>
-                  {accessState.label}
-                </span>
-              </div>
+      {/* Velo para legibilidad de las tarjetas sobre el fondo. */}
+      <div className="pointer-events-none absolute inset-0 bg-black/25" />
 
-              <div className="mt-5 flex items-center gap-4">
-                {branding?.logo_url ? (
-                  <Image
-                    src={branding.logo_url}
-                    alt={`Logo de ${event?.name || 'Alista'}`}
-                    width={96}
-                    height={96}
-                    unoptimized
-                    className="h-16 w-16 rounded-2xl border border-white/15 bg-white/10 object-contain p-2"
-                  />
-                ) : (
-                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-white/15 bg-white/10 text-2xl font-semibold">
-                    Q
-                  </div>
-                )}
-                <div>
-                  <p className="text-sm font-medium text-white/70">Evento</p>
-                  <h1 className="text-3xl font-semibold leading-tight sm:text-5xl">
-                    {event?.name || 'Evento privado'}
-                  </h1>
-                </div>
-              </div>
+      <div className="relative mx-auto max-w-xl space-y-5">
+        {/* Logo transparente, arriba, sobre el fondo. */}
+        {branding?.logo_url ? (
+          <Image
+            src={branding.logo_url}
+            alt={`Logo de ${event?.name || 'evento'}`}
+            width={220}
+            height={132}
+            unoptimized
+            className="mx-auto h-20 w-auto max-w-[70%] object-contain drop-shadow-lg"
+          />
+        ) : (
+          <p className="pt-4 text-center text-sm font-semibold uppercase tracking-[0.28em] text-white/85">
+            {event?.name || 'Tu evento'}
+          </p>
+        )}
 
-              <h2 className="mt-8 text-2xl font-semibold leading-tight sm:text-3xl">
-                {guestDisplayName ? `${guestDisplayName}, gestiona tu invitacion` : 'Gestiona tu invitacion antes del ingreso'}
-              </h2>
-              <p className="mt-4 max-w-2xl text-base leading-7 text-white/82">{accessState.detail}</p>
+        {/* Tarjeta principal: el evento. */}
+        <section className="rounded-[28px] border border-white/50 bg-white/95 p-6 shadow-2xl backdrop-blur-sm">
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <span className="rounded-full bg-secondary px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-secondary-foreground">
+              Acceso digital
+            </span>
+            <span className={`rounded-full px-3 py-1 text-xs font-semibold ${accessState.pill}`}>
+              {accessState.label}
+            </span>
+          </div>
+
+          <h1 className="mt-4 text-center text-3xl font-semibold leading-tight sm:text-4xl" style={{ color: primaryColor }}>
+            {event?.name || 'Evento privado'}
+          </h1>
+          {guestDisplayName && (
+            <p className="mt-2 text-center text-sm text-slate-600">{guestDisplayName}, gestioná tu invitación</p>
+          )}
+
+          <div className="mt-6 grid gap-4 text-center text-sm text-slate-700">
+            <div>
+              <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Fecha y hora</p>
+              <p className="mt-1 font-semibold">
+                {event?.event_date ? formatDate(event.event_date) : 'A confirmar'}
+                {event?.start_time ? ` · ${formatTime(event.start_time)} hs` : ''}
+              </p>
             </div>
+            <div>
+              <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Lugar</p>
+              <p className="mt-1 font-semibold">{event?.venue_name || 'Venue privado'}</p>
+              {event?.venue_address && <p className="mt-0.5 text-xs text-slate-500">{event.venue_address}</p>}
+              {invitationConfig?.directionsUrl && (
+                <a
+                  href={invitationConfig.directionsUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-1 inline-block text-xs font-semibold underline"
+                  style={{ color: primaryColor }}
+                >
+                  Cómo llegar →
+                </a>
+              )}
+            </div>
+            {invitationConfig?.dresscode && (
+              <div>
+                <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Dresscode</p>
+                <p className="mt-1 font-semibold">{invitationConfig.dresscode}</p>
+              </div>
+            )}
+          </div>
+        </section>
 
-            <div className="rounded-[28px] border border-white/12 bg-white/10 p-5 backdrop-blur">
-              <p className="text-xs uppercase tracking-[0.24em] text-white/65">Resumen rapido</p>
-              <div className="mt-4 space-y-4">
-                <div>
-                  <p className="text-sm text-white/65">Fecha</p>
-                  <p className="mt-1 text-lg font-semibold">{event?.event_date ? formatDate(event.event_date) : 'A confirmar'}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-white/65">Horario</p>
-                  <p className="mt-1 text-lg font-semibold">{event?.start_time ? `${formatTime(event.start_time)} hs` : 'A confirmar'}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-white/65">Lugar</p>
-                  <p className="mt-1 text-lg font-semibold">{event?.venue_name || 'Venue privado'}</p>
-                  {event?.venue_address && <p className="mt-2 text-sm leading-6 text-white/75">{event.venue_address}</p>}
-                  {invitationConfig?.directionsUrl && (
-                    <a
-                      href={invitationConfig.directionsUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="mt-2 inline-block text-sm font-semibold text-white underline"
-                    >
-                      Cómo llegar →
+        {/* Estado del acceso. */}
+        <section className={`rounded-[28px] border p-6 shadow-xl ${accessState.tone}`}>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] opacity-70">Estado del acceso</p>
+          <h3 className="mt-2 text-xl font-semibold">{accessState.title}</h3>
+          <p className="mt-2 text-sm leading-6 opacity-85">{accessState.detail}</p>
+        </section>
+
+        {!accessReady ? (
+          /* Paso previo: formulario de confirmacion. */
+          <section className="rounded-[28px] border border-white/50 bg-white/95 p-6 shadow-2xl backdrop-blur-sm">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">Paso previo al ingreso</p>
+            <h3 className="mt-2 text-xl font-semibold text-foreground">Confirmá tu asistencia y completá tus datos</h3>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">
+              Funciona como save the date y confirmación final. Al completarlo, el sistema habilita tu QR de ingreso.
+            </p>
+            <div className="mt-5">
+              <InvitationResponseForm
+                token={token}
+                initialData={{
+                  attendanceResponse: invitationResponseForForm,
+                  firstName: guest?.first_name || '',
+                  lastName: guest?.last_name || '',
+                  email: guest?.email || '',
+                  phone: guest?.phone || '',
+                  dni: guest?.document_number || invitationDetails.dni,
+                  plusOnesAllowed: 0,
+                  plusOnesConfirmed: 0,
+                  companionNames: invitationDetails.companionNames,
+                  dietaryRequirements: invitationDetails.dietaryRequirements,
+                  song: invitationDetails.song,
+                  greeting: invitationDetails.greeting,
+                  observations: invitationDetails.observations,
+                  photoUrl: guest?.photo_url || '',
+                }}
+              />
+            </div>
+          </section>
+        ) : (
+          <>
+            {/* QR de acceso. */}
+            <section className="rounded-[28px] border border-white/50 bg-white/95 p-6 text-center shadow-2xl backdrop-blur-sm">
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">Tu acceso</p>
+              <div className="mx-auto mt-4 w-full max-w-[280px] rounded-[24px] bg-white p-3 shadow-inner">
+                <Image
+                  src={qrCodeUrl}
+                  alt="QR de acceso al evento"
+                  width={640}
+                  height={640}
+                  unoptimized
+                  className="w-full rounded-[16px]"
+                />
+              </div>
+              <a
+                href={qrCodeUrl}
+                download={`alista-${event?.slug || 'acceso'}-${invitationToken.token.slice(-6)}.png`}
+                className="mt-4 inline-flex w-full items-center justify-center rounded-full px-5 py-3 text-sm font-semibold text-white transition hover:brightness-[0.97]"
+                style={{ backgroundColor: primaryColor }}
+              >
+                Descargar QR
+              </a>
+              <p className="mt-3 text-xs leading-5 text-slate-500">Mostralo desde tu celular al llegar, con brillo suficiente.</p>
+            </section>
+
+            {/* Tu confirmacion. */}
+            <section className="rounded-[28px] border border-white/50 bg-white/95 p-6 shadow-2xl backdrop-blur-sm">
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">Tu confirmación</p>
+              <div className="mt-3 space-y-1.5 text-sm text-slate-700">
+                <p>DNI: {invitationDetails.dni || 'No informado'}</p>
+                <p>Menú: {invitationDetails.dietaryRequirements || 'Sin aclaraciones'}</p>
+                {invitationDetails.song && <p>Tu canción: {invitationDetails.song}</p>}
+                {invitationDetails.greeting && <p>Saludo: {invitationDetails.greeting}</p>}
+              </div>
+            </section>
+
+            {/* Accesos rapidos + token. */}
+            {(mapsUrl || calendarUrl || phoneHref) && (
+              <section className="rounded-[28px] border border-white/50 bg-white/95 p-6 shadow-2xl backdrop-blur-sm">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">Accesos rápidos</p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {mapsUrl && (
+                    <a href={mapsUrl} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center rounded-full bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800">
+                      Ver ubicación
+                    </a>
+                  )}
+                  {calendarUrl && (
+                    <a href={calendarUrl} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center rounded-full border border-border bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 transition hover:bg-slate-50">
+                      Agendar
+                    </a>
+                  )}
+                  {phoneHref && (
+                    <a href={phoneHref} className="inline-flex items-center justify-center rounded-full border border-border bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 transition hover:bg-slate-50">
+                      Contactar
                     </a>
                   )}
                 </div>
-                {invitationConfig?.dresscode && (
-                  <div>
-                    <p className="text-sm text-white/65">Dresscode</p>
-                    <p className="mt-1 text-lg font-semibold">{invitationConfig.dresscode}</p>
-                  </div>
-                )}
-                <div>
-                  <p className="text-sm text-white/65">Vigencia del acceso</p>
-                  <p className="mt-1 text-base font-semibold">{formatDateTime(invitationToken.expires_at)}</p>
+                <div className="mt-4 rounded-[18px] border border-dashed border-border bg-secondary/40 p-3">
+                  <p className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground">Token de respaldo</p>
+                  <p className="mt-1 break-all font-mono text-xs text-slate-600">{invitationToken.token}</p>
                 </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
-          <div className="space-y-6">
-            <div className={`rounded-[32px] border p-6 shadow-[0_18px_70px_rgba(15,23,42,0.08)] ${accessState.tone}`}>
-              <p className="text-sm font-semibold uppercase tracking-[0.24em] opacity-70">Estado del acceso</p>
-              <h3 className="mt-3 text-2xl font-semibold">{accessState.title}</h3>
-              <p className="mt-3 max-w-3xl text-sm leading-7 opacity-85">{accessState.detail}</p>
-            </div>
-
-            {!accessReady ? (
-              <div className="rounded-[32px] border border-border/70 bg-card p-6 shadow-[0_18px_60px_rgba(15,23,42,0.06)]">
-                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-muted-foreground">Paso previo al ingreso</p>
-                <h3 className="mt-3 text-2xl font-semibold text-foreground">Confirma tu asistencia y completa tus datos</h3>
-                <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                  Este paso funciona como save the date y confirmacion final. Una vez completado, el sistema habilita el QR de ingreso.
-                </p>
-                <div className="mt-6">
-                  <InvitationResponseForm
-                    token={token}
-                    initialData={{
-                      attendanceResponse: invitationResponseForForm,
-                      firstName: guest?.first_name || '',
-                      lastName: guest?.last_name || '',
-                      email: guest?.email || '',
-                      phone: guest?.phone || '',
-                      dni: guest?.document_number || invitationDetails.dni,
-                      plusOnesAllowed: 0,
-                      plusOnesConfirmed: 0,
-                      companionNames: invitationDetails.companionNames,
-                      dietaryRequirements: invitationDetails.dietaryRequirements,
-                      song: invitationDetails.song,
-                      greeting: invitationDetails.greeting,
-                      observations: invitationDetails.observations,
-                      photoUrl: guest?.photo_url || '',
-                    }}
-                  />
-                </div>
-              </div>
-            ) : (
-              <>
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="rounded-[28px] border border-border/70 bg-card p-6 shadow-[0_18px_60px_rgba(15,23,42,0.06)]">
-                    <p className="text-sm font-semibold uppercase tracking-[0.24em] text-muted-foreground">Tu confirmacion</p>
-                    <div className="mt-4 space-y-3 text-sm leading-7 text-slate-700">
-                      <p>Asistencia confirmada.</p>
-                      <p>DNI: {invitationDetails.dni || 'No informado'}</p>
-                      <p>Acompanantes: gestion pendiente para una version posterior</p>
-                      <p>Menu: {invitationDetails.dietaryRequirements || 'Sin aclaraciones'}</p>
-                      {invitationDetails.song && <p>Tu cancion: {invitationDetails.song}</p>}
-                      {invitationDetails.greeting && <p>Saludo: {invitationDetails.greeting}</p>}
-                    </div>
-                  </div>
-
-                  <div className="rounded-[28px] border border-border/70 bg-card p-6 shadow-[0_18px_60px_rgba(15,23,42,0.06)]">
-                    <p className="text-sm font-semibold uppercase tracking-[0.24em] text-muted-foreground">Informacion util</p>
-                    <div className="mt-4 space-y-3 text-sm leading-7 text-slate-700">
-                      <p>Muestra este QR directamente desde tu celular al llegar.</p>
-                      <p>Si cambias de dispositivo, vuelve a abrir este mismo enlace.</p>
-                      <p>Si necesitas ayuda en puerta, el equipo tambien puede localizar tu acceso con el token de respaldo.</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="rounded-[32px] border border-border/70 bg-card p-6 shadow-[0_18px_60px_rgba(15,23,42,0.06)]">
-                  <p className="text-sm font-semibold uppercase tracking-[0.24em] text-muted-foreground">Accesos rapidos</p>
-                  <div className="mt-5 flex flex-wrap gap-3">
-                    {mapsUrl && (
-                      <a
-                        href={mapsUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center justify-center rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
-                      >
-                        Ver ubicacion
-                      </a>
-                    )}
-                    {calendarUrl && (
-                      <a
-                        href={calendarUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center justify-center rounded-full border border-border bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-50"
-                      >
-                        Agendar evento
-                      </a>
-                    )}
-                    {phoneHref && (
-                      <a
-                        href={phoneHref}
-                        className="inline-flex items-center justify-center rounded-full border border-border bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-50"
-                      >
-                        Contactar organizacion
-                      </a>
-                    )}
-                  </div>
-
-                  <div className="mt-6 rounded-[24px] border border-dashed border-border bg-secondary/40 p-4">
-                    <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">Token de respaldo</p>
-                    <p className="mt-3 break-all font-mono text-xs text-slate-700">{invitationToken.token}</p>
-                  </div>
-                </div>
-              </>
+              </section>
             )}
-          </div>
+          </>
+        )}
 
-          <aside className="lg:sticky lg:top-6">
-            <div className="rounded-[34px] border border-border/70 bg-card p-5 shadow-[0_24px_80px_rgba(15,23,42,0.08)]">
-              <div
-                className="rounded-[28px] border border-black/5 p-4"
-                style={{
-                  background: `linear-gradient(180deg, ${secondaryColor} 0%, #ffffff 100%)`,
-                }}
-              >
-                <div className="rounded-[24px] bg-white p-4 shadow-[0_14px_50px_rgba(15,23,42,0.08)]">
-                  {accessReady ? (
-                    <Image
-                      src={qrCodeUrl}
-                      alt="QR de acceso al evento"
-                      width={640}
-                      height={640}
-                      unoptimized
-                      className="mx-auto w-full max-w-[310px] rounded-[24px]"
-                    />
-                  ) : (
-                    <div className="flex min-h-[310px] items-center justify-center rounded-[24px] border border-dashed border-slate-200 bg-slate-50 p-6 text-center text-sm leading-7 text-slate-500">
-                      El QR final aparecera aqui una vez que completes la gestion de tu invitacion y confirmes asistencia.
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="mt-5 space-y-3">
-                {accessReady ? (
-                  <a
-                    href={qrCodeUrl}
-                    download={`alista-${event?.slug || 'acceso'}-${invitationToken.token.slice(-6)}.png`}
-                    className="inline-flex w-full items-center justify-center rounded-full px-5 py-3 text-sm font-semibold text-white transition hover:brightness-[0.97]"
-                    style={{ backgroundColor: primaryColor }}
-                  >
-                    Descargar QR
-                  </a>
-                ) : (
-                  <div className="inline-flex w-full items-center justify-center rounded-full border border-border bg-secondary/40 px-5 py-3 text-sm font-semibold text-slate-600">
-                    QR pendiente de confirmacion
-                  </div>
-                )}
-                <Link
-                  href="/"
-                  className="inline-flex w-full items-center justify-center rounded-full border border-border bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-50"
-                >
-                  Ir al inicio
-                </Link>
-              </div>
-
-              <div className="mt-5 rounded-[24px] border border-border bg-secondary/45 p-4 text-sm leading-6 text-muted-foreground">
-                {accessReady
-                  ? 'Presenta este QR completo y con brillo suficiente. Si el equipo necesita asistencia extra, tambien puede usar el token de respaldo.'
-                  : 'Primero confirma asistencia y completa los datos del invitado. Ese paso habilita el QR final de ingreso.'}
-              </div>
-            </div>
-          </aside>
-        </section>
-
-        <footer className="pb-2 text-center text-xs uppercase tracking-[0.28em] text-slate-500">
+        <footer className="pb-2 pt-1 text-center text-xs uppercase tracking-[0.28em] text-white/80">
           Desarrollado por Alista
         </footer>
       </div>
