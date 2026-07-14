@@ -14,6 +14,7 @@ import {
 } from '@/lib/guest-status-display'
 import { useGuestTypes, useGuests } from '@/lib/hooks'
 import { buildAbsoluteAppUrl } from '@/lib/public-url'
+import { toE164 } from '@/lib/phone'
 import type {
   CreateGuestForm,
   CreateGuestTypeForm,
@@ -846,7 +847,12 @@ export default function EventGuestsManager({
 
   const openWhatsAppShare = (guest: GuestWithType, token: InvitationToken) => {
     const { whatsappText } = buildShareMessage(guest, token)
-    window.open(`https://wa.me/?text=${encodeURIComponent(whatsappText)}`, '_blank', 'noopener,noreferrer')
+    // Si el invitado tiene telefono, abrimos el chat directo (wa.me/<numero>);
+    // si no, abrimos WhatsApp con el mensaje y se elige el contacto a mano.
+    const phone = guest.phone?.trim()
+    const waNumber = phone ? toE164(phone).replace(/\D/g, '') : ''
+    const base = waNumber ? `https://wa.me/${waNumber}` : 'https://wa.me/'
+    window.open(`${base}?text=${encodeURIComponent(whatsappText)}`, '_blank', 'noopener,noreferrer')
   }
 
   const openEmailShare = (guest: GuestWithType, token: InvitationToken) => {
@@ -1779,7 +1785,7 @@ export default function EventGuestsManager({
                                 </summary>
                                 <div className="absolute left-0 z-10 mt-1 w-64 rounded-lg border border-gray-200 bg-white p-1 shadow-lg">
                                   <p className="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
-                                    Automatico (lo manda Alista)
+                                    Email (lo manda Alista)
                                   </p>
                                   <button
                                     type="button"
@@ -1793,21 +1799,21 @@ export default function EventGuestsManager({
                                       ? 'Enviar por email'
                                       : 'Enviar por email (falta email)'}
                                   </button>
+                                  <div className="my-1 border-t border-gray-100" />
+                                  <p className="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
+                                    WhatsApp (desde tu telefono)
+                                  </p>
                                   <button
                                     type="button"
-                                    onClick={() => sendGuestAccessThroughProvider(guest, latestToken, 'whatsapp')}
-                                    disabled={deliveryLoadingKey === `${guest.id}:whatsapp` || !guest.phone}
+                                    onClick={() => openWhatsAppShare(guest, latestToken)}
+                                    disabled={!guest.phone}
                                     className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:text-gray-300"
                                   >
-                                    {deliveryLoadingKey === `${guest.id}:whatsapp`
-                                      ? 'Enviando WhatsApp...'
-                                      : guest.phone
-                                      ? 'Enviar por WhatsApp'
-                                      : 'Enviar por WhatsApp (falta telefono)'}
+                                    {guest.phone ? 'Enviar por WhatsApp' : 'Enviar por WhatsApp (falta telefono)'}
                                   </button>
                                   <div className="my-1 border-t border-gray-100" />
                                   <p className="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
-                                    Manual (lo mandas vos)
+                                    Otras opciones
                                   </p>
                                   <button
                                     type="button"
@@ -1815,13 +1821,6 @@ export default function EventGuestsManager({
                                     className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
                                   >
                                     {copiedInvitationGuestId === guest.id ? 'Enlace copiado' : 'Copiar enlace'}
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => openWhatsAppShare(guest, latestToken)}
-                                    className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
-                                  >
-                                    Mandar desde mi WhatsApp
                                   </button>
                                   <button
                                     type="button"

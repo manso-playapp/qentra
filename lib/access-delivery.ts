@@ -77,42 +77,11 @@ function buildEmailHtml(payload: AccessDeliveryPayload) {
   `.trim()
 }
 
-// Codigo de pais movil por defecto para numeros sin prefijo internacional.
-// Argentina es 549 (54 + 9 de movil). Configurable por si cambia el mercado.
-const DEFAULT_MOBILE_COUNTRY_CODE =
-  process.env.ALISTA_DEFAULT_PHONE_COUNTRY?.trim() ||
-  process.env.QENTRA_DEFAULT_PHONE_COUNTRY?.trim() ||
-  '549'
-
-/**
- * Lleva un telefono a formato E.164 (+549...).
- *
- * Sin esto, un numero guardado como "3425579221" se enviaba tal cual y Twilio
- * lo interpretaba como +1 (EE.UU.), fallando la entrega. Los numeros que ya
- * vienen en formato internacional (+...) se respetan.
- */
-export function toE164(raw: string): string {
-  const trimmed = raw.trim()
-  if (trimmed.startsWith('+')) {
-    return '+' + trimmed.slice(1).replace(/\D/g, '')
-  }
-
-  let digits = trimmed.replace(/\D/g, '')
-  if (digits.startsWith('00')) {
-    return '+' + digits.slice(2)
-  }
-  if (digits.startsWith('0')) {
-    digits = digits.slice(1) // prefijo de larga distancia nacional
-  }
-  if (digits.startsWith('54')) {
-    return '+' + digits
-  }
-  // Sin codigo de pais: asumimos movil del pais por defecto.
-  if (digits.startsWith('9')) {
-    return '+54' + digits
-  }
-  return `+${DEFAULT_MOBILE_COUNTRY_CODE}${digits}`
-}
+// toE164 vive en un modulo puro (lib/phone) para poder reutilizarlo desde
+// componentes cliente. Se re-exporta aca por compatibilidad con importadores
+// y tests existentes.
+export { toE164 } from './phone'
+import { toE164 } from './phone'
 
 function normalizeWhatsAppRecipient(phone: string) {
   if (phone.startsWith('whatsapp:')) {
@@ -124,6 +93,10 @@ function normalizeWhatsAppRecipient(phone: string) {
 async function sendWithResend(payload: AccessDeliveryPayload): Promise<DeliveryResult> {
   const apiKey = process.env.RESEND_API_KEY
   const from = process.env.ALISTA_EMAIL_FROM ?? process.env.QENTRA_EMAIL_FROM
+  // Casilla que recibe las respuestas del invitado ("no me abre el link", etc.).
+  // Enviamos desde el dominio de Manso, pero las respuestas caen en esta casilla.
+  const replyTo =
+    process.env.ALISTA_EMAIL_REPLY_TO?.trim() || process.env.QENTRA_EMAIL_REPLY_TO?.trim()
 
   if (!apiKey || !from) {
     throw new Error('Falta configurar RESEND_API_KEY o ALISTA_EMAIL_FROM para envio real de email.')
@@ -138,6 +111,7 @@ async function sendWithResend(payload: AccessDeliveryPayload): Promise<DeliveryR
     body: JSON.stringify({
       from,
       to: [payload.recipient],
+      ...(replyTo ? { reply_to: replyTo } : {}),
       subject: `Tu acceso para ${payload.eventName}`,
       html: buildEmailHtml(payload),
       text: buildPlainTextMessage(payload),
