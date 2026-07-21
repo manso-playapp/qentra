@@ -159,9 +159,20 @@ type InvitationViewProps = {
   guestDisplayName: string
   accessState: AccessState
   calendarUrl?: string | null
+  tableAssignment?: string
   isPreview?: boolean
   children?: ReactNode
 }
+
+// ---- Constantes hardcodeadas para esta fiesta ----
+const FIESTA_DIRECTIONS_URL = 'https://maps.app.goo.gl/yuuhpJ3KbXuhJKBi9'
+const FIESTA_DRESSCODE = 'Prohibido ellas: negro y blanco. Ellos: gorra y ropa deportiva.'
+const FIESTA_CONTACT_PHONE = '+54 9 3496 54-9307'
+const FIESTA_SCHEDULE = [
+  { label: 'Check-in', time: '20:30' },
+  { label: 'Check-out', time: '05:00' },
+  { label: 'VIP Lounge (after party)', time: '05:00 a 06:30' },
+]
 
 export default function InvitationView({
   event,
@@ -170,10 +181,12 @@ export default function InvitationView({
   guestDisplayName,
   accessState,
   calendarUrl,
+  tableAssignment,
   isPreview = false,
   children,
 }: InvitationViewProps) {
-  const mapsUrl = buildMapsUrl(event.venue_address)
+  const mapsUrl = FIESTA_DIRECTIONS_URL
+  const contactPhone = FIESTA_CONTACT_PHONE
   // Portada fija: ocupa el ancho desde arriba y el contenido continúa sobre negro.
   const bgImage = '/portada.jpg'
 
@@ -228,62 +241,75 @@ export default function InvitationView({
                 {event.start_time ? ` · ${formatTime(event.start_time)} hs` : ''}
               </p>
             </div>
+
+            {/* Horarios hardcodeados de la fiesta */}
+            <div>
+              <p className="text-xs uppercase tracking-[0.18em] text-white/50">Horarios</p>
+              <ul className="mt-1 space-y-0.5">
+                {FIESTA_SCHEDULE.map((item) => (
+                  <li key={item.label} className="font-semibold">
+                    {item.label}: <span className="text-white/80">{item.time}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
             <div>
               <p className="text-xs uppercase tracking-[0.18em] text-white/50">Lugar</p>
               <p className="mt-1 font-semibold">{event.venue_name || 'Venue privado'}</p>
               {event.venue_address && <p className="mt-0.5 text-xs text-white/60">{event.venue_address}</p>}
-              {config?.directionsUrl && (
-                <a
-                  href={config.directionsUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-1 inline-block text-xs font-semibold text-white underline"
-                >
-                  Cómo llegar →
-                </a>
-              )}
+              <a
+                href={mapsUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-1 inline-block text-xs font-semibold text-white underline"
+              >
+                Cómo llegar →
+              </a>
             </div>
-            {config?.dresscode && (
+
+            {/* Mesa asignada (dato por invitado). Solo se muestra si viene informada. */}
+            {tableAssignment && (
               <div>
-                <p className="text-xs uppercase tracking-[0.18em] text-white/50">Dresscode</p>
-                <p className="mt-1 font-semibold">{config.dresscode}</p>
+                <p className="text-xs uppercase tracking-[0.18em] text-white/50">Mesa asignada</p>
+                <p className="mt-1 font-semibold">{tableAssignment}</p>
               </div>
             )}
+
+            {/* Dresscode hardcodeado */}
+            <div>
+              <p className="text-xs uppercase tracking-[0.18em] text-white/50">Dresscode</p>
+              <p className="mt-1 font-semibold">{FIESTA_DRESSCODE}</p>
+            </div>
           </div>
 
           {/* Mapa/agenda/contacto van como apéndice compacto del evento, no en otra tarjeta. */}
-          {(mapsUrl || calendarUrl || event.contact_phone) && (
-            <div className="mt-5 flex flex-wrap justify-center gap-2 border-t border-white/10 pt-4">
-              {mapsUrl && (
-                <a
-                  href={mapsUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center justify-center rounded-full bg-white px-4 py-2 text-xs font-semibold text-black transition hover:bg-white/85"
-                >
-                  Ver ubicación
-                </a>
-              )}
-              {calendarUrl && (
-                <a
-                  href={calendarUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center justify-center rounded-full border border-white/30 bg-white/10 px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/20"
-                >
-                  Agendar
-                </a>
-              )}
-              {event.contact_phone && (
-                <a
-                  href={buildPhoneHref(event.contact_phone) || '#'}
-                  className="inline-flex items-center justify-center rounded-full border border-white/30 bg-white/10 px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/20"
-                >
-                  Contactar
-                </a>
-              )}
-            </div>
-          )}
+          <div className="mt-5 flex flex-wrap justify-center gap-2 border-t border-white/10 pt-4">
+            <a
+              href={mapsUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center justify-center rounded-full bg-white px-4 py-2 text-xs font-semibold text-black transition hover:bg-white/85"
+            >
+              Ver ubicación
+            </a>
+            {calendarUrl && (
+              <a
+                href={calendarUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center justify-center rounded-full border border-white/30 bg-white/10 px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/20"
+              >
+                Agendar
+              </a>
+            )}
+            <a
+              href={buildPhoneHref(contactPhone) || '#'}
+              className="inline-flex items-center justify-center rounded-full border border-white/30 bg-white/10 px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/20"
+            >
+              Contactar
+            </a>
+          </div>
         </section>
 
         {/* Estado del acceso: única tarjeta de estado (antes había pill + tarjeta). */}

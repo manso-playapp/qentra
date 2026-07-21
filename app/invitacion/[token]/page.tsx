@@ -158,6 +158,7 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
       guestDisplayName={guestDisplayName}
       accessState={accessState}
       calendarUrl={calendarUrl}
+      tableAssignment={invitationDetails.tableAssignment || undefined}
     >
       {!accessReady ? (
         <section className="rounded-[28px] border border-white/20 bg-black/75 p-6 shadow-2xl backdrop-blur-sm">

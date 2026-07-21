@@ -15,6 +15,7 @@ const LABELS = {
   companions: 'Acompanantes',
   song: 'Cancion',
   greeting: 'Saludo',
+  tableAssignment: 'Mesa',
   observations: 'Observaciones',
   payment: 'Pago',
 }
@@ -68,6 +69,7 @@ describe('parseInvitationDetails — well-formed input', () => {
       `${LABELS.companions}: Juan, Maria`,
       `${LABELS.song}: Despacito`,
       `${LABELS.greeting}: Feliz cumple`,
+      `${LABELS.tableAssignment}: Mesa 7`,
       `${LABELS.observations}: Llega tarde`,
       `${LABELS.payment}: approved`,
     ].join('\n')
@@ -78,6 +80,7 @@ describe('parseInvitationDetails — well-formed input', () => {
       companionNames: 'Juan, Maria',
       song: 'Despacito',
       greeting: 'Feliz cumple',
+      tableAssignment: 'Mesa 7',
       observations: 'Llega tarde',
       paymentStatus: 'approved',
     })
@@ -104,6 +107,7 @@ describe('parseInvitationDetails — defaults and missing fields', () => {
       companionNames: '',
       song: '',
       greeting: '',
+      tableAssignment: '',
       observations: '',
       paymentStatus: 'not_required',
     })
@@ -116,6 +120,7 @@ describe('parseInvitationDetails — defaults and missing fields', () => {
       companionNames: '',
       song: '',
       greeting: '',
+      tableAssignment: '',
       observations: '',
       paymentStatus: 'not_required',
     })
@@ -128,6 +133,7 @@ describe('parseInvitationDetails — defaults and missing fields', () => {
       companionNames: '',
       song: '',
       greeting: '',
+      tableAssignment: '',
       observations: '',
       paymentStatus: 'not_required',
     })
@@ -204,6 +210,7 @@ describe('parseInvitationDetails — round-trip with serializeInvitationDetails'
       companionNames: 'Juan',
       song: 'Despacito',
       greeting: 'Feliz cumple',
+      tableAssignment: 'Mesa 12',
       observations: 'Llega tarde',
       paymentStatus: 'pending' as const,
     }

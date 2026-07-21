@@ -5,6 +5,7 @@ type InvitationDetailsInput = {
   song?: string
   greeting?: string
   observations?: string
+  tableAssignment?: string
   paymentStatus?: 'not_required' | 'pending' | 'approved'
 }
 
@@ -15,6 +16,7 @@ export type ParsedInvitationDetails = {
   song: string
   greeting: string
   observations: string
+  tableAssignment: string
   paymentStatus: 'not_required' | 'pending' | 'approved'
 }
 
@@ -25,6 +27,7 @@ const LABELS = {
   song: 'Cancion',
   greeting: 'Saludo',
   observations: 'Observaciones',
+  tableAssignment: 'Mesa',
   paymentStatus: 'Pago',
 } as const
 
@@ -35,6 +38,7 @@ export function serializeInvitationDetails({
   song,
   greeting,
   observations,
+  tableAssignment,
   paymentStatus,
 }: InvitationDetailsInput) {
   const sections = [
@@ -43,6 +47,7 @@ export function serializeInvitationDetails({
     { label: LABELS.companionNames, value: companionNames?.trim() },
     { label: LABELS.song, value: song?.trim() },
     { label: LABELS.greeting, value: greeting?.trim() },
+    { label: LABELS.tableAssignment, value: tableAssignment?.trim() },
     { label: LABELS.observations, value: observations?.trim() },
     {
       label: LABELS.paymentStatus,
@@ -66,6 +71,7 @@ export function parseInvitationDetails(value?: string | null): ParsedInvitationD
     song: '',
     greeting: '',
     observations: '',
+    tableAssignment: '',
     paymentStatus: 'not_required',
   }
 
@@ -99,6 +105,11 @@ export function parseInvitationDetails(value?: string | null): ParsedInvitationD
 
     if (line.startsWith(`${LABELS.observations}:`)) {
       parsed.observations = line.replace(`${LABELS.observations}:`, '').trim()
+      continue
+    }
+
+    if (line.startsWith(`${LABELS.tableAssignment}:`)) {
+      parsed.tableAssignment = line.replace(`${LABELS.tableAssignment}:`, '').trim()
       continue
     }
 
