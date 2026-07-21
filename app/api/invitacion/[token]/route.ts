@@ -145,7 +145,6 @@ export async function POST(request: Request, context: RouteContext) {
         full_name: buildGuestFullName(firstName, lastName),
         email,
         phone,
-        document_number: attendanceResponse === 'confirmed' ? dni : null,
         notes: specialRequests || null,
         payment_status: paymentStatus,
         status: nextGuestStatus,
