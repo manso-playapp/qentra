@@ -233,35 +233,35 @@ export default function InvitationView({
             <p className="mt-2 text-center text-sm text-white/70">Para {guestDisplayName}</p>
           )}
 
-          <div className="mt-6 grid gap-4 text-center text-sm text-white/85">
-            <div>
-              <p className="text-xs uppercase tracking-[0.18em] text-white/50">Fecha</p>
-              <p className="mt-1 font-semibold">
+          <div className="mt-8 flex flex-col divide-y divide-white/10 text-center text-sm text-white/85">
+            <div className="pb-5">
+              <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-white/45">Fecha</p>
+              <p className="mt-2 text-base font-semibold tracking-wide">
                 {event.event_date ? formatDate(event.event_date) : 'A confirmar'}
               </p>
             </div>
 
             {/* Horarios hardcodeados de la fiesta */}
-            <div>
-              <p className="text-xs uppercase tracking-[0.18em] text-white/50">Horarios</p>
-              <ul className="mt-1 space-y-0.5">
+            <div className="py-5">
+              <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-white/45">Horarios</p>
+              <ul className="mt-2 space-y-1">
                 {FIESTA_SCHEDULE.map((item) => (
-                  <li key={item.label} className="font-semibold">
-                    {item.label}: <span className="text-white/80">{item.time}</span>
+                  <li key={item.label} className="text-base font-semibold tracking-wide">
+                    {item.label}: <span className="font-medium text-white/75">{item.time}</span>
                   </li>
                 ))}
               </ul>
             </div>
 
-            <div>
-              <p className="text-xs uppercase tracking-[0.18em] text-white/50">Lugar</p>
-              <p className="mt-1 font-semibold">{event.venue_name || 'Venue privado'}</p>
-              {event.venue_address && <p className="mt-0.5 text-xs text-white/60">{event.venue_address}</p>}
+            <div className="py-5">
+              <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-white/45">Lugar</p>
+              <p className="mt-2 text-base font-semibold tracking-wide">{event.venue_name || 'Venue privado'}</p>
+              {event.venue_address && <p className="mt-0.5 text-xs text-white/55">{event.venue_address}</p>}
               <a
                 href={mapsUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-1 inline-block text-xs font-semibold text-white underline"
+                className="mt-2 inline-block text-xs font-semibold text-white underline underline-offset-4"
               >
                 Cómo llegar →
               </a>
@@ -269,16 +269,16 @@ export default function InvitationView({
 
             {/* Mesa asignada (dato por invitado). Solo se muestra si viene informada. */}
             {tableAssignment && (
-              <div>
-                <p className="text-xs uppercase tracking-[0.18em] text-white/50">Mesa asignada</p>
-                <p className="mt-1 font-semibold">{tableAssignment}</p>
+              <div className="py-5">
+                <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-white/45">Mesa asignada</p>
+                <p className="mt-2 text-base font-semibold tracking-wide">{tableAssignment}</p>
               </div>
             )}
 
             {/* Dresscode hardcodeado */}
-            <div>
-              <p className="text-xs uppercase tracking-[0.18em] text-white/50">Dresscode</p>
-              <p className="mt-1 font-semibold">{FIESTA_DRESSCODE}</p>
+            <div className="pt-5">
+              <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-white/45">Dresscode</p>
+              <p className="mt-2 text-base font-semibold tracking-wide">{FIESTA_DRESSCODE}</p>
             </div>
           </div>
 
