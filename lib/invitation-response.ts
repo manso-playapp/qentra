@@ -27,9 +27,14 @@ const LABELS = {
   song: 'Cancion',
   greeting: 'Saludo',
   observations: 'Observaciones',
-  tableAssignment: 'Mesa',
+  // Label visible para el destino (mesa). Se escribe como "Destino:" en notes,
+  // pero el parser acepta el prefijo legacy "Mesa:" para no perder datos viejos.
+  tableAssignment: 'Destino',
   paymentStatus: 'Pago',
 } as const
+
+// Prefijos legacy aceptados al leer notes (backward-compat con datos existentes).
+const TABLE_ASSIGNMENT_LEGACY_PREFIX = 'Mesa'
 
 export function serializeInvitationDetails({
   dni,
@@ -108,8 +113,14 @@ export function parseInvitationDetails(value?: string | null): ParsedInvitationD
       continue
     }
 
-    if (line.startsWith(`${LABELS.tableAssignment}:`)) {
-      parsed.tableAssignment = line.replace(`${LABELS.tableAssignment}:`, '').trim()
+    if (
+      line.startsWith(`${LABELS.tableAssignment}:`) ||
+      line.startsWith(`${TABLE_ASSIGNMENT_LEGACY_PREFIX}:`)
+    ) {
+      parsed.tableAssignment = line
+        .replace(`${LABELS.tableAssignment}:`, '')
+        .replace(`${TABLE_ASSIGNMENT_LEGACY_PREFIX}:`, '')
+        .trim()
       continue
     }
 
@@ -129,6 +140,39 @@ export function parseInvitationDetails(value?: string | null): ParsedInvitationD
   }
 
   return parsed
+}
+
+// Inserta o reemplaza la linea "Destino: ..." dentro de notes.
+// Se usa como fallback de almacenamiento cuando la columna nativa
+// table_assignment no existe aun en el esquema de la base de datos.
+// Idempotente: si tableAssignment esta vacio, elimina la linea existente.
+export function upsertTableAssignmentInNotes(
+  notes: string | null | undefined,
+  tableAssignment: string | null | undefined
+): string | null {
+  const trimmed = tableAssignment?.trim() || ''
+  const existingLines = (notes || '')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
+
+  const preservedLines = existingLines.filter(
+    (line) =>
+      !line.startsWith(`${LABELS.tableAssignment}:`) &&
+      !line.startsWith(`${TABLE_ASSIGNMENT_LEGACY_PREFIX}:`)
+  )
+
+  if (trimmed) {
+    preservedLines.push(`${LABELS.tableAssignment}: ${trimmed}`)
+  }
+
+  const result = preservedLines.join('\n')
+  return result || null
+}
+
+export function isTableAssignmentColumnMissingError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error ?? '')
+  return message.includes("Could not find the column 'table_assignment'")
 }
 
 export function isInvitationAccessReady(

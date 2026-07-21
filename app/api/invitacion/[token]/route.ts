@@ -2,7 +2,7 @@ import QRCode from 'qrcode'
 import { buildGuestAccessQrPayload } from '@/lib/guest-access'
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
 import { buildGuestFullName } from '@/lib/guest-schema'
-import { serializeInvitationDetails } from '@/lib/invitation-response'
+import { parseInvitationDetails, serializeInvitationDetails } from '@/lib/invitation-response'
 
 export const runtime = 'nodejs'
 
@@ -61,7 +61,7 @@ export async function POST(request: Request, context: RouteContext) {
 
     const { data: guest, error: guestError } = await adminClient
       .from('guests')
-      .select('id, event_id, status, notes, payment_status')
+      .select('id, event_id, status, notes, payment_status, table_assignment')
       .eq('id', invitationToken.guest_id)
       .maybeSingle()
 
@@ -113,6 +113,13 @@ export async function POST(request: Request, context: RouteContext) {
       )
     }
 
+    // Preservamos el destino (mesa) actual al serializar notes para no pisar
+    // el valor legacy embebido. El destino no lo edita el invitado en este form.
+    const currentTableAssignment =
+      guest.table_assignment?.trim() ||
+      parseInvitationDetails(guest.notes).tableAssignment ||
+      ''
+
     const specialRequests = serializeInvitationDetails({
       dni,
       dietaryRequirements,
@@ -120,6 +127,7 @@ export async function POST(request: Request, context: RouteContext) {
       song,
       greeting,
       observations,
+      tableAssignment: currentTableAssignment,
     })
 
     const nextGuestStatus =

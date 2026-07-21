@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest'
 
 import {
   isInvitationAccessReady,
+  isTableAssignmentColumnMissingError,
   parseInvitationDetails,
   serializeInvitationDetails,
+  upsertTableAssignmentInNotes,
 } from './invitation-response'
 
 // The `notes` field is serialized as one `Label: value` line per field, using
@@ -223,6 +225,54 @@ describe('parseInvitationDetails — round-trip with serializeInvitationDetails'
     )
     expect(parsed.paymentStatus).toBe('not_required')
     expect(parsed.dni).toBe('1')
+  })
+})
+
+describe('upsertTableAssignmentInNotes', () => {
+  it('adds the Destino line when notes has no prior assignment', () => {
+    expect(upsertTableAssignmentInNotes('DNI: 1', 'Mesa 7')).toBe('DNI: 1\nDestino: Mesa 7')
+  })
+
+  it('replaces an existing Destino line and preserves other lines', () => {
+    const notes = 'DNI: 1\nDestino: Mesa 7\nMenu: Vegano'
+    expect(upsertTableAssignmentInNotes(notes, 'Mesa 12')).toBe(
+      'DNI: 1\nMenu: Vegano\nDestino: Mesa 12'
+    )
+  })
+
+  it('replaces a legacy "Mesa:" line', () => {
+    const notes = 'Mesa: 3'
+    expect(upsertTableAssignmentInNotes(notes, 'Mesa 5')).toBe('Destino: Mesa 5')
+  })
+
+  it('removes the Destino line when the new value is empty', () => {
+    const notes = 'DNI: 1\nDestino: Mesa 7'
+    expect(upsertTableAssignmentInNotes(notes, '')).toBe('DNI: 1')
+  })
+
+  it('returns null when there is nothing left', () => {
+    expect(upsertTableAssignmentInNotes('Destino: Mesa 7', '')).toBeNull()
+  })
+
+  it('handles null/undefined notes gracefully', () => {
+    expect(upsertTableAssignmentInNotes(null, 'Mesa 1')).toBe('Destino: Mesa 1')
+    expect(upsertTableAssignmentInNotes(undefined, '')).toBeNull()
+  })
+})
+
+describe('isTableAssignmentColumnMissingError', () => {
+  it('matches the PostgREST column-missing message', () => {
+    expect(
+      isTableAssignmentColumnMissingError(
+        new Error("Could not find the column 'table_assignment' in the schema cache")
+      )
+    ).toBe(true)
+  })
+
+  it('does not match unrelated errors', () => {
+    expect(isTableAssignmentColumnMissingError(new Error('permission denied'))).toBe(false)
+    expect(isTableAssignmentColumnMissingError(null)).toBe(false)
+    expect(isTableAssignmentColumnMissingError(undefined)).toBe(false)
   })
 })
 

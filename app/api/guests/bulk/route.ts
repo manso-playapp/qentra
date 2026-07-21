@@ -1,6 +1,10 @@
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
 import { ensureAuthorizedApiAccess } from '@/lib/operator-auth'
 import { buildGuestFullName } from '@/lib/guest-schema'
+import {
+  isTableAssignmentColumnMissingError,
+  upsertTableAssignmentInNotes,
+} from '@/lib/invitation-response'
 
 // Alta masiva de invitados: inserta todas las filas en una sola operacion.
 // Cada invitado entra como 'preinvited' con el mismo tipo (el que elige el
@@ -11,6 +15,7 @@ type BulkGuestRow = {
   last_name?: string
   email?: string
   phone?: string
+  table_assignment?: string
 }
 
 type BulkGuestsRequestBody = {
@@ -55,6 +60,7 @@ export async function POST(request: Request) {
         full_name: buildGuestFullName(firstName, lastName),
         email: row.email?.trim() || null,
         phone: row.phone?.trim() || null,
+        table_assignment: row.table_assignment?.trim() || null,
         created_manually: true,
         status: 'preinvited',
       }
@@ -69,6 +75,26 @@ export async function POST(request: Request) {
   }
 
   const { error } = await adminClient.from('guests').insert(payload)
+
+  // Fallback: si la columna table_assignment no existe (migracion pendiente),
+  // reintentar sin esa columna y embeber el destino dentro de notes.
+  if (error && isTableAssignmentColumnMissingError(error)) {
+    const fallbackPayload = payload.map((row) => {
+      const { table_assignment, ...rest } = row
+      return {
+        ...rest,
+        notes: upsertTableAssignmentInNotes(null, table_assignment),
+      }
+    })
+
+    const { error: retryError } = await adminClient.from('guests').insert(fallbackPayload)
+
+    if (retryError) {
+      return Response.json({ error: retryError.message }, { status: 500 })
+    }
+
+    return Response.json({ count: payload.length })
+  }
 
   if (error) {
     return Response.json({ error: error.message }, { status: 500 })

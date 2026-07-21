@@ -162,7 +162,8 @@ export interface GuestType {
  * Invitado. OJO: no todos los campos son columnas de la tabla `guests`.
  * Columnas reales: id, event_id, guest_type_id, first_name, last_name,
  * full_name, phone, email, document_number, photo_url, status, notes,
- * payment_status, created_manually, created_by_user_id, created_at, updated_at.
+ * payment_status, table_assignment, created_manually, created_by_user_id,
+ * created_at, updated_at.
  *
  * Campos VIRTUALES (no consultar por nombre en un select/insert, romperia):
  * - `special_requests`: alias de la columna `notes` (mapeado en la capa de API).
@@ -197,6 +198,11 @@ export interface Guest {
     | 'duplicate'
   /** Estado del pago/aporte. Gatea la emision del acceso (ver isInvitationAccessReady). */
   payment_status?: 'not_required' | 'pending' | 'approved'
+  /**
+   * Destino (mesa) asignado al invitado. Se muestra solo en el totem/puerta al
+   * ingresar, nunca en la invitacion. Antes se embebia en `notes` como "Mesa:".
+   */
+  table_assignment?: string | null
   plus_ones_allowed: number
   plus_ones_confirmed: number
   special_requests?: string
@@ -314,6 +320,7 @@ export interface CreateGuestForm {
   phone?: string
   plus_ones_allowed: number
   special_requests?: string
+  table_assignment?: string
 }
 
 export interface CreateGuestTypeForm {
@@ -376,6 +383,7 @@ export interface UpdateGuestForm {
   plus_ones_allowed?: number
   plus_ones_confirmed?: number
   special_requests?: string
+  table_assignment?: string | null
 }
 
 // API Response types

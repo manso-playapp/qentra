@@ -158,7 +158,6 @@ type InvitationViewProps = {
   guestDisplayName: string
   accessState: AccessState
   calendarUrl?: string | null
-  tableAssignment?: string
   isPreview?: boolean
   children?: ReactNode
 }
@@ -179,7 +178,6 @@ export default function InvitationView({
   guestDisplayName,
   accessState,
   calendarUrl,
-  tableAssignment,
   isPreview = false,
   children,
 }: InvitationViewProps) {
@@ -264,14 +262,6 @@ export default function InvitationView({
                 Cómo llegar →
               </a>
             </div>
-
-            {/* Mesa asignada (dato por invitado). Solo se muestra si viene informada. */}
-            {tableAssignment && (
-              <div className="py-5">
-                <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-white/45">Mesa asignada</p>
-                <p className="mt-2 text-base font-semibold tracking-wide">{tableAssignment}</p>
-              </div>
-            )}
 
             {/* Dresscode hardcodeado */}
             <div className="pt-5">

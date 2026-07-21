@@ -48,3 +48,6 @@ qentra_vscode_codex_playbook.md
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# supabase local CLI artifacts
+supabase/.temp/

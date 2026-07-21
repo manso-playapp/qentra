@@ -1,4 +1,5 @@
 import type { Guest, GuestWithType } from '@/types'
+import { parseInvitationDetails } from '@/lib/invitation-response'
 
 export type DbGuestStatus =
   | 'preinvited'
@@ -24,6 +25,7 @@ type DbGuestRow = {
   status?: string | null
   payment_status?: string | null
   notes?: string | null
+  table_assignment?: string | null
   created_at: string
   updated_at: string
   guest_types?: GuestTypeSubset
@@ -79,6 +81,11 @@ export function normalizeGuestRecord(row: DbGuestRow): GuestWithType {
     db_status: (row.status as DbGuestStatus | null) ?? undefined,
     payment_status:
       (row.payment_status as Guest['payment_status'] | null) ?? 'not_required',
+    // Fuente de verdad: columna propia. Fallback legacy: valor embebido en notes.
+    table_assignment:
+      row.table_assignment?.trim() ||
+      parseInvitationDetails(row.notes).tableAssignment ||
+      null,
     plus_ones_allowed: 0,
     plus_ones_confirmed: 0,
     special_requests: row.notes ?? undefined,

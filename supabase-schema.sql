@@ -88,6 +88,7 @@ create table if not exists guests (
   created_by_user_id uuid,
   payment_status text not null default 'not_required'
     check (payment_status in ('not_required', 'pending', 'approved')),
+  table_assignment text,                                -- destino/mesa asignado al invitado
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );

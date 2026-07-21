@@ -250,7 +250,7 @@ export default function EventCheckinManager({
   const [overridePolicyLoading, setOverridePolicyLoading] = useState(false)
   const [overridePinConfigured, setOverridePinConfigured] = useState(true)
   const [overrideSupervisorRequired, setOverrideSupervisorRequired] = useState(false)
-  const [now, setNow] = useState(() => new Date())
+  const [now, setNow] = useState<Date | null>(null)
   const [totemSpotlight, setTotemSpotlight] = useState<TotemSpotlight | null>(null)
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
@@ -365,6 +365,7 @@ export default function EventCheckinManager({
   }, [isTotemMode, event.id, fetchRecentCheckins])
 
   useEffect(() => {
+    setNow(new Date())
     const clockTimer = window.setInterval(() => {
       setNow(new Date())
     }, isTotemMode ? 1000 : 30000)
@@ -875,7 +876,7 @@ export default function EventCheckinManager({
             : `radial-gradient(circle at top left, ${totemAccent}55, transparent 28%), radial-gradient(circle at top right, ${totemSecondary}60, transparent 32%), linear-gradient(180deg, ${totemSecondary} 0%, #090d14 100%)`,
         }}
       >
-        <div className="mx-auto grid min-h-[calc(100vh-3rem)] max-w-[1080px] grid-rows-[auto_1fr_auto] gap-8">
+        <div className="mx-auto grid min-h-[calc(100vh-3rem)] max-w-270 grid-rows-[auto_1fr_auto] gap-8">
           <header className="grid grid-cols-[1fr_auto] items-start gap-6">
             <div>
               <p className="text-sm uppercase tracking-[0.34em] text-white/65">Fecha del evento</p>
@@ -883,12 +884,12 @@ export default function EventCheckinManager({
             </div>
             <div className="text-right">
               <p className="text-sm uppercase tracking-[0.34em] text-white/65">Hora actual</p>
-              <p className="mt-2 text-7xl font-semibold leading-none text-white sm:text-8xl">{formatClock(now)}</p>
+              <p className="mt-2 text-7xl font-semibold leading-none text-white sm:text-8xl">{now ? formatClock(now) : '--:--'}</p>
             </div>
           </header>
 
           <section className="flex min-h-0 items-center justify-center">
-            <div className="flex w-full max-w-[920px] flex-col items-center justify-center rounded-[42px] border border-white/10 bg-black/28 px-8 py-10 text-center shadow-[0_35px_120px_rgba(0,0,0,0.35)] backdrop-blur-sm">
+            <div className="flex w-full max-w-230 flex-col items-center justify-center rounded-[42px] border border-white/10 bg-black/28 px-8 py-10 text-center shadow-[0_35px_120px_rgba(0,0,0,0.35)] backdrop-blur-sm">
               {!totemSpotlight ? (
                 <>
                   {branding?.logo_url ? (
@@ -920,7 +921,7 @@ export default function EventCheckinManager({
                 <>
                   <p className="text-sm uppercase tracking-[0.34em] text-emerald-200/90">{approvedMessage}</p>
                   <div
-                    className="mt-8 flex h-[38vh] max-h-[380px] min-h-[240px] w-[38vh] max-w-[380px] min-w-[240px] items-center justify-center overflow-hidden rounded-[36px] border border-white/14 text-8xl font-semibold text-white shadow-[0_0_90px_rgba(16,185,129,0.18)]"
+                    className="mt-8 flex h-[38vh] max-h-95 min-h-60 w-[38vh] max-w-95 min-w-60 items-center justify-center overflow-hidden rounded-[36px] border border-white/14 text-8xl font-semibold text-white shadow-[0_0_90px_rgba(16,185,129,0.18)]"
                     style={{ background: `linear-gradient(145deg, ${totemAccent}55, rgba(255,255,255,0.08))` }}
                   >
                     {totemSpotlight.photoUrl ? (
@@ -947,7 +948,7 @@ export default function EventCheckinManager({
           </section>
 
           <footer className="flex flex-col items-center gap-4 text-center">
-            <div className="flex items-center gap-3 rounded-full border border-white/10 bg-white/[0.06] px-5 py-2 text-sm text-white/70">
+            <div className="flex items-center gap-3 rounded-full border border-white/10 bg-white/6 px-5 py-2 text-sm text-white/70">
               <span
                 className="h-2.5 w-2.5 rounded-full"
                 style={{ backgroundColor: totemSpotlight ? '#34d399' : totemAccent }}
@@ -966,7 +967,7 @@ export default function EventCheckinManager({
   if (isDoorMode) {
     return (
       <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.16),transparent_24%),linear-gradient(180deg,#09111b_0%,#101b2a_28%,#eef3f7_28%,#eef3f7_100%)] px-4 py-5 text-slate-950 sm:px-6">
-        <div className="mx-auto max-w-[1600px] space-y-6">
+        <div className="mx-auto max-w-400 space-y-6">
           <section className="rounded-[34px] border border-slate-800 bg-slate-950/96 px-6 py-6 text-white shadow-[0_28px_90px_rgba(2,8,23,0.42)]">
             <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
               <div>
@@ -978,14 +979,14 @@ export default function EventCheckinManager({
               </div>
 
               <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
-                <div className="rounded-[26px] border border-white/10 bg-white/[0.06] px-5 py-4">
+                <div className="rounded-[26px] border border-white/10 bg-white/6 px-5 py-4">
                   <p className="text-xs uppercase tracking-[0.28em] text-slate-400">Evento</p>
                   <p className="mt-2 text-2xl font-semibold text-white">{event.name}</p>
                   <p className="mt-2 text-sm text-slate-300">{formatEventDate(event.event_date)} · {event.start_time}</p>
                 </div>
                 <div className="rounded-[26px] border border-sky-400/20 bg-sky-400/10 px-5 py-4 text-right">
                   <p className="text-xs uppercase tracking-[0.28em] text-sky-200/80">Hora actual</p>
-                  <p className="mt-2 text-5xl font-semibold leading-none text-white">{formatClock(now)}</p>
+                  <p className="mt-2 text-5xl font-semibold leading-none text-white">{now ? formatClock(now) : '--:--'}</p>
                 </div>
               </div>
             </div>
@@ -1044,7 +1045,7 @@ export default function EventCheckinManager({
 
           <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(360px,0.85fr)]">
             <section className="space-y-6">
-              <div className={`rounded-[32px] border p-6 shadow-[0_18px_70px_rgba(15,23,42,0.12)] ${statusTone.shell}`}>
+              <div className={`rounded-4xl border p-6 shadow-[0_18px_70px_rgba(15,23,42,0.12)] ${statusTone.shell}`}>
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
                     <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] ${statusTone.badge}`}>
@@ -1053,23 +1054,23 @@ export default function EventCheckinManager({
                     <h2 className="mt-4 text-4xl font-semibold">{statusSummary.title}</h2>
                     <p className="mt-3 max-w-3xl text-base leading-7 opacity-90">{statusSummary.detail}</p>
                   </div>
-                  <div className={`rounded-[24px] px-4 py-3 text-sm font-medium ${statusTone.badge}`}>
+                  <div className={`rounded-3xl px-4 py-3 text-sm font-medium ${statusTone.badge}`}>
                     {scannerActive ? 'Cámara activa' : 'Cámara en espera'}
                   </div>
                 </div>
 
                 <div className={`mt-5 grid gap-3 ${aforo.hasLimit ? 'md:grid-cols-4' : 'md:grid-cols-3'}`}>
-                  <div className={`rounded-[24px] px-4 py-3 ${statusTone.badge}`}>
+                  <div className={`rounded-3xl px-4 py-3 ${statusTone.badge}`}>
                     <p className="text-xs uppercase tracking-[0.18em] opacity-80">Base activa</p>
                     <p className="mt-2 text-2xl font-semibold">{doorMetrics.activeGuests}</p>
                   </div>
-                  <div className={`rounded-[24px] px-4 py-3 ${statusTone.badge}`}>
+                  <div className={`rounded-3xl px-4 py-3 ${statusTone.badge}`}>
                     <p className="text-xs uppercase tracking-[0.18em] opacity-80">Por ingresar</p>
                     <p className="mt-2 text-2xl font-semibold">{doorMetrics.remainingExpectedPeople}</p>
                   </div>
                   {aforo.hasLimit && (
                     <div
-                      className={`rounded-[24px] px-4 py-3 ${
+                      className={`rounded-3xl px-4 py-3 ${
                         aforo.full ? 'bg-rose-500/25 text-white ring-1 ring-rose-300/40' : statusTone.badge
                       }`}
                     >
@@ -1082,7 +1083,7 @@ export default function EventCheckinManager({
                       </p>
                     </div>
                   )}
-                  <div className={`rounded-[24px] px-4 py-3 ${statusTone.badge}`}>
+                  <div className={`rounded-3xl px-4 py-3 ${statusTone.badge}`}>
                     <p className="text-xs uppercase tracking-[0.18em] opacity-80">Últimos movimientos</p>
                     <p className="mt-2 text-2xl font-semibold">{recentCheckins.length}</p>
                   </div>
@@ -1115,19 +1116,19 @@ export default function EventCheckinManager({
                       ref={videoRef}
                       muted
                       playsInline
-                      className="aspect-[16/10] w-full object-cover"
+                      className="aspect-16/10 w-full object-cover"
                     />
                   </div>
                   <canvas ref={canvasRef} className="hidden" />
 
                   {!scannerSupported && (
-                    <div className="rounded-[24px] border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                    <div className="rounded-3xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
                       Este navegador no soporta acceso a cámara para el scanner.
                     </div>
                   )}
 
                   {scannerMessage && (
-                    <div className="rounded-[24px] border border-sky-200 bg-sky-50 p-4 text-sm text-sky-800">
+                    <div className="rounded-3xl border border-sky-200 bg-sky-50 p-4 text-sm text-sky-800">
                       {scannerMessage}
                     </div>
                   )}
@@ -1154,7 +1155,7 @@ export default function EventCheckinManager({
 
                   {status && (
                     <div
-                      className={`rounded-[24px] border p-4 ${
+                      className={`rounded-3xl border p-4 ${
                         status.kind === 'success'
                           ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
                           : status.kind === 'warning'
@@ -1290,13 +1291,13 @@ export default function EventCheckinManager({
                       <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-primary"></div>
                     </div>
                   ) : filteredGuests.length === 0 ? (
-                    <div className="mt-4 rounded-[24px] border border-dashed border-border bg-secondary/60 p-4 text-sm text-muted-foreground">
+                    <div className="mt-4 rounded-3xl border border-dashed border-border bg-secondary/60 p-4 text-sm text-muted-foreground">
                       No hay invitados que coincidan con la búsqueda.
                     </div>
                   ) : (
                     <div className="mt-4 grid gap-3">
                       {filteredGuests.map((guest) => (
-                        <div key={guest.id} className="rounded-[24px] border border-border/70 bg-white/80 p-4">
+                        <div key={guest.id} className="rounded-3xl border border-border/70 bg-white/80 p-4">
                           <div className="flex items-start justify-between gap-3">
                             <div>
                               <p className="font-medium text-foreground">
@@ -1358,7 +1359,7 @@ export default function EventCheckinManager({
                 <CardContent className="space-y-4">
                   <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
                     {aforo.hasLimit ? (
-                      <div className="rounded-[24px] border border-white/10 bg-white/[0.05] p-4">
+                      <div className="rounded-3xl border border-white/10 bg-white/5 p-4">
                         <p className="text-xs uppercase tracking-[0.24em] text-slate-400">Aforo</p>
                         <p className="mt-3 text-3xl font-semibold text-white">
                           {aforo.known ? aforo.occupancy : '—'}
@@ -1377,7 +1378,7 @@ export default function EventCheckinManager({
                         </p>
                       </div>
                     ) : (
-                      <div className="rounded-[24px] border border-white/10 bg-white/[0.05] p-4">
+                      <div className="rounded-3xl border border-white/10 bg-white/5 p-4">
                         <p className="text-xs uppercase tracking-[0.24em] text-slate-400">Ingresados</p>
                         <p className="mt-3 text-3xl font-semibold text-white">
                           {aforo.known ? aforo.occupancy : recentCheckins.length}
@@ -1387,7 +1388,7 @@ export default function EventCheckinManager({
                         </p>
                       </div>
                     )}
-                    <div className="rounded-[24px] border border-white/10 bg-white/[0.05] p-4">
+                    <div className="rounded-3xl border border-white/10 bg-white/5 p-4">
                       <p className="text-xs uppercase tracking-[0.24em] text-slate-400">No habilitados</p>
                       <p className="mt-3 text-3xl font-semibold text-white">{doorMetrics.cancelledGuests}</p>
                       <p className="mt-2 text-sm leading-6 text-slate-300">
@@ -1414,13 +1415,13 @@ export default function EventCheckinManager({
                       <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-primary"></div>
                     </div>
                   ) : recentCheckins.length === 0 ? (
-                    <div className="rounded-[24px] border border-dashed border-border bg-secondary/60 p-4 text-sm text-muted-foreground">
+                    <div className="rounded-3xl border border-dashed border-border bg-secondary/60 p-4 text-sm text-muted-foreground">
                       Todavía no hay ingresos registrados para este evento.
                     </div>
                   ) : (
                     <div className="space-y-3">
                       {recentCheckins.map((checkin) => (
-                        <div key={checkin.id} className="rounded-[24px] border border-border/70 bg-white/80 p-4">
+                        <div key={checkin.id} className="rounded-3xl border border-border/70 bg-white/80 p-4">
                           <div className="flex items-start justify-between gap-3">
                             <div>
                               <p className="font-medium text-foreground">
@@ -1545,7 +1546,7 @@ export default function EventCheckinManager({
       <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <div className="rounded-2xl border border-slate-200 bg-slate-950 p-5 text-white shadow-sm">
           <p className="text-sm text-slate-300">Hora de puerta</p>
-          <p className="mt-2 text-3xl font-semibold">{formatClock(now)}</p>
+          <p className="mt-2 text-3xl font-semibold">{now ? formatClock(now) : '--:--'}</p>
           <p className="mt-1 text-sm text-slate-300">
             Evento {formatDateTime(buildEventDateTime(event.event_date, event.start_time))}
           </p>
@@ -1649,7 +1650,7 @@ export default function EventCheckinManager({
                 ref={videoRef}
                 muted
                 playsInline
-                className={`w-full object-cover ${isTotemMode ? 'aspect-[16/10]' : 'aspect-[4/3]'}`}
+                className={`w-full object-cover ${isTotemMode ? 'aspect-16/10' : 'aspect-4/3'}`}
               />
             </div>
             <canvas ref={canvasRef} className="hidden" />

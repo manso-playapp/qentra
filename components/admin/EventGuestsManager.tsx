@@ -40,6 +40,7 @@ type GuestFormState = {
   last_name: string
   email: string
   phone: string
+  table_assignment: string
   plus_ones_allowed: string
   special_requests: string
 }
@@ -62,6 +63,7 @@ type GuestEditFormState = {
   last_name: string
   email: string
   phone: string
+  table_assignment: string
   status: Guest['status']
   plus_ones_allowed: string
   plus_ones_confirmed: string
@@ -125,6 +127,7 @@ const INITIAL_GUEST_FORM: GuestFormState = {
   last_name: '',
   email: '',
   phone: '',
+  table_assignment: '',
   plus_ones_allowed: '0',
   special_requests: '',
 }
@@ -183,11 +186,18 @@ function buildGuestsCsv(guests: GuestWithType[]): string {
   return [header.map(cell).join(','), ...rows].join('\r\n')
 }
 
-type ImportRow = { first_name: string; last_name: string; email: string; phone: string }
+type ImportRow = {
+  first_name: string
+  last_name: string
+  email: string
+  phone: string
+  table_assignment: string
+}
 
 // Parser de la carga masiva. Una fila por linea; columnas separadas por coma,
-// tab (pegado de planilla) o punto y coma: Nombre, Apellido, Email, Telefono.
-// Solo el nombre es obligatorio; las filas sin nombre se descartan.
+// tab (pegado de planilla) o punto y coma: Nombre, Apellido, Email, Telefono,
+// Destino (mesa/sector). Solo el nombre es obligatorio; las filas sin nombre
+// se descartan.
 function parseGuestRows(text: string): ImportRow[] {
   return text
     .split(/\r?\n/)
@@ -200,6 +210,7 @@ function parseGuestRows(text: string): ImportRow[] {
         last_name: cols[1] ?? '',
         email: cols[2] ?? '',
         phone: cols[3] ?? '',
+        table_assignment: cols[4] ?? '',
       }
     })
     .filter((row) => row.first_name.length > 0)
@@ -223,6 +234,7 @@ function createGuestEditForm(guest: GuestWithType): GuestEditFormState {
     last_name: guest.last_name,
     email: guest.email ?? '',
     phone: guest.phone ?? '',
+    table_assignment: guest.table_assignment ?? '',
     status: guest.status,
     plus_ones_allowed: String(guest.plus_ones_allowed),
     plus_ones_confirmed: String(guest.plus_ones_confirmed),
@@ -541,6 +553,7 @@ export default function EventGuestsManager({
       phone: trimOptionalValue(guestForm.phone),
       plus_ones_allowed: Number.parseInt(guestForm.plus_ones_allowed || '0', 10),
       plus_ones_confirmed: 0,
+      table_assignment: trimOptionalValue(guestForm.table_assignment),
       special_requests: trimOptionalValue(guestForm.special_requests),
       status: 'pending',
     }
@@ -604,6 +617,7 @@ export default function EventGuestsManager({
       last_name: editGuestForm.last_name.trim(),
       email: trimOptionalValue(editGuestForm.email),
       phone: trimOptionalValue(editGuestForm.phone),
+      table_assignment: trimOptionalValue(editGuestForm.table_assignment),
       status: editGuestForm.status,
       plus_ones_allowed: Number.parseInt(editGuestForm.plus_ones_allowed || '0', 10),
       plus_ones_confirmed: Number.parseInt(editGuestForm.plus_ones_confirmed || '0', 10),
@@ -1335,7 +1349,7 @@ export default function EventGuestsManager({
                 <h3 className="text-sm font-semibold text-gray-900">Importar invitados</h3>
                 <p className="mt-1 text-sm text-gray-600">
                   Pegá una fila por invitado. Columnas separadas por coma o tab:{' '}
-                  <span className="font-mono text-xs">Nombre, Apellido, Email, Telefono</span>. Solo el
+                  <span className="font-mono text-xs">Nombre, Apellido, Email, Telefono, Destino</span>. Solo el
                   nombre es obligatorio.
                 </p>
 
@@ -1366,7 +1380,7 @@ export default function EventGuestsManager({
                   value={importText}
                   onChange={(event) => setImportText(event.target.value)}
                   rows={6}
-                  placeholder={'Sofia, Gimenez, sofia@mail.com, 3415551234\nMateo, Ledesma\n...'}
+                  placeholder={'Sofia, Gimenez, sofia@mail.com, 3415551234, Mesa 4\nMateo, Ledesma\n...'}
                   className="mt-4 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 font-mono text-xs focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                 />
 
@@ -1501,6 +1515,19 @@ export default function EventGuestsManager({
                                 </option>
                               ))}
                             </select>
+                          </div>
+                          <div>
+                            <label htmlFor={`edit-table-assignment-${guest.id}`} className="block text-sm font-medium text-gray-700">
+                              Destino (mesa/sector)
+                            </label>
+                            <input
+                              id={`edit-table-assignment-${guest.id}`}
+                              name="table_assignment"
+                              value={editGuestForm.table_assignment}
+                              onChange={handleEditGuestInputChange}
+                              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                              placeholder="Mesa 4, VIP, Staff..."
+                            />
                           </div>
                           <div>
                             <label htmlFor={`edit-status-${guest.id}`} className="block text-sm font-medium text-gray-700">
@@ -1655,12 +1682,13 @@ export default function EventGuestsManager({
                         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                           <div className="grid gap-1 text-sm text-gray-600">
                             <p>Tipo: {guest.guest_types?.name || 'Sin tipo asociado'}</p>
+                            <p>Destino: {guest.table_assignment || 'No asignado'}</p>
                             <p>Email: {guest.email || 'No cargado'}</p>
                             <p>Telefono: {guest.phone || 'No cargado'}</p>
                             <p>Acceso: {formatGuestTypeAccessPolicy(guest.guest_types, event.start_time)}</p>
                           </div>
 
-                          <div className="grid grid-cols-2 gap-3 text-sm text-gray-600 lg:min-w-[270px]">
+                          <div className="grid grid-cols-2 gap-3 text-sm text-gray-600 lg:min-w-67.5">
                             <div className="rounded-lg bg-gray-50 px-3 py-2">
                               <p className="text-xs uppercase tracking-wide text-gray-500">Acompanantes</p>
                               <p className="mt-1 font-medium text-gray-900">
@@ -1757,7 +1785,7 @@ export default function EventGuestsManager({
                                 width={104}
                                 height={104}
                                 unoptimized
-                                className="h-[104px] w-[104px] rounded-md"
+                                className="h-26 w-26 rounded-md"
                               />
                             ) : (
                               <div className="text-center text-xs text-gray-500">
@@ -2039,6 +2067,20 @@ export default function EventGuestsManager({
                   value={guestForm.plus_ones_allowed}
                   onChange={handleGuestInputChange}
                   className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="guest-table-assignment" className="block text-sm font-medium text-gray-700">
+                  Destino (mesa/sector)
+                </label>
+                <input
+                  id="guest-table-assignment"
+                  name="table_assignment"
+                  value={guestForm.table_assignment}
+                  onChange={handleGuestInputChange}
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  placeholder="Mesa 4, VIP, Staff..."
                 />
               </div>
 

@@ -611,7 +611,13 @@ export function useGuests(eventId?: string, initialGuests: GuestWithType[] = [])
   // y un refetch para reflejar la lista completa.
   const bulkCreateGuests = async (
     guestTypeId: string,
-    rows: { first_name: string; last_name: string; email?: string; phone?: string }[]
+    rows: {
+      first_name: string
+      last_name: string
+      email?: string
+      phone?: string
+      table_assignment?: string
+    }[]
   ): Promise<ApiResponse<{ count: number }>> => {
     try {
       const response = await fetch('/api/guests/bulk', {

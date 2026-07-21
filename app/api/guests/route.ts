@@ -1,6 +1,10 @@
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
 import { ensureAuthorizedApiAccess } from '@/lib/operator-auth'
 import { buildGuestFullName, normalizeGuestRecord } from '@/lib/guest-schema'
+import {
+  isTableAssignmentColumnMissingError,
+  upsertTableAssignmentInNotes,
+} from '@/lib/invitation-response'
 
 type CreateGuestRequestBody = {
   event_id?: string
@@ -10,6 +14,7 @@ type CreateGuestRequestBody = {
   email?: string
   phone?: string
   special_requests?: string
+  table_assignment?: string
 }
 
 export const runtime = 'nodejs'
@@ -90,7 +95,7 @@ export async function POST(request: Request) {
     )
   }
 
-  const payload = {
+  const payload: Record<string, string | boolean | null> = {
     event_id: eventId,
     guest_type_id: guestTypeId,
     first_name: firstName,
@@ -99,6 +104,7 @@ export async function POST(request: Request) {
     email: body.email?.trim() || null,
     phone: body.phone?.trim() || null,
     notes: body.special_requests?.trim() || null,
+    table_assignment: body.table_assignment?.trim() || null,
     created_manually: true,
     status: 'preinvited',
   }
@@ -119,6 +125,40 @@ export async function POST(request: Request) {
       )
     `)
     .single()
+
+  // Fallback: si la columna table_assignment no existe (migracion pendiente),
+  // reintentar el insert embebiendo el destino dentro de notes.
+  if (error && isTableAssignmentColumnMissingError(error)) {
+    const fallbackPayload = { ...payload }
+    delete fallbackPayload.table_assignment
+    fallbackPayload.notes = upsertTableAssignmentInNotes(
+      (payload.notes as string | null) ?? null,
+      (payload.table_assignment as string | null) ?? null
+    )
+
+    const { data: retryData, error: retryError } = await adminClient
+      .from('guests')
+      .insert(fallbackPayload)
+      .select(`
+        *,
+        guest_types (
+          name,
+          description,
+          access_policy_label,
+          access_start_time,
+          access_end_time,
+          access_start_day_offset,
+          access_end_day_offset
+        )
+      `)
+      .single()
+
+    if (retryError) {
+      return Response.json({ error: retryError.message }, { status: 500 })
+    }
+
+    return Response.json({ data: normalizeGuestRecord(retryData) })
+  }
 
   if (error) {
     return Response.json({ error: error.message }, { status: 500 })

@@ -36,8 +36,8 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
 
   if (invitationError) {
     return (
-      <main className="min-h-screen bg-[radial-gradient(circle_at_top,_#e2e8f0,_#f8fafc_45%,_#ffffff)] px-6 py-10">
-        <div className="mx-auto max-w-2xl rounded-[32px] border border-red-200 bg-white/92 p-8 shadow-[0_24px_80px_rgba(15,23,42,0.12)]">
+      <main className="min-h-screen bg-[radial-gradient(circle_at_top,#e2e8f0,#f8fafc_45%,#ffffff)] px-6 py-10">
+        <div className="mx-auto max-w-2xl rounded-4xl border border-red-200 bg-white/92 p-8 shadow-[0_24px_80px_rgba(15,23,42,0.12)]">
           <p className="text-sm font-semibold uppercase tracking-[0.24em] text-red-600">Acceso digital</p>
           <h1 className="mt-4 text-3xl font-semibold text-slate-950">No se pudo cargar tu acceso</h1>
           <p className="mt-3 text-sm leading-6 text-slate-600">
@@ -142,7 +142,6 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
       guestDisplayName={guestDisplayName}
       accessState={accessState}
       calendarUrl={calendarUrl}
-      tableAssignment={invitationDetails.tableAssignment || undefined}
     >
       {!accessReady ? (
         <section className="rounded-[28px] border border-white/20 bg-black/75 p-6 shadow-2xl backdrop-blur-sm">
@@ -180,14 +179,14 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/50">Tu acceso</p>
             {qrCodeUrl && (
               <>
-                <div className="mx-auto mt-4 w-full max-w-[280px] rounded-[24px] bg-white p-3 shadow-inner">
+                <div className="mx-auto mt-4 w-full max-w-70 rounded-3xl bg-white p-3 shadow-inner">
                   <Image
                     src={qrCodeUrl}
                     alt="QR de acceso al evento"
                     width={640}
                     height={640}
                     unoptimized
-                    className="w-full rounded-[16px]"
+                    className="w-full rounded-2xl"
                   />
                 </div>
                 <a

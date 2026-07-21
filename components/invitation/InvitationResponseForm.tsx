@@ -108,7 +108,7 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
         <button
           type="button"
           onClick={() => setAttendanceResponse('confirmed')}
-          className={`rounded-[24px] border px-4 py-4 text-left transition ${
+          className={`rounded-3xl border px-4 py-4 text-left transition ${
             isConfirming
               ? 'border-emerald-300/70 bg-emerald-950/80 text-emerald-50'
               : 'border-white/20 bg-white/10 text-white hover:bg-white/20'
@@ -120,7 +120,7 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
         <button
           type="button"
           onClick={() => setAttendanceResponse('declined')}
-          className={`rounded-[24px] border px-4 py-4 text-left transition ${
+          className={`rounded-3xl border px-4 py-4 text-left transition ${
             !isConfirming
               ? 'border-rose-300/70 bg-rose-950/80 text-rose-50'
               : 'border-white/20 bg-white/10 text-white hover:bg-white/20'
@@ -181,7 +181,7 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
 
       {isConfirming && (
         <>
-          <div className="rounded-[24px] border border-white/20 bg-white/5 p-4">
+          <div className="rounded-3xl border border-white/20 bg-white/5 p-4">
             <ImageUpload
               label="Tu foto"
               hint="Se usa para validar tu identidad en el ingreso. Podés sacártela con la cámara."
@@ -286,13 +286,13 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
       </div>
 
       {error && (
-        <div className="rounded-[24px] border border-rose-300/50 bg-rose-950/80 p-4 text-sm text-rose-100">
+        <div className="rounded-3xl border border-rose-300/50 bg-rose-950/80 p-4 text-sm text-rose-100">
           {error}
         </div>
       )}
 
       {notice && (
-        <div className="rounded-[24px] border border-emerald-300/50 bg-emerald-950/80 p-4 text-sm text-emerald-100">
+        <div className="rounded-3xl border border-emerald-300/50 bg-emerald-950/80 p-4 text-sm text-emerald-100">
           {notice}
         </div>
       )}

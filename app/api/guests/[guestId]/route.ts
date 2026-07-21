@@ -5,6 +5,10 @@ import {
   mapGuestStatusToDb,
   normalizeGuestRecord,
 } from '@/lib/guest-schema'
+import {
+  isTableAssignmentColumnMissingError,
+  upsertTableAssignmentInNotes,
+} from '@/lib/invitation-response'
 import type { UpdateGuestForm } from '@/types'
 
 type GuestRouteContext = {
@@ -42,6 +46,8 @@ export async function PATCH(request: Request, context: GuestRouteContext) {
     if (body.email !== undefined) payload.email = body.email?.trim() || null
     if (body.phone !== undefined) payload.phone = body.phone?.trim() || null
     if (body.special_requests !== undefined) payload.notes = body.special_requests?.trim() || null
+    if (body.table_assignment !== undefined)
+      payload.table_assignment = body.table_assignment?.trim() || null
     if (body.status !== undefined) payload.status = mapGuestStatusToDb(body.status)
     if (
       body.payment_status !== undefined &&
@@ -52,6 +58,76 @@ export async function PATCH(request: Request, context: GuestRouteContext) {
 
     if (body.first_name !== undefined && body.last_name !== undefined) {
       payload.full_name = buildGuestFullName(body.first_name, body.last_name)
+    }
+
+    // Si el update incluye table_assignment y la columna no existe en el
+    // esquema (migracion pendiente), caemos a un fallback que persiste el
+    // valor dentro de notes como "Destino: ...". El read path ya lo lee.
+    if (payload.table_assignment !== undefined) {
+      const { data, error } = await adminClient
+        .from('guests')
+        .update(payload)
+        .eq('id', guestId)
+        .select(`
+          *,
+          guest_types (
+            name,
+            description,
+            access_policy_label,
+            access_start_time,
+            access_end_time,
+            access_start_day_offset,
+            access_end_day_offset
+          )
+        `)
+        .single()
+
+      if (error && isTableAssignmentColumnMissingError(error)) {
+        // Reintentar sin la columna nativa: embeber destino en notes.
+        const { data: existing } = await adminClient
+          .from('guests')
+          .select('notes')
+          .eq('id', guestId)
+          .maybeSingle()
+
+        const fallbackNotes = upsertTableAssignmentInNotes(
+          payload.notes !== undefined ? payload.notes : existing?.notes,
+          payload.table_assignment
+        )
+        const fallbackPayload: Record<string, string | null> = { ...payload }
+        delete fallbackPayload.table_assignment
+        fallbackPayload.notes = fallbackNotes
+
+        const { data: retryData, error: retryError } = await adminClient
+          .from('guests')
+          .update(fallbackPayload)
+          .eq('id', guestId)
+          .select(`
+            *,
+            guest_types (
+              name,
+              description,
+              access_policy_label,
+              access_start_time,
+              access_end_time,
+              access_start_day_offset,
+              access_end_day_offset
+            )
+          `)
+          .single()
+
+        if (retryError) {
+          return Response.json({ error: retryError.message }, { status: 500 })
+        }
+
+        return Response.json({ data: normalizeGuestRecord(retryData) })
+      }
+
+      if (error) {
+        return Response.json({ error: error.message }, { status: 500 })
+      }
+
+      return Response.json({ data: normalizeGuestRecord(data) })
     }
 
     const { data, error } = await adminClient

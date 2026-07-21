@@ -48,7 +48,9 @@ export async function GET(_request: Request, context: RouteContext) {
         first_name,
         last_name,
         status,
-        photo_url
+        photo_url,
+        table_assignment,
+        notes
       )
     `
       )

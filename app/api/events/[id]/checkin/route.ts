@@ -1,6 +1,7 @@
 import { evaluateGuestAccess } from '@/lib/access-policy'
 import { ensureAuthorizedApiAccess } from '@/lib/operator-auth'
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
+import { parseInvitationDetails } from '@/lib/invitation-response'
 import type { CheckinMethod } from '@/types'
 
 export const runtime = 'nodejs'
@@ -109,6 +110,8 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       first_name,
       last_name,
       status,
+      table_assignment,
+      notes,
       guest_types (
         name,
         access_policy_label,
@@ -162,6 +165,12 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     .select('id', { count: 'exact', head: true })
     .eq('event_id', eventId)
     .eq('result', 'approved')
+
+  // Destino (mesa) para mostrar en el totem: columna propia con fallback legacy.
+  const tableAssignment =
+    guest.table_assignment?.trim() ||
+    parseInvitationDetails(guest.notes).tableAssignment ||
+    ''
 
   const decision = evaluateGuestAccess({
     event: eventData,
@@ -238,6 +247,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
         ? `${guest.first_name} ${guest.last_name} ingresó por excepción supervisada.`
         : `${guest.first_name} ${guest.last_name} ingresó correctamente al evento.`,
       guest: { first_name: guest.first_name, last_name: guest.last_name },
+      tableAssignment: tableAssignment || null,
     },
   })
 }
