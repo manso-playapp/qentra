@@ -113,7 +113,6 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
   const guestCount = guestsCountResponse.count ?? 0
   const checkinCount = checkinsCountResponse.count ?? 0
   const availableSeats = Math.max(event.max_capacity - guestCount, 0)
-
   return (
     <AdminLayout>
       <div className="px-4 py-6 sm:px-0">
@@ -200,6 +199,12 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
                     <Link href={`/admin/events/${event.id}/invitacion`}>
                       <Palette className="size-4" />
                       Personalizar invitación
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline">
+                    <Link href={`/invitacion/preview/${event.id}`} target="_blank" rel="noreferrer">
+                      Ver en vivo
+                      <ExternalLink className="size-4" />
                     </Link>
                   </Button>
                 </div>

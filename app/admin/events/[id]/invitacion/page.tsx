@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, ExternalLink } from 'lucide-react'
 import AdminLayout from '@/components/admin/AdminLayout'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -49,6 +49,26 @@ export default async function InvitationEditorPage({ params }: { params: Promise
 
   if (!event) notFound()
 
+  const { data: previewGuests } = await supabase
+    .from('guests')
+    .select('id')
+    .eq('event_id', id)
+
+  let invitationPreviewToken: string | null = null
+  const previewGuestIds = (previewGuests ?? []).map((guest) => guest.id)
+
+  if (previewGuestIds.length > 0) {
+    const { data: previewInvitation } = await supabase
+      .from('invitation_tokens')
+      .select('token')
+      .in('guest_id', previewGuestIds)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    invitationPreviewToken = previewInvitation?.token ?? null
+  }
+
   // select('*') para no romper si la columna config todavia no existe.
   const { data: branding } = await supabase
     .from('event_branding')
@@ -74,6 +94,16 @@ export default async function InvitationEditorPage({ params }: { params: Promise
               Editá la landing que recibe cada invitado. Los cambios se ven en vivo a la derecha.
             </p>
           </div>
+          {invitationPreviewToken ? (
+            <Button asChild variant="outline">
+              <Link href={`/invitacion/${invitationPreviewToken}`} target="_blank" rel="noreferrer">
+                Ver invitación en vivo
+                <ExternalLink className="size-4" />
+              </Link>
+            </Button>
+          ) : (
+            <p className="text-xs text-muted-foreground">Emití una invitación para habilitar la vista en vivo.</p>
+          )}
         </div>
 
         <InvitationEditor

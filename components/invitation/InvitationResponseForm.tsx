@@ -100,15 +100,18 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-5 text-white [&_input]:border-white/20 [&_input]:bg-black/45 [&_input]:text-white [&_input]:placeholder:text-white/40 [&_label]:text-white [&_textarea]:border-white/20 [&_textarea]:bg-black/45 [&_textarea]:text-white [&_textarea]:placeholder:text-white/40"
+    >
       <div className="grid gap-3 sm:grid-cols-2">
         <button
           type="button"
           onClick={() => setAttendanceResponse('confirmed')}
           className={`rounded-[24px] border px-4 py-4 text-left transition ${
             isConfirming
-              ? 'border-emerald-300 bg-emerald-50 text-emerald-950'
-              : 'border-border bg-white text-slate-700 hover:bg-slate-50'
+              ? 'border-emerald-300/70 bg-emerald-950/80 text-emerald-50'
+              : 'border-white/20 bg-white/10 text-white hover:bg-white/20'
           }`}
         >
           <p className="text-sm font-semibold">Confirmar asistencia</p>
@@ -119,8 +122,8 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
           onClick={() => setAttendanceResponse('declined')}
           className={`rounded-[24px] border px-4 py-4 text-left transition ${
             !isConfirming
-              ? 'border-rose-300 bg-rose-50 text-rose-950'
-              : 'border-border bg-white text-slate-700 hover:bg-slate-50'
+              ? 'border-rose-300/70 bg-rose-950/80 text-rose-50'
+              : 'border-white/20 bg-white/10 text-white hover:bg-white/20'
           }`}
         >
           <p className="text-sm font-semibold">No asistire</p>
@@ -178,7 +181,7 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
 
       {isConfirming && (
         <>
-          <div className="rounded-[24px] border border-border bg-white/70 p-4">
+          <div className="rounded-[24px] border border-white/20 bg-white/5 p-4">
             <ImageUpload
               label="Tu foto"
               hint="Se usa para validar tu identidad en el ingreso. Podés sacártela con la cámara."
@@ -214,7 +217,7 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
                 className="mt-2"
                 placeholder="0"
               />
-              <p className="mt-2 text-xs text-muted-foreground">
+              <p className="mt-2 text-xs text-white/60">
                 Cupo disponible: {companionLimit}
               </p>
             </div>
@@ -283,13 +286,13 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
       </div>
 
       {error && (
-        <div className="rounded-[24px] border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
+        <div className="rounded-[24px] border border-rose-300/50 bg-rose-950/80 p-4 text-sm text-rose-100">
           {error}
         </div>
       )}
 
       {notice && (
-        <div className="rounded-[24px] border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+        <div className="rounded-[24px] border border-emerald-300/50 bg-emerald-950/80 p-4 text-sm text-emerald-100">
           {notice}
         </div>
       )}
