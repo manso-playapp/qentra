@@ -235,10 +235,9 @@ export default function InvitationView({
 
           <div className="mt-6 grid gap-4 text-center text-sm text-white/85">
             <div>
-              <p className="text-xs uppercase tracking-[0.18em] text-white/50">Fecha y hora</p>
+              <p className="text-xs uppercase tracking-[0.18em] text-white/50">Fecha</p>
               <p className="mt-1 font-semibold">
                 {event.event_date ? formatDate(event.event_date) : 'A confirmar'}
-                {event.start_time ? ` · ${formatTime(event.start_time)} hs` : ''}
               </p>
             </div>
 
