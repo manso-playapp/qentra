@@ -182,6 +182,8 @@ export interface Guest {
   phone?: string
   /** Foto del invitado. URL firmada del bucket privado guest-photos. */
   photo_url?: string | null
+  /** Documento de identidad (DNI). Columna real `document_number`. */
+  document_number?: string | null
   status: 'pending' | 'confirmed' | 'checked_in' | 'cancelled'
   /**
    * Estado crudo de la base (7 valores del ciclo real). `status` lo colapsa a 4

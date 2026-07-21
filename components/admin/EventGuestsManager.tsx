@@ -12,6 +12,7 @@ import {
   GUEST_PAYMENT_STYLES,
   type GuestPaymentStatus,
 } from '@/lib/guest-status-display'
+import { parseInvitationDetails } from '@/lib/invitation-response'
 import { useGuestTypes, useGuests } from '@/lib/hooks'
 import { buildAbsoluteAppUrl } from '@/lib/public-url'
 import { toE164 } from '@/lib/phone'
@@ -1685,6 +1686,7 @@ export default function EventGuestsManager({
                             <p>Destino: {guest.table_assignment || 'No asignado'}</p>
                             <p>Email: {guest.email || 'No cargado'}</p>
                             <p>Telefono: {guest.phone || 'No cargado'}</p>
+                            <p>DNI: {guest.document_number || 'No cargado'}</p>
                             <p>Acceso: {formatGuestTypeAccessPolicy(guest.guest_types, event.start_time)}</p>
                           </div>
 
@@ -1795,11 +1797,43 @@ export default function EventGuestsManager({
                           </div>
                         </div>
 
-                        {guest.special_requests && (
-                          <div className="mt-4 rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm text-gray-700">
-                            Pedido especial: {guest.special_requests}
-                          </div>
-                        )}
+                        {(() => {
+                          // Los datos extras (menu, acompanantes, cancion, saludo,
+                          // observaciones) viven serializados en notes. Los parseamos
+                          // para mostrarlos de forma estructurada en lugar de un blob.
+                          const details = parseInvitationDetails(guest.special_requests)
+                          const extras = [
+                            { label: 'Menu', value: details.dietaryRequirements },
+                            { label: 'Acompanantes', value: details.companionNames },
+                            { label: 'Cancion', value: details.song },
+                            { label: 'Saludo', value: details.greeting },
+                            { label: 'Observaciones', value: details.observations },
+                          ].filter((item) => item.value.trim().length > 0)
+
+                          if (extras.length === 0) {
+                            return null
+                          }
+
+                          return (
+                            <div className="mt-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
+                              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                                Datos del invitado
+                              </p>
+                              <dl className="mt-2 grid gap-x-4 gap-y-2 text-sm sm:grid-cols-2">
+                                {extras.map((item) => (
+                                  <div key={item.label} className="flex flex-col">
+                                    <dt className="text-xs font-medium uppercase tracking-wide text-gray-400">
+                                      {item.label}
+                                    </dt>
+                                    <dd className="text-gray-700 whitespace-pre-line">
+                                      {item.value}
+                                    </dd>
+                                  </div>
+                                ))}
+                              </dl>
+                            </div>
+                          )
+                        })()}
 
                         <div className="mt-4 space-y-3">
                           {/* Enviar: un solo boton con menu. Si no hay token todavia, primero emitir. */}

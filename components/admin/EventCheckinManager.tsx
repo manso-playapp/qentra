@@ -144,9 +144,11 @@ function formatDateTime(date: string) {
 }
 
 function formatClock(date: Date) {
+  // 24h explicito (formato "22:00") para que el totem no dependa del locale.
   return new Intl.DateTimeFormat('es-AR', {
     hour: '2-digit',
     minute: '2-digit',
+    hour12: false,
   }).format(date)
 }
 
@@ -877,14 +879,14 @@ export default function EventCheckinManager({
         }}
       >
         <div className="mx-auto grid min-h-[calc(100vh-3rem)] max-w-270 grid-rows-[auto_1fr_auto] gap-8">
-          <header className="grid grid-cols-[1fr_auto] items-start gap-6">
+          <header className="grid grid-cols-2 items-start gap-6">
             <div>
               <p className="text-sm uppercase tracking-[0.34em] text-white/65">Fecha del evento</p>
-              <p className="mt-3 text-3xl font-semibold capitalize text-white">{formatEventDate(event.event_date)}</p>
+              <p className="mt-3 text-4xl font-semibold capitalize text-white">{formatEventDate(event.event_date)}</p>
             </div>
             <div className="text-right">
               <p className="text-sm uppercase tracking-[0.34em] text-white/65">Hora actual</p>
-              <p className="mt-2 text-7xl font-semibold leading-none text-white sm:text-8xl">{now ? formatClock(now) : '--:--'}</p>
+              <p className="mt-3 text-4xl font-semibold leading-none tabular-nums text-white">{now ? formatClock(now) : '--:--'}</p>
             </div>
           </header>
 

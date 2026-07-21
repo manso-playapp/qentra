@@ -22,6 +22,7 @@ type DbGuestRow = {
   email?: string | null
   phone?: string | null
   photo_url?: string | null
+  document_number?: string | null
   status?: string | null
   payment_status?: string | null
   notes?: string | null
@@ -77,6 +78,12 @@ export function normalizeGuestRecord(row: DbGuestRow): GuestWithType {
     email: row.email ?? undefined,
     phone: row.phone ?? undefined,
     photo_url: row.photo_url ?? null,
+    // DNI: fuente de verdad es la columna propia. Fallback legacy si solo esta
+    // embebido en notes (invitaciones respondidas antes de la columna propia).
+    document_number:
+      row.document_number?.trim() ||
+      parseInvitationDetails(row.notes).dni.trim() ||
+      null,
     status: normalizeGuestStatus(row.status),
     db_status: (row.status as DbGuestStatus | null) ?? undefined,
     payment_status:
