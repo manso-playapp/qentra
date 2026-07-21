@@ -5,7 +5,6 @@ import InvitationResponseForm from '@/components/invitation/InvitationResponseFo
 import InvitationView, {
   buildAccessState,
   buildCalendarUrl,
-  type InvitationConfigInfo,
   type InvitationEventInfo,
 } from '@/components/invitation/InvitationView'
 import { buildGuestAccessQrPayload } from '@/lib/guest-access'
@@ -80,20 +79,6 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
 
   const branding = (brandingResponse.data ?? null) as SurfaceBranding | null
 
-  // Config rica (dresscode, "como llegar"). Fetch separado y defensivo.
-  let invitationConfig: InvitationConfigInfo | null = null
-  if (guest?.event_id) {
-    const { data: cfgRow } = await supabase
-      .from('event_branding')
-      .select('config')
-      .eq('event_id', guest.event_id)
-      .maybeSingle()
-    const raw = (cfgRow as { config?: unknown } | null)?.config
-    if (raw && typeof raw === 'object') {
-      invitationConfig = raw as InvitationConfigInfo
-    }
-  }
-
   const invitationDetails = parseInvitationDetails(guest?.notes)
   const paymentStatus = (guest?.payment_status ?? 'not_required') as 'not_required' | 'pending' | 'approved'
 
@@ -154,7 +139,6 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
     <InvitationView
       event={eventInfo}
       branding={branding}
-      config={invitationConfig}
       guestDisplayName={guestDisplayName}
       accessState={accessState}
       calendarUrl={calendarUrl}

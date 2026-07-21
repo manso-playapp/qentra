@@ -155,7 +155,6 @@ export function buildAccessState(input: {
 type InvitationViewProps = {
   event: InvitationEventInfo
   branding: SurfaceBranding | null
-  config: InvitationConfigInfo | null
   guestDisplayName: string
   accessState: AccessState
   calendarUrl?: string | null
@@ -177,7 +176,6 @@ const FIESTA_SCHEDULE = [
 export default function InvitationView({
   event,
   branding,
-  config,
   guestDisplayName,
   accessState,
   calendarUrl,

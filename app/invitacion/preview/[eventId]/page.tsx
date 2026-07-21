@@ -2,7 +2,6 @@ import { notFound } from 'next/navigation'
 import InvitationView, {
   buildAccessState,
   buildCalendarUrl,
-  type InvitationConfigInfo,
   type InvitationEventInfo,
 } from '@/components/invitation/InvitationView'
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
@@ -21,14 +20,13 @@ export default async function InvitationPreviewPage({ params }: PreviewPageProps
   const { eventId } = await params
   const supabase = getSupabaseAdminClient() ?? (await createServerSupabaseClient())
 
-  const [eventResponse, brandingResponse, configResponse] = await Promise.all([
+  const [eventResponse, brandingResponse] = await Promise.all([
     supabase
       .from('events')
       .select('id, name, slug, event_date, start_time, venue_name, venue_address, status, description, contact_phone')
       .eq('id', eventId)
       .maybeSingle(),
     supabase.from('event_branding').select(SURFACE_BRANDING_COLUMNS).eq('event_id', eventId).maybeSingle(),
-    supabase.from('event_branding').select('config').eq('event_id', eventId).maybeSingle(),
   ])
 
   if (eventResponse.error || !eventResponse.data) {
@@ -37,13 +35,6 @@ export default async function InvitationPreviewPage({ params }: PreviewPageProps
 
   const branding = (brandingResponse.data ?? null) as SurfaceBranding | null
   const eventInfo = eventResponse.data as InvitationEventInfo
-
-  // Config rica (dresscode, "como llegar"). Defensivo.
-  let invitationConfig: InvitationConfigInfo | null = null
-  const rawConfig = (configResponse.data as { config?: unknown } | null)?.config
-  if (rawConfig && typeof rawConfig === 'object') {
-    invitationConfig = rawConfig as InvitationConfigInfo
-  }
 
   const calendarUrl = buildCalendarUrl(eventInfo)
 
@@ -60,7 +51,6 @@ export default async function InvitationPreviewPage({ params }: PreviewPageProps
     <InvitationView
       event={eventInfo}
       branding={branding}
-      config={invitationConfig}
       guestDisplayName="Invitado/a de ejemplo"
       accessState={accessState}
       calendarUrl={calendarUrl}
