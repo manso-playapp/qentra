@@ -256,7 +256,10 @@ export default function InvitationView({
             </div>
             <div>
               <dt className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500"><MapPin className="size-3" aria-hidden="true" /> Gate</dt>
-              <dd className="mt-1 truncate text-base font-bold uppercase tracking-[0.04em] sm:text-lg">{event.venue_name || 'Venue privado'}</dd>
+              <dd className="mt-1 text-base font-bold uppercase leading-tight tracking-[0.04em] sm:text-lg">
+                <span className="block">El Pirincho</span>
+                <span className="block">Aerocountry</span>
+              </dd>
             </div>
             <div>
               <dt className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Vuelo</dt>
