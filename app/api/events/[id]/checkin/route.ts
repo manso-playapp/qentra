@@ -113,7 +113,6 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       last_name,
       document_number,
       photo_url,
-      plus_ones_confirmed,
       status,
       table_assignment,
       notes,
@@ -172,10 +171,12 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     .eq('result', 'approved')
 
   // Destino (mesa) para mostrar en el totem: columna propia con fallback legacy.
-  const tableAssignment =
-    guest.table_assignment?.trim() ||
-    parseInvitationDetails(guest.notes).tableAssignment ||
-    ''
+  const invitationDetails = parseInvitationDetails(guest.notes)
+  const tableAssignment = guest.table_assignment?.trim() || invitationDetails.tableAssignment || ''
+  const companionCount = invitationDetails.companionNames
+    .split(/[\n,]/)
+    .map((name) => name.trim())
+    .filter(Boolean).length
 
   const decision = evaluateGuestAccess({
     event: eventData,
@@ -205,7 +206,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
           last_name: guest.last_name,
           document_number: guest.document_number,
           photo_url: guest.photo_url,
-          plus_ones_confirmed: guest.plus_ones_confirmed ?? 0,
+          plus_ones_confirmed: companionCount,
         },
       },
     })
@@ -223,7 +224,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
           last_name: guest.last_name,
           document_number: guest.document_number,
           photo_url: guest.photo_url,
-          plus_ones_confirmed: guest.plus_ones_confirmed ?? 0,
+          plus_ones_confirmed: companionCount,
         },
       },
     })
