@@ -13,7 +13,6 @@ import type {
   InvitationToken,
   GuestQrCode,
   GuestAccessArtifacts,
-  CheckinMethod,
   ApiResponse,
   CreateOperatorForm,
   CreateDeliveryProfileForm,
@@ -22,12 +21,6 @@ import type {
   UpdateGuestTypeForm,
   UpdateOperatorForm,
 } from '@/types'
-
-type UpdateGuestOptions = {
-  previousStatus?: Guest['status']
-  checkinMethod?: CheckinMethod
-  checkinNotes?: string
-}
 
 type CreateGuestAccessOptions = {
   eventSlug: string
@@ -643,8 +636,7 @@ export function useGuests(eventId?: string, initialGuests: GuestWithType[] = [])
 
   const updateGuest = async (
     id: string,
-    updates: UpdateGuestForm,
-    options?: UpdateGuestOptions
+    updates: UpdateGuestForm
   ): Promise<ApiResponse<Guest>> => {
     try {
       const response = await fetch(`/api/guests/${id}`, {
@@ -672,53 +664,6 @@ export function useGuests(eventId?: string, initialGuests: GuestWithType[] = [])
       setGuests((current) =>
         current.map((guest) => (guest.id === id ? data : guest))
       )
-
-      const shouldCreateCheckin =
-        updates.status === 'checked_in' &&
-        options?.previousStatus !== 'checked_in'
-
-      const shouldRevokeQrCodes =
-        updates.status === 'cancelled' &&
-        options?.previousStatus !== 'cancelled'
-
-      if (shouldCreateCheckin) {
-        const { error: checkinError } = await supabase
-          .from('checkins')
-          .insert({
-            guest_id: data.id,
-            event_id: data.event_id,
-            checked_in_at: new Date().toISOString(),
-            result: 'approved',
-            device_name: options?.checkinMethod ?? 'manual',
-            reason: options?.checkinNotes ?? null,
-          })
-
-        if (checkinError) {
-          await fetchGuests(eventId)
-          return {
-            data,
-            error: `El invitado se actualizo, pero no se pudo registrar el check-in: ${checkinError.message}`,
-          }
-        }
-      }
-
-      if (shouldRevokeQrCodes) {
-        const revokedAt = new Date().toISOString()
-        const { error: revokeQrError } = await supabase
-          .from('guest_qr_codes')
-          .update({ is_active: false, revoked_at: revokedAt })
-          .eq('guest_id', data.id)
-          .eq('is_active', true)
-
-        if (revokeQrError) {
-          await fetchGuests(eventId)
-          await fetchGuestAccess()
-          return {
-            data,
-            error: `El invitado se actualizo, pero no se pudieron revocar sus QR activos: ${revokeQrError.message}`,
-          }
-        }
-      }
 
       await fetchGuests(eventId)
       await fetchGuestAccess()

@@ -46,7 +46,7 @@ export async function PATCH(request: Request, context: GuestRouteContext) {
     // contar como ingreso y el token que se uso vuelve a quedar disponible.
     const { data: currentGuest, error: currentGuestError } = await adminClient
       .from('guests')
-      .select('status')
+      .select('status, event_id')
       .eq('id', guestId)
       .maybeSingle()
 
@@ -61,52 +61,31 @@ export async function PATCH(request: Request, context: GuestRouteContext) {
     const isCheckinReversal =
       body.restore_invitation_access === true ||
       (body.status === 'confirmed' && currentGuest.status === 'checked_in')
+    const isManualCheckin = body.status === 'checked_in' && currentGuest.status !== 'checked_in'
 
-    const restoreAccessAfterCheckinReversal = async () => {
-      if (!isCheckinReversal) return null
+    if (isCheckinReversal) {
+      const { error: reversalError } = await adminClient.rpc('revert_guest_checkin', {
+        p_guest_id: guestId,
+      })
 
-      const rollbackGuestStatus = async () => {
-        await adminClient.from('guests').update({ status: currentGuest.status }).eq('id', guestId)
+      if (reversalError) return Response.json({ error: reversalError.message }, { status: 500 })
+    }
+
+    // El ingreso manual de la tarjeta tambien pasa por la misma transaccion que
+    // el escaner. El cliente ya no escribe checkins ni QR directamente.
+    if (isManualCheckin) {
+      const { error: manualCheckinError } = await adminClient.rpc('register_guest_checkin', {
+        p_event_id: currentGuest.event_id,
+        p_guest_id: guestId,
+        p_invitation_token_id: null,
+        p_method: 'manual',
+        p_reason: 'Check-in manual desde Alista Admin',
+        p_allow_duplicate: false,
+      })
+
+      if (manualCheckinError) {
+        return Response.json({ error: manualCheckinError.message }, { status: 409 })
       }
-
-      const { error: checkinReversalError } = await adminClient
-        .from('checkins')
-        .update({ result: 'rejected', reason: 'Ingreso revertido desde Alista Admin' })
-        .eq('guest_id', guestId)
-        .eq('result', 'approved')
-
-      if (checkinReversalError) {
-        await rollbackGuestStatus()
-        return checkinReversalError.message
-      }
-
-      const { data: usedToken, error: usedTokenError } = await adminClient
-        .from('invitation_tokens')
-        .select('id')
-        .eq('guest_id', guestId)
-        .not('last_used_at', 'is', null)
-        .order('last_used_at', { ascending: false })
-        .limit(1)
-        .maybeSingle()
-
-      if (usedTokenError) {
-        await rollbackGuestStatus()
-        return usedTokenError.message
-      }
-
-      if (!usedToken) return null
-
-      const { error: restoreTokenError } = await adminClient
-        .from('invitation_tokens')
-        .update({ used_count: 0, last_used_at: null, is_active: true })
-        .eq('id', usedToken.id)
-
-      if (restoreTokenError) {
-        await rollbackGuestStatus()
-        return restoreTokenError.message
-      }
-
-      return null
     }
 
     if (body.guest_type_id !== undefined) payload.guest_type_id = body.guest_type_id
@@ -189,18 +168,12 @@ export async function PATCH(request: Request, context: GuestRouteContext) {
           return Response.json({ error: retryError.message }, { status: 500 })
         }
 
-        const reversalError = await restoreAccessAfterCheckinReversal()
-        if (reversalError) return Response.json({ error: reversalError }, { status: 500 })
-
         return Response.json({ data: normalizeGuestRecord(retryData) })
       }
 
       if (error) {
         return Response.json({ error: error.message }, { status: 500 })
       }
-
-      const reversalError = await restoreAccessAfterCheckinReversal()
-      if (reversalError) return Response.json({ error: reversalError }, { status: 500 })
 
       return Response.json({ data: normalizeGuestRecord(data) })
     }
@@ -226,9 +199,6 @@ export async function PATCH(request: Request, context: GuestRouteContext) {
     if (error) {
       return Response.json({ error: error.message }, { status: 500 })
     }
-
-    const reversalError = await restoreAccessAfterCheckinReversal()
-    if (reversalError) return Response.json({ error: reversalError }, { status: 500 })
 
     return Response.json({ data: normalizeGuestRecord(data) })
   } catch (error) {

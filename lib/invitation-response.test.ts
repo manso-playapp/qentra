@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { buildAccessState } from '@/components/invitation/InvitationView'
 
 import {
   isInvitationAccessReady,
@@ -292,14 +293,28 @@ describe('isInvitationAccessReady — non-payment branches', () => {
     }
   )
 
-  it('is ready when checked_in even with no paymentStatus argument', () => {
-    expect(isInvitationAccessReady('checked_in')).toBe(true)
+  it('is NOT ready when checked_in even with no paymentStatus argument', () => {
+    expect(isInvitationAccessReady('checked_in')).toBe(false)
   })
 
   it.each(['not_required', 'pending', 'approved'] as const)(
-    'is ready when checked_in regardless of payment "%s"',
+    'is NOT ready when checked_in regardless of payment "%s"',
     (status) => {
-      expect(isInvitationAccessReady('checked_in', status)).toBe(true)
+      expect(isInvitationAccessReady('checked_in', status)).toBe(false)
     }
   )
+})
+
+describe('buildAccessState', () => {
+  it('informa el ingreso registrado aun si fue manual y no consumio token', () => {
+    expect(
+      buildAccessState({
+        invitationUsed: false,
+        eventInactive: false,
+        accessReady: false,
+        invitationResponse: 'checked_in',
+        paymentStatus: 'not_required',
+      }).title
+    ).toBe('Tu ingreso ya fue registrado en puerta')
+  })
 })

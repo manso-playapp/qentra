@@ -179,9 +179,10 @@ export function isInvitationAccessReady(
   guestStatus?: string | null,
   paymentStatus: ParsedInvitationDetails['paymentStatus'] = 'not_required'
 ) {
-  if (guestStatus === 'checked_in') {
-    return true
-  }
+  // Un invitado que ya ingreso no debe volver a recibir un QR aunque el token
+  // siga activo por un registro historico. La puerta y la invitacion comparten
+  // esta regla: solo un invitado habilitado puede mostrar acceso.
+  if (guestStatus === 'checked_in') return false
 
   if (guestStatus !== 'enabled') {
     return false

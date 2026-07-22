@@ -231,43 +231,25 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     })
   }
 
-  const now = new Date().toISOString()
-
-  // Consumir el token de invitacion (un solo uso, salvo max_uses mayor).
-  if (invitationToken && !invitationToken.last_used_at) {
-    const nextUsedCount = (invitationToken.used_count ?? 0) + 1
-    const maxUses = invitationToken.max_uses ?? 1
-    const { error: tokenUpdateError } = await adminClient
-      .from('invitation_tokens')
-      .update({ used_count: nextUsedCount, last_used_at: now, is_active: nextUsedCount < maxUses })
-      .eq('id', invitationToken.id)
-
-    if (tokenUpdateError) return Response.json({ error: tokenUpdateError.message }, { status: 500 })
-  }
-
-  const { error: guestUpdateError } = await adminClient
-    .from('guests')
-    .update({ status: 'checked_in' })
-    .eq('id', guest.id)
-
-  if (guestUpdateError) return Response.json({ error: guestUpdateError.message }, { status: 500 })
-
   const reason = override
     ? `Override ${override.code}: ${override.reason ?? ''}`.trim()
     : method === 'qr'
       ? 'Check-in desde QR en admin'
       : 'Check-in manual desde admin'
 
-  const { error: checkinInsertError } = await adminClient.from('checkins').insert({
-    guest_id: guest.id,
-    event_id: eventId,
-    checked_in_at: now,
-    result: 'approved',
-    device_name: method,
-    reason,
+  // La base consume el token, marca al invitado, revoca el QR legado y crea el
+  // check-in en una misma transaccion. Ninguna superficie puede ver un estado
+  // intermedio si la red se corta durante el escaneo.
+  const { error: registerError } = await adminClient.rpc('register_guest_checkin', {
+    p_event_id: eventId,
+    p_guest_id: guest.id,
+    p_invitation_token_id: invitationToken?.id ?? null,
+    p_method: method,
+    p_reason: reason,
+    p_allow_duplicate: Boolean(override),
   })
 
-  if (checkinInsertError) return Response.json({ error: checkinInsertError.message }, { status: 500 })
+  if (registerError) return Response.json({ error: registerError.message }, { status: 409 })
 
   return Response.json({
     data: {

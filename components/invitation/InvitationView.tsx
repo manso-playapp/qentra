@@ -109,6 +109,16 @@ export function buildAccessState(input: {
     }
   }
 
+  if (invitationResponse === 'checked_in') {
+    return {
+      label: 'Ingreso registrado',
+      title: 'Tu ingreso ya fue registrado en puerta',
+      detail: 'Si necesitÃ¡s ayuda, acercate al control de acceso.',
+      tone: 'border-amber-300/35 bg-amber-950/80 text-amber-50',
+      pill: 'bg-amber-300/15 text-amber-100',
+    }
+  }
+
   if (accessReady) {
     return {
       label: 'Acceso confirmado',

@@ -12,7 +12,7 @@ import {
   GUEST_PAYMENT_STYLES,
   type GuestPaymentStatus,
 } from '@/lib/guest-status-display'
-import { parseInvitationDetails } from '@/lib/invitation-response'
+import { isInvitationAccessReady, parseInvitationDetails } from '@/lib/invitation-response'
 import { useGuestTypes, useGuests } from '@/lib/hooks'
 import { buildAbsoluteAppUrl } from '@/lib/public-url'
 import { toE164 } from '@/lib/phone'
@@ -625,11 +625,7 @@ export default function EventGuestsManager({
       special_requests: trimOptionalValue(editGuestForm.special_requests),
     }
 
-    const result = await updateGuest(guestId, payload, {
-      previousStatus: visibleGuests.find((guest) => guest.id === guestId)?.status,
-      checkinMethod: 'manual',
-      checkinNotes: 'Registro desde Alista Admin',
-    })
+    const result = await updateGuest(guestId, payload)
 
     if (result.error) {
       setGuestRowActionError(result.error)
@@ -657,11 +653,7 @@ export default function EventGuestsManager({
       payload.plus_ones_confirmed = guest.plus_ones_allowed
     }
 
-    const result = await updateGuest(guest.id, payload, {
-      previousStatus: guest.status,
-      checkinMethod: 'manual',
-      checkinNotes: 'Registro desde Alista Admin',
-    })
+    const result = await updateGuest(guest.id, payload)
 
     if (result.error) {
       setGuestRowActionError(result.error)
@@ -1620,14 +1612,22 @@ export default function EventGuestsManager({
                         {(() => {
                           const latestToken = latestInvitationTokenByGuestId.get(guest.id)
                           const latestQrCode = latestGuestQrByGuestId.get(guest.id)
-                          const hasRenderableQr = Boolean(
-                            latestQrCode?.is_active && latestQrCode?.qr_image_url
-                          )
-                          const accessReady =
-                            guest.status === 'confirmed' || guest.status === 'checked_in'
-
                           const dbStatus: DbGuestStatus =
                             guest.db_status ?? mapGuestStatusToDb(guest.status)
+                          const invitationWasUsed = Boolean(
+                            latestToken?.last_used_at || (latestToken?.used_count ?? 0) > 0 || latestToken?.is_active === false
+                          )
+                          const accessReady =
+                            isInvitationAccessReady(dbStatus, guest.payment_status ?? 'not_required') &&
+                            Boolean(latestToken) &&
+                            !invitationWasUsed
+                          const renderableQrImageUrl =
+                            accessReady &&
+                              latestQrCode?.qr_image_url &&
+                              latestToken &&
+                              latestQrCode.qr_value.includes(latestToken.token)
+                              ? latestQrCode.qr_image_url
+                              : null
                           const isExpanded = expandedGuestIds.has(guest.id)
 
                           return (
@@ -1714,31 +1714,33 @@ export default function EventGuestsManager({
                               <div>
                                 <p className="text-xs uppercase tracking-wide text-gray-500">Acceso digital</p>
                                 <p className="mt-1 text-sm font-medium text-gray-900">
-                                  {hasRenderableQr
+                                  {guest.status === 'checked_in'
+                                    ? 'Ingreso registrado'
+                                    : accessReady
                                     ? 'QR final habilitado'
                                     : latestToken
-                                    ? 'Link de gestion emitido'
+                                    ? invitationWasUsed
+                                      ? 'Acceso ya utilizado'
+                                      : 'Link de gestion emitido'
                                     : 'Sin invitacion emitida'}
                                 </p>
                               </div>
                               <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                                hasRenderableQr
+                                guest.status === 'checked_in'
+                                  ? 'bg-blue-100 text-blue-800'
+                                  : accessReady
                                   ? 'bg-emerald-100 text-emerald-800'
-                                  : latestQrCode?.revoked_at
-                                  ? 'bg-red-100 text-red-700'
-                                  : latestQrCode?.is_active
+                                  : invitationWasUsed
                                   ? 'bg-amber-100 text-amber-800'
                                   : 'bg-gray-100 text-gray-700'
                               }`}>
-                                {hasRenderableQr
-                                  ? 'QR activo'
-                                  : latestQrCode?.revoked_at
-                                  ? 'QR revocado'
-                                  : latestQrCode?.is_active
-                                  ? 'QR pendiente'
-                                  : latestQrCode
-                                  ? 'QR inactivo'
-                                  : 'Sin QR'}
+                                {guest.status === 'checked_in'
+                                  ? 'Ingresado'
+                                  : accessReady
+                                  ? 'Habilitado'
+                                  : invitationWasUsed
+                                  ? 'Usado'
+                                  : 'Pendiente'}
                               </span>
                             </div>
 
@@ -1775,7 +1777,7 @@ export default function EventGuestsManager({
                                   'No disponible'
                                 )}
                               </p>
-                              {!accessReady && latestToken && (
+                              {!accessReady && guest.status !== 'checked_in' && latestToken && (
                                 <p className="text-amber-700">
                                   El QR final se habilita cuando el invitado confirma asistencia y queda listo para ingresar.
                                 </p>
@@ -1784,9 +1786,9 @@ export default function EventGuestsManager({
                           </div>
 
                           <div className="flex aspect-square w-full max-w-45 items-center justify-center justify-self-center rounded-lg border border-gray-200 bg-white p-2">
-                            {latestQrCode?.qr_image_url ? (
+                            {renderableQrImageUrl ? (
                               <Image
-                                src={latestQrCode.qr_image_url}
+                                src={renderableQrImageUrl}
                                 alt={`QR de acceso para ${guest.first_name} ${guest.last_name}`}
                                 width={180}
                                 height={180}

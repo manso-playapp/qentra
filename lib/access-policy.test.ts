@@ -267,8 +267,8 @@ describe('isInvitationAccessReady — paymentStatus gating', () => {
     expect(isInvitationAccessReady('enabled', 'pending')).toBe(false)
   })
 
-  it('is ready when already checked_in regardless of pending payment', () => {
-    expect(isInvitationAccessReady('checked_in', 'pending')).toBe(true)
+  it('is NOT ready when already checked_in', () => {
+    expect(isInvitationAccessReady('checked_in', 'pending')).toBe(false)
   })
 
   it('is NOT ready when payment approved but status is not enabled', () => {

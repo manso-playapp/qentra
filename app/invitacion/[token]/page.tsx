@@ -112,6 +112,8 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
     Boolean(invitationToken.last_used_at) ||
     (invitationToken.used_count ?? 0) > 0 ||
     invitationToken.is_active === false
+  const canEditInvitation =
+    !accessReady && !invitationUsed && invitationResponse !== 'checked_in'
   const eventInactive = event?.status === 'cancelled' || event?.status === 'inactive'
 
   const accessState = buildAccessState({
@@ -153,7 +155,7 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
       accessState={accessState}
       calendarUrl={calendarUrl}
     >
-      {!accessReady ? (
+      {canEditInvitation ? (
         <section className="relative overflow-hidden rounded-[28px] border border-slate-300 bg-[#eed8d2] p-6 pt-7 text-slate-950 shadow-2xl before:absolute before:inset-x-0 before:top-0 before:h-1.5 before:bg-[#fcb39e] [&>p:first-child]:border-b-2 [&>p:first-child]:border-dashed [&>p:first-child]:border-slate-300 [&>p:first-child]:pb-4 [&_h3]:!text-slate-950 [&_p]:!text-slate-600">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/50">Paso previo al ingreso</p>
           <h3 className="mt-2 text-xl font-semibold text-white">Confirmá tu asistencia y completá tus datos</h3>
