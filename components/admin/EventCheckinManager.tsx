@@ -867,8 +867,20 @@ export default function EventCheckinManager({
               : 'url(/portada.jpg) center/cover no-repeat',
           }}
         >
-          {totemSpotlight && (
-            <section className="flex size-full items-center justify-center px-6 py-6 sm:px-10">
+          <div className="mx-auto grid min-h-full max-w-270 grid-rows-[auto_1fr_auto] gap-8 px-6 py-6 sm:px-10">
+            <header className="grid grid-cols-2 items-start gap-6">
+              <div>
+                <p className="text-sm uppercase tracking-[0.34em] text-white/65">Fecha del evento</p>
+                <p className="mt-3 text-4xl font-semibold capitalize text-white">{formatEventDate(event.event_date)}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-sm uppercase tracking-[0.34em] text-white/65">Hora actual</p>
+                <p className="mt-3 text-4xl font-semibold leading-none tabular-nums text-white">{now ? formatClock(now) : '--:--'}</p>
+              </div>
+            </header>
+
+            <section className="flex min-h-0 items-center justify-center">
+              {totemSpotlight && (
               <div className="flex w-full max-w-230 flex-col items-center justify-center rounded-[42px] border border-white/10 bg-black/28 px-8 py-10 text-center shadow-[0_35px_120px_rgba(0,0,0,0.35)] backdrop-blur-sm">
                 <p className="text-sm uppercase tracking-[0.34em] text-emerald-200/90">{approvedMessage}</p>
                 <div
@@ -894,8 +906,22 @@ export default function EventCheckinManager({
                   Acceso validado a las {formatClock(new Date(totemSpotlight.checkinTime))}
                 </p>
               </div>
+              )}
             </section>
-          )}
+
+            <footer className="flex flex-col items-center gap-4 text-center">
+              <div className="flex items-center gap-3 rounded-full border border-white/10 bg-white/6 px-5 py-2 text-sm text-white/70">
+                <span
+                  className="h-2.5 w-2.5 rounded-full"
+                  style={{ backgroundColor: totemSpotlight ? '#34d399' : totemAccent }}
+                />
+                {totemSpotlight ? 'Ingreso registrado correctamente' : 'Pantalla de bienvenida del evento'}
+              </div>
+              <p className="text-xs uppercase tracking-[0.3em] text-white/40">
+                Desarrollado por Alista
+              </p>
+            </footer>
+          </div>
         </main>
       </div>
     )
