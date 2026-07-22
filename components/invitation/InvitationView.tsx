@@ -179,7 +179,7 @@ export default function InvitationView({
 
   return (
     <main
-      className="relative min-h-screen bg-black px-4 pb-8 text-white sm:px-6"
+      className="relative min-h-screen min-h-[100dvh] overscroll-y-none bg-black px-4 pb-8 text-white sm:px-6"
       style={{
         backgroundColor: '#000',
         backgroundImage: 'url(/portada.jpg)',

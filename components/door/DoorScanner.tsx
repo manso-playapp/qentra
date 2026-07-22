@@ -86,16 +86,22 @@ export default function DoorScanner({ event }: DoorScannerProps) {
   useEffect(() => {
     const bodyOverflow = document.body.style.overflow
     const bodyOverscroll = document.body.style.overscrollBehavior
+    const bodyBackground = document.body.style.backgroundColor
     const htmlOverflow = document.documentElement.style.overflow
+    const htmlBackground = document.documentElement.style.backgroundColor
 
     document.body.style.overflow = 'hidden'
     document.body.style.overscrollBehavior = 'none'
+    document.body.style.backgroundColor = '#020617'
     document.documentElement.style.overflow = 'hidden'
+    document.documentElement.style.backgroundColor = '#020617'
 
     return () => {
       document.body.style.overflow = bodyOverflow
       document.body.style.overscrollBehavior = bodyOverscroll
+      document.body.style.backgroundColor = bodyBackground
       document.documentElement.style.overflow = htmlOverflow
+      document.documentElement.style.backgroundColor = htmlBackground
     }
   }, [])
 

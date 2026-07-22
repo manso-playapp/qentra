@@ -649,6 +649,10 @@ export default function EventGuestsManager({
 
     const payload: UpdateGuestForm = { status }
 
+    if (status === 'confirmed' && guest.status === 'checked_in') {
+      payload.restore_invitation_access = true
+    }
+
     if (status === 'checked_in' && guest.status === 'pending') {
       payload.plus_ones_confirmed = guest.plus_ones_allowed
     }

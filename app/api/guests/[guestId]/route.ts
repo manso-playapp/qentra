@@ -58,7 +58,9 @@ export async function PATCH(request: Request, context: GuestRouteContext) {
       return Response.json({ error: 'Invitado inexistente.' }, { status: 404 })
     }
 
-    const isCheckinReversal = body.status === 'confirmed' && currentGuest.status === 'checked_in'
+    const isCheckinReversal =
+      body.restore_invitation_access === true ||
+      (body.status === 'confirmed' && currentGuest.status === 'checked_in')
 
     const restoreAccessAfterCheckinReversal = async () => {
       if (!isCheckinReversal) return null
@@ -69,7 +71,7 @@ export async function PATCH(request: Request, context: GuestRouteContext) {
 
       const { error: checkinReversalError } = await adminClient
         .from('checkins')
-        .update({ result: 'denied', reason: 'Ingreso revertido desde Alista Admin' })
+        .update({ result: 'rejected', reason: 'Ingreso revertido desde Alista Admin' })
         .eq('guest_id', guestId)
         .eq('result', 'approved')
 

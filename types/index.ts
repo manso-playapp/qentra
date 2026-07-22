@@ -271,7 +271,14 @@ export interface Checkin {
   operator_user_id?: string | null
   /** Guardamos acá el método (qr/manual/totem). */
   device_name?: string | null
-  result: 'approved' | 'denied'
+  result:
+    | 'approved'
+    | 'rejected'
+    | 'duplicate'
+    | 'invalid_qr'
+    | 'outside_schedule'
+    | 'capacity_full'
+    | 'assistance_required'
   reason?: string | null
   checked_in_at: string
   created_at: string
@@ -386,6 +393,8 @@ export interface UpdateGuestForm {
   plus_ones_confirmed?: number
   special_requests?: string
   table_assignment?: string | null
+  /** Marca una reversión de ingreso para reactivar el QR que se consumió. */
+  restore_invitation_access?: boolean
 }
 
 // API Response types
