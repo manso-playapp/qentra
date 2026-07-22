@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import AdminLayout from '@/components/admin/AdminLayout'
+import DoorScannerLink from '@/components/admin/DoorScannerLink'
 import EventCheckinManager from '@/components/admin/EventCheckinManager'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import type { Event } from '@/types'
@@ -37,6 +38,7 @@ export default async function EventCheckinPage({ params }: EventCheckinPageProps
 
   return (
     <AdminLayout>
+      <DoorScannerLink eventId={id} />
       <EventCheckinManager event={data as Pick<Event, 'id' | 'name' | 'slug' | 'event_date' | 'start_time' | 'max_capacity'>} />
     </AdminLayout>
   )

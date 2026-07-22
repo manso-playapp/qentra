@@ -41,7 +41,6 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
   const [plusOnesConfirmed, setPlusOnesConfirmed] = useState(String(initialData.plusOnesConfirmed))
   const [companionNames, setCompanionNames] = useState(initialData.companionNames)
   const [dietaryRequirements, setDietaryRequirements] = useState(initialData.dietaryRequirements)
-  const [song, setSong] = useState(initialData.song)
   const [observations, setObservations] = useState(initialData.observations)
   const [photoUrl, setPhotoUrl] = useState(initialData.photoUrl)
   const [loading, setLoading] = useState(false)
@@ -73,7 +72,7 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
           plusOnesConfirmed: isConfirming ? Number.parseInt(plusOnesConfirmed || '0', 10) || 0 : 0,
           companionNames: isConfirming ? companionNames : '',
           dietaryRequirements: isConfirming ? dietaryRequirements : '',
-          song: isConfirming ? song : '',
+          song: isConfirming ? initialData.song : '',
           greeting: isConfirming ? initialData.greeting : '',
           observations,
         }),
@@ -109,8 +108,8 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
           onClick={() => setAttendanceResponse('confirmed')}
           className={`rounded-3xl border px-4 py-4 text-left transition ${
             isConfirming
-              ? 'border-emerald-300/70 bg-emerald-950/80 text-emerald-50'
-              : 'border-slate-300 bg-white/60 text-slate-800 hover:bg-slate-100'
+              ? 'border-emerald-300/70 bg-emerald-950/80 text-white'
+              : 'border-slate-700 bg-slate-700 text-white hover:bg-slate-800'
           }`}
         >
           <p className="text-sm font-semibold">Confirmar asistencia</p>
@@ -121,8 +120,8 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
           onClick={() => setAttendanceResponse('declined')}
           className={`rounded-3xl border px-4 py-4 text-left transition ${
             !isConfirming
-              ? 'border-rose-300/70 bg-rose-950/80 text-rose-50'
-              : 'border-slate-300 bg-white/60 text-slate-800 hover:bg-slate-100'
+              ? 'border-rose-300/70 bg-rose-950/80 text-white'
+              : 'border-slate-700 bg-slate-700 text-white hover:bg-slate-800'
           }`}
         >
           <p className="text-sm font-semibold">No asistire</p>
@@ -192,7 +191,7 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
             />
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className={`grid gap-4 ${companionLimit > 0 ? 'sm:grid-cols-2' : ''}`}>
             <div>
               <Label htmlFor="invitation-dni">DNI</Label>
               <Input
@@ -204,22 +203,24 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
               />
             </div>
 
-            <div>
-              <Label htmlFor="invitation-plus-ones">Acompanantes confirmados</Label>
-              <Input
-                id="invitation-plus-ones"
-                type="number"
-                min="0"
-                max={String(companionLimit)}
-                value={plusOnesConfirmed}
-                onChange={(event) => setPlusOnesConfirmed(event.target.value)}
-                className="mt-2"
-                placeholder="0"
-              />
-              <p className="mt-2 text-xs text-slate-500">
-                Cupo disponible: {companionLimit}
-              </p>
-            </div>
+            {companionLimit > 0 && (
+              <div>
+                <Label htmlFor="invitation-plus-ones">Acompanantes confirmados</Label>
+                <Input
+                  id="invitation-plus-ones"
+                  type="number"
+                  min="0"
+                  max={String(companionLimit)}
+                  value={plusOnesConfirmed}
+                  onChange={(event) => setPlusOnesConfirmed(event.target.value)}
+                  className="mt-2"
+                  placeholder="0"
+                />
+                <p className="mt-2 text-xs text-slate-500">
+                  Cupo disponible: {companionLimit}
+                </p>
+              </div>
+            )}
           </div>
 
           {companionLimit > 0 && (
@@ -247,16 +248,6 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
             />
           </div>
 
-          <div>
-            <Label htmlFor="invitation-song">Tu cancion 🎵</Label>
-            <Input
-              id="invitation-song"
-              value={song}
-              onChange={(event) => setSong(event.target.value)}
-              className="mt-2"
-              placeholder="La que no puede faltar en la pista"
-            />
-          </div>
 
         </>
       )}

@@ -20,6 +20,7 @@ type CheckinRequestBody = {
   token?: string
   guestId?: string
   method?: CheckinMethod
+  intent?: 'preview' | 'approve'
   override?: { code?: string; reason?: string }
 }
 
@@ -52,6 +53,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const body = (await request.json().catch(() => null)) as CheckinRequestBody | null
   const token = body?.token?.trim()
   const method: CheckinMethod = body?.method ?? 'manual'
+  const isPreview = body?.intent === 'preview'
   const override = body?.override?.code ? body.override : undefined
 
   if (!token && !body?.guestId) {
@@ -109,6 +111,9 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       event_id,
       first_name,
       last_name,
+      document_number,
+      photo_url,
+      plus_ones_confirmed,
       status,
       table_assignment,
       notes,
@@ -195,7 +200,31 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
         detail: decision.detail,
         overrideable: isOverrideable(decision.code),
         decisionCode: decision.code,
-        guest: { first_name: guest.first_name, last_name: guest.last_name },
+        guest: {
+          first_name: guest.first_name,
+          last_name: guest.last_name,
+          document_number: guest.document_number,
+          photo_url: guest.photo_url,
+          plus_ones_confirmed: guest.plus_ones_confirmed ?? 0,
+        },
+      },
+    })
+  }
+
+  if (isPreview) {
+    return Response.json({
+      data: {
+        outcome: 'ready',
+        kind: 'success',
+        title: 'Acceso válido',
+        detail: 'Verifica la identidad y aprueba el ingreso para registrarlo.',
+        guest: {
+          first_name: guest.first_name,
+          last_name: guest.last_name,
+          document_number: guest.document_number,
+          photo_url: guest.photo_url,
+          plus_ones_confirmed: guest.plus_ones_confirmed ?? 0,
+        },
       },
     })
   }

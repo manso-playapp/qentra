@@ -128,8 +128,8 @@ export const MVP_FEATURES: MvpFeature[] = [
     module: 'checkin',
     status: 'done',
     detail:
-      'Escaneo por camara con jsQR mas ingreso manual del token. Probado end-to-end: invitacion por mail, registro con foto, lectura en la puerta y festejo en el totem, todo funcionando con el registro persistido.',
-    evidence: ['components/admin/EventCheckinManager.tsx', 'app/puerta/[id]/page.tsx'],
+      'Modo Puerta móvil con cámara, prevalidación, foto, DNI, menores confirmados y aprobación explícita. El notebook conserva monitoreo, actividad, búsqueda y excepciones; desde allí genera un QR para abrir el escáner en otro celular autenticado.',
+    evidence: ['components/door/DoorScanner.tsx', 'components/admin/DoorScannerLink.tsx', 'app/api/events/[id]/checkin/route.ts'],
   },
   {
     id: 'validacion-horario',
@@ -190,8 +190,8 @@ export const MVP_FEATURES: MvpFeature[] = [
     module: 'admin',
     status: 'partial',
     detail:
-      'Editor dedicado con preview en vivo de dos paneles: aspecto (colores, tipografia, subida de logo/portada/fondo), info (dresscode, como llegar) y widgets opcionales (mensaje, trivia, Spotify) + toggles de campos. Todo persiste (aspecto e imagenes en columnas; la config rica en event_branding.config). La invitacion publica muestra dresscode y como llegar.',
-    gap: 'Falta Spotify real (buscar y sumar temas), guardar respuestas de trivia y que los toggles de campos afecten el formulario publico y su validacion.',
+      'Editor dedicado con preview de aspecto, imágenes, información y trivia. La invitación pública usa una composición de boarding pass controlada, con dress code, regalo, ubicación y formulario de confirmación.',
+    gap: 'Falta que los controles persistidos del editor afecten de forma completa la composición pública y sumar una trivia funcional si vuelve a ser necesaria.',
     evidence: ['components/admin/InvitationEditor.tsx', 'app/api/events/[id]/invitation/route.ts'],
   },
   {
@@ -214,6 +214,10 @@ export const MVP_FEATURES: MvpFeature[] = [
 
 /** Cosas construidas que el MVP no pedia. Sirven para no subestimar el avance. */
 export const BEYOND_MVP: { title: string; detail: string }[] = [
+  {
+    title: 'Puerta móvil emparejable desde notebook',
+    detail: 'El panel de check-in muestra un QR que abre Modo puerta en otro celular autenticado, separado de la superficie de monitoreo detallado.',
+  },
   {
     title: 'Override de seguridad',
     detail: 'Ingreso forzado con PIN de operador y PIN de supervisor, con comparacion timing-safe y auditoria.',

@@ -598,6 +598,14 @@ export default function EventCheckinManager({
       return status
     }
 
+    if (!isDoorMode && !isTotemMode) {
+      return {
+        kind: 'success' as const,
+        title: 'Monitoreo activo',
+        detail: 'Los ingresos se escanean desde Modo puerta. Este panel concentra actividad, búsqueda y excepciones.',
+      }
+    }
+
     if (scannerActive) {
       return {
         kind: 'success' as const,
@@ -611,7 +619,7 @@ export default function EventCheckinManager({
       title: 'Listo para recibir',
       detail: 'Escanea o pega un acceso. La puerta valida duplicados, horario y vigencia antes del ingreso.',
     }
-  }, [processingCheckin, scannerActive, status])
+  }, [isDoorMode, isTotemMode, processingCheckin, scannerActive, status])
 
   // Valida y registra el check-in en el servidor (service role). El cliente ya
   // no lee/escribe invitation_tokens, guests ni checkins: RLS se lo bloqueaba.
@@ -1576,23 +1584,23 @@ export default function EventCheckinManager({
         </div>
       </div>
 
-      <div className={`grid gap-6 ${isTotemMode ? 'xl:grid-cols-1' : isDoorMode ? 'xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.85fr)]' : 'xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.9fr)]'}`}>
-        <section className="space-y-6">
-          <div className={`rounded-2xl border p-6 shadow-sm ${statusTone.shell}`}>
+      <div className={`grid gap-4 ${isTotemMode ? 'xl:grid-cols-1' : isDoorMode ? 'xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.85fr)]' : 'xl:grid-cols-[minmax(0,1.2fr)_minmax(360px,0.8fr)]'}`}>
+        <section className="space-y-4">
+          <div className={`rounded-2xl border p-4 shadow-sm ${statusTone.shell}`}>
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] ${statusTone.badge}`}>
                   {statusTone.eyebrow}
                 </span>
-                <h2 className="mt-4 text-3xl font-semibold">{statusSummary.title}</h2>
+                <h2 className="mt-2 text-2xl font-semibold">{statusSummary.title}</h2>
                 <p className="mt-2 max-w-3xl text-sm/6 opacity-90">{statusSummary.detail}</p>
               </div>
               <div className={`rounded-2xl px-4 py-3 text-sm font-medium ${statusTone.badge}`}>
-                {scannerActive ? 'Camara abierta' : 'Camara en espera'}
+                Panel detallado
               </div>
             </div>
 
-            <div className="mt-5 grid gap-3 md:grid-cols-3">
+            <div className="mt-5 hidden grid gap-3 md:grid-cols-3">
               <div className={`rounded-2xl px-4 py-3 ${statusTone.badge}`}>
                 <p className="text-xs uppercase tracking-[0.18em] opacity-80">Capacidad esperada</p>
                 <p className="mt-2 text-2xl font-semibold">{doorMetrics.expectedPeople}</p>
@@ -1608,66 +1616,12 @@ export default function EventCheckinManager({
             </div>
           </div>
 
-          <div className={`rounded-xl border border-gray-200 bg-white p-6 shadow-sm ${isTotemMode ? 'max-w-5xl' : ''}`}>
+          <div className={`rounded-xl border border-gray-200 bg-white p-4 shadow-sm ${isTotemMode ? 'max-w-5xl' : ''}`}>
             <div>
-            <h2 className="text-lg font-semibold text-gray-900">Validar acceso</h2>
+            <h2 className="text-lg font-semibold text-gray-900">Validación manual y excepciones</h2>
             <p className="mt-1 text-sm text-gray-600">
-              Escanea con la camara el QR que el invitado exhibe en su celular, WhatsApp o email. Si hace falta, tambien puedes pegar token o `qr_data`.
+              El escaneo se realiza desde Modo puerta. Acá podés pegar un token o `qr_data` para resolver casos excepcionales.
             </p>
-            </div>
-
-            <div className={`mt-5 rounded-xl border border-gray-200 bg-gray-50 p-4 ${isTotemMode ? 'border-2 border-slate-900/10' : ''}`}>
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h3 className="font-medium text-gray-900">{isTotemMode ? 'Scanner de totem' : 'Scanner de puerta'}</h3>
-                <p className="mt-1 text-sm text-gray-600">
-                  {isTotemMode
-                    ? 'Modo enfocado para tablet o puesto fijo de ingreso.'
-                    : 'Pensado para recepcion desde celular o tablet con camara trasera.'}
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-3">
-                <button
-                  type="button"
-                  onClick={startScanner}
-                  disabled={processingCheckin}
-                  className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {scannerActive ? 'Reiniciar camara' : 'Abrir camara'}
-                </button>
-                {scannerActive && (
-                  <button
-                    type="button"
-                    onClick={stopScanner}
-                    className="inline-flex items-center rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                  >
-                    Detener
-                  </button>
-                )}
-              </div>
-            </div>
-
-            <div className="mt-4 overflow-hidden rounded-lg border border-gray-200 bg-black">
-              <video
-                ref={videoRef}
-                muted
-                playsInline
-                className={`w-full object-cover ${isTotemMode ? 'aspect-16/10' : 'aspect-4/3'}`}
-              />
-            </div>
-            <canvas ref={canvasRef} className="hidden" />
-
-            {!scannerSupported && (
-              <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-                Este navegador no soporta acceso a camara para el scanner.
-              </div>
-            )}
-
-            {scannerMessage && (
-              <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800">
-                {scannerMessage}
-              </div>
-            )}
             </div>
 
             <form onSubmit={consumeAccess} className="mt-5 space-y-4">
@@ -1679,7 +1633,7 @@ export default function EventCheckinManager({
                 id="access-input"
                 value={accessInput}
                 onChange={(eventInput) => setAccessInput(eventInput.target.value)}
-                rows={isTotemMode ? 5 : 8}
+                rows={isTotemMode ? 5 : 4}
                 className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-3 font-mono text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                 placeholder='alista_xxx o {"kind":"alista_guest_access","token":"alista_xxx",...}'
               />
@@ -1813,8 +1767,8 @@ export default function EventCheckinManager({
         </section>
 
         {!isTotemMode && (
-        <aside className="space-y-6">
-          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <aside className="flex flex-col gap-4">
+          <div className="hidden rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <h2 className="text-lg font-semibold text-gray-900">Control de puerta</h2>
@@ -1845,7 +1799,7 @@ export default function EventCheckinManager({
             </div>
           </div>
 
-          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <h2 className="text-lg font-semibold text-gray-900">Busqueda manual</h2>
@@ -1934,8 +1888,8 @@ export default function EventCheckinManager({
             )}
           </div>
 
-          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-gray-900">Reglas actuales</h2>
+          <details className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+            <summary className="cursor-pointer text-lg font-semibold text-gray-900">Reglas actuales</summary>
             <div className="mt-4 space-y-3 text-sm text-gray-600">
               <p>Solo se aceptan tokens del evento actual.</p>
               <p>El flujo principal esta pensado para leer por camara el QR que el invitado muestra en puerta.</p>
@@ -1947,9 +1901,9 @@ export default function EventCheckinManager({
               <p>Al validar, se marca `used_at` y se registra una fila en `checkins`.</p>
               <p>Tambien se puede operar check-in manual desde la busqueda de invitados.</p>
             </div>
-          </div>
+          </details>
 
-          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="order-first rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900">Actividad reciente</h2>
               <button

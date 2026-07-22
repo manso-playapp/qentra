@@ -214,12 +214,6 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
                 <dt className="text-white/60">Menú</dt>
                 <dd className="font-medium text-right">{invitationDetails.dietaryRequirements || 'Sin aclaraciones'}</dd>
               </div>
-              {invitationDetails.song && (
-                <div className="flex justify-between gap-4">
-                  <dt className="text-white/60">Canción</dt>
-                  <dd className="font-medium text-right">{invitationDetails.song}</dd>
-                </div>
-              )}
             </dl>
             <div className="mt-4 rounded-[18px] border border-dashed border-white/25 bg-white/5 p-3">
               <p className="text-[10px] uppercase tracking-[0.24em] text-white/50">Token de respaldo</p>

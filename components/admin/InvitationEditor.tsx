@@ -13,7 +13,7 @@ export type InvitationConfig = {
   fontFamily: 'sans' | 'serif' | 'display'
   dresscode: string
   directionsUrl: string
-  widgets: { trivia: boolean; song: boolean }
+  widgets: { trivia: boolean }
   triviaQuestion: string
   fields: { rsvp: boolean; dni: boolean; menu: boolean; companions: boolean }
 }
@@ -39,7 +39,7 @@ export const DEFAULT_INVITATION_CONFIG: InvitationConfig = {
   fontFamily: 'display',
   dresscode: '',
   directionsUrl: '',
-  widgets: { trivia: false, song: false },
+  widgets: { trivia: false },
   triviaQuestion: '',
   fields: { rsvp: true, dni: true, menu: true, companions: true },
 }
@@ -171,7 +171,6 @@ export default function InvitationEditor({
           {config.widgets.trivia && (
             <Field label="Pregunta de la trivia"><input className={inputClass} value={config.triviaQuestion} onChange={(e) => setConfig((c) => ({ ...c, triviaQuestion: e.target.value }))} placeholder="¿En qué año se conocieron los novios?" /></Field>
           )}
-          <ToggleRow icon={Music2} label="Canción (Spotify)" desc="El invitado suma un tema a la playlist del evento." on={config.widgets.song} onToggle={() => toggleWidget('song')} />
         </Section>
 
         <Section title="Datos que pedimos" desc="Los campos funcionales del formulario de confirmación.">
@@ -246,11 +245,6 @@ export default function InvitationEditor({
               </div>
 
               {/* Widgets: cada uno su tarjeta. */}
-              {config.widgets.song && (
-                <PreviewWidget primary={primary} icon={Music2} title="Sumá tu canción">
-                  <div className="rounded-lg bg-black/5 px-3 py-2 text-xs text-gray-500">🔎 Buscar en Spotify…</div>
-                </PreviewWidget>
-              )}
               {config.widgets.trivia && (
                 <PreviewWidget primary={primary} icon={HelpCircle} title="Trivia">
                   <p className="text-xs text-gray-600">{config.triviaQuestion || '¿Quién sabe más de…?'}</p>

@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import EventCheckinManager from '@/components/admin/EventCheckinManager'
+import DoorScanner from '@/components/door/DoorScanner'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import type { Event } from '@/types'
 
@@ -35,9 +35,6 @@ export default async function DoorPage({ params }: DoorPageProps) {
   }
 
   return (
-    <EventCheckinManager
-      event={data as Pick<Event, 'id' | 'name' | 'slug' | 'event_date' | 'start_time' | 'max_capacity'>}
-      mode="door"
-    />
+    <DoorScanner event={data as Pick<Event, 'id' | 'name' | 'event_date' | 'start_time'>} />
   )
 }
