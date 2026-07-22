@@ -161,16 +161,6 @@ function formatEventDate(date: string) {
   }).format(new Date(date))
 }
 
-function getGuestInitials(firstName?: string | null, lastName?: string | null) {
-  const initials = [firstName, lastName]
-    .map((part) => (part || '').trim().charAt(0).toUpperCase())
-    .filter(Boolean)
-    .slice(0, 2)
-    .join('')
-
-  return initials || 'Q'
-}
-
 function buildEventDateTime(eventDate: string, startTime: string) {
   const timeParts = startTime.trim().split(':').filter(Boolean)
 
@@ -866,107 +856,46 @@ export default function EventCheckinManager({
 
   if (isTotemMode) {
     const totemAccent = branding?.primary_color || '#b55330'
-    const totemSecondary = branding?.secondary_color || '#182433'
-    // El totem prefiere su propio fondo; si el evento solo cargo portada, la reusa.
-    const totemBackground = branding?.background_image_url || branding?.cover_image_url
-    const welcomeMessage =
-      branding?.welcome_message ||
-      'Bienvenidos. Cada ingreso aprobado se reflejara aqui por unos segundos, sin exponer informacion operativa.'
     const approvedMessage = branding?.approved_message || 'Bienvenida habilitada'
     return (
       <div className="fixed inset-0 overflow-hidden bg-slate-950">
         <main
-          className="absolute left-1/2 top-1/2 h-[100vw] w-[100vh] -translate-x-1/2 -translate-y-1/2 -rotate-90 overflow-hidden px-6 py-6 text-white sm:px-10"
+          className="absolute left-1/2 top-1/2 h-[100vw] w-[100vh] -translate-x-1/2 -translate-y-1/2 -rotate-90 overflow-hidden text-white"
           style={{
-            background: totemBackground
-              ? `linear-gradient(180deg, rgba(10,15,24,0.55), rgba(10,15,24,0.78)), url(${totemBackground}) center/cover no-repeat`
-              : `radial-gradient(circle at top left, ${totemAccent}55, transparent 28%), radial-gradient(circle at top right, ${totemSecondary}60, transparent 32%), linear-gradient(180deg, ${totemSecondary} 0%, #090d14 100%)`,
+            background: totemSpotlight
+              ? 'linear-gradient(rgba(4, 9, 18, 0.42), rgba(4, 9, 18, 0.64)), url(/portada.jpg) center/cover no-repeat'
+              : 'url(/portada.jpg) center/cover no-repeat',
           }}
         >
-          <div className="mx-auto grid min-h-[calc(100vw-3rem)] max-w-270 grid-rows-[auto_1fr_auto] gap-8">
-          <header className="grid grid-cols-2 items-start gap-6">
-            <div>
-              <p className="text-sm uppercase tracking-[0.34em] text-white/65">Fecha del evento</p>
-              <p className="mt-3 text-4xl font-semibold capitalize text-white">{formatEventDate(event.event_date)}</p>
-            </div>
-            <div className="text-right">
-              <p className="text-sm uppercase tracking-[0.34em] text-white/65">Hora actual</p>
-              <p className="mt-3 text-4xl font-semibold leading-none tabular-nums text-white">{now ? formatClock(now) : '--:--'}</p>
-            </div>
-          </header>
-
-          <section className="flex min-h-0 items-center justify-center">
-            <div className="flex w-full max-w-230 flex-col items-center justify-center rounded-[42px] border border-white/10 bg-black/28 px-8 py-10 text-center shadow-[0_35px_120px_rgba(0,0,0,0.35)] backdrop-blur-sm">
-              {!totemSpotlight ? (
-                <>
-                  {branding?.logo_url ? (
-                    // Logo URLs can come from event branding sources not covered by Next image config.
-                    // Using a plain img keeps the totem resilient across arbitrary client-provided URLs.
+          {totemSpotlight && (
+            <section className="flex size-full items-center justify-center px-6 py-6 sm:px-10">
+              <div className="flex w-full max-w-230 flex-col items-center justify-center rounded-[42px] border border-white/10 bg-black/28 px-8 py-10 text-center shadow-[0_35px_120px_rgba(0,0,0,0.35)] backdrop-blur-sm">
+                <p className="text-sm uppercase tracking-[0.34em] text-emerald-200/90">{approvedMessage}</p>
+                <div
+                  className="mt-8 flex h-[38vh] max-h-95 min-h-60 w-[38vh] max-w-95 min-w-60 items-center justify-center overflow-hidden rounded-[36px] border border-white/14 text-8xl font-semibold text-white shadow-[0_0_90px_rgba(16,185,129,0.18)]"
+                  style={{ background: `linear-gradient(145deg, ${totemAccent}55, rgba(255,255,255,0.08))` }}
+                >
+                  {totemSpotlight.photoUrl ? (
+                    // Foto del invitado (URL firmada de guest-photos), fuera del config de next/image.
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
-                      src={branding.logo_url}
-                      alt={event.name}
-                      className="mb-8 max-h-28 w-auto object-contain"
+                      src={totemSpotlight.photoUrl}
+                      alt={totemSpotlight.fullName}
+                      className="size-full object-cover"
                     />
                   ) : (
-                    <div
-                      className="mb-8 flex h-28 w-28 items-center justify-center rounded-full border border-white/15 text-3xl font-semibold text-white shadow-[0_0_50px_var(--event-glow)]"
-                      style={{ backgroundColor: `${totemAccent}33` }}
-                    >
-                      {getGuestInitials(event.name)}
-                    </div>
+                    <UserRound className="size-32 text-white/85" strokeWidth={1.25} aria-label="Invitado sin foto" />
                   )}
-                  <p className="text-sm uppercase tracking-[0.34em] text-white/60">Identidad del evento</p>
-                  <h1 className="admin-heading mt-5 max-w-[12ch] text-6xl leading-[0.95] text-white sm:text-7xl">
-                    {event.name}
-                  </h1>
-                  <p className="mt-6 max-w-2xl text-xl leading-8 text-white/78 sm:text-2xl">
-                    {welcomeMessage}
-                  </p>
-                </>
-              ) : (
-                <>
-                  <p className="text-sm uppercase tracking-[0.34em] text-emerald-200/90">{approvedMessage}</p>
-                  <div
-                    className="mt-8 flex h-[38vh] max-h-95 min-h-60 w-[38vh] max-w-95 min-w-60 items-center justify-center overflow-hidden rounded-[36px] border border-white/14 text-8xl font-semibold text-white shadow-[0_0_90px_rgba(16,185,129,0.18)]"
-                    style={{ background: `linear-gradient(145deg, ${totemAccent}55, rgba(255,255,255,0.08))` }}
-                  >
-                    {totemSpotlight.photoUrl ? (
-                      // Foto del invitado (URL firmada de guest-photos), fuera del config de next/image.
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={totemSpotlight.photoUrl}
-                        alt={totemSpotlight.fullName}
-                        className="size-full object-cover"
-                      />
-                    ) : (
-                      <UserRound className="size-32 text-white/85" strokeWidth={1.25} aria-label="Invitado sin foto" />
-                    )}
-                  </div>
-                  <h2 className="admin-heading mt-8 text-6xl leading-none text-white sm:text-7xl">
-                    {totemSpotlight.fullName}
-                  </h2>
-                  <p className="mt-5 text-2xl leading-8 text-white/80">
-                    Acceso validado a las {formatClock(new Date(totemSpotlight.checkinTime))}
-                  </p>
-                </>
-              )}
-            </div>
-          </section>
-
-          <footer className="flex flex-col items-center gap-4 text-center">
-            <div className="flex items-center gap-3 rounded-full border border-white/10 bg-white/6 px-5 py-2 text-sm text-white/70">
-              <span
-                className="h-2.5 w-2.5 rounded-full"
-                style={{ backgroundColor: totemSpotlight ? '#34d399' : totemAccent }}
-              />
-              {totemSpotlight ? 'Ingreso registrado correctamente' : 'Pantalla de bienvenida del evento'}
-            </div>
-            <p className="text-xs uppercase tracking-[0.3em] text-white/40">
-              Desarrollado por Alista
-            </p>
-          </footer>
-          </div>
+                </div>
+                <h2 className="admin-heading mt-8 text-6xl leading-none text-white sm:text-7xl">
+                  {totemSpotlight.fullName}
+                </h2>
+                <p className="mt-5 text-2xl leading-8 text-white/80">
+                  Acceso validado a las {formatClock(new Date(totemSpotlight.checkinTime))}
+                </p>
+              </div>
+            </section>
+          )}
         </main>
       </div>
     )
