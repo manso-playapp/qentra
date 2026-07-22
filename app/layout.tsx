@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Nunito } from 'next/font/google'
+import { getPublicAppUrl } from '@/lib/public-url'
 import './globals.css'
 
 const nunito = Nunito({
@@ -9,6 +10,7 @@ const nunito = Nunito({
 })
 
 export const metadata: Metadata = {
+  ...(getPublicAppUrl() ? { metadataBase: new URL(getPublicAppUrl()) } : {}),
   title: {
     default: 'Alista',
     template: '%s · Alista',

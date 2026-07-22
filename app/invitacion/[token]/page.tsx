@@ -16,6 +16,16 @@ import { SURFACE_BRANDING_COLUMNS, type SurfaceBranding } from '@/types'
 
 export const metadata = {
   title: 'Invitación',
+  description: 'Estás invitado/a a una fiesta de 15.',
+  openGraph: {
+    title: 'Invitación',
+    description: 'Estás invitado/a a una fiesta de 15.',
+    images: [{ url: '/portada.jpg' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    images: ['/portada.jpg'],
+  },
 }
 
 type InvitationPageProps = {

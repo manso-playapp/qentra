@@ -32,11 +32,11 @@ function formatDateTime(date: string) {
 
 function buildPlainTextMessage(payload: AccessDeliveryPayload) {
   return [
-    `Hola ${payload.guestFirstName},`,
+    `Hola ${payload.guestFirstName}!`,
     '',
-    `Tu acceso para ${payload.eventName} ya esta listo.`,
-    `Abre este enlace desde tu celular y muestra el QR en puerta: ${payload.invitationUrl}`,
-    `Vigencia: ${formatDateTime(payload.expiresAt)}`,
+    'Se acerca mi fiesta de 15, te mando el link para que te registres, te espero!',
+    '',
+    payload.invitationUrl,
   ].join('\n')
 }
 
