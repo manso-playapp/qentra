@@ -174,33 +174,34 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
         </section>
       ) : (
         <>
-          {/* QR de acceso. */}
-          <section className="relative overflow-hidden rounded-[28px] border border-slate-300 bg-[#eed8d2] p-6 pt-7 text-center text-slate-950 shadow-2xl before:absolute before:inset-x-0 before:top-0 before:h-1.5 before:bg-[#fcb39e] [&>p:first-child]:border-b-2 [&>p:first-child]:border-dashed [&>p:first-child]:border-slate-300 [&>p:first-child]:pb-4 [&_p]:!text-slate-600">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/50">Tu acceso</p>
-            {qrCodeUrl && (
-              <>
-                <div className="mx-auto mt-4 w-full max-w-70 rounded-3xl bg-white p-3 shadow-inner">
-                  <Image
-                    src={qrCodeUrl}
-                    alt="QR de acceso al evento"
-                    width={640}
-                    height={640}
-                    unoptimized
-                    className="w-full rounded-2xl"
-                  />
-                </div>
-                <a
-                  href={qrCodeUrl}
-                  download={`alista-${event?.slug || 'acceso'}-${invitationToken.token.slice(-6)}.png`}
-                  className="mt-4 inline-flex w-full items-center justify-center rounded-full px-5 py-3 text-sm font-semibold text-slate-950 transition hover:brightness-[0.97]"
-                  style={{ backgroundColor: primaryColor }}
-                >
-                  Descargar QR
-                </a>
-              </>
-            )}
-            <p className="mt-3 text-xs leading-5 text-white/60">Mostralo desde tu celular al llegar, con brillo suficiente.</p>
-          </section>
+          {!invitationUsed && (
+            <section className="relative overflow-hidden rounded-[28px] border border-slate-300 bg-[#eed8d2] p-6 pt-7 text-center text-slate-950 shadow-2xl before:absolute before:inset-x-0 before:top-0 before:h-1.5 before:bg-[#fcb39e] [&>p:first-child]:border-b-2 [&>p:first-child]:border-dashed [&>p:first-child]:border-slate-300 [&>p:first-child]:pb-4 [&_p]:!text-slate-600">
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/50">Tu acceso</p>
+              {qrCodeUrl && (
+                <>
+                  <div className="mx-auto mt-4 w-full max-w-70 rounded-3xl bg-white p-3 shadow-inner">
+                    <Image
+                      src={qrCodeUrl}
+                      alt="QR de acceso al evento"
+                      width={640}
+                      height={640}
+                      unoptimized
+                      className="w-full rounded-2xl"
+                    />
+                  </div>
+                  <a
+                    href={qrCodeUrl}
+                    download={`alista-${event?.slug || 'acceso'}-${invitationToken.token.slice(-6)}.png`}
+                    className="mt-4 inline-flex w-full items-center justify-center rounded-full px-5 py-3 text-sm font-semibold text-slate-950 transition hover:brightness-[0.97]"
+                    style={{ backgroundColor: primaryColor }}
+                  >
+                    Descargar QR
+                  </a>
+                </>
+              )}
+              <p className="mt-3 text-xs leading-5 text-white/60">Mostralo desde tu celular al llegar, con brillo suficiente.</p>
+            </section>
+          )}
 
           {/* Tu confirmación: solo lo que ya completaste, sin repetir el estado. */}
           <section className="relative overflow-hidden rounded-[28px] border border-slate-300 bg-[#eed8d2] p-6 pt-7 text-slate-950 shadow-2xl before:absolute before:inset-x-0 before:top-0 before:h-1.5 before:bg-[#fcb39e] [&>p:first-child]:border-b-2 [&>p:first-child]:border-dashed [&>p:first-child]:border-slate-300 [&>p:first-child]:pb-4 [&_dt]:!text-slate-500 [&_dd]:!text-slate-800 [&_p]:!text-slate-600">
