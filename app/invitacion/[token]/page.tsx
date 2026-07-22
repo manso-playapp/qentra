@@ -96,7 +96,7 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
   const invitationResponseForForm = invitationResponse === 'checked_in' ? 'confirmed' : invitationResponse
 
   const accessReady = isInvitationAccessReady(guest?.status, paymentStatus)
-  const primaryColor = branding?.primary_color || '#8b5e3c'
+  const primaryColor = '#fcb39e'
 
   const invitationUsed =
     Boolean(invitationToken.last_used_at) ||
@@ -144,7 +144,7 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
       calendarUrl={calendarUrl}
     >
       {!accessReady ? (
-        <section className="rounded-[28px] border border-white/20 bg-black/75 p-6 shadow-2xl backdrop-blur-sm">
+        <section className="relative overflow-hidden rounded-[28px] border border-slate-300 bg-[#eed8d2] p-6 pt-7 text-slate-950 shadow-2xl before:absolute before:inset-x-0 before:top-0 before:h-1.5 before:bg-slate-950 [&>p:first-child]:border-b-2 [&>p:first-child]:border-dashed [&>p:first-child]:border-slate-300 [&>p:first-child]:pb-4 [&_h3]:!text-slate-950 [&_p]:!text-slate-600">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/50">Paso previo al ingreso</p>
           <h3 className="mt-2 text-xl font-semibold text-white">Confirmá tu asistencia y completá tus datos</h3>
           <p className="mt-2 text-sm leading-6 text-white/70">
@@ -175,7 +175,7 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
       ) : (
         <>
           {/* QR de acceso. */}
-          <section className="rounded-[28px] border border-white/20 bg-black/75 p-6 text-center shadow-2xl backdrop-blur-sm">
+          <section className="relative overflow-hidden rounded-[28px] border border-slate-300 bg-[#eed8d2] p-6 pt-7 text-center text-slate-950 shadow-2xl before:absolute before:inset-x-0 before:top-0 before:h-1.5 before:bg-slate-950 [&>p:first-child]:border-b-2 [&>p:first-child]:border-dashed [&>p:first-child]:border-slate-300 [&>p:first-child]:pb-4 [&_p]:!text-slate-600">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/50">Tu acceso</p>
             {qrCodeUrl && (
               <>
@@ -192,7 +192,7 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
                 <a
                   href={qrCodeUrl}
                   download={`alista-${event?.slug || 'acceso'}-${invitationToken.token.slice(-6)}.png`}
-                  className="mt-4 inline-flex w-full items-center justify-center rounded-full px-5 py-3 text-sm font-semibold text-white transition hover:brightness-[0.97]"
+                  className="mt-4 inline-flex w-full items-center justify-center rounded-full px-5 py-3 text-sm font-semibold text-slate-950 transition hover:brightness-[0.97]"
                   style={{ backgroundColor: primaryColor }}
                 >
                   Descargar QR
@@ -203,7 +203,7 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
           </section>
 
           {/* Tu confirmación: solo lo que ya completaste, sin repetir el estado. */}
-          <section className="rounded-[28px] border border-white/20 bg-black/75 p-6 shadow-2xl backdrop-blur-sm">
+          <section className="relative overflow-hidden rounded-[28px] border border-slate-300 bg-[#eed8d2] p-6 pt-7 text-slate-950 shadow-2xl before:absolute before:inset-x-0 before:top-0 before:h-1.5 before:bg-slate-950 [&>p:first-child]:border-b-2 [&>p:first-child]:border-dashed [&>p:first-child]:border-slate-300 [&>p:first-child]:pb-4 [&_dt]:!text-slate-500 [&_dd]:!text-slate-800 [&_p]:!text-slate-600">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/50">Tu confirmación</p>
             <dl className="mt-3 space-y-2 text-sm text-white/85">
               <div className="flex justify-between gap-4">
@@ -218,12 +218,6 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
                 <div className="flex justify-between gap-4">
                   <dt className="text-white/60">Canción</dt>
                   <dd className="font-medium text-right">{invitationDetails.song}</dd>
-                </div>
-              )}
-              {invitationDetails.greeting && (
-                <div className="flex justify-between gap-4">
-                  <dt className="text-white/60">Saludo</dt>
-                  <dd className="font-medium text-right">{invitationDetails.greeting}</dd>
                 </div>
               )}
             </dl>

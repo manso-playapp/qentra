@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { CalendarDays, Clock, MapPin, Music2, MessageCircle, HelpCircle } from 'lucide-react'
+import { CalendarDays, Clock, MapPin, Music2, HelpCircle } from 'lucide-react'
 import ImageUpload from '@/components/admin/ImageUpload'
 
 // Editor tipo "front editor" para la invitacion: panel de controles a la
@@ -13,7 +13,7 @@ export type InvitationConfig = {
   fontFamily: 'sans' | 'serif' | 'display'
   dresscode: string
   directionsUrl: string
-  widgets: { message: boolean; trivia: boolean; song: boolean }
+  widgets: { trivia: boolean; song: boolean }
   triviaQuestion: string
   fields: { rsvp: boolean; dni: boolean; menu: boolean; companions: boolean }
 }
@@ -39,7 +39,7 @@ export const DEFAULT_INVITATION_CONFIG: InvitationConfig = {
   fontFamily: 'display',
   dresscode: '',
   directionsUrl: '',
-  widgets: { message: true, trivia: false, song: false },
+  widgets: { trivia: false, song: false },
   triviaQuestion: '',
   fields: { rsvp: true, dni: true, menu: true, companions: true },
 }
@@ -167,7 +167,6 @@ export default function InvitationEditor({
         </Section>
 
         <Section title="Widgets opcionales" desc="Activá solo los que quieras. La invitación no obliga a completarlos.">
-          <ToggleRow icon={MessageCircle} label="Campo de mensajes" desc="El invitado deja un saludo o dedicatoria." on={config.widgets.message} onToggle={() => toggleWidget('message')} />
           <ToggleRow icon={HelpCircle} label="Trivia" desc="“¿Quién sabe más de…?”" on={config.widgets.trivia} onToggle={() => toggleWidget('trivia')} />
           {config.widgets.trivia && (
             <Field label="Pregunta de la trivia"><input className={inputClass} value={config.triviaQuestion} onChange={(e) => setConfig((c) => ({ ...c, triviaQuestion: e.target.value }))} placeholder="¿En qué año se conocieron los novios?" /></Field>
@@ -255,11 +254,6 @@ export default function InvitationEditor({
               {config.widgets.trivia && (
                 <PreviewWidget primary={primary} icon={HelpCircle} title="Trivia">
                   <p className="text-xs text-gray-600">{config.triviaQuestion || '¿Quién sabe más de…?'}</p>
-                </PreviewWidget>
-              )}
-              {config.widgets.message && (
-                <PreviewWidget primary={primary} icon={MessageCircle} title="Dejá tu saludo">
-                  <div className="rounded-lg bg-black/5 px-3 py-3 text-xs text-gray-400">Escribí un mensaje…</div>
                 </PreviewWidget>
               )}
 

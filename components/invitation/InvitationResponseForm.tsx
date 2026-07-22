@@ -42,7 +42,6 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
   const [companionNames, setCompanionNames] = useState(initialData.companionNames)
   const [dietaryRequirements, setDietaryRequirements] = useState(initialData.dietaryRequirements)
   const [song, setSong] = useState(initialData.song)
-  const [greeting, setGreeting] = useState(initialData.greeting)
   const [observations, setObservations] = useState(initialData.observations)
   const [photoUrl, setPhotoUrl] = useState(initialData.photoUrl)
   const [loading, setLoading] = useState(false)
@@ -75,7 +74,7 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
           companionNames: isConfirming ? companionNames : '',
           dietaryRequirements: isConfirming ? dietaryRequirements : '',
           song: isConfirming ? song : '',
-          greeting: isConfirming ? greeting : '',
+          greeting: isConfirming ? initialData.greeting : '',
           observations,
         }),
       })
@@ -102,7 +101,7 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-5 text-white [&_input]:border-white/20 [&_input]:bg-black/45 [&_input]:text-white [&_input]:placeholder:text-white/40 [&_label]:text-white [&_textarea]:border-white/20 [&_textarea]:bg-black/45 [&_textarea]:text-white [&_textarea]:placeholder:text-white/40"
+      className="space-y-5 text-slate-950 [&_input]:border-slate-300 [&_input]:bg-white/70 [&_input]:text-slate-950 [&_input]:placeholder:text-slate-400 [&_label]:text-slate-700 [&_textarea]:border-slate-300 [&_textarea]:bg-white/70 [&_textarea]:text-slate-950 [&_textarea]:placeholder:text-slate-400"
     >
       <div className="grid gap-3 sm:grid-cols-2">
         <button
@@ -111,7 +110,7 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
           className={`rounded-3xl border px-4 py-4 text-left transition ${
             isConfirming
               ? 'border-emerald-300/70 bg-emerald-950/80 text-emerald-50'
-              : 'border-white/20 bg-white/10 text-white hover:bg-white/20'
+              : 'border-slate-300 bg-white/60 text-slate-800 hover:bg-slate-100'
           }`}
         >
           <p className="text-sm font-semibold">Confirmar asistencia</p>
@@ -123,7 +122,7 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
           className={`rounded-3xl border px-4 py-4 text-left transition ${
             !isConfirming
               ? 'border-rose-300/70 bg-rose-950/80 text-rose-50'
-              : 'border-white/20 bg-white/10 text-white hover:bg-white/20'
+              : 'border-slate-300 bg-white/60 text-slate-800 hover:bg-slate-100'
           }`}
         >
           <p className="text-sm font-semibold">No asistire</p>
@@ -181,7 +180,7 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
 
       {isConfirming && (
         <>
-          <div className="rounded-3xl border border-white/20 bg-white/5 p-4">
+          <div className="rounded-3xl border border-dashed border-slate-300 bg-white/50 p-4">
             <ImageUpload
               label="Tu foto"
               hint="Se usa para validar tu identidad en el ingreso. Podés sacártela con la cámara."
@@ -217,7 +216,7 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
                 className="mt-2"
                 placeholder="0"
               />
-              <p className="mt-2 text-xs text-white/60">
+              <p className="mt-2 text-xs text-slate-500">
                 Cupo disponible: {companionLimit}
               </p>
             </div>
@@ -259,17 +258,6 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
             />
           </div>
 
-          <div>
-            <Label htmlFor="invitation-greeting">Saludo o dedicatoria 💌</Label>
-            <Textarea
-              id="invitation-greeting"
-              rows={3}
-              value={greeting}
-              onChange={(event) => setGreeting(event.target.value)}
-              className="mt-2"
-              placeholder="Un mensaje para quien celebra"
-            />
-          </div>
         </>
       )}
 
@@ -297,7 +285,7 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
         </div>
       )}
 
-      <Button type="submit" size="lg" className="w-full" disabled={loading}>
+      <Button type="submit" size="lg" className="w-full bg-[#fcb39e] text-slate-950 hover:bg-[#f8c4b5]" disabled={loading}>
         {loading
           ? 'Guardando respuesta...'
           : isConfirming

@@ -1704,7 +1704,7 @@ export default function EventGuestsManager({
                           </div>
                         </div>
 
-                        <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_120px]">
+                        <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_180px]">
                           <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
                             <div className="flex flex-wrap items-center justify-between gap-3">
                               <div>
@@ -1779,15 +1779,15 @@ export default function EventGuestsManager({
                             </div>
                           </div>
 
-                          <div className="flex items-center justify-center rounded-lg border border-gray-200 bg-white p-3">
+                          <div className="flex aspect-square w-full max-w-45 items-center justify-center justify-self-center rounded-lg border border-gray-200 bg-white p-2">
                             {latestQrCode?.qr_image_url ? (
                               <Image
                                 src={latestQrCode.qr_image_url}
                                 alt={`QR de acceso para ${guest.first_name} ${guest.last_name}`}
-                                width={104}
-                                height={104}
+                                width={180}
+                                height={180}
                                 unoptimized
-                                className="h-26 w-26 rounded-md"
+                                className="size-full object-contain"
                               />
                             ) : (
                               <div className="text-center text-xs text-gray-500">

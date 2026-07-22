@@ -1,18 +1,7 @@
 import Image from 'next/image'
 import type { ReactNode } from 'react'
+import { CalendarDays, Clock3, MapPin, PlaneTakeoff, Ticket } from 'lucide-react'
 import type { SurfaceBranding } from '@/types'
-
-/**
- * Shell compartido de la invitacion publica.
- *
- * Lo usan tanto la invitacion real (app/invitacion/[token]) como la vista
- * previa modelo (app/invitacion/preview/[eventId]). Mantiene una sola
- * jerarquia: logo -> datos del evento -> estado del acceso -> accion.
- *
- * El area de accion (formulario o QR) la provee cada pagina via `children`,
- * porque la real envia un formulario que escribe en la base y la preview usa
- * un mock estatico.
- */
 
 export type InvitationEventInfo = {
   name?: string
@@ -38,10 +27,24 @@ export type AccessState = {
   pill: string
 }
 
-// ---- helpers de formato (compartidos entre la pagina real y la preview) ----
-
 export function formatDate(date: string) {
   return new Intl.DateTimeFormat('es-AR', { dateStyle: 'full' }).format(new Date(date))
+}
+
+export function formatAirportDate(date: string) {
+  const parts = new Intl.DateTimeFormat('es-AR', {
+    weekday: 'short',
+    day: '2-digit',
+    month: 'long',
+  }).formatToParts(new Date(`${date}T12:00:00`))
+  const value = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value || ''
+
+  return [value('weekday'), value('day'), value('month')]
+    .filter(Boolean)
+    .join(' ')
+    .toLocaleUpperCase('es-AR')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
 }
 
 export function formatTime(time: string) {
@@ -71,10 +74,6 @@ export function buildCalendarUrl(event: InvitationEventInfo) {
   )}`
 }
 
-/**
- * Calcula el objeto de estado del acceso. Es puro para que la vista previa lo
- * pueda armar con datos de ejemplo sin tocar la base.
- */
 export function buildAccessState(input: {
   invitationUsed: boolean
   eventInactive: boolean
@@ -90,11 +89,11 @@ export function buildAccessState(input: {
       label: 'Acceso ya utilizado',
       title: 'Este QR ya fue registrado en puerta',
       detail: lastUsedAt
-        ? `Si necesitas ayuda, acércate al control de acceso. Último uso: ${new Intl.DateTimeFormat('es-AR', {
+        ? `Si necesitás ayuda, acercate al control de acceso. Último uso: ${new Intl.DateTimeFormat('es-AR', {
             dateStyle: 'full',
             timeStyle: 'short',
           }).format(new Date(lastUsedAt))}.`
-        : 'Si necesitas ayuda, acércate al control de acceso.',
+        : 'Si necesitás ayuda, acercate al control de acceso.',
       tone: 'border-amber-300/35 bg-amber-950/80 text-amber-50',
       pill: 'bg-amber-300/15 text-amber-100',
     }
@@ -104,7 +103,7 @@ export function buildAccessState(input: {
     return {
       label: 'Evento no disponible',
       title: 'Este acceso no está habilitado por el momento',
-      detail: 'El evento fue pausado o cancelado. Si crees que es un error, contacta a la organización.',
+      detail: 'El evento fue pausado o cancelado. Si creés que es un error, contactá a la organización.',
       tone: 'border-white/20 bg-black/80 text-white',
       pill: 'bg-white/15 text-white',
     }
@@ -137,7 +136,7 @@ export function buildAccessState(input: {
     return {
       label: 'No asistencia registrada',
       title: 'Tu respuesta ya quedó guardada',
-      detail: 'Si cambias de idea, puedes volver a completar este paso antes del evento.',
+      detail: 'Si cambiás de idea, podés volver a completar este paso antes del evento.',
       tone: 'border-rose-300/35 bg-rose-950/80 text-rose-50',
       pill: 'bg-rose-300/15 text-rose-100',
     }
@@ -162,15 +161,10 @@ type InvitationViewProps = {
   children?: ReactNode
 }
 
-// ---- Constantes hardcodeadas para esta fiesta ----
 const FIESTA_DIRECTIONS_URL = 'https://maps.app.goo.gl/yuuhpJ3KbXuhJKBi9'
-const FIESTA_DRESSCODE = 'Prohibido ellas: negro y blanco. Ellos: gorra y ropa deportiva.'
+const FIESTA_DRESSCODE = 'Ellas: negro y blanco. Ellos: gorra y ropa deportiva.'
 const FIESTA_CONTACT_PHONE = '+54 9 3496 54-9307'
-const FIESTA_SCHEDULE = [
-  { label: 'Check-in', time: '20:30' },
-  { label: 'Check-out', time: '05:00' },
-  { label: 'VIP Lounge (after party)', time: '05:00 a 06:30' },
-]
+const BOARDING_TIME = '20:30'
 
 export default function InvitationView({
   event,
@@ -181,17 +175,14 @@ export default function InvitationView({
   isPreview = false,
   children,
 }: InvitationViewProps) {
-  const mapsUrl = FIESTA_DIRECTIONS_URL
-  const contactPhone = FIESTA_CONTACT_PHONE
-  // Portada fija: ocupa el ancho desde arriba y el contenido continúa sobre negro.
-  const bgImage = '/portada.jpg'
+  const airportCode = (event.name || 'DRM').replace(/[^a-zA-Z0-9]/g, '').slice(0, 3).toUpperCase() || 'DRM'
 
   return (
     <main
       className="relative min-h-screen bg-black px-4 pb-8 text-white sm:px-6"
       style={{
         backgroundColor: '#000',
-        backgroundImage: `url(${bgImage})`,
+        backgroundImage: 'url(/portada.jpg)',
         backgroundPosition: 'top center',
         backgroundRepeat: 'no-repeat',
         backgroundSize: '100% auto',
@@ -204,7 +195,6 @@ export default function InvitationView({
       )}
 
       <div className="relative mx-auto max-w-xl space-y-5" style={{ paddingTop: 'min(177.78vw, 680px)' }}>
-        {/* Logo. Cuando no hay logo, un eyebrow neutro (no repite el nombre del evento). */}
         {branding?.logo_url ? (
           <Image
             src={branding.logo_url}
@@ -215,103 +205,100 @@ export default function InvitationView({
             className="mx-auto h-20 w-auto max-w-[70%] object-contain drop-shadow-lg"
           />
         ) : (
-          <p className="pt-4 text-center text-[11px] font-semibold uppercase tracking-[0.32em] text-white/60">
-            Acceso digital
-          </p>
+          <p className="pt-4 text-center text-[11px] font-semibold uppercase tracking-[0.32em] text-white/60">Acceso digital</p>
         )}
 
-        {/* Datos del evento: el nombre va UNA sola vez, como título. */}
-        <section className="rounded-[28px] border border-white/20 bg-black/75 p-6 shadow-2xl backdrop-blur-sm">
-          <h1 className="text-center text-3xl font-semibold leading-tight text-white sm:text-4xl">
-            {event.name || 'Evento privado'}
-          </h1>
-          {guestDisplayName && (
-            <p className="mt-2 text-center text-sm text-white/70">Para {guestDisplayName}</p>
-          )}
+        <section className="relative overflow-hidden rounded-[28px] bg-[#eed8d2] p-5 text-slate-950 shadow-2xl sm:p-6">
+          <div className="absolute inset-x-0 top-0 h-1.5 bg-slate-950" />
 
-          <div className="mt-8 flex flex-col divide-y divide-white/10 text-center text-sm text-white/85">
-            <div className="pb-5">
-              <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-white/45">Fecha</p>
-              <p className="mt-2 text-base font-semibold tracking-wide">
-                {event.event_date ? formatDate(event.event_date) : 'A confirmar'}
-              </p>
+          <header className="flex items-center justify-between pt-2">
+            <div>
+              <p className="font-mono text-[10px] font-bold uppercase tracking-[0.28em] text-slate-500">Alista Air</p>
+              <p className="mt-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-950">Boarding pass</p>
             </div>
+            <Ticket className="size-6 text-slate-950" strokeWidth={1.75} aria-hidden="true" />
+          </header>
 
-            {/* Horarios hardcodeados de la fiesta */}
-            <div className="py-5">
-              <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-white/45">Horarios</p>
-              <ul className="mt-2 space-y-1">
-                {FIESTA_SCHEDULE.map((item) => (
-                  <li key={item.label} className="text-base font-semibold tracking-wide">
-                    {item.label}: <span className="font-medium text-white/75">{item.time}</span>
-                  </li>
-                ))}
-              </ul>
+          <div className="mt-7 grid grid-cols-[1fr_96px_1fr] items-center gap-2 sm:grid-cols-[1fr_132px_1fr]">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Origen</p>
+              <p className="mt-1 font-mono text-4xl font-bold tracking-[-0.08em] sm:text-5xl">ESP</p>
+              <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">Esperanza</p>
             </div>
-
-            <div className="py-5">
-              <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-white/45">Lugar</p>
-              <p className="mt-2 text-base font-semibold tracking-wide">{event.venue_name || 'Venue privado'}</p>
-              {event.venue_address && <p className="mt-0.5 text-xs text-white/55">{event.venue_address}</p>}
-              <a
-                href={mapsUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="mt-2 inline-block text-xs font-semibold text-white underline underline-offset-4"
-              >
-                Cómo llegar →
-              </a>
+            <div className="relative flex items-center justify-center" aria-label={`Ruta de ESP a ${airportCode}`}>
+              <span className="absolute inset-x-0 border-t-2 border-dashed border-slate-400" />
+              <PlaneTakeoff className="relative size-14 -rotate-12 bg-[#eed8d2] px-2 text-slate-950 sm:size-18" strokeWidth={1.45} aria-hidden="true" />
             </div>
-
-            {/* Dresscode hardcodeado */}
-            <div className="pt-5">
-              <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-white/45">Dresscode</p>
-              <p className="mt-2 text-base font-semibold tracking-wide">{FIESTA_DRESSCODE}</p>
+            <div className="text-right">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Destino</p>
+              <p className="mt-1 font-mono text-4xl font-bold tracking-[-0.08em] sm:text-5xl">{airportCode}</p>
+              <p className="mt-1 truncate text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">15 Dharma</p>
             </div>
           </div>
 
-          {/* Mapa/agenda/contacto van como apéndice compacto del evento, no en otra tarjeta. */}
-          <div className="mt-5 flex flex-wrap justify-center gap-2 border-t border-white/10 pt-4">
-            <a
-              href={mapsUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center justify-center rounded-full bg-white px-4 py-2 text-xs font-semibold text-black transition hover:bg-white/85"
-            >
-              Ver ubicación
-            </a>
-            {calendarUrl && (
-              <a
-                href={calendarUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center justify-center rounded-full border border-white/30 bg-white/10 px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/20"
-              >
-                Agendar
-              </a>
-            )}
-            <a
-              href={buildPhoneHref(contactPhone) || '#'}
-              className="inline-flex items-center justify-center rounded-full border border-white/30 bg-white/10 px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/20"
-            >
-              Contactar
-            </a>
+          <div className="relative my-6 border-t-2 border-dashed border-slate-300">
+            <span className="absolute -left-8 -top-3 size-6 rounded-full bg-black sm:-left-9" />
+            <span className="absolute -right-8 -top-3 size-6 rounded-full bg-black sm:-right-9" />
           </div>
+
+          <dl className="grid grid-cols-[minmax(0,1.35fr)_minmax(0,0.65fr)] gap-x-3 gap-y-5">
+            <div className="col-span-2">
+              <dt className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Pasajero</dt>
+              <dd className="mt-1 text-lg font-bold uppercase tracking-[0.1em] sm:text-xl">{guestDisplayName || 'Invitado/a'}</dd>
+            </div>
+            <div>
+              <dt className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500"><CalendarDays className="size-3" aria-hidden="true" /> Fecha</dt>
+              <dd className="mt-1 font-mono text-base font-bold uppercase tracking-[0.05em] sm:text-lg">{event.event_date ? formatAirportDate(event.event_date) : 'A confirmar'}</dd>
+            </div>
+            <div>
+              <dt className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500"><Clock3 className="size-3" aria-hidden="true" /> Boarding</dt>
+              <dd className="mt-1 font-mono text-base font-bold uppercase tracking-[0.05em] sm:text-lg">{BOARDING_TIME} hs</dd>
+            </div>
+            <div>
+              <dt className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500"><MapPin className="size-3" aria-hidden="true" /> Gate</dt>
+              <dd className="mt-1 truncate text-base font-bold uppercase tracking-[0.04em] sm:text-lg">{event.venue_name || 'Venue privado'}</dd>
+            </div>
+            <div>
+              <dt className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Vuelo</dt>
+              <dd className="mt-1 font-mono text-base font-bold uppercase tracking-[0.05em] sm:text-lg">15 Dharma</dd>
+            </div>
+          </dl>
+
+          <div className="mt-6 border-t-2 border-dashed border-slate-300 pt-5">
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Dress code</p>
+            <p className="mt-1 text-sm font-semibold uppercase leading-5 tracking-[0.03em]">
+              <span className="block">Prohibido</span>
+              <span>{FIESTA_DRESSCODE}</span>
+            </p>
+            <div className="mt-5 flex flex-wrap gap-2">
+              <a href={FIESTA_DIRECTIONS_URL} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center rounded-full bg-[#fcb39e] px-4 py-2 text-xs font-semibold text-slate-950 transition hover:bg-[#f8c4b5]">
+                Ver ubicación
+              </a>
+              {calendarUrl && (
+                <a href={calendarUrl} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center rounded-full border border-slate-300 px-4 py-2 text-xs font-semibold text-slate-900 transition hover:bg-slate-200">
+                  Agendar
+                </a>
+              )}
+              <a href={buildPhoneHref(FIESTA_CONTACT_PHONE) || '#'} className="inline-flex items-center justify-center rounded-full border border-slate-300 px-4 py-2 text-xs font-semibold text-slate-900 transition hover:bg-slate-200">
+                Contactar
+              </a>
+            </div>
+          </div>
+
+          <div className="mt-6 h-10 opacity-70" aria-hidden="true" style={{ backgroundImage: 'repeating-linear-gradient(90deg, #0f172a 0 2px, transparent 2px 4px, #0f172a 4px 5px, transparent 5px 8px)' }} />
         </section>
 
-        {/* Estado del acceso: única tarjeta de estado (antes había pill + tarjeta). */}
-        <section className={`rounded-[28px] border p-6 shadow-xl ${accessState.tone}`}>
+        <section className="relative overflow-hidden rounded-[28px] border border-slate-300 bg-[#eed8d2] p-6 text-slate-950 shadow-xl">
+          <div className="absolute inset-x-0 top-0 h-1.5 bg-slate-950" />
           <div className="flex items-center justify-between gap-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] opacity-70">Estado del acceso</p>
-            <span className={`rounded-full px-3 py-1 text-[11px] font-semibold ${accessState.pill}`}>
-              {accessState.label}
-            </span>
+            <p className="pt-1 text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Estado del vuelo</p>
+            <span className="rounded-full bg-slate-950 px-3 py-1 text-[11px] font-semibold text-white">{accessState.label}</span>
           </div>
+          <div className="my-4 border-t-2 border-dashed border-slate-300" />
           <h2 className="mt-2 text-xl font-semibold">{accessState.title}</h2>
-          <p className="mt-2 text-sm leading-6 opacity-85">{accessState.detail}</p>
+          <p className="mt-2 text-sm leading-6 text-slate-600">{accessState.detail}</p>
         </section>
 
-        {/* Area de accion: formulario (pendiente) o QR (listo). Lo provee cada pagina. */}
         {children}
 
         <footer className="pb-2 pt-1 text-center text-xs uppercase tracking-[0.28em] text-white/80">
