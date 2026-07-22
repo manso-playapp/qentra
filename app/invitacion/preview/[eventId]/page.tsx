@@ -52,18 +52,18 @@ export default async function InvitationPreviewPage({ params }: PreviewPageProps
       event={eventInfo}
       branding={branding}
       guestDisplayName="Invitado/a de ejemplo"
-      accessState={accessState}
       calendarUrl={calendarUrl}
       isPreview
     >
       {/* Formulario deshabilitado: muestra cómo se vería el paso previo sin
           enviar datos reales. */}
-      <section className="relative overflow-hidden rounded-[28px] border border-slate-300 bg-[#eed8d2] p-6 pt-7 text-slate-950 shadow-2xl before:absolute before:inset-x-0 before:top-0 before:h-1.5 before:bg-[#fcb39e] [&>p:first-child]:border-b-2 [&>p:first-child]:border-dashed [&>p:first-child]:border-slate-300 [&>p:first-child]:pb-4 [&_h3]:!text-slate-950 [&_p]:!text-slate-600">
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/50">Paso previo al ingreso</p>
-        <h3 className="mt-2 text-xl font-semibold text-white">Confirmá tu asistencia y completá tus datos</h3>
-        <p className="mt-2 text-sm leading-6 text-white/70">
-          Así verá cada invitado el formulario antes de confirmar. En la vista previa los campos no envían datos.
-        </p>
+      <section className="relative overflow-hidden rounded-[28px] border border-slate-300 bg-[#eed8d2] p-6 pt-7 text-slate-950 shadow-2xl before:absolute before:inset-x-0 before:top-0 before:h-1.5 before:bg-[#fcb39e]">
+        <div className="flex items-center justify-between gap-3 border-b-2 border-dashed border-slate-300 pb-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Estado del vuelo</p>
+          <span className="rounded-full bg-slate-950 px-3 py-1 text-[11px] font-semibold text-white">{accessState.label}</span>
+        </div>
+        <h3 className="mt-4 text-xl font-semibold text-slate-950">{accessState.title}</h3>
+        <p className="mt-2 text-sm leading-6 text-slate-600">{accessState.detail}</p>
 
         <div className="mt-5 space-y-3 opacity-60" aria-hidden="true">
           <div className="rounded-[14px] border border-white/15 bg-white/5 p-3">

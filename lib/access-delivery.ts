@@ -34,7 +34,12 @@ function buildPlainTextMessage(payload: AccessDeliveryPayload) {
   return [
     `Hola ${payload.guestFirstName}!`,
     '',
-    'Se acerca mi fiesta de 15, te mando el link para que te registres, te espero!',
+    'Se acerca mi fiesta de 15,',
+    '',
+    '\uD83C\uDFAB Tu pr\u00f3xima aventura comienza ac\u00e1!!!!!!',
+    '',
+    'Realiz\u00e1 tu check-in y preparate para despegar...',
+    'Te mando el link para que te registres, te espero!',
     '',
     payload.invitationUrl,
   ].join('\n')

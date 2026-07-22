@@ -68,7 +68,7 @@ export function buildCalendarUrl(event: InvitationEventInfo) {
   const fmt = (value: Date) => value.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'
   const details = [event.description, event.venue_name, event.venue_address].filter(Boolean).join('\n')
   return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(
-    event.name || 'Evento privado'
+    'Cumple de Dharma'
   )}&dates=${fmt(start)}/${fmt(end)}&details=${encodeURIComponent(details)}&location=${encodeURIComponent(
     event.venue_address || event.venue_name || ''
   )}`
@@ -153,8 +153,8 @@ export function buildAccessState(input: {
   }
 
   return {
-    label: 'Gestión pendiente',
-    title: 'Completá tu invitación para recibir el QR final',
+    label: 'Acreditación pendiente',
+    title: 'Completá tu checkin para recibir el QR final',
     detail: 'Confirmá asistencia, DNI, acompañantes y observaciones antes de mostrar el acceso en puerta.',
     tone: 'border-sky-300/35 bg-sky-950/80 text-sky-50',
     pill: 'bg-sky-300/15 text-sky-100',
@@ -165,14 +165,17 @@ type InvitationViewProps = {
   event: InvitationEventInfo
   branding: SurfaceBranding | null
   guestDisplayName: string
-  accessState: AccessState
   calendarUrl?: string | null
   isPreview?: boolean
   children?: ReactNode
 }
 
 const FIESTA_DIRECTIONS_URL = 'https://maps.app.goo.gl/yuuhpJ3KbXuhJKBi9'
-const FIESTA_DRESSCODE = 'Ellas: negro y blanco. Ellos: gorra y ropa deportiva.'
+const FIESTA_DRESSCODE = {
+  ellas: 'Ellas: negro y blanco.',
+  ellos: 'Ellos: gorra y ropa deportiva.',
+}
+const FIESTA_SONG_EMBED_URL = 'https://open.spotify.com/embed/track/5Q0Nhxo0l2bP3pNjpGJwV1?utm_source=generator'
 const FIESTA_CONTACT_PHONE = '+54 9 3496 54-9307'
 const BOARDING_TIME = '20:30'
 
@@ -180,7 +183,6 @@ export default function InvitationView({
   event,
   branding,
   guestDisplayName,
-  accessState,
   calendarUrl,
   isPreview = false,
   children,
@@ -280,13 +282,24 @@ export default function InvitationView({
           <div className="mt-6 border-t-2 border-dashed border-slate-300 pt-5">
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Dress code</p>
             <p className="mt-1 text-sm font-semibold uppercase leading-5 tracking-[0.03em]">
-              <span className="block">Prohibido</span>
-              <span>{FIESTA_DRESSCODE}</span>
+              <span className="block font-black text-[#b42318]">Prohibido</span>
+              <span className="block">{FIESTA_DRESSCODE.ellas}</span>
+              <span className="block">{FIESTA_DRESSCODE.ellos}</span>
             </p>
             <div className="mt-5 border-t-2 border-dashed border-slate-300 pt-5">
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Regalo</p>
               <p className="mt-1 text-sm font-semibold uppercase tracking-[0.03em]">Alias de CBU</p>
               <p className="mt-1 font-mono text-lg font-bold uppercase tracking-[0.08em]">Cumple.15.Dharma</p>
+            </div>
+            <div className="mt-5 border-t-2 border-dashed border-slate-300 pt-5">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Canción de abordaje</p>
+              <iframe
+                className="mt-2 h-38 w-full rounded-[18px] border-0"
+                src={FIESTA_SONG_EMBED_URL}
+                title="Party In The U.S.A. de Miley cyrus en Spotify"
+                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                loading="lazy"
+              />
             </div>
             <div className="mt-5 flex flex-wrap gap-2">
               <a href={FIESTA_DIRECTIONS_URL} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center rounded-full bg-[#fcb39e] px-4 py-2 text-xs font-semibold text-slate-950 transition hover:bg-[#f8c4b5]">
@@ -304,17 +317,6 @@ export default function InvitationView({
           </div>
 
           <div className="mt-6 h-10 opacity-70" aria-hidden="true" style={{ backgroundImage: 'repeating-linear-gradient(90deg, #0f172a 0 2px, transparent 2px 4px, #0f172a 4px 5px, transparent 5px 8px)' }} />
-        </section>
-
-        <section className="relative overflow-hidden rounded-[28px] border border-slate-300 bg-[#eed8d2] p-6 text-slate-950 shadow-xl">
-          <div className="absolute inset-x-0 top-0 h-1.5 bg-[#fcb39e]" />
-          <div className="flex items-center justify-between gap-3">
-            <p className="pt-1 text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Estado del vuelo</p>
-            <span className="rounded-full bg-slate-950 px-3 py-1 text-[11px] font-semibold text-white">{accessState.label}</span>
-          </div>
-          <div className="my-4 border-t-2 border-dashed border-slate-300" />
-          <h2 className="mt-2 text-xl font-semibold">{accessState.title}</h2>
-          <p className="mt-2 text-sm leading-6 text-slate-600">{accessState.detail}</p>
         </section>
 
         {children}

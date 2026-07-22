@@ -30,7 +30,7 @@ export const metadata = {
 
 type InvitationPageProps = {
   params: Promise<{ token: string }>
-  searchParams?: Promise<{ guest?: string }>
+  searchParams?: Promise<{ guest?: string; confirmed?: string }>
 }
 
 export default async function InvitationPage({ params, searchParams }: InvitationPageProps) {
@@ -124,6 +124,8 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
     paymentStatus,
     lastUsedAt: invitationToken.last_used_at,
   })
+  const showCheckinConfirmation =
+    resolvedSearchParams?.confirmed === '1' && invitationResponse === 'confirmed' && accessReady && !invitationUsed
 
   const eventInfo = (event ?? {}) as InvitationEventInfo
   const calendarUrl = buildCalendarUrl(eventInfo)
@@ -152,16 +154,16 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
       event={eventInfo}
       branding={branding}
       guestDisplayName={guestDisplayName}
-      accessState={accessState}
       calendarUrl={calendarUrl}
     >
       {canEditInvitation ? (
-        <section className="relative overflow-hidden rounded-[28px] border border-slate-300 bg-[#eed8d2] p-6 pt-7 text-slate-950 shadow-2xl before:absolute before:inset-x-0 before:top-0 before:h-1.5 before:bg-[#fcb39e] [&>p:first-child]:border-b-2 [&>p:first-child]:border-dashed [&>p:first-child]:border-slate-300 [&>p:first-child]:pb-4 [&_h3]:!text-slate-950 [&_p]:!text-slate-600">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/50">Paso previo al ingreso</p>
-          <h3 className="mt-2 text-xl font-semibold text-white">Confirmá tu asistencia y completá tus datos</h3>
-          <p className="mt-2 text-sm leading-6 text-white/70">
-            Funciona como save the date y confirmación final. Al completarlo, el sistema habilita tu QR de ingreso.
-          </p>
+        <section className="relative overflow-hidden rounded-[28px] border border-slate-300 bg-[#eed8d2] p-6 pt-7 text-slate-950 shadow-2xl before:absolute before:inset-x-0 before:top-0 before:h-1.5 before:bg-[#fcb39e]">
+          <div className="flex items-center justify-between gap-3 border-b-2 border-dashed border-slate-300 pb-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Estado del vuelo</p>
+            <span className="rounded-full bg-slate-950 px-3 py-1 text-[11px] font-semibold text-white">{accessState.label}</span>
+          </div>
+          <h3 className="mt-4 text-xl font-semibold text-slate-950">{accessState.title}</h3>
+          <p className="mt-2 text-sm leading-6 text-slate-600">{accessState.detail}</p>
           <div className="mt-5">
             <InvitationResponseForm
               token={token}
@@ -186,6 +188,19 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
         </section>
       ) : (
         <>
+          {showCheckinConfirmation && (
+            <section className="relative overflow-hidden rounded-[28px] border border-slate-300 bg-[#eed8d2] p-6 pt-7 text-slate-950 shadow-2xl before:absolute before:inset-x-0 before:top-0 before:h-1.5 before:bg-[#fcb39e]">
+              <p className="border-b-2 border-dashed border-slate-300 pb-4 text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
+                Check-in confirmado
+              </p>
+              <h3 className="mt-4 text-xl font-semibold text-slate-950">
+                El pr{'\u00f3'}ximo destino: mis 15. {'\u2764\uFE0F'}
+              </h3>
+              <p className="mt-2 text-sm leading-6 text-slate-600">Una noche inolvidable. Nos vemos a bordo.</p>
+              <p className="mt-3 text-sm font-semibold text-slate-950">No olvides descargar tu QR.</p>
+            </section>
+          )}
+
           {!invitationUsed && (
             <section className="relative overflow-hidden rounded-[28px] border border-slate-300 bg-[#eed8d2] p-6 pt-7 text-center text-slate-950 shadow-2xl before:absolute before:inset-x-0 before:top-0 before:h-1.5 before:bg-[#fcb39e] [&>p:first-child]:border-b-2 [&>p:first-child]:border-dashed [&>p:first-child]:border-slate-300 [&>p:first-child]:pb-4 [&_p]:!text-slate-600">
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/50">Tu acceso</p>

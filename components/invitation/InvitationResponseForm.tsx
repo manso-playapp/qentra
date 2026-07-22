@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Check, X } from 'lucide-react'
 import ImageUpload from '@/components/admin/ImageUpload'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -45,7 +46,6 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
   const [photoUrl, setPhotoUrl] = useState(initialData.photoUrl)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [notice, setNotice] = useState<string | null>(null)
 
   const isConfirming = attendanceResponse === 'confirmed'
   const companionLimit = initialData.plusOnesAllowed
@@ -54,7 +54,6 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
     event.preventDefault()
     setLoading(true)
     setError(null)
-    setNotice(null)
 
     try {
       const response = await fetch(`/api/invitacion/${token}`, {
@@ -84,12 +83,13 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
         throw new Error(payload?.error || 'No se pudo guardar tu respuesta.')
       }
 
-      setNotice(
-        attendanceResponse === 'confirmed'
-          ? 'Asistencia confirmada. Si el acceso queda habilitado, el QR final aparecera enseguida.'
-          : 'Respuesta registrada. Gracias por avisarnos.'
-      )
-      router.refresh()
+      if (attendanceResponse === 'confirmed') {
+        const nextSearchParams = new URLSearchParams(window.location.search)
+        nextSearchParams.set('confirmed', '1')
+        router.replace(`${window.location.pathname}?${nextSearchParams.toString()}`)
+      } else {
+        router.refresh()
+      }
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : 'No se pudo guardar tu respuesta.')
     } finally {
@@ -106,26 +106,50 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
         <button
           type="button"
           onClick={() => setAttendanceResponse('confirmed')}
-          className={`rounded-3xl border px-4 py-4 text-left transition ${
+          aria-pressed={isConfirming}
+          className={`min-h-28 rounded-[22px] border-2 px-5 py-4 text-left transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#fcb39e] focus-visible:ring-offset-2 ${
             isConfirming
-              ? 'border-emerald-300/70 bg-emerald-950/80 text-white'
-              : 'border-slate-700 bg-slate-700 text-white hover:bg-slate-800'
+              ? 'border-[#2f5d55] bg-[#2f5d55] text-white shadow-[0_10px_24px_rgba(47,93,85,0.2)]'
+              : 'border-[#fcb39e] bg-white/60 text-slate-800 hover:border-[#2f5d55] hover:bg-white'
           }`}
         >
-          <p className="!text-white text-sm font-semibold">Confirmar asistencia</p>
-          <p className="!text-white mt-2 text-sm leading-6 opacity-80">Completa tus datos y recibe el QR final de ingreso.</p>
+          <span className="flex items-center gap-2.5">
+            <span
+              className={`grid size-7 shrink-0 place-items-center rounded-full border ${
+                isConfirming ? 'border-white/45 bg-white/15 text-white' : 'border-[#fcb39e] bg-[#fcb39e]/25 text-[#2f5d55]'
+              }`}
+            >
+              <Check className="size-4" strokeWidth={3} aria-hidden="true" />
+            </span>
+            <span className="text-sm font-semibold">Confirmar asistencia</span>
+          </span>
+          <span className={`mt-2 block text-sm leading-6 ${isConfirming ? 'text-white/80' : 'text-slate-600'}`}>
+            Completá tus datos y recibí el QR final de ingreso.
+          </span>
         </button>
         <button
           type="button"
           onClick={() => setAttendanceResponse('declined')}
-          className={`rounded-3xl border px-4 py-4 text-left transition ${
+          aria-pressed={!isConfirming}
+          className={`min-h-28 rounded-[22px] border-2 px-5 py-4 text-left transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#fcb39e] focus-visible:ring-offset-2 ${
             !isConfirming
-              ? 'border-rose-300/70 bg-rose-950/80 text-white'
-              : 'border-slate-700 bg-slate-700 text-white hover:bg-slate-800'
+              ? 'border-[#344563] bg-[#344563] text-white shadow-[0_10px_24px_rgba(52,69,99,0.2)]'
+              : 'border-[#fcb39e] bg-white/60 text-slate-800 hover:border-[#344563] hover:bg-white'
           }`}
         >
-          <p className="!text-white text-sm font-semibold">No asistire</p>
-          <p className="!text-white mt-2 text-sm leading-6 opacity-80">Avisa a la organizacion para liberar tu lugar.</p>
+          <span className="flex items-center gap-2.5">
+            <span
+              className={`grid size-7 shrink-0 place-items-center rounded-full border ${
+                !isConfirming ? 'border-white/45 bg-white/15 text-white' : 'border-[#fcb39e] bg-[#fcb39e]/25 text-[#344563]'
+              }`}
+            >
+              <X className="size-4" strokeWidth={3} aria-hidden="true" />
+            </span>
+            <span className="text-sm font-semibold">No asistiré</span>
+          </span>
+          <span className={`mt-2 block text-sm leading-6 ${!isConfirming ? 'text-white/80' : 'text-slate-600'}`}>
+            Avisá a la organización para liberar tu lugar.
+          </span>
         </button>
       </div>
 
@@ -267,12 +291,6 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
       {error && (
         <div className="rounded-3xl border border-rose-300/50 bg-rose-950/80 p-4 text-sm text-rose-100">
           {error}
-        </div>
-      )}
-
-      {notice && (
-        <div className="rounded-3xl border border-emerald-300/50 bg-emerald-950/80 p-4 text-sm text-emerald-100">
-          {notice}
         </div>
       )}
 
