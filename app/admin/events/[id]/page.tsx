@@ -244,7 +244,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
                     </Link>
                   </Button>
                   <Button asChild variant="outline">
-                    <Link href={`/totem/${event.id}`} target="_blank">
+                    <Link href={`/t/${event.slug}`} target="_blank">
                       Ver en vivo
                       <ExternalLink className="size-4" />
                     </Link>

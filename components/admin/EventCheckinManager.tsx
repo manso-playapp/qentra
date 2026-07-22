@@ -1,6 +1,7 @@
 'use client'
 
 import jsQR from 'jsqr'
+import { UserRound } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { formatGuestTypeAccessPolicy } from '@/lib/access-policy'
@@ -872,21 +873,17 @@ export default function EventCheckinManager({
       branding?.welcome_message ||
       'Bienvenidos. Cada ingreso aprobado se reflejara aqui por unos segundos, sin exponer informacion operativa.'
     const approvedMessage = branding?.approved_message || 'Bienvenida habilitada'
-    const spotlightNameParts = totemSpotlight?.fullName.split(' ').filter(Boolean) ?? []
-    const spotlightInitials = totemSpotlight
-      ? getGuestInitials(spotlightNameParts[0], spotlightNameParts[1])
-      : getGuestInitials(event.name)
-
     return (
-      <main
-        className="min-h-screen overflow-hidden px-6 py-6 text-white sm:px-10"
-        style={{
-          background: totemBackground
-            ? `linear-gradient(180deg, rgba(10,15,24,0.55), rgba(10,15,24,0.78)), url(${totemBackground}) center/cover no-repeat`
-            : `radial-gradient(circle at top left, ${totemAccent}55, transparent 28%), radial-gradient(circle at top right, ${totemSecondary}60, transparent 32%), linear-gradient(180deg, ${totemSecondary} 0%, #090d14 100%)`,
-        }}
-      >
-        <div className="mx-auto grid min-h-[calc(100vh-3rem)] max-w-270 grid-rows-[auto_1fr_auto] gap-8">
+      <div className="fixed inset-0 overflow-hidden bg-slate-950">
+        <main
+          className="absolute left-1/2 top-1/2 h-[100vw] w-[100vh] -translate-x-1/2 -translate-y-1/2 -rotate-90 overflow-hidden px-6 py-6 text-white sm:px-10"
+          style={{
+            background: totemBackground
+              ? `linear-gradient(180deg, rgba(10,15,24,0.55), rgba(10,15,24,0.78)), url(${totemBackground}) center/cover no-repeat`
+              : `radial-gradient(circle at top left, ${totemAccent}55, transparent 28%), radial-gradient(circle at top right, ${totemSecondary}60, transparent 32%), linear-gradient(180deg, ${totemSecondary} 0%, #090d14 100%)`,
+          }}
+        >
+          <div className="mx-auto grid min-h-[calc(100vw-3rem)] max-w-270 grid-rows-[auto_1fr_auto] gap-8">
           <header className="grid grid-cols-2 items-start gap-6">
             <div>
               <p className="text-sm uppercase tracking-[0.34em] text-white/65">Fecha del evento</p>
@@ -943,7 +940,7 @@ export default function EventCheckinManager({
                         className="size-full object-cover"
                       />
                     ) : (
-                      spotlightInitials
+                      <UserRound className="size-32 text-white/85" strokeWidth={1.25} aria-label="Invitado sin foto" />
                     )}
                   </div>
                   <h2 className="admin-heading mt-8 text-6xl leading-none text-white sm:text-7xl">
@@ -969,8 +966,9 @@ export default function EventCheckinManager({
               Desarrollado por Alista
             </p>
           </footer>
-        </div>
-      </main>
+          </div>
+        </main>
+      </div>
     )
   }
 
@@ -1009,7 +1007,7 @@ export default function EventCheckinManager({
                 <Link href={`/admin/events/${event.id}/guests`}>Ver invitados</Link>
               </Button>
               <Button asChild variant="outline" className="border-amber-400/20 bg-amber-400/10 text-amber-100 hover:bg-amber-400/15 hover:text-white">
-                <Link href={`/totem/${event.id}`}>Ver pantalla publica</Link>
+                <Link href={`/t/${event.slug}`}>Ver pantalla publica</Link>
               </Button>
             </div>
           </section>

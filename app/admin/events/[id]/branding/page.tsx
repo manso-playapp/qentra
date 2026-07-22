@@ -17,7 +17,7 @@ export default async function BrandingPage({ params }: BrandingPageProps) {
   const supabase = await createServerSupabaseClient()
 
   const [eventResponse, brandingResponse] = await Promise.all([
-    supabase.from('events').select('id, name').eq('id', id).maybeSingle(),
+    supabase.from('events').select('id, name, slug').eq('id', id).maybeSingle(),
     supabase.from('event_branding').select('*').eq('event_id', id).maybeSingle(),
   ])
 
@@ -33,7 +33,7 @@ export default async function BrandingPage({ params }: BrandingPageProps) {
     )
   }
 
-  const event = eventResponse.data as Pick<Event, 'id' | 'name'> | null
+  const event = eventResponse.data as Pick<Event, 'id' | 'name' | 'slug'> | null
   if (!event) {
     notFound()
   }
@@ -42,6 +42,7 @@ export default async function BrandingPage({ params }: BrandingPageProps) {
     <AdminLayout>
       <BrandingForm
         eventId={event.id}
+        eventSlug={event.slug}
         eventName={event.name}
         branding={(brandingResponse.data ?? null) as EventBranding | null}
       />

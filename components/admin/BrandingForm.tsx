@@ -15,6 +15,7 @@ import type { EventBranding } from '@/types'
 
 type BrandingFormProps = {
   eventId: string
+  eventSlug: string
   eventName: string
   branding: EventBranding | null
 }
@@ -49,7 +50,7 @@ function initialState(branding: EventBranding | null): BrandingState {
   }
 }
 
-export default function BrandingForm({ eventId, eventName, branding }: BrandingFormProps) {
+export default function BrandingForm({ eventId, eventSlug, eventName, branding }: BrandingFormProps) {
   const router = useRouter()
   const [form, setForm] = useState<BrandingState>(() => initialState(branding))
   const [saving, setSaving] = useState(false)
@@ -284,7 +285,7 @@ export default function BrandingForm({ eventId, eventName, branding }: BrandingF
 
               <div className="grid gap-2">
                 <Button asChild variant="outline" className="w-full">
-                  <Link href={`/totem/${eventId}`} target="_blank">
+                  <Link href={`/t/${eventSlug}`} target="_blank">
                     <ExternalLink className="size-4" />
                     Ver tótem
                   </Link>
