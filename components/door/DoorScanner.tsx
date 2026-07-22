@@ -1,7 +1,8 @@
 'use client'
 
 import jsQR from 'jsqr'
-import { Camera, Keyboard, LoaderCircle, RotateCcw, ScanLine } from 'lucide-react'
+import Image from 'next/image'
+import { Camera, Flashlight, FlashlightOff, Keyboard, LoaderCircle, RotateCcw, ScanLine } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -28,6 +29,12 @@ type DoorResult = {
   guest?: GuestAtDoor
 }
 
+type TorchTrack = MediaStreamTrack & {
+  getCapabilities?: () => MediaTrackCapabilities
+}
+
+type TorchCapabilities = MediaTrackCapabilities & { torch?: boolean }
+
 function tokenFromAccess(value: string) {
   const trimmed = value.trim()
   if (!trimmed) throw new Error('No se detectó un QR válido.')
@@ -52,6 +59,8 @@ export default function DoorScanner({ event }: DoorScannerProps) {
   const [manualOpen, setManualOpen] = useState(false)
   const [manualValue, setManualValue] = useState('')
   const [cameraMessage, setCameraMessage] = useState<string | null>(null)
+  const [flashSupported, setFlashSupported] = useState(false)
+  const [flashActive, setFlashActive] = useState(false)
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -66,9 +75,29 @@ export default function DoorScanner({ event }: DoorScannerProps) {
     streamRef.current = null
     if (videoRef.current) videoRef.current.srcObject = null
     setScannerActive(false)
+    setFlashSupported(false)
+    setFlashActive(false)
   }, [])
 
   useEffect(() => () => stopScanner(), [stopScanner])
+
+  // Esta pantalla se usa como una app operativa: evitar el rebote y el scroll
+  // del navegador para que el gesto sobre la cámara no mueva toda la página.
+  useEffect(() => {
+    const bodyOverflow = document.body.style.overflow
+    const bodyOverscroll = document.body.style.overscrollBehavior
+    const htmlOverflow = document.documentElement.style.overflow
+
+    document.body.style.overflow = 'hidden'
+    document.body.style.overscrollBehavior = 'none'
+    document.documentElement.style.overflow = 'hidden'
+
+    return () => {
+      document.body.style.overflow = bodyOverflow
+      document.body.style.overscrollBehavior = bodyOverscroll
+      document.documentElement.style.overflow = htmlOverflow
+    }
+  }, [])
 
   const request = useCallback(
     async (token: string, intent: 'preview' | 'approve') => {
@@ -128,6 +157,9 @@ export default function DoorScanner({ event }: DoorScannerProps) {
       if (!video || !canvas) throw new Error('No se pudo inicializar la cámara.')
 
       streamRef.current = stream
+      const videoTrack = stream.getVideoTracks()[0] as TorchTrack | undefined
+      const capabilities = videoTrack?.getCapabilities?.() as TorchCapabilities | undefined
+      setFlashSupported(Boolean(capabilities?.torch))
       video.srcObject = stream
       await video.play()
       const context = canvas.getContext('2d', { willReadFrequently: true })
@@ -160,6 +192,22 @@ export default function DoorScanner({ event }: DoorScannerProps) {
     }
   }, [previewAccess, stopScanner])
 
+  const toggleFlash = async () => {
+    const videoTrack = streamRef.current?.getVideoTracks()[0] as TorchTrack | undefined
+    if (!videoTrack || !flashSupported) return
+
+    try {
+      const nextFlashState = !flashActive
+      await videoTrack.applyConstraints({
+        advanced: [{ torch: nextFlashState } as MediaTrackConstraintSet],
+      })
+      setFlashActive(nextFlashState)
+      setCameraMessage(null)
+    } catch {
+      setCameraMessage('No se pudo cambiar el flash de esta cámara.')
+    }
+  }
+
   const approve = async () => {
     if (!accessToken) return
     setLoading(true)
@@ -185,16 +233,32 @@ export default function DoorScanner({ event }: DoorScannerProps) {
   const companionCount = result?.guest?.plus_ones_confirmed ?? 0
 
   return (
-    <main className="min-h-screen bg-slate-950 px-4 py-5 text-white sm:px-6">
-      <div className="mx-auto flex min-h-[calc(100vh-2.5rem)] max-w-md flex-col">
+    <main className="fixed inset-0 h-[100dvh] touch-none overflow-hidden overscroll-none bg-slate-950 px-4 py-5 text-white sm:px-6">
+      <div className="mx-auto flex h-full max-w-md flex-col">
         <header className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-sky-300">Modo puerta</p>
-            <h1 className="mt-2 text-2xl font-bold leading-tight">{event.name}</h1>
+          <div className="flex items-start gap-3">
+            <Image src="/alista-logo-white.svg" alt="Alista" width={120} height={40} className="mt-1 h-auto w-18 shrink-0" priority />
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-sky-300">Modo puerta</p>
+              <h1 className="mt-2 text-2xl font-bold leading-tight">{event.name}</h1>
+            </div>
           </div>
-          <div className={`mt-1 flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold ${scannerActive ? 'bg-emerald-400/15 text-emerald-200' : 'bg-white/10 text-slate-300'}`}>
-            <span className={`size-2 rounded-full ${scannerActive ? 'bg-emerald-400' : 'bg-slate-500'}`} />
-            {scannerActive ? 'Cámara lista' : 'En espera'}
+          <div className="mt-1 flex flex-col items-end gap-2">
+            <div className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold ${scannerActive ? 'bg-emerald-400/15 text-emerald-200' : 'bg-white/10 text-slate-300'}`}>
+              <span className={`size-2 rounded-full ${scannerActive ? 'bg-emerald-400' : 'bg-slate-500'}`} />
+              {scannerActive ? 'Cámara lista' : 'En espera'}
+            </div>
+            {scannerActive && flashSupported && (
+              <button
+                type="button"
+                onClick={() => void toggleFlash()}
+                className={`grid size-10 place-items-center rounded-full border transition ${flashActive ? 'border-[#fcb39e] bg-[#fcb39e] text-slate-950' : 'border-white/15 bg-white/10 text-white hover:bg-white/15'}`}
+                aria-label={flashActive ? 'Desactivar flash' : 'Activar flash'}
+                title={flashActive ? 'Desactivar flash' : 'Activar flash'}
+              >
+                {flashActive ? <FlashlightOff className="size-4" /> : <Flashlight className="size-4" />}
+              </button>
+            )}
           </div>
         </header>
 
@@ -224,7 +288,7 @@ export default function DoorScanner({ event }: DoorScannerProps) {
                   Ingresar código manual
                 </button>
                 {manualOpen && (
-                  <form className="mt-3 flex gap-2" onSubmit={(submitEvent) => { submitEvent.preventDefault(); void previewAccess(manualValue) }}>
+                  <form className="mt-3 flex touch-auto gap-2" onSubmit={(submitEvent) => { submitEvent.preventDefault(); void previewAccess(manualValue) }}>
                     <Input value={manualValue} onChange={(inputEvent) => setManualValue(inputEvent.target.value)} className="border-white/20 bg-white text-slate-950" placeholder="Token de acceso" />
                     <Button type="submit" disabled={!manualValue.trim() || loading}>Validar</Button>
                   </form>
