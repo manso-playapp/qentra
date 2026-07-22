@@ -209,7 +209,7 @@ export default function InvitationView({
         )}
 
         <section className="relative overflow-hidden rounded-[28px] bg-[#eed8d2] p-5 text-slate-950 shadow-2xl sm:p-6">
-          <div className="absolute inset-x-0 top-0 h-1.5 bg-slate-950" />
+          <div className="absolute inset-x-0 top-0 h-1.5 bg-[#fcb39e]" />
 
           <header className="flex items-center justify-between pt-2">
             <div>
@@ -297,7 +297,7 @@ export default function InvitationView({
         </section>
 
         <section className="relative overflow-hidden rounded-[28px] border border-slate-300 bg-[#eed8d2] p-6 text-slate-950 shadow-xl">
-          <div className="absolute inset-x-0 top-0 h-1.5 bg-slate-950" />
+          <div className="absolute inset-x-0 top-0 h-1.5 bg-[#fcb39e]" />
           <div className="flex items-center justify-between gap-3">
             <p className="pt-1 text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Estado del vuelo</p>
             <span className="rounded-full bg-slate-950 px-3 py-1 text-[11px] font-semibold text-white">{accessState.label}</span>
