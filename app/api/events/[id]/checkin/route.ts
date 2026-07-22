@@ -158,6 +158,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     .select('checked_in_at')
     .eq('event_id', eventId)
     .eq('guest_id', guest.id)
+    .eq('result', 'approved')
     .order('checked_in_at', { ascending: false })
     .limit(1)
     .maybeSingle()

@@ -88,7 +88,11 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
       .order('created_at', { ascending: true }),
     supabase.from('delivery_profiles').select('*'),
     supabase.from('guests').select('*', { count: 'exact', head: true }).eq('event_id', id),
-    supabase.from('checkins').select('*', { count: 'exact', head: true }).eq('event_id', id),
+    supabase
+      .from('checkins')
+      .select('*', { count: 'exact', head: true })
+      .eq('event_id', id)
+      .eq('result', 'approved'),
   ])
 
   if (eventResponse.error) {

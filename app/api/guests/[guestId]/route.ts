@@ -40,6 +40,73 @@ export async function PATCH(request: Request, context: GuestRouteContext) {
     const body = (await request.json()) as UpdateGuestForm
     const payload: Record<string, string | null> = {}
 
+    // Revertir un ingreso es mas que volver el status a "habilitado": el
+    // check-in aprobado consume el token y deja el QR oculto en la invitacion.
+    // Conservamos el registro como "denegado" para auditoria, pero deja de
+    // contar como ingreso y el token que se uso vuelve a quedar disponible.
+    const { data: currentGuest, error: currentGuestError } = await adminClient
+      .from('guests')
+      .select('status')
+      .eq('id', guestId)
+      .maybeSingle()
+
+    if (currentGuestError) {
+      return Response.json({ error: currentGuestError.message }, { status: 500 })
+    }
+
+    if (!currentGuest) {
+      return Response.json({ error: 'Invitado inexistente.' }, { status: 404 })
+    }
+
+    const isCheckinReversal = body.status === 'confirmed' && currentGuest.status === 'checked_in'
+
+    const restoreAccessAfterCheckinReversal = async () => {
+      if (!isCheckinReversal) return null
+
+      const rollbackGuestStatus = async () => {
+        await adminClient.from('guests').update({ status: currentGuest.status }).eq('id', guestId)
+      }
+
+      const { error: checkinReversalError } = await adminClient
+        .from('checkins')
+        .update({ result: 'denied', reason: 'Ingreso revertido desde Alista Admin' })
+        .eq('guest_id', guestId)
+        .eq('result', 'approved')
+
+      if (checkinReversalError) {
+        await rollbackGuestStatus()
+        return checkinReversalError.message
+      }
+
+      const { data: usedToken, error: usedTokenError } = await adminClient
+        .from('invitation_tokens')
+        .select('id')
+        .eq('guest_id', guestId)
+        .not('last_used_at', 'is', null)
+        .order('last_used_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (usedTokenError) {
+        await rollbackGuestStatus()
+        return usedTokenError.message
+      }
+
+      if (!usedToken) return null
+
+      const { error: restoreTokenError } = await adminClient
+        .from('invitation_tokens')
+        .update({ used_count: 0, last_used_at: null, is_active: true })
+        .eq('id', usedToken.id)
+
+      if (restoreTokenError) {
+        await rollbackGuestStatus()
+        return restoreTokenError.message
+      }
+
+      return null
+    }
+
     if (body.guest_type_id !== undefined) payload.guest_type_id = body.guest_type_id
     if (body.first_name !== undefined) payload.first_name = body.first_name.trim()
     if (body.last_name !== undefined) payload.last_name = body.last_name.trim()
@@ -120,12 +187,18 @@ export async function PATCH(request: Request, context: GuestRouteContext) {
           return Response.json({ error: retryError.message }, { status: 500 })
         }
 
+        const reversalError = await restoreAccessAfterCheckinReversal()
+        if (reversalError) return Response.json({ error: reversalError }, { status: 500 })
+
         return Response.json({ data: normalizeGuestRecord(retryData) })
       }
 
       if (error) {
         return Response.json({ error: error.message }, { status: 500 })
       }
+
+      const reversalError = await restoreAccessAfterCheckinReversal()
+      if (reversalError) return Response.json({ error: reversalError }, { status: 500 })
 
       return Response.json({ data: normalizeGuestRecord(data) })
     }
@@ -151,6 +224,9 @@ export async function PATCH(request: Request, context: GuestRouteContext) {
     if (error) {
       return Response.json({ error: error.message }, { status: 500 })
     }
+
+    const reversalError = await restoreAccessAfterCheckinReversal()
+    if (reversalError) return Response.json({ error: reversalError }, { status: 500 })
 
     return Response.json({ data: normalizeGuestRecord(data) })
   } catch (error) {

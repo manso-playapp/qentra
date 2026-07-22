@@ -112,8 +112,8 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
               : 'border-slate-700 bg-slate-700 text-white hover:bg-slate-800'
           }`}
         >
-          <p className="text-sm font-semibold">Confirmar asistencia</p>
-          <p className="mt-2 text-sm leading-6 opacity-80">Completa tus datos y recibe el QR final de ingreso.</p>
+          <p className="!text-white text-sm font-semibold">Confirmar asistencia</p>
+          <p className="!text-white mt-2 text-sm leading-6 opacity-80">Completa tus datos y recibe el QR final de ingreso.</p>
         </button>
         <button
           type="button"
@@ -124,8 +124,8 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
               : 'border-slate-700 bg-slate-700 text-white hover:bg-slate-800'
           }`}
         >
-          <p className="text-sm font-semibold">No asistire</p>
-          <p className="mt-2 text-sm leading-6 opacity-80">Avisa a la organizacion para liberar tu lugar.</p>
+          <p className="!text-white text-sm font-semibold">No asistire</p>
+          <p className="!text-white mt-2 text-sm leading-6 opacity-80">Avisa a la organizacion para liberar tu lugar.</p>
         </button>
       </div>
 
