@@ -157,7 +157,7 @@ export function buildAccessState(input: {
   return {
     label: 'Acreditación pendiente',
     title: 'Completá tu checkin para recibir el QR final',
-    detail: 'Confirmá asistencia, DNI, acompañantes y observaciones antes de mostrar el acceso en puerta.',
+    detail: 'Confirmá asistencia, DNI y observaciones antes de mostrar el acceso en puerta.',
     tone: 'border-sky-300/35 bg-sky-950/80 text-sky-50',
     pill: 'bg-sky-300/15 text-sky-100',
   }

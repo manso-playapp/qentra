@@ -317,7 +317,11 @@ export default function DoorScanner({ event }: DoorScannerProps) {
                   <div>
                     <h2 className="text-3xl font-bold leading-tight">{guestName(result.guest)}</h2>
                     <p className="mt-2 font-mono text-base font-semibold">DNI {result.guest.document_number || 'NO INFORMADO'}</p>
-                    <p className="mt-1 text-sm font-semibold uppercase tracking-[0.08em]">Acompañantes: {companionCount} menores</p>
+                    {companionCount > 0 && (
+                      <p className="mt-1 text-sm font-semibold uppercase tracking-[0.08em]">
+                        Acompañantes: {companionCount}
+                      </p>
+                    )}
                   </div>
                 </div>
               )}
