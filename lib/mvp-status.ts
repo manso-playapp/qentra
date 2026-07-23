@@ -119,8 +119,12 @@ export const MVP_FEATURES: MvpFeature[] = [
     module: 'guest',
     status: 'done',
     detail:
-      'El admin marca el aporte de cada invitado como sin cobro / pendiente / confirmado desde la ficha. Confirmarlo destraba la emision del acceso (isInvitationAccessReady ya gatea contra la columna payment_status). La pasarela automatica (MercadoPago) sigue pendiente aparte.',
-    evidence: ['app/api/guests/[guestId]/route.ts', 'components/admin/EventGuestsManager.tsx'],
+      'El admin puede marcar el aporte desde la ficha y Mercado Pago lo concilia automáticamente. Un pago aprobado actualiza payment_status, habilita el acceso y emite el QR; la invitación también puede revalidar un pago pendiente contra la API de Mercado Pago.',
+    evidence: [
+      'app/api/guests/[guestId]/route.ts',
+      'components/admin/EventGuestsManager.tsx',
+      'app/api/invitacion/[token]/payment/sync/route.ts',
+    ],
   },
   {
     id: 'checkin-web',
@@ -206,11 +210,15 @@ export const MVP_FEATURES: MvpFeature[] = [
     id: 'mercadopago',
     title: 'Cobros con MercadoPago',
     module: 'pagos',
-    status: 'partial',
+    status: 'done',
     detail:
-      'Checkout Pro crea una preferencia por invitado, recibe webhooks firmados y habilita o revoca el QR según el estado del pago.',
-    gap: 'Falta aplicar la migración en Supabase, configurar las credenciales y probar el webhook de cada entorno con una cuenta de prueba.',
-    evidence: ['app/api/invitacion/[token]/payment/route.ts', 'app/api/mercadopago/webhook/route.ts'],
+      'Checkout Pro crea una preferencia por invitado, usa Sandbox en Preview y cobros reales en Producción. Los webhooks firmados y la conciliación autenticada de respaldo validan importe/moneda, actualizan el pago y habilitan o revocan el QR. Flujo end-to-end verificado con una cuenta de prueba.',
+    evidence: [
+      'app/api/invitacion/[token]/payment/route.ts',
+      'app/api/mercadopago/webhook/route.ts',
+      'app/api/invitacion/[token]/payment/sync/route.ts',
+      'lib/mercadopago-webhook.ts',
+    ],
   },
 ]
 
@@ -245,8 +253,8 @@ export const BEYOND_MVP: { title: string; detail: string }[] = [
     detail: 'Registro de envios y trazabilidad de delivery en la vista de configuracion.',
   },
   {
-    title: '95 tests automatizados',
-    detail: 'Cobertura de la política de acceso y del parseo de respuestas de invitación.',
+    title: '113 tests automatizados',
+    detail: 'Cobertura de política de acceso, respuestas de invitación, configuración de Mercado Pago y firma de webhooks.',
   },
 ]
 
@@ -258,24 +266,18 @@ export const TECH_DEBT: { title: string; detail: string; severity: 'alta' | 'med
 export const NEXT_STEPS: { order: number; title: string; detail: string; featureId: string }[] = [
   {
     order: 1,
-    title: 'Cobros con Mercado Pago',
-    detail: 'Aplicar la migración, cargar las credenciales y completar una compra de prueba con webhook verificado.',
-    featureId: 'mercadopago',
-  },
-  {
-    order: 2,
     title: 'Terminar el editor de invitacion',
     detail: 'Spotify real (buscar y sumar temas a la playlist), guardar respuestas de trivia y que los toggles de campos afecten el formulario publico y su validacion.',
     featureId: 'invitacion-editor',
   },
   {
-    order: 3,
+    order: 2,
     title: 'Editor del totem (dedicado)',
     detail: 'Su propio editor, distinto al de la invitacion: composicion visual y mensajes del totem con preview en vivo.',
     featureId: 'totem-editor',
   },
   {
-    order: 4,
+    order: 3,
     title: 'Numero de WhatsApp productivo',
     detail: 'El envio por WhatsApp corre contra el sandbox de Twilio. Dar de alta un numero propio aprobado para escribirle a cualquier invitado sin opt-in previo.',
     featureId: 'twilio-numero',
