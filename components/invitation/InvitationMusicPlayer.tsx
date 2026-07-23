@@ -59,6 +59,12 @@ export default function InvitationMusicPlayer() {
             return
           }
 
+          // Sin este permiso Spotify solo entrega una vista previa corta en
+          // navegadores que requieren contenido cifrado para la pista completa.
+          containerRef.current?.querySelector('iframe')?.setAttribute(
+            'allow',
+            'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture'
+          )
           controllerRef.current = controller
           controller.addListener('ready', () => {
             controller.play()
