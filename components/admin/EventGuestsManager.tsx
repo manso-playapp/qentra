@@ -187,6 +187,12 @@ function buildGuestsCsv(guests: GuestWithType[]): string {
   return [header.map(cell).join(','), ...rows].join('\r\n')
 }
 
+// Plantilla vacia lista para completar en Excel o Google Sheets. Los nombres
+// de columna coinciden exactamente con el orden que entiende la importacion.
+function buildGuestImportTemplateCsv(): string {
+  return ['Nombre', 'Apellido', 'Email', 'Telefono', 'Destino'].join(',') + '\r\n'
+}
+
 type ImportRow = {
   first_name: string
   last_name: string
@@ -204,6 +210,17 @@ function parseGuestRows(text: string): ImportRow[] {
     .split(/\r?\n/)
     .map((line) => line.trim())
     .filter(Boolean)
+    // Una plantilla descargada incluye esta cabecera; no debe crear por error
+    // un invitado llamado "Nombre" al volver a importarla.
+    .filter((line, index) => {
+      if (index !== 0) return true
+      const firstColumn = (line.split(/\t|,|;/)[0] ?? '')
+        .trim()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLocaleLowerCase('es-AR')
+      return firstColumn !== 'nombre'
+    })
     .map((line) => {
       const cols = line.split(/\t|,|;/).map((cell) => cell.trim())
       return {
@@ -744,6 +761,18 @@ export default function EventGuestsManager({
     const anchor = document.createElement('a')
     anchor.href = url
     anchor.download = `invitados-${event.slug}.csv`
+    anchor.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const downloadGuestImportTemplate = () => {
+    const blob = new Blob(['ï»¿' + buildGuestImportTemplateCsv()], {
+      type: 'text/csv;charset=utf-8;',
+    })
+    const url = URL.createObjectURL(blob)
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = 'plantilla-carga-invitados.csv'
     anchor.click()
     URL.revokeObjectURL(url)
   }
@@ -1519,6 +1548,13 @@ export default function EventGuestsManager({
                   className="inline-flex flex-none items-center whitespace-nowrap rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
                 >
                   {showImport ? 'Cerrar' : 'Importar'}
+                </button>
+                <button
+                  type="button"
+                  onClick={downloadGuestImportTemplate}
+                  className="inline-flex flex-none items-center whitespace-nowrap rounded-md border border-sky-200 bg-sky-50 px-3 py-1.5 text-sm font-medium text-sky-800 hover:bg-sky-100"
+                >
+                  Descargar plantilla
                 </button>
                 <button
                   type="button"
