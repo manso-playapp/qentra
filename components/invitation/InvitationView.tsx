@@ -2,6 +2,7 @@ import Image from 'next/image'
 import type { ReactNode } from 'react'
 import { CalendarDays, Clock3, MapPin, PlaneTakeoff, Ticket } from 'lucide-react'
 import type { SurfaceBranding } from '@/types'
+import InvitationMusicPlayer from '@/components/invitation/InvitationMusicPlayer'
 
 export type InvitationEventInfo = {
   name?: string
@@ -175,7 +176,6 @@ const FIESTA_DRESSCODE = {
   ellas: 'Ellas: negro y blanco.',
   ellos: 'Ellos: gorra y ropa deportiva.',
 }
-const FIESTA_SONG_EMBED_URL = 'https://open.spotify.com/embed/track/5Q0Nhxo0l2bP3pNjpGJwV1?utm_source=generator&autoplay=1'
 const FIESTA_CONTACT_PHONE = '+54 9 3496 54-9307'
 const BOARDING_TIME = '20:30'
 
@@ -296,12 +296,7 @@ export default function InvitationView({
             </div>
             <div className="mt-5 border-t-2 border-dashed border-slate-300 pt-5">
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Canción de abordaje</p>
-              <iframe
-                className="mt-2 h-38 w-full rounded-[18px] border-0"
-                src={FIESTA_SONG_EMBED_URL}
-                title="Party In The U.S.A. de Miley cyrus en Spotify"
-                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-              />
+              <InvitationMusicPlayer />
             </div>
             <div className="mt-5 flex flex-wrap gap-2">
               <a href={FIESTA_DIRECTIONS_URL} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center rounded-full bg-[#fcb39e] px-4 py-2 text-xs font-semibold text-slate-950 transition hover:bg-[#f8c4b5]">
