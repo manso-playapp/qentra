@@ -9,6 +9,16 @@ describe('resolveMercadoPagoConfig', () => {
     ).toEqual({ accessToken: 'prod-token', mode: 'production' })
   })
 
+  it('forces the test credential in a Vercel Preview deployment', () => {
+    expect(
+      resolveMercadoPagoConfig({
+        productionAccessToken: 'prod-token',
+        testAccessToken: 'test-token',
+        vercelEnvironment: 'preview',
+      })
+    ).toEqual({ accessToken: 'test-token', mode: 'test' })
+  })
+
   it('uses a test credential only when a production credential is absent', () => {
     expect(resolveMercadoPagoConfig({ testAccessToken: ' test-token ' })).toEqual({
       accessToken: 'test-token',

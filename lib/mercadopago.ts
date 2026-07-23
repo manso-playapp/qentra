@@ -16,23 +16,30 @@ export type PaymentTransactionStatus =
 type MercadoPagoEnvironment = {
   productionAccessToken?: string
   testAccessToken?: string
+  vercelEnvironment?: string
 }
 
 /**
- * Production credentials always win. The test token is deliberately an
- * explicit fallback, so a deployment cannot accidentally send a real buyer
- * to a sandbox checkout once its production credential is configured.
+ * Preview deployments are hard-pinned to test credentials so they can never
+ * create a real charge, even if a production secret was added to Preview by
+ * mistake. Production keeps its explicit production-first behavior.
  */
 export function resolveMercadoPagoConfig(
   environment: MercadoPagoEnvironment = {
     productionAccessToken: process.env.MERCADOPAGO_ACCESS_TOKEN,
     testAccessToken: process.env.MERCADOPAGO_TEST_ACCESS_TOKEN,
+    vercelEnvironment: process.env.VERCEL_ENV,
   }
 ): MercadoPagoConfig | null {
   const productionAccessToken = environment.productionAccessToken?.trim()
+  const testAccessToken = environment.testAccessToken?.trim()
+
+  if (environment.vercelEnvironment === 'preview' && testAccessToken) {
+    return { accessToken: testAccessToken, mode: 'test' }
+  }
+
   if (productionAccessToken) return { accessToken: productionAccessToken, mode: 'production' }
 
-  const testAccessToken = environment.testAccessToken?.trim()
   if (testAccessToken) return { accessToken: testAccessToken, mode: 'test' }
 
   return null

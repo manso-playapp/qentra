@@ -61,9 +61,10 @@ Entre las mas importantes:
 
 ### Mercado Pago
 
-Checkout Pro usa `MERCADOPAGO_ACCESS_TOKEN` en producción y, solo si esa
-variable no existe, `MERCADOPAGO_TEST_ACCESS_TOKEN` para pruebas. Ambas son
-secretas y se usan exclusivamente desde rutas del servidor. Configurá también
+Checkout Pro usa `MERCADOPAGO_ACCESS_TOKEN` en producción y fuerza
+`MERCADOPAGO_TEST_ACCESS_TOKEN` en los deploys Preview de Vercel, incluso si
+la credencial productiva fue cargada allí por error. Ambas son secretas y se
+usan exclusivamente desde rutas del servidor. Configurá también
 `MERCADOPAGO_WEBHOOK_SECRET` y el webhook HTTPS
 `/api/mercadopago/webhook` con el evento **Pagos**. Antes de habilitar cobros,
 aplicá la migración `supabase/migrations/20260723162321_add_mercadopago_payments.sql`.
