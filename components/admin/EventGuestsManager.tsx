@@ -315,6 +315,11 @@ export default function EventGuestsManager({
   const [guestAccessActionLoadingId, setGuestAccessActionLoadingId] = useState<string | null>(null)
   const [copiedInvitationGuestId, setCopiedInvitationGuestId] = useState<string | null>(null)
   const [deliveryLoadingKey, setDeliveryLoadingKey] = useState<string | null>(null)
+  const [destinationDrafts, setDestinationDrafts] = useState<Record<string, string>>({})
+  const [destinationSavingGuestId, setDestinationSavingGuestId] = useState<string | null>(null)
+  const [destinationError, setDestinationError] = useState<string | null>(null)
+  const [destinationNotice, setDestinationNotice] = useState<string | null>(null)
+  const [destinationFilter, setDestinationFilter] = useState('')
   const selectedGuestTypeId = guestForm.guest_type_id || visibleGuestTypes[0]?.id || ''
   const latestInvitationTokenByGuestId = useMemo(() => {
     const map = new Map<string, InvitationToken>()
@@ -354,6 +359,54 @@ export default function EventGuestsManager({
       remainingCapacity: Math.max(event.max_capacity - reservedSeats, 0),
     }
   }, [event.max_capacity, visibleGuests])
+
+  // El destino pertenece al titular de la invitacion: sus acompanantes viajan
+  // con el grupo y cuentan para la capacidad de esa mesa/sector.
+  const destinationGuests = useMemo(
+    () => visibleGuests.filter((guest) => guest.status === 'confirmed' || guest.status === 'checked_in'),
+    [visibleGuests]
+  )
+
+  const destinationSummary = useMemo(() => {
+    const groups = new Map<string, { guests: number; people: number }>()
+    let unassignedGuests = 0
+    let unassignedPeople = 0
+
+    for (const guest of destinationGuests) {
+      const people = 1 + guest.plus_ones_confirmed
+      const destination = guest.table_assignment?.trim()
+
+      if (!destination) {
+        unassignedGuests += 1
+        unassignedPeople += people
+        continue
+      }
+
+      const current = groups.get(destination) ?? { guests: 0, people: 0 }
+      groups.set(destination, {
+        guests: current.guests + 1,
+        people: current.people + people,
+      })
+    }
+
+    return {
+      unassignedGuests,
+      unassignedPeople,
+      groups: [...groups.entries()]
+        .map(([name, values]) => ({ name, ...values }))
+        .sort((a, b) => a.name.localeCompare(b.name, 'es')),
+    }
+  }, [destinationGuests])
+
+  const filteredDestinationGuests = useMemo(() => {
+    const query = destinationFilter.trim().toLocaleLowerCase('es-AR')
+    if (!query) return destinationGuests
+
+    return destinationGuests.filter((guest) => {
+      const searchable = `${guest.first_name} ${guest.last_name} ${guest.table_assignment ?? ''}`
+      return searchable.toLocaleLowerCase('es-AR').includes(query)
+    })
+  }, [destinationFilter, destinationGuests])
 
   const guestCountByGuestTypeId = useMemo(() => {
     const map = new Map<string, number>()
@@ -871,6 +924,30 @@ export default function EventGuestsManager({
     window.location.href = `mailto:${guest.email ?? ''}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`
   }
 
+  const saveGuestDestination = async (guest: GuestWithType) => {
+    const destination = (destinationDrafts[guest.id] ?? guest.table_assignment ?? '').trim()
+    setDestinationSavingGuestId(guest.id)
+    setDestinationError(null)
+    setDestinationNotice(null)
+
+    const result = await updateGuest(guest.id, {
+      table_assignment: destination || null,
+    })
+
+    if (result.error) {
+      setDestinationError(result.error)
+    } else {
+      setDestinationDrafts((current) => ({ ...current, [guest.id]: destination }))
+      setDestinationNotice(
+        destination
+          ? `${guest.first_name} ${guest.last_name} fue asignado a ${destination}.`
+          : `Se quitó el destino de ${guest.first_name} ${guest.last_name}.`
+      )
+    }
+
+    setDestinationSavingGuestId(null)
+  }
+
   return (
     <div className="px-4 py-6 sm:px-0">
       <div className="mb-8 flex flex-col gap-4 border-b border-gray-200 pb-6 md:flex-row md:items-end md:justify-between">
@@ -917,6 +994,120 @@ export default function EventGuestsManager({
           <p className="mt-1 text-sm text-gray-600">Sobre {event.max_capacity} plazas totales</p>
         </div>
       </div>
+
+      <section aria-labelledby="destinations-heading" className="mb-8 rounded-xl border border-sky-200 bg-sky-50/50 p-6 shadow-sm">
+        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+          <div>
+            <h2 id="destinations-heading" className="text-lg font-semibold text-gray-900">Mesas y destinos</h2>
+            <p className="mt-1 max-w-3xl text-sm text-gray-600">
+              Organizá sólo a quienes confirmaron. El destino se aplica al titular y a sus acompañantes, y aparecerá en el Tótem al ingresar.
+            </p>
+          </div>
+          <div className="rounded-full bg-white px-3 py-1 text-sm font-medium text-sky-800 shadow-sm">
+            {destinationGuests.length} grupos confirmados
+          </div>
+        </div>
+
+        {destinationError && (
+          <p className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{destinationError}</p>
+        )}
+        {destinationNotice && (
+          <p className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">{destinationNotice}</p>
+        )}
+
+        {destinationGuests.length === 0 ? (
+          <div className="mt-5 rounded-lg border border-dashed border-sky-200 bg-white/70 p-5 text-sm text-gray-600">
+            Cuando haya invitados confirmados, aparecerán acá para distribuirlos por mesa o sector.
+          </div>
+        ) : (
+          <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.55fr)_minmax(280px,0.85fr)]">
+            <div className="rounded-xl border border-sky-100 bg-white p-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h3 className="font-medium text-gray-900">Asignar confirmados</h3>
+                  <p className="mt-1 text-sm text-gray-600">
+                    {destinationSummary.unassignedGuests} sin destino · {destinationSummary.unassignedPeople} personas por ubicar
+                  </p>
+                </div>
+                <input
+                  value={destinationFilter}
+                  onChange={(eventInput) => setDestinationFilter(eventInput.target.value)}
+                  placeholder="Buscar invitado o destino"
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm sm:w-56"
+                  aria-label="Buscar invitados para asignar destino"
+                />
+              </div>
+
+              <div className="mt-4 max-h-112 space-y-2 overflow-y-auto pr-1">
+                {filteredDestinationGuests.map((guest) => {
+                  const people = 1 + guest.plus_ones_confirmed
+                  const currentDestination = destinationDrafts[guest.id] ?? guest.table_assignment ?? ''
+                  const saving = destinationSavingGuestId === guest.id
+
+                  return (
+                    <div key={guest.id} className="flex flex-col gap-3 rounded-lg border border-gray-100 p-3 lg:flex-row lg:items-center">
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-medium text-gray-900">{guest.first_name} {guest.last_name}</p>
+                        <p className="text-sm text-gray-500">
+                          {people} {people === 1 ? 'persona' : 'personas'}{guest.plus_ones_confirmed > 0 ? ' · grupo con acompañantes' : ''}
+                        </p>
+                      </div>
+                      <div className="flex gap-2 lg:w-80">
+                        <input
+                          value={currentDestination}
+                          onChange={(eventInput) => setDestinationDrafts((current) => ({
+                            ...current,
+                            [guest.id]: eventInput.target.value,
+                          }))}
+                          onKeyDown={(eventInput) => {
+                            if (eventInput.key === 'Enter') {
+                              eventInput.preventDefault()
+                              void saveGuestDestination(guest)
+                            }
+                          }}
+                          placeholder="Mesa 4, VIP, Sector A..."
+                          className="min-w-0 flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                          aria-label={`Destino para ${guest.first_name} ${guest.last_name}`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => void saveGuestDestination(guest)}
+                          disabled={saving}
+                          className="rounded-md bg-sky-700 px-3 py-2 text-sm font-medium text-white hover:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {saving ? 'Guardando...' : 'Guardar'}
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })}
+                {filteredDestinationGuests.length === 0 && (
+                  <p className="rounded-lg bg-gray-50 p-4 text-sm text-gray-600">No hay confirmados que coincidan con la búsqueda.</p>
+                )}
+              </div>
+            </div>
+
+            <aside className="rounded-xl border border-sky-100 bg-white p-4">
+              <h3 className="font-medium text-gray-900">Resumen por destino</h3>
+              <p className="mt-1 text-sm text-gray-600">Personas, incluyendo acompañantes confirmados.</p>
+              <div className="mt-4 space-y-2">
+                {destinationSummary.groups.length === 0 ? (
+                  <p className="rounded-lg bg-gray-50 p-4 text-sm text-gray-600">Todavía no hay destinos asignados.</p>
+                ) : (
+                  destinationSummary.groups.map((destination) => (
+                    <div key={destination.name} className="flex items-center justify-between gap-3 rounded-lg bg-sky-50 px-3 py-2">
+                      <p className="min-w-0 truncate font-medium text-sky-950">{destination.name}</p>
+                      <p className="whitespace-nowrap text-sm text-sky-800">
+                        {destination.people} {destination.people === 1 ? 'persona' : 'personas'}
+                      </p>
+                    </div>
+                  ))
+                )}
+              </div>
+            </aside>
+          </div>
+        )}
+      </section>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.7fr)_minmax(360px,1fr)]">
         <section className="space-y-6">

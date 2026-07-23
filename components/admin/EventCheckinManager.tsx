@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { formatGuestTypeAccessPolicy } from '@/lib/access-policy'
+import { parseInvitationDetails } from '@/lib/invitation-response'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -44,7 +45,9 @@ type CheckinStatus =
     }
 
 type CheckinWithGuest = Checkin & {
-  guests?: Pick<Guest, 'first_name' | 'last_name' | 'status' | 'photo_url'> | null
+  guests?: (Pick<Guest, 'first_name' | 'last_name' | 'status' | 'photo_url' | 'table_assignment'> & {
+    notes?: string | null
+  }) | null
 }
 
 type TotemSpotlight = {
@@ -52,6 +55,7 @@ type TotemSpotlight = {
   fullName: string
   checkinTime: string
   photoUrl?: string | null
+  tableAssignment?: string | null
 }
 
 type OverrideableAccessCode = 'already_checked_in' | 'outside_window' | 'event_full'
@@ -462,6 +466,10 @@ export default function EventCheckinManager({
       fullName: `${latestCheckin.guests?.first_name || ''} ${latestCheckin.guests?.last_name || ''}`.trim() || 'Invitado autorizado',
       checkinTime: latestCheckin.checked_in_at,
       photoUrl: latestCheckin.guests?.photo_url ?? null,
+      tableAssignment:
+        latestCheckin.guests?.table_assignment?.trim() ||
+        parseInvitationDetails(latestCheckin.guests?.notes).tableAssignment ||
+        null,
     })
 
     if (spotlightTimeoutRef.current !== null) {
@@ -968,6 +976,12 @@ export default function EventCheckinManager({
                 <p className="mt-5 text-2xl leading-8 text-white/80">
                   Acceso validado a las {formatClock(new Date(totemSpotlight.checkinTime))}
                 </p>
+                {totemSpotlight.tableAssignment && (
+                  <div className="mt-7 rounded-2xl border border-sky-300/30 bg-sky-300/12 px-7 py-4">
+                    <p className="text-sm font-semibold uppercase tracking-[0.28em] text-sky-100/80">Tu destino</p>
+                    <p className="mt-2 text-3xl font-semibold text-white">{totemSpotlight.tableAssignment}</p>
+                  </div>
+                )}
               </div>
               )}
             </section>
