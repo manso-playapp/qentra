@@ -241,15 +241,13 @@ export default function DoorScanner({ event }: DoorScannerProps) {
   return (
     <main className="fixed inset-0 h-[100dvh] touch-none overflow-hidden overscroll-none bg-slate-950 px-4 py-5 text-white sm:px-6">
       <div className="mx-auto flex h-full max-w-md flex-col">
-        <header className="flex items-start justify-between gap-4">
-          <div className="flex items-start gap-3">
-            <Image src="/alista-logo-white.svg" alt="Alista" width={120} height={40} className="mt-1 h-auto w-18 shrink-0" priority />
-            <div>
+        <header className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 border-b border-white/10 pb-4">
+          <Image src="/alista-logo-white.svg" alt="Alista" width={120} height={40} className="h-auto w-18 shrink-0 justify-self-start" priority />
+          <div className="min-w-0 text-center">
               <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-sky-300">Modo puerta</p>
-              <h1 className="mt-2 text-2xl font-bold leading-tight">{event.name}</h1>
-            </div>
+              <h1 className="mt-1 truncate text-xl font-bold leading-tight">{event.name}</h1>
           </div>
-          <div className="mt-1 flex flex-col items-end gap-2">
+          <div className="mt-1 flex flex-col items-end gap-2 justify-self-end">
             <div className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold ${scannerActive ? 'bg-emerald-400/15 text-emerald-200' : 'bg-white/10 text-slate-300'}`}>
               <span className={`size-2 rounded-full ${scannerActive ? 'bg-emerald-400' : 'bg-slate-500'}`} />
               {scannerActive ? 'Cámara lista' : 'En espera'}

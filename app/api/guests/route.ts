@@ -45,10 +45,18 @@ export async function GET(request: Request) {
   const { data, error } = await adminClient
     .from('guests')
     .select(`
-      *,
+      id,
+      event_id,
+      guest_type_id,
+      first_name,
+      last_name,
+      email,
+      phone,
+      status,
+      created_at,
+      updated_at,
       guest_types (
         name,
-        description,
         access_policy_label,
         access_start_time,
         access_end_time,
@@ -63,7 +71,7 @@ export async function GET(request: Request) {
     return Response.json({ error: error.message }, { status: 500 })
   }
 
-  return Response.json({ data: (data ?? []).map((guest) => normalizeGuestRecord(guest)) })
+  return Response.json({ data: data ?? [] })
 }
 
 export async function POST(request: Request) {

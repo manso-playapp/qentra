@@ -175,7 +175,7 @@ const FIESTA_DRESSCODE = {
   ellas: 'Ellas: negro y blanco.',
   ellos: 'Ellos: gorra y ropa deportiva.',
 }
-const FIESTA_SONG_EMBED_URL = 'https://open.spotify.com/embed/track/5Q0Nhxo0l2bP3pNjpGJwV1?utm_source=generator'
+const FIESTA_SONG_EMBED_URL = 'https://open.spotify.com/embed/track/5Q0Nhxo0l2bP3pNjpGJwV1?utm_source=generator&autoplay=1'
 const FIESTA_CONTACT_PHONE = '+54 9 3496 54-9307'
 const BOARDING_TIME = '20:30'
 
@@ -289,7 +289,10 @@ export default function InvitationView({
             <div className="mt-5 border-t-2 border-dashed border-slate-300 pt-5">
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Regalo</p>
               <p className="mt-1 text-sm font-semibold uppercase tracking-[0.03em]">Alias de CBU</p>
-              <p className="mt-1 font-mono text-lg font-bold uppercase tracking-[0.08em]">Cumple.15.Dharma</p>
+              <div className="mt-2 space-y-1 font-mono text-base font-bold uppercase tracking-[0.08em]">
+                <p>U$S: CUMPLE.15.DHARMA</p>
+                <p>PESOS: DHARMAXV</p>
+              </div>
             </div>
             <div className="mt-5 border-t-2 border-dashed border-slate-300 pt-5">
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Canción de abordaje</p>
@@ -298,7 +301,6 @@ export default function InvitationView({
                 src={FIESTA_SONG_EMBED_URL}
                 title="Party In The U.S.A. de Miley cyrus en Spotify"
                 allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                loading="lazy"
               />
             </div>
             <div className="mt-5 flex flex-wrap gap-2">

@@ -4,6 +4,7 @@ import jsQR from 'jsqr'
 import { UserRound } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { formatGuestTypeAccessPolicy } from '@/lib/access-policy'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -98,8 +99,11 @@ type SearchableGuestRow = Omit<SearchableGuest, 'guest_types'> & {
   guest_types?: SearchableGuest['guest_types'] | SearchableGuest['guest_types'][]
 }
 
-const LIVE_REFRESH_INTERVAL_MS = 15000
-const TOTEM_REFRESH_INTERVAL_MS = 5000
+// Realtime entrega los check-ins al instante. Este polling solo cubre cortes de
+// Realtime, por eso no debe competir con la operacion normal de la puerta.
+const LIVE_REFRESH_INTERVAL_MS = 30000
+const TOTEM_REFRESH_INTERVAL_MS = 15000
+const REALTIME_REFRESH_DEBOUNCE_MS = 300
 const TOTEM_SPOTLIGHT_DURATION_MS = 6000
 
 
@@ -249,89 +253,127 @@ export default function EventCheckinManager({
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const animationFrameRef = useRef<number | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
+  const recentCheckinsRequestRef = useRef<Promise<void> | null>(null)
+  const guestDirectoryRequestRef = useRef<Promise<void> | null>(null)
+  const realtimeRefreshTimeoutRef = useRef<number | null>(null)
   const lastTotemCheckinIdRef = useRef<string | null>(null)
   const totemBaselineInitializedRef = useRef(false)
   const initialCheckinLoadDoneRef = useRef(false)
   const spotlightTimeoutRef = useRef<number | null>(null)
 
-  const fetchRecentCheckins = useCallback(async () => {
-    try {
-      setLoadingRecentCheckins(true)
-      // Via endpoint servidor (service role): RLS oculta guests al cliente anonimo,
-      // asi que el join desde el navegador devolvia nombre y foto vacios.
-      const response = await fetch(`/api/events/${event.id}/checkin-feed`)
-      const payload = (await response.json().catch(() => null)) as
-        | { data?: CheckinWithGuest[]; approvedCount?: number; error?: string }
-        | null
-
-      if (!response.ok) {
-        throw new Error(payload?.error || 'No se pudo cargar la actividad.')
-      }
-
-      setRecentCheckins(payload?.data ?? [])
-      if (typeof payload?.approvedCount === 'number') {
-        setApprovedCount(payload.approvedCount)
-      }
-      // Marca que el primer fetch resolvio, para que el spotlight del totem
-      // distinga "lista vacia inicial" de "todavia no cargamos".
-      initialCheckinLoadDoneRef.current = true
-    } catch (error) {
-      setStatus({
-        kind: 'error',
-        title: 'No se pudo cargar la actividad',
-        detail: getErrorMessage(error),
-      })
-    } finally {
-      setLoadingRecentCheckins(false)
+  const fetchRecentCheckins = useCallback(() => {
+    // Si la base esta lenta, reutilizamos el pedido en curso en vez de abrir
+    // otra conexion y formar una cola de requests.
+    if (recentCheckinsRequestRef.current) {
+      return recentCheckinsRequestRef.current
     }
+
+    const request = (async () => {
+      try {
+        setLoadingRecentCheckins(true)
+        // Via endpoint servidor (service role): RLS oculta guests al cliente anonimo,
+        // asi que el join desde el navegador devolvia nombre y foto vacios.
+        const response = await fetch(`/api/events/${event.id}/checkin-feed`)
+        const payload = (await response.json().catch(() => null)) as
+          | { data?: CheckinWithGuest[]; approvedCount?: number; error?: string }
+          | null
+
+        if (!response.ok) {
+          throw new Error(payload?.error || 'No se pudo cargar la actividad.')
+        }
+
+        setRecentCheckins(payload?.data ?? [])
+        if (typeof payload?.approvedCount === 'number') {
+          setApprovedCount(payload.approvedCount)
+        }
+        // Marca que el primer fetch resolvio, para que el spotlight del totem
+        // distinga "lista vacia inicial" de "todavia no cargamos".
+        initialCheckinLoadDoneRef.current = true
+      } catch (error) {
+        setStatus({
+          kind: 'error',
+          title: 'No se pudo cargar la actividad',
+          detail: getErrorMessage(error),
+        })
+      } finally {
+        setLoadingRecentCheckins(false)
+      }
+    })()
+
+    recentCheckinsRequestRef.current = request
+    void request.finally(() => {
+      if (recentCheckinsRequestRef.current === request) {
+        recentCheckinsRequestRef.current = null
+      }
+    })
+
+    return request
   }, [event.id])
 
   useEffect(() => {
     fetchRecentCheckins()
   }, [fetchRecentCheckins])
 
-  const fetchGuestDirectory = useCallback(async () => {
-    try {
-      setLoadingGuestDirectory(true)
-      // Via endpoint servidor (service role): RLS oculta guests al cliente.
-      const response = await fetch(`/api/guests?eventId=${event.id}`)
-      const payload = (await response.json().catch(() => null)) as
-        | { data?: SearchableGuestRow[]; error?: string }
-        | null
-
-      if (!response.ok) {
-        throw new Error(payload?.error || 'No se pudo cargar el directorio.')
-      }
-
-      const sorted = (payload?.data ?? []).sort((a, b) =>
-        `${a.last_name} ${a.first_name}`.localeCompare(`${b.last_name} ${b.first_name}`)
-      )
-      setGuestDirectory(sorted.map(normalizeSearchableGuest))
-    } catch (error) {
-      setStatus({
-        kind: 'error',
-        title: 'No se pudo cargar el directorio',
-        detail: getErrorMessage(error),
-      })
-    } finally {
-      setLoadingGuestDirectory(false)
+  const fetchGuestDirectory = useCallback(() => {
+    if (guestDirectoryRequestRef.current) {
+      return guestDirectoryRequestRef.current
     }
+
+    const request = (async () => {
+      try {
+        setLoadingGuestDirectory(true)
+        // Via endpoint servidor (service role): RLS oculta guests al cliente.
+        const response = await fetch(`/api/guests?eventId=${event.id}`)
+        const payload = (await response.json().catch(() => null)) as
+          | { data?: SearchableGuestRow[]; error?: string }
+          | null
+
+        if (!response.ok) {
+          throw new Error(payload?.error || 'No se pudo cargar el directorio.')
+        }
+
+        const sorted = (payload?.data ?? []).sort((a, b) =>
+          `${a.last_name} ${a.first_name}`.localeCompare(`${b.last_name} ${b.first_name}`)
+        )
+        setGuestDirectory(sorted.map(normalizeSearchableGuest))
+      } catch (error) {
+        setStatus({
+          kind: 'error',
+          title: 'No se pudo cargar el directorio',
+          detail: getErrorMessage(error),
+        })
+      } finally {
+        setLoadingGuestDirectory(false)
+      }
+    })()
+
+    guestDirectoryRequestRef.current = request
+    void request.finally(() => {
+      if (guestDirectoryRequestRef.current === request) {
+        guestDirectoryRequestRef.current = null
+      }
+    })
+
+    return request
   }, [event.id])
 
   useEffect(() => {
-    fetchGuestDirectory()
-  }, [fetchGuestDirectory])
+    // El totem no muestra ni usa el directorio completo de invitados.
+    // Evitamos descargarlo para que la pantalla de celebracion sea liviana.
+    if (!isTotemMode) {
+      void fetchGuestDirectory()
+    }
+  }, [fetchGuestDirectory, isTotemMode])
 
   useEffect(() => {
     const refreshTimer = window.setInterval(() => {
       void fetchRecentCheckins()
-      void fetchGuestDirectory()
     }, isTotemMode ? TOTEM_REFRESH_INTERVAL_MS : LIVE_REFRESH_INTERVAL_MS)
 
     return () => {
       window.clearInterval(refreshTimer)
     }
-  }, [fetchGuestDirectory, fetchRecentCheckins, isTotemMode])
+  }, [fetchRecentCheckins, isTotemMode])
 
   // Realtime: el totem muestra el spotlight en el instante en que la puerta
   // acredita a alguien, sin esperar al proximo poll. El intervalo de arriba
@@ -347,12 +389,23 @@ export default function EventCheckinManager({
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'checkins', filter: `event_id=eq.${event.id}` },
         () => {
-          void fetchRecentCheckins()
+          if (realtimeRefreshTimeoutRef.current !== null) {
+            window.clearTimeout(realtimeRefreshTimeoutRef.current)
+          }
+
+          realtimeRefreshTimeoutRef.current = window.setTimeout(() => {
+            realtimeRefreshTimeoutRef.current = null
+            void fetchRecentCheckins()
+          }, REALTIME_REFRESH_DEBOUNCE_MS)
         }
       )
       .subscribe()
 
     return () => {
+      if (realtimeRefreshTimeoutRef.current !== null) {
+        window.clearTimeout(realtimeRefreshTimeoutRef.current)
+        realtimeRefreshTimeoutRef.current = null
+      }
       void supabase.removeChannel(channel)
     }
   }, [isTotemMode, event.id, fetchRecentCheckins])
@@ -910,16 +963,20 @@ export default function EventCheckinManager({
             </section>
 
             <footer className="flex flex-col items-center gap-4 text-center">
-              <div className="flex items-center gap-3 rounded-full border border-white/10 bg-white/6 px-5 py-2 text-sm text-white/70">
-                <span
-                  className="h-2.5 w-2.5 rounded-full"
-                  style={{ backgroundColor: totemSpotlight ? '#34d399' : totemAccent }}
-                />
-                {totemSpotlight ? 'Ingreso registrado correctamente' : 'Pantalla de bienvenida del evento'}
-              </div>
-              <p className="text-xs uppercase tracking-[0.3em] text-white/40">
-                Desarrollado por Alista
-              </p>
+              {totemSpotlight && (
+                <div className="flex items-center gap-3 rounded-full border border-white/10 bg-white/6 px-5 py-2 text-sm text-white/70">
+                  <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
+                  Ingreso registrado correctamente
+                </div>
+              )}
+              <Image
+                src="/alista-logo-white.svg"
+                alt="Alista"
+                width={200}
+                height={41}
+                className="h-8 w-auto opacity-95"
+                priority
+              />
             </footer>
           </div>
         </main>
@@ -932,8 +989,8 @@ export default function EventCheckinManager({
       <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.16),transparent_24%),linear-gradient(180deg,#09111b_0%,#101b2a_28%,#eef3f7_28%,#eef3f7_100%)] px-4 py-5 text-slate-950 sm:px-6">
         <div className="mx-auto max-w-400 space-y-6">
           <section className="rounded-[34px] border border-slate-800 bg-slate-950/96 px-6 py-6 text-white shadow-[0_28px_90px_rgba(2,8,23,0.42)]">
-            <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
-              <div>
+            <div className="flex flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
+              <div className="max-w-3xl">
                 <p className="text-sm font-semibold uppercase tracking-[0.34em] text-sky-300">Control de ingreso</p>
                 <h1 className="admin-heading mt-4 text-5xl leading-none text-white">Control de acceso</h1>
                 <p className="mt-4 max-w-3xl text-base leading-7 text-slate-300">
@@ -941,10 +998,10 @@ export default function EventCheckinManager({
                 </p>
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
+              <div className="grid w-full gap-4 sm:grid-cols-[minmax(0,1fr)_auto] xl:max-w-125">
                 <div className="rounded-[26px] border border-white/10 bg-white/6 px-5 py-4">
                   <p className="text-xs uppercase tracking-[0.28em] text-slate-400">Evento</p>
-                  <p className="mt-2 text-2xl font-semibold text-white">{event.name}</p>
+                  <p className="mt-2 truncate text-2xl font-semibold text-white" title={event.name}>{event.name}</p>
                   <p className="mt-2 text-sm text-slate-300">{formatEventDate(event.event_date)} · {event.start_time}</p>
                 </div>
                 <div className="rounded-[26px] border border-sky-400/20 bg-sky-400/10 px-5 py-4 text-right">
@@ -954,12 +1011,12 @@ export default function EventCheckinManager({
               </div>
             </div>
 
-            <div className="mt-5 flex flex-wrap gap-3">
+            <div className="mt-4 grid gap-3 sm:grid-cols-3 xl:ml-auto xl:max-w-125">
               <Button asChild variant="outline" className="border-white/10 bg-white/5 text-white hover:bg-white/10 hover:text-white">
-                <Link href={`/admin/events/${event.id}/check-in`}>Abrir panel operativo</Link>
+                <Link href={`/admin/events/${event.id}/check-in`}>Panel operativo</Link>
               </Button>
               <Button asChild variant="outline" className="border-sky-400/20 bg-sky-400/10 text-sky-100 hover:bg-sky-400/15 hover:text-white">
-                <Link href={`/admin/events/${event.id}/guests`}>Ver invitados</Link>
+                <Link href={`/admin/events/${event.id}/guests`}>Invitados</Link>
               </Button>
               <Button asChild variant="outline" className="border-amber-400/20 bg-amber-400/10 text-amber-100 hover:bg-amber-400/15 hover:text-white">
                 <Link href={`/t/${event.slug}`}>Ver pantalla publica</Link>
