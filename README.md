@@ -13,6 +13,7 @@ Estado actual del MVP:
 - vistas separadas de `admin`, `puerta` y `totem`, con destino visible al ingresar
 - autenticacion operativa con Supabase Auth
 - envio por email y WhatsApp segun configuracion del entorno
+- Checkout Pro de Mercado Pago operativo: pago, conciliacion y habilitacion automatica del QR
 
 ## Stack
 
@@ -68,6 +69,9 @@ usan exclusivamente desde rutas del servidor. Configurá también
 `MERCADOPAGO_WEBHOOK_SECRET` y el webhook HTTPS
 `/api/mercadopago/webhook` con el evento **Pagos**. Antes de habilitar cobros,
 aplicá la migración `supabase/migrations/20260723162321_add_mercadopago_payments.sql`.
+Si una notificación demora o falla, la invitación permite verificar el pago
+directamente contra Mercado Pago antes de habilitar el QR; importe y moneda se
+vuelven a validar en servidor.
 
 ## Notas
 
