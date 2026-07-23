@@ -2,6 +2,7 @@ import { createHmac, timingSafeEqual } from 'node:crypto'
 import QRCode from 'qrcode'
 import { buildGuestAccessQrPayload } from '@/lib/guest-access'
 import { buildGuestFullName } from '@/lib/guest-schema'
+import { getMercadoPagoConfig, mapMercadoPagoPaymentStatus } from '@/lib/mercadopago'
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
 
 export const runtime = 'nodejs'
@@ -48,21 +49,6 @@ function validWebhookSignature(request: Request, dataId: string, secret: string)
   return expected.length === received.length && timingSafeEqual(expected, received)
 }
 
-function mapPaymentStatus(status?: string) {
-  switch (status) {
-    case 'approved':
-      return 'approved'
-    case 'rejected':
-      return 'rejected'
-    case 'cancelled':
-      return 'cancelled'
-    case 'refunded':
-      return 'refunded'
-    default:
-      return 'pending'
-  }
-}
-
 async function issueApprovedGuestQr(
   adminClient: NonNullable<ReturnType<typeof getSupabaseAdminClient>>,
   guestId: string,
@@ -102,11 +88,56 @@ async function issueApprovedGuestQr(
   if (error) throw error
 }
 
+async function syncGuestAccessFromPayments(
+  adminClient: NonNullable<ReturnType<typeof getSupabaseAdminClient>>,
+  guestId: string,
+  eventId: string
+) {
+  const { data: approvedTransaction, error: approvedTransactionError } = await adminClient
+    .from('payment_transactions')
+    .select('id')
+    .eq('guest_id', guestId)
+    .eq('status', 'approved')
+    .limit(1)
+    .maybeSingle()
+  if (approvedTransactionError) throw approvedTransactionError
+
+  if (approvedTransaction) {
+    const { error: updateGuestError } = await adminClient
+      .from('guests')
+      .update({ payment_status: 'approved', status: 'enabled', updated_at: new Date().toISOString() })
+      .eq('id', guestId)
+      .eq('payment_status', 'pending')
+      .eq('status', 'registered')
+    if (updateGuestError) throw updateGuestError
+
+    await issueApprovedGuestQr(adminClient, guestId, eventId)
+    return
+  }
+
+  // A refund, cancellation or chargeback must close the access that payment
+  // previously unlocked. Keep checked-in guests intact for audit purposes.
+  const { error: updateGuestError } = await adminClient
+    .from('guests')
+    .update({ payment_status: 'pending', status: 'registered', updated_at: new Date().toISOString() })
+    .eq('id', guestId)
+    .eq('payment_status', 'approved')
+    .eq('status', 'enabled')
+  if (updateGuestError) throw updateGuestError
+
+  const { error: revokeQrError } = await adminClient
+    .from('guest_qr_codes')
+    .update({ is_active: false, revoked_at: new Date().toISOString() })
+    .eq('guest_id', guestId)
+    .eq('is_active', true)
+  if (revokeQrError) throw revokeQrError
+}
+
 export async function POST(request: Request) {
   const adminClient = getSupabaseAdminClient()
-  const accessToken = process.env.MERCADOPAGO_TEST_ACCESS_TOKEN?.trim()
+  const mercadoPago = getMercadoPagoConfig()
   const webhookSecret = process.env.MERCADOPAGO_WEBHOOK_SECRET?.trim()
-  if (!adminClient || !accessToken || !webhookSecret) {
+  if (!adminClient || !mercadoPago || !webhookSecret) {
     return Response.json({ error: 'Webhook de Mercado Pago no configurado.' }, { status: 503 })
   }
 
@@ -121,7 +152,7 @@ export async function POST(request: Request) {
   }
 
   const paymentResponse = await fetch(`https://api.mercadopago.com/v1/payments/${encodeURIComponent(dataId)}`, {
-    headers: { Authorization: `Bearer ${accessToken}` },
+    headers: { Authorization: `Bearer ${mercadoPago.accessToken}` },
   })
   const payment = (await paymentResponse.json().catch(() => null)) as MercadoPagoPayment | null
   if (!paymentResponse.ok || !payment?.external_reference || !payment.id) {
@@ -141,7 +172,7 @@ export async function POST(request: Request) {
     return Response.json({ error: 'El importe o moneda del pago no coincide.' }, { status: 409 })
   }
 
-  const status = mapPaymentStatus(payment.status)
+  const status = mapMercadoPagoPaymentStatus(payment.status)
   const { error: updateTransactionError } = await adminClient
     .from('payment_transactions')
     .update({
@@ -154,17 +185,7 @@ export async function POST(request: Request) {
     .eq('id', transaction.id)
   if (updateTransactionError) throw updateTransactionError
 
-  if (status === 'approved') {
-    const { error: updateGuestError } = await adminClient
-      .from('guests')
-      .update({ payment_status: 'approved', status: 'enabled', updated_at: new Date().toISOString() })
-      .eq('id', transaction.guest_id)
-      .eq('payment_status', 'pending')
-      .eq('status', 'registered')
-    if (updateGuestError) throw updateGuestError
-
-    await issueApprovedGuestQr(adminClient, transaction.guest_id, transaction.event_id)
-  }
+  await syncGuestAccessFromPayments(adminClient, transaction.guest_id, transaction.event_id)
 
   return Response.json({ ok: true })
 }

@@ -206,9 +206,11 @@ export const MVP_FEATURES: MvpFeature[] = [
     id: 'mercadopago',
     title: 'Cobros con MercadoPago',
     module: 'pagos',
-    status: 'todo',
-    detail: 'Sin integracion de pagos todavia.',
-    gap: 'Falta conectar MercadoPago para cobrar entradas o el uso de la plataforma.',
+    status: 'partial',
+    detail:
+      'Checkout Pro crea una preferencia por invitado, recibe webhooks firmados y habilita o revoca el QR según el estado del pago.',
+    gap: 'Falta aplicar la migración en Supabase, configurar las credenciales y probar el webhook de cada entorno con una cuenta de prueba.',
+    evidence: ['app/api/invitacion/[token]/payment/route.ts', 'app/api/mercadopago/webhook/route.ts'],
   },
 ]
 
@@ -257,7 +259,7 @@ export const NEXT_STEPS: { order: number; title: string; detail: string; feature
   {
     order: 1,
     title: 'Cobros con Mercado Pago',
-    detail: 'Conectar la pasarela, crear una intención de pago por invitado, recibir webhooks verificados y actualizar payment_status sin intervención manual.',
+    detail: 'Aplicar la migración, cargar las credenciales y completar una compra de prueba con webhook verificado.',
     featureId: 'mercadopago',
   },
   {
