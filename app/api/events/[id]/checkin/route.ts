@@ -173,6 +173,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
 
   // Destino (mesa) para mostrar en el totem: columna propia con fallback legacy.
   const invitationDetails = parseInvitationDetails(guest.notes)
+  const documentNumber = guest.document_number?.trim() || invitationDetails.dni.trim() || null
   const tableAssignment = guest.table_assignment?.trim() || invitationDetails.tableAssignment || ''
   const companionCount = invitationDetails.companionNames
     .split(/[\n,]/)
@@ -205,7 +206,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
         guest: {
           first_name: guest.first_name,
           last_name: guest.last_name,
-          document_number: guest.document_number,
+          document_number: documentNumber,
           photo_url: guest.photo_url,
           plus_ones_confirmed: companionCount,
         },
@@ -223,7 +224,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
         guest: {
           first_name: guest.first_name,
           last_name: guest.last_name,
-          document_number: guest.document_number,
+          document_number: documentNumber,
           photo_url: guest.photo_url,
           plus_ones_confirmed: companionCount,
         },
@@ -259,7 +260,13 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       detail: override
         ? `${guest.first_name} ${guest.last_name} ingresó por excepción supervisada.`
         : `${guest.first_name} ${guest.last_name} ingresó correctamente al evento.`,
-      guest: { first_name: guest.first_name, last_name: guest.last_name },
+      guest: {
+        first_name: guest.first_name,
+        last_name: guest.last_name,
+        document_number: documentNumber,
+        photo_url: guest.photo_url,
+        plus_ones_confirmed: companionCount,
+      },
       tableAssignment: tableAssignment || null,
     },
   })
