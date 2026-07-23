@@ -29,7 +29,7 @@ type DbGuestRow = {
   table_assignment?: string | null
   created_at: string
   updated_at: string
-  guest_types?: GuestTypeSubset
+  guest_types?: GuestTypeSubset | GuestTypeSubset[]
 }
 
 export function normalizeGuestStatus(status?: string | null): Guest['status'] {
@@ -98,6 +98,8 @@ export function normalizeGuestRecord(row: DbGuestRow): GuestWithType {
     special_requests: row.notes ?? undefined,
     created_at: row.created_at,
     updated_at: row.updated_at,
-    guest_types: row.guest_types ?? null,
+    guest_types: Array.isArray(row.guest_types)
+      ? row.guest_types[0] ?? null
+      : row.guest_types ?? null,
   }
 }

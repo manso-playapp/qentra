@@ -52,11 +52,17 @@ export async function GET(request: Request) {
       last_name,
       email,
       phone,
+      photo_url,
+      document_number,
       status,
+      payment_status,
+      notes,
+      table_assignment,
       created_at,
       updated_at,
       guest_types (
         name,
+        description,
         access_policy_label,
         access_start_time,
         access_end_time,
@@ -71,7 +77,7 @@ export async function GET(request: Request) {
     return Response.json({ error: error.message }, { status: 500 })
   }
 
-  return Response.json({ data: data ?? [] })
+  return Response.json({ data: (data ?? []).map((guest) => normalizeGuestRecord(guest)) })
 }
 
 export async function POST(request: Request) {
