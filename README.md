@@ -59,6 +59,15 @@ Entre las mas importantes:
 - `TWILIO_ACCOUNT_SID`
 - `TWILIO_AUTH_TOKEN`
 
+### Mercado Pago
+
+Checkout Pro usa `MERCADOPAGO_ACCESS_TOKEN` en producción y, solo si esa
+variable no existe, `MERCADOPAGO_TEST_ACCESS_TOKEN` para pruebas. Ambas son
+secretas y se usan exclusivamente desde rutas del servidor. Configurá también
+`MERCADOPAGO_WEBHOOK_SECRET` y el webhook HTTPS
+`/api/mercadopago/webhook` con el evento **Pagos**. Antes de habilitar cobros,
+aplicá la migración `supabase/migrations/20260723162321_add_mercadopago_payments.sql`.
+
 ## Notas
 
 - Este repo publico no incluye playbooks internos ni handoff operativo.
