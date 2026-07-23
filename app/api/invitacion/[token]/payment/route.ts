@@ -1,4 +1,4 @@
-import { getPublicAppUrl } from '@/lib/public-url'
+import { getPaymentAppUrl } from '@/lib/public-url'
 import { getCheckoutUrl, getMercadoPagoConfig } from '@/lib/mercadopago'
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
 
@@ -9,7 +9,7 @@ type RouteContext = { params: Promise<{ token: string }> }
 export async function POST(_request: Request, context: RouteContext) {
   const adminClient = getSupabaseAdminClient()
   const mercadoPago = getMercadoPagoConfig()
-  const appUrl = getPublicAppUrl()
+  const appUrl = getPaymentAppUrl()
 
   if (!adminClient || !mercadoPago || !appUrl) {
     return Response.json({ error: 'El cobro con Mercado Pago todavía no está configurado.' }, { status: 503 })
