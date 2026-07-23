@@ -33,6 +33,34 @@ function firstGuestType(value: unknown) {
   return (value as Record<string, unknown> | null) ?? null
 }
 
+async function notifyTotemOfApprovedCheckin(eventId: string) {
+  const projectUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+  if (!projectUrl || !serviceRoleKey) return
+
+  try {
+    const topic = encodeURIComponent(`totem-checkins-${eventId}`)
+    const response = await fetch(`${projectUrl}/realtime/v1/api/broadcast/${topic}/events/checkin`, {
+      method: 'POST',
+      headers: {
+        apikey: serviceRoleKey,
+        'Content-Type': 'application/json',
+      },
+      body: '{}',
+      signal: AbortSignal.timeout(600),
+    })
+
+    if (!response.ok) {
+      console.warn('[checkin] no se pudo notificar al totem', response.status)
+    }
+  } catch (error) {
+    // El registro ya fue confirmado. Realtime/Postgres Changes y el sondeo del
+    // Tótem siguen siendo respaldo si este aviso inmediato falla.
+    console.warn('[checkin] fallo el aviso inmediato al totem', error)
+  }
+}
+
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   const { response: authErrorResponse } = await ensureAuthorizedApiAccess([
     'admin',
@@ -251,6 +279,8 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   })
 
   if (registerError) return Response.json({ error: registerError.message }, { status: 409 })
+
+  await notifyTotemOfApprovedCheckin(eventId)
 
   return Response.json({
     data: {

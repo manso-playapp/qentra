@@ -385,6 +385,16 @@ export default function EventCheckinManager({
 
     const channel = supabase
       .channel(`totem-checkins-${event.id}`)
+      .on('broadcast', { event: 'checkin' }, () => {
+        if (realtimeRefreshTimeoutRef.current !== null) {
+          window.clearTimeout(realtimeRefreshTimeoutRef.current)
+        }
+
+        realtimeRefreshTimeoutRef.current = window.setTimeout(() => {
+          realtimeRefreshTimeoutRef.current = null
+          void fetchRecentCheckins()
+        }, 0)
+      })
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'checkins', filter: `event_id=eq.${event.id}` },
