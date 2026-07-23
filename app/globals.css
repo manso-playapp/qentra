@@ -138,6 +138,15 @@ body {
   animation-iteration-count: infinite;
 }
 
+.invitation-wind-particle:nth-child(3n) {
+  background: rgba(255, 231, 190, 0.92);
+  box-shadow: 0 0 12px rgba(255, 190, 130, 0.38);
+}
+
+.invitation-wind-particle:nth-child(5n) {
+  filter: blur(0.45px);
+}
+
 @keyframes invitation-wind-drift {
   from {
     transform: translate3d(-14vw, -2vh, 0) rotate(0deg);
