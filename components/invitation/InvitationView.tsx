@@ -352,7 +352,10 @@ export default function InvitationView({
         {children}
 
         <footer className="pb-2 pt-1 text-center text-xs uppercase tracking-[0.28em] text-white/80">
-          {isPreview ? 'Vista previa · ' : ''}Desarrollado por Alista
+          {isPreview ? 'Vista previa · ' : ''}
+          <a href="/" target="_blank" rel="noreferrer" className="transition hover:text-[#fcb39e] hover:underline underline-offset-4">
+            Desarrollado por Alista
+          </a>
         </footer>
       </div>
     </main>
