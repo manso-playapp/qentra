@@ -109,6 +109,19 @@ export async function POST(request: Request) {
     )
   }
 
+  const { data: guestType, error: guestTypeError } = await adminClient
+    .from('guest_types')
+    .select('event_id, payment_amount_cents')
+    .eq('id', guestTypeId)
+    .maybeSingle()
+
+  if (guestTypeError) {
+    return Response.json({ error: guestTypeError.message }, { status: 500 })
+  }
+  if (!guestType || guestType.event_id !== eventId) {
+    return Response.json({ error: 'El tipo de invitado no corresponde al evento.' }, { status: 400 })
+  }
+
   const payload: Record<string, string | boolean | null> = {
     event_id: eventId,
     guest_type_id: guestTypeId,
@@ -121,6 +134,7 @@ export async function POST(request: Request) {
     table_assignment: body.table_assignment?.trim() || null,
     created_manually: true,
     status: 'preinvited',
+    payment_status: (guestType.payment_amount_cents ?? 0) > 0 ? 'pending' : 'not_required',
   }
 
   const { data, error } = await adminClient

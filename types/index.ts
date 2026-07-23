@@ -154,6 +154,8 @@ export interface GuestType {
   access_end_time?: string
   access_start_day_offset?: number
   access_end_day_offset?: number
+  /** Importe fijo del tipo en centavos ARS. Cero significa que no requiere pago. */
+  payment_amount_cents?: number
   created_at: string
   updated_at: string
 }
@@ -341,6 +343,7 @@ export interface CreateGuestTypeForm {
   access_end_time?: string
   access_start_day_offset?: number
   access_end_day_offset?: number
+  payment_amount_cents?: number
 }
 
 export interface UpdateGuestTypeForm {
@@ -352,6 +355,7 @@ export interface UpdateGuestTypeForm {
   access_end_time?: string
   access_start_day_offset?: number
   access_end_day_offset?: number
+  payment_amount_cents?: number
 }
 
 export interface CreateDeliveryProfileForm {

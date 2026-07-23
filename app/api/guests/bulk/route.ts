@@ -47,6 +47,19 @@ export async function POST(request: Request) {
     return Response.json({ error: 'Falta el evento o el tipo de invitado.' }, { status: 400 })
   }
 
+  const { data: guestType, error: guestTypeError } = await adminClient
+    .from('guest_types')
+    .select('event_id, payment_amount_cents')
+    .eq('id', guestTypeId)
+    .maybeSingle()
+
+  if (guestTypeError) return Response.json({ error: guestTypeError.message }, { status: 500 })
+  if (!guestType || guestType.event_id !== eventId) {
+    return Response.json({ error: 'El tipo de invitado no corresponde al evento.' }, { status: 400 })
+  }
+
+  const paymentStatus = (guestType.payment_amount_cents ?? 0) > 0 ? 'pending' : 'not_required'
+
   const payload = rows
     .map((row) => {
       const firstName = row.first_name?.trim() ?? ''
@@ -63,6 +76,7 @@ export async function POST(request: Request) {
         table_assignment: row.table_assignment?.trim() || null,
         created_manually: true,
         status: 'preinvited',
+        payment_status: paymentStatus,
       }
     })
     .filter((row): row is NonNullable<typeof row> => row !== null)

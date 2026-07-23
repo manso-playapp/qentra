@@ -16,6 +16,7 @@ type UpdateGuestTypeRequestBody = {
   access_end_time?: string
   access_start_day_offset?: number
   access_end_day_offset?: number
+  payment_amount_cents?: number
 }
 
 export const runtime = 'nodejs'
@@ -88,6 +89,12 @@ export async function PATCH(request: Request, context: GuestTypeRouteContext) {
     }
     if (body.access_end_day_offset !== undefined) {
       payload.access_end_day_offset = body.access_end_day_offset
+    }
+    if (body.payment_amount_cents !== undefined) {
+      if (!Number.isInteger(body.payment_amount_cents) || body.payment_amount_cents < 0) {
+        return Response.json({ error: 'El importe del tipo debe ser un número positivo.' }, { status: 400 })
+      }
+      payload.payment_amount_cents = body.payment_amount_cents
     }
 
     const { data, error } = await adminClient

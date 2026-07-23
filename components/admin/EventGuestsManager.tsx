@@ -54,6 +54,7 @@ type GuestTypeFormState = {
   access_end_time: string
   access_start_day_offset: string
   access_end_day_offset: string
+  payment_amount_ars: string
 }
 
 type GuestTypeEditFormState = GuestTypeFormState
@@ -141,6 +142,7 @@ const INITIAL_GUEST_TYPE_FORM: GuestTypeFormState = {
   access_end_time: '',
   access_start_day_offset: '0',
   access_end_day_offset: '0',
+  payment_amount_ars: '0',
 }
 
 function formatDate(date: string) {
@@ -185,6 +187,11 @@ function buildGuestsCsv(guests: GuestWithType[]): string {
     ].join(',')
   })
   return [header.map(cell).join(','), ...rows].join('\r\n')
+}
+
+function pesosToCents(value: string) {
+  const pesos = Number.parseInt(value.trim() || '0', 10)
+  return Number.isFinite(pesos) && pesos > 0 ? pesos * 100 : 0
 }
 
 // Plantilla vacia lista para completar en Excel o Google Sheets. Los nombres
@@ -493,6 +500,7 @@ export default function EventGuestsManager({
       access_end_time: trimOptionalValue(guestTypeForm.access_end_time),
       access_start_day_offset: parseOptionalInteger(guestTypeForm.access_start_day_offset),
       access_end_day_offset: parseOptionalInteger(guestTypeForm.access_end_day_offset),
+      payment_amount_cents: pesosToCents(guestTypeForm.payment_amount_ars),
     }
 
     const result = await createGuestType(payload)
@@ -523,6 +531,7 @@ export default function EventGuestsManager({
     access_end_time: guestType.access_end_time ?? '',
     access_start_day_offset: String(guestType.access_start_day_offset ?? 0),
     access_end_day_offset: String(guestType.access_end_day_offset ?? 0),
+    payment_amount_ars: String((guestType.payment_amount_cents ?? 0) / 100),
   })
 
   const startEditingGuestType = (guestType: GuestType) => {
@@ -556,6 +565,7 @@ export default function EventGuestsManager({
       access_end_time: trimOptionalValue(editGuestTypeForm.access_end_time),
       access_start_day_offset: parseOptionalInteger(editGuestTypeForm.access_start_day_offset),
       access_end_day_offset: parseOptionalInteger(editGuestTypeForm.access_end_day_offset),
+      payment_amount_cents: pesosToCents(editGuestTypeForm.payment_amount_ars),
     }
 
     const result = await updateGuestType(guestTypeId, payload)
@@ -1230,6 +1240,18 @@ export default function EventGuestsManager({
                             />
                           </div>
                           <div>
+                            <label className="block text-sm font-medium text-gray-700">Importe por invitado (ARS)</label>
+                            <input
+                              name="payment_amount_ars"
+                              type="number"
+                              min="0"
+                              step="1"
+                              value={editGuestTypeForm.payment_amount_ars}
+                              onChange={handleEditGuestTypeInputChange}
+                              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                            />
+                          </div>
+                          <div>
                             <label className="block text-sm font-medium text-gray-700">Hora desde</label>
                             <input
                               name="access_start_time"
@@ -1428,6 +1450,23 @@ export default function EventGuestsManager({
                       className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                       placeholder="Notas internas para el equipo"
                     />
+                  </div>
+
+                  <div>
+                    <label htmlFor="guest-type-payment-amount" className="block text-sm font-medium text-gray-700">
+                      Importe por invitado (ARS)
+                    </label>
+                    <input
+                      id="guest-type-payment-amount"
+                      name="payment_amount_ars"
+                      type="number"
+                      min="0"
+                      step="1"
+                      value={guestTypeForm.payment_amount_ars}
+                      onChange={handleGuestTypeInputChange}
+                      className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    />
+                    <p className="mt-1 text-xs text-gray-500">0 significa que este tipo no requiere pago.</p>
                   </div>
 
                   <div className="rounded-lg border border-gray-200 bg-white p-4">
