@@ -83,8 +83,8 @@ export default function InvitationWindParticles() {
             width: particle.size,
             height: particle.size,
             opacity: particle.opacity,
-            animationDuration: `${particle.duration}s`,
-            animationDelay: `${particle.delay}s`,
+            animationDuration: `${particle.duration}s, ${(particle.duration / 7).toFixed(1)}s`,
+            animationDelay: `${particle.delay}s, ${(particle.delay / 3).toFixed(1)}s`,
           }}
         />
       ))}

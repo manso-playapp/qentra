@@ -133,8 +133,8 @@ body {
   border-radius: 999px;
   background: rgba(255, 247, 232, 0.95);
   box-shadow: 0 0 8px rgba(255, 221, 177, 0.45);
-  animation-name: invitation-wind-drift;
-  animation-timing-function: linear;
+  animation-name: invitation-wind-drift, invitation-firefly-glow;
+  animation-timing-function: linear, ease-in-out;
   animation-iteration-count: infinite;
 }
 
@@ -156,6 +156,30 @@ body {
   }
   to {
     transform: translate3d(118vw, 13vh, 0) rotate(280deg);
+  }
+}
+
+@keyframes invitation-firefly-glow {
+  0%,
+  100% {
+    opacity: 0.22;
+    box-shadow: 0 0 4px rgba(255, 220, 154, 0.2);
+  }
+  18% {
+    opacity: 0.82;
+    box-shadow: 0 0 13px rgba(255, 224, 159, 0.72), 0 0 24px rgba(255, 184, 112, 0.2);
+  }
+  31% {
+    opacity: 0.38;
+    box-shadow: 0 0 6px rgba(255, 220, 154, 0.3);
+  }
+  57% {
+    opacity: 0.96;
+    box-shadow: 0 0 16px rgba(255, 231, 175, 0.8), 0 0 30px rgba(255, 183, 107, 0.24);
+  }
+  68% {
+    opacity: 0.3;
+    box-shadow: 0 0 5px rgba(255, 220, 154, 0.24);
   }
 }
 
