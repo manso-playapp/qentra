@@ -1,111 +1,42 @@
 'use client'
 
+import { Music2 } from 'lucide-react'
 import { useEffect, useRef } from 'react'
 
-type SpotifyEmbedController = {
-  play: () => void
-  destroy?: () => void
-  addListener: (event: 'ready', callback: () => void) => void
-}
-
-type SpotifyIFrameApi = {
-  createController: (
-    element: HTMLElement,
-    options: { uri: string; width: string; height: string },
-    callback: (controller: SpotifyEmbedController) => void
-  ) => void
-}
-
-declare global {
-  interface Window {
-    onSpotifyIframeApiReady?: (api: SpotifyIFrameApi) => void
-    spotifyIFrameApi?: SpotifyIFrameApi
-  }
-}
-
-const SPOTIFY_TRACK_URI = 'spotify:track:5Q0Nhxo0l2bP3pNjpGJwV1'
-const SPOTIFY_IFRAME_API_URL = 'https://open.spotify.com/embed/iframe-api/v1'
+const PARTY_TRACK_URL = '/Party.mp3'
 
 /**
- * Spotify puede bloquear autoplay con sonido. Intentamos al cargar y, si el
- * navegador lo impide, el primer toque sobre la invitacion inicia la musica.
+ * El audio propio evita las vistas previas de proveedores externos. El primer
+ * intento ocurre al abrir la invitacion; si el navegador lo bloquea, cualquier
+ * toque sobre la pagina lo inicia sin requerir un boton de Play.
  */
 export default function InvitationMusicPlayer() {
-  const containerRef = useRef<HTMLDivElement | null>(null)
-  const controllerRef = useRef<SpotifyEmbedController | null>(null)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
 
   useEffect(() => {
-    let disposed = false
-    let playbackStarted = false
-
-    const startPlaybackFromInteraction = () => {
-      const controller = controllerRef.current
-
-      if (!controller || playbackStarted) return
-
-      controller.play()
-      playbackStarted = true
+    const startPlayback = () => {
+      void audioRef.current?.play().catch(() => {
+        // El navegador puede exigir una interaccion. El siguiente toque reintenta.
+      })
     }
 
-    const initializeEmbed = (iframeApi: SpotifyIFrameApi) => {
-      if (disposed || !containerRef.current) return
-
-      iframeApi.createController(
-        containerRef.current,
-        { uri: SPOTIFY_TRACK_URI, width: '100%', height: '152' },
-        (controller) => {
-          if (disposed) {
-            controller.destroy?.()
-            return
-          }
-
-          // Sin este permiso Spotify solo entrega una vista previa corta en
-          // navegadores que requieren contenido cifrado para la pista completa.
-          containerRef.current?.querySelector('iframe')?.setAttribute(
-            'allow',
-            'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture'
-          )
-          controllerRef.current = controller
-          controller.addListener('ready', () => {
-            controller.play()
-          })
-        }
-      )
-    }
-
-    const previousReadyHandler = window.onSpotifyIframeApiReady
-    window.onSpotifyIframeApiReady = (iframeApi) => {
-      window.spotifyIFrameApi = iframeApi
-      previousReadyHandler?.(iframeApi)
-      initializeEmbed(iframeApi)
-    }
-
-    if (window.spotifyIFrameApi) {
-      initializeEmbed(window.spotifyIFrameApi)
-    }
-
-    const script = document.querySelector<HTMLScriptElement>('script[data-spotify-iframe-api]')
-      ?? document.createElement('script')
-
-    if (!script.dataset.spotifyIframeApi) {
-      script.src = SPOTIFY_IFRAME_API_URL
-      script.async = true
-      script.dataset.spotifyIframeApi = 'true'
-      document.body.appendChild(script)
-    }
-
-    document.addEventListener('pointerdown', startPlaybackFromInteraction, { capture: true })
-    document.addEventListener('keydown', startPlaybackFromInteraction, { capture: true })
+    startPlayback()
+    document.addEventListener('pointerdown', startPlayback, { capture: true, once: true })
+    document.addEventListener('keydown', startPlayback, { capture: true, once: true })
 
     return () => {
-      disposed = true
-      window.onSpotifyIframeApiReady = previousReadyHandler
-      document.removeEventListener('pointerdown', startPlaybackFromInteraction, { capture: true })
-      document.removeEventListener('keydown', startPlaybackFromInteraction, { capture: true })
-      controllerRef.current?.destroy?.()
-      controllerRef.current = null
+      document.removeEventListener('pointerdown', startPlayback, { capture: true })
+      document.removeEventListener('keydown', startPlayback, { capture: true })
     }
   }, [])
 
-  return <div ref={containerRef} className="mt-2 h-38 w-full overflow-hidden rounded-[18px]" />
+  return (
+    <>
+      <div className="mt-2 flex items-center gap-3 rounded-[18px] bg-slate-950 px-4 py-3 text-white">
+        <Music2 className="size-4 shrink-0 text-[#fcb39e]" aria-hidden="true" />
+        <p className="text-sm font-semibold">Party In The U.S.A. · Miley Cyrus</p>
+      </div>
+      <audio ref={audioRef} src={PARTY_TRACK_URL} autoPlay preload="auto" />
+    </>
+  )
 }
