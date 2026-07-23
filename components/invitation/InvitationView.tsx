@@ -180,6 +180,37 @@ const FIESTA_DRESSCODE = {
 const FIESTA_CONTACT_PHONE = '+54 9 3496 54-9307'
 const BOARDING_TIME = '20:30'
 
+function BoardingPassBarcode({ value }: { value: string }) {
+  const source = value.replace(/[^A-Z0-9]/gi, '').toUpperCase() || 'ALISTA15'
+  const bars = Array.from({ length: 52 }, (_, index) => {
+    const code = source.charCodeAt(index % source.length)
+    return 1 + ((code + index * 7) % 4)
+  })
+
+  return (
+    <div className="mt-6 border-t-2 border-dashed border-slate-300 pt-4" aria-hidden="true">
+      <div className="rounded-md bg-white/35 px-3 py-2">
+        <div className="flex h-10 items-stretch gap-px overflow-hidden">
+          <span className="w-0.75 shrink-0 bg-slate-950" />
+          {bars.map((width, index) => (
+            <span
+              key={index}
+              className={`shrink-0 bg-slate-950 ${index === 0 || index === bars.length - 1 ? 'h-full' : 'h-8'}`}
+              style={{ width }}
+            />
+          ))}
+          <span className="w-0.75 shrink-0 bg-slate-950" />
+        </div>
+        <div className="mt-1 flex justify-between font-mono text-[8px] font-bold tracking-[0.22em] text-slate-600">
+          <span>ESP</span>
+          <span>{source.slice(0, 12).padEnd(12, '0')}</span>
+          <span>ALISTA</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function InvitationView({
   event,
   branding,
@@ -315,7 +346,7 @@ export default function InvitationView({
             </div>
           </div>
 
-          <div className="mt-6 h-10 opacity-70" aria-hidden="true" style={{ backgroundImage: 'repeating-linear-gradient(90deg, #0f172a 0 2px, transparent 2px 4px, #0f172a 4px 5px, transparent 5px 8px)' }} />
+          <BoardingPassBarcode value={`${event.slug || airportCode}${event.event_date || ''}`} />
         </section>
 
         {children}
