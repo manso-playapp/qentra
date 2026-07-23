@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import QRCode from 'qrcode'
+import InvitationPaymentButton from '@/components/invitation/InvitationPaymentButton'
 import InvitationResponseForm from '@/components/invitation/InvitationResponseForm'
 import InvitationView, {
   buildAccessState,
@@ -64,7 +65,10 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
 
   const { data: guest } = await supabase
     .from('guests')
-    .select('id, event_id, first_name, last_name, email, phone, status, notes, payment_status, photo_url')
+    .select(`
+      id, event_id, guest_type_id, first_name, last_name, email, phone, status, notes, payment_status, photo_url,
+      guest_types (name, payment_amount_cents)
+    `)
     .eq('id', invitationToken.guest_id)
     .maybeSingle()
 
@@ -91,6 +95,8 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
 
   const invitationDetails = parseInvitationDetails(guest?.notes)
   const paymentStatus = (guest?.payment_status ?? 'not_required') as 'not_required' | 'pending' | 'approved'
+  const guestType = Array.isArray(guest?.guest_types) ? guest.guest_types[0] : guest?.guest_types
+  const paymentAmountCents = guestType?.payment_amount_cents ?? 0
 
   const fallbackGuestName = [guest?.first_name, guest?.last_name].filter(Boolean).join(' ').trim()
   const guestDisplayName = resolvedSearchParams?.guest?.trim() || fallbackGuestName
@@ -185,6 +191,9 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
               }}
             />
           </div>
+          {invitationResponse === 'confirmed' && paymentStatus === 'pending' && paymentAmountCents > 0 && (
+            <InvitationPaymentButton token={token} amountCents={paymentAmountCents} />
+          )}
         </section>
       ) : (
         <>
