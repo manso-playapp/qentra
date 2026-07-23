@@ -248,9 +248,9 @@ export default function DoorScanner({ event }: DoorScannerProps) {
               <h1 className="mt-1 truncate text-xl font-bold leading-tight">{event.name}</h1>
           </div>
           <div className="mt-1 flex flex-col items-end gap-2 justify-self-end">
-            <div className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold ${scannerActive ? 'bg-emerald-400/15 text-emerald-200' : 'bg-white/10 text-slate-300'}`}>
-              <span className={`size-2 rounded-full ${scannerActive ? 'bg-emerald-400' : 'bg-slate-500'}`} />
-              {scannerActive ? 'Cámara lista' : 'En espera'}
+            <div className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold ${loading ? 'bg-amber-300/15 text-amber-100' : scannerActive ? 'bg-emerald-400/15 text-emerald-200' : 'bg-white/10 text-slate-300'}`}>
+              <span className={`size-2 rounded-full ${loading ? 'animate-pulse bg-amber-300' : scannerActive ? 'bg-emerald-400' : 'bg-slate-500'}`} />
+              {loading ? 'Procesando...' : scannerActive ? 'Cámara lista' : 'En espera'}
             </div>
             {scannerActive && flashSupported && (
               <button
@@ -272,6 +272,13 @@ export default function DoorScanner({ event }: DoorScannerProps) {
               <div className="relative aspect-[3/4] overflow-hidden rounded-[24px] bg-black">
                 <video ref={videoRef} muted playsInline className="size-full object-cover" />
                 <canvas ref={canvasRef} className="hidden" />
+                {loading && (
+                  <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-slate-950/90 px-7 text-center">
+                    <LoaderCircle className="size-12 animate-spin text-[#fcb39e]" />
+                    <p className="mt-4 text-xl font-bold">Procesando...</p>
+                    <p className="mt-2 text-sm text-slate-300">Estamos validando el acceso.</p>
+                  </div>
+                )}
                 {!scannerActive && (
                   <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/90 px-7 text-center">
                     <ScanLine className="size-16 text-sky-300" strokeWidth={1.35} />
@@ -331,7 +338,7 @@ export default function DoorScanner({ event }: DoorScannerProps) {
                 {isReady && (
                   <Button type="button" onClick={() => void approve()} disabled={loading} className="h-14 bg-white text-emerald-800 hover:bg-emerald-50">
                     {loading ? <LoaderCircle className="size-5 animate-spin" /> : null}
-                    Aprobar ingreso
+                    {loading ? 'Procesando...' : 'Aprobar ingreso'}
                   </Button>
                 )}
                 <Button type="button" onClick={next} disabled={loading} variant={isReady ? 'outline' : 'secondary'} className={isReady ? 'h-14 border-white/40 bg-transparent text-white hover:bg-white/10 hover:text-white' : 'h-14'}>
