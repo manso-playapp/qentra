@@ -65,7 +65,7 @@ export const MVP_FEATURES: MvpFeature[] = [
     module: 'admin',
     status: 'done',
     detail:
-      'Crear, editar, borrar y cambiar estado desde la ficha del evento. Carga masiva pegando una lista (CSV/tab) con insert unico, y export a CSV de todos los invitados con estado, pago y contacto.',
+      'Crear, editar, borrar y cambiar estado desde la ficha del evento. Carga masiva por pegado o plantilla CSV descargable, export a CSV y organizador de mesas/destinos para confirmados.',
     evidence: ['components/admin/EventGuestsManager.tsx', 'app/api/guests/bulk/route.ts'],
   },
   {
@@ -173,7 +173,7 @@ export const MVP_FEATURES: MvpFeature[] = [
     module: 'totem',
     status: 'done',
     detail:
-      'Pantalla de bienvenida con branding; muestra el ingreso aprobado con la FOTO del invitado al instante via Realtime (con polling de respaldo) y vuelve sola a idle. Por diseno solo celebra aprobaciones; los rechazos quedan en la puerta.',
+      'Pantalla de bienvenida con branding; muestra al instante el ingreso aprobado con foto y destino cuando existe, via Realtime con sondeo de respaldo. Por diseño solo celebra aprobaciones; los rechazos quedan en la puerta.',
     evidence: ['app/api/events/[id]/checkin-feed/route.ts', 'components/admin/EventCheckinManager.tsx'],
   },
   {
@@ -215,6 +215,10 @@ export const MVP_FEATURES: MvpFeature[] = [
 /** Cosas construidas que el MVP no pedia. Sirven para no subestimar el avance. */
 export const BEYOND_MVP: { title: string; detail: string }[] = [
   {
+    title: 'Mesas y destinos operativos',
+    detail: 'El panel de invitados permite ubicar grupos confirmados por mesa o sector, cuenta acompañantes y entrega ese dato al Tótem en el ingreso.',
+  },
+  {
     title: 'Puerta móvil emparejable desde notebook',
     detail: 'El panel de check-in muestra un QR que abre Modo puerta en otro celular autenticado, separado de la superficie de monitoreo detallado.',
   },
@@ -239,8 +243,8 @@ export const BEYOND_MVP: { title: string; detail: string }[] = [
     detail: 'Registro de envios y trazabilidad de delivery en la vista de configuracion.',
   },
   {
-    title: '71 tests automatizados',
-    detail: 'Cobertura de la politica de acceso y del parseo de respuestas de invitacion.',
+    title: '95 tests automatizados',
+    detail: 'Cobertura de la política de acceso y del parseo de respuestas de invitación.',
   },
 ]
 
@@ -252,18 +256,24 @@ export const TECH_DEBT: { title: string; detail: string; severity: 'alta' | 'med
 export const NEXT_STEPS: { order: number; title: string; detail: string; featureId: string }[] = [
   {
     order: 1,
+    title: 'Cobros con Mercado Pago',
+    detail: 'Conectar la pasarela, crear una intención de pago por invitado, recibir webhooks verificados y actualizar payment_status sin intervención manual.',
+    featureId: 'mercadopago',
+  },
+  {
+    order: 2,
     title: 'Terminar el editor de invitacion',
     detail: 'Spotify real (buscar y sumar temas a la playlist), guardar respuestas de trivia y que los toggles de campos afecten el formulario publico y su validacion.',
     featureId: 'invitacion-editor',
   },
   {
-    order: 2,
+    order: 3,
     title: 'Editor del totem (dedicado)',
     detail: 'Su propio editor, distinto al de la invitacion: composicion visual y mensajes del totem con preview en vivo.',
     featureId: 'totem-editor',
   },
   {
-    order: 3,
+    order: 4,
     title: 'Numero de WhatsApp productivo',
     detail: 'El envio por WhatsApp corre contra el sandbox de Twilio. Dar de alta un numero propio aprobado para escribirle a cualquier invitado sin opt-in previo.',
     featureId: 'twilio-numero',

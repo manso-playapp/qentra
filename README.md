@@ -8,8 +8,9 @@ Estado actual del MVP:
 
 - admin de eventos, invitados y tipos de invitado
 - invitaciones con QR unico por invitado
+- carga masiva con plantilla descargable y asignacion de mesas/destinos
 - check-in manual y por QR
-- vistas separadas de `admin`, `puerta` y `totem`
+- vistas separadas de `admin`, `puerta` y `totem`, con destino visible al ingresar
 - autenticacion operativa con Supabase Auth
 - envio por email y WhatsApp segun configuracion del entorno
 
