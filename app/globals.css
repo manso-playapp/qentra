@@ -119,3 +119,39 @@ body {
     linear-gradient(145deg, color-mix(in srgb, var(--event-accent) 10%, white), var(--card)),
     var(--card);
 }
+
+.invitation-wind-particles {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  overflow: hidden;
+}
+
+.invitation-wind-particle {
+  position: absolute;
+  border-radius: 999px;
+  background: rgba(255, 247, 232, 0.95);
+  box-shadow: 0 0 8px rgba(255, 221, 177, 0.45);
+  animation-name: invitation-wind-drift;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+@keyframes invitation-wind-drift {
+  from {
+    transform: translate3d(-14vw, -2vh, 0) rotate(0deg);
+  }
+  45% {
+    transform: translate3d(48vw, 5vh, 0) rotate(120deg);
+  }
+  to {
+    transform: translate3d(118vw, 13vh, 0) rotate(280deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .invitation-wind-particle {
+    animation: none;
+  }
+}

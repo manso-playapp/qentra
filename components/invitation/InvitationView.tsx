@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { CalendarDays, Clock3, MapPin, PlaneTakeoff, Ticket } from 'lucide-react'
 import type { SurfaceBranding } from '@/types'
 import InvitationMusicPlayer from '@/components/invitation/InvitationMusicPlayer'
+import InvitationWindParticles from '@/components/invitation/InvitationWindParticles'
 
 export type InvitationEventInfo = {
   name?: string
@@ -200,6 +201,7 @@ export default function InvitationView({
         backgroundSize: '100% auto',
       }}
     >
+      <InvitationWindParticles />
       {isPreview && (
         <div className="sticky top-0 z-20 bg-amber-400 px-4 py-2 text-center text-[11px] font-bold uppercase tracking-[0.2em] text-black">
           Vista previa · invitación de ejemplo
