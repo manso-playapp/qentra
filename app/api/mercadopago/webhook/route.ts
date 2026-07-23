@@ -1,8 +1,8 @@
-import { createHmac, timingSafeEqual } from 'node:crypto'
 import QRCode from 'qrcode'
 import { buildGuestAccessQrPayload } from '@/lib/guest-access'
 import { buildGuestFullName } from '@/lib/guest-schema'
 import { getMercadoPagoConfig, mapMercadoPagoPaymentStatus } from '@/lib/mercadopago'
+import { validMercadoPagoWebhookSignature } from '@/lib/mercadopago-webhook'
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
 
 export const runtime = 'nodejs'
@@ -20,33 +20,6 @@ type MercadoPagoPayment = {
   transaction_amount?: number
   currency_id?: string
   date_approved?: string | null
-}
-
-function validWebhookSignature(request: Request, dataId: string, secret: string) {
-  const signature = request.headers.get('x-signature')
-  if (!signature) return false
-
-  const values = Object.fromEntries(
-    signature.split(',').map((part) => {
-      const [key, ...rest] = part.trim().split('=')
-      return [key, rest.join('=')]
-    })
-  )
-  const timestamp = values.ts
-  const receivedHash = values.v1
-  if (!timestamp || !receivedHash) return false
-
-  const requestId = request.headers.get('x-request-id')
-  const manifest = [
-    `id:${dataId.toLowerCase()};`,
-    requestId ? `request-id:${requestId};` : '',
-    `ts:${timestamp};`,
-  ].join('')
-  const expectedHash = createHmac('sha256', secret).update(manifest).digest('hex')
-  const expected = Buffer.from(expectedHash, 'utf8')
-  const received = Buffer.from(receivedHash, 'utf8')
-
-  return expected.length === received.length && timingSafeEqual(expected, received)
 }
 
 async function issueApprovedGuestQr(
@@ -142,12 +115,18 @@ export async function POST(request: Request) {
   }
 
   const notification = (await request.json().catch(() => null)) as MercadoPagoNotification | null
-  const dataId = new URL(request.url).searchParams.get('data.id') ?? notification?.data?.id?.toString()
+  const dataIdFromUrl = new URL(request.url).searchParams.get('data.id')
+  const dataId = dataIdFromUrl ?? notification?.data?.id?.toString()
   if (!dataId || (notification?.type && notification.type !== 'payment')) {
     return Response.json({ ok: true })
   }
 
-  if (!validWebhookSignature(request, dataId, webhookSecret)) {
+  if (!validMercadoPagoWebhookSignature({
+    signature: request.headers.get('x-signature'),
+    requestId: request.headers.get('x-request-id'),
+    dataIdFromUrl,
+    secret: webhookSecret,
+  })) {
     return Response.json({ error: 'Firma de webhook inválida.' }, { status: 401 })
   }
 

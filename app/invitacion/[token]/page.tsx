@@ -2,6 +2,7 @@ import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import QRCode from 'qrcode'
 import InvitationPaymentButton from '@/components/invitation/InvitationPaymentButton'
+import InvitationPaymentStatusSyncButton from '@/components/invitation/InvitationPaymentStatusSyncButton'
 import InvitationResponseForm from '@/components/invitation/InvitationResponseForm'
 import InvitationView, {
   buildAccessState,
@@ -192,7 +193,10 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
             />
           </div>
           {invitationResponse === 'confirmed' && paymentStatus === 'pending' && paymentAmountCents > 0 && (
-            <InvitationPaymentButton token={token} amountCents={paymentAmountCents} />
+            <>
+              <InvitationPaymentButton token={token} amountCents={paymentAmountCents} />
+              <InvitationPaymentStatusSyncButton token={token} />
+            </>
           )}
         </section>
       ) : (
