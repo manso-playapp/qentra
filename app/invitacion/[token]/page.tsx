@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import QRCode from 'qrcode'
 import InvitationPaymentButton from '@/components/invitation/InvitationPaymentButton'
 import InvitationPaymentStatusSyncButton from '@/components/invitation/InvitationPaymentStatusSyncButton'
+import InvitationQrDownloadButton from '@/components/invitation/InvitationQrDownloadButton'
 import InvitationResponseForm from '@/components/invitation/InvitationResponseForm'
 import InvitationView, {
   buildAccessState,
@@ -229,14 +230,11 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
                       className="w-full rounded-2xl"
                     />
                   </div>
-                  <a
-                    href={qrCodeUrl}
-                    download={`alista-${event?.slug || 'acceso'}-${invitationToken.token.slice(-6)}.png`}
-                    className="mt-4 inline-flex w-full items-center justify-center rounded-full px-5 py-3 text-sm font-semibold text-slate-950 transition hover:brightness-[0.97]"
-                    style={{ backgroundColor: primaryColor }}
-                  >
-                    Descargar QR
-                  </a>
+                  <InvitationQrDownloadButton
+                    qrCodeUrl={qrCodeUrl}
+                    fileName={`alista-${event?.slug || 'acceso'}-${invitationToken.token.slice(-6)}.png`}
+                    color={primaryColor}
+                  />
                 </>
               )}
               <p className="mt-3 text-xs leading-5 text-white/60">Mostralo desde tu celular al llegar, con brillo suficiente.</p>
