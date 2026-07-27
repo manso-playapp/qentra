@@ -65,13 +65,24 @@ export function buildPhoneHref(phone?: string) {
 
 export function buildCalendarUrl(event: InvitationEventInfo) {
   if (!event.event_date || !event.start_time) return null
-  const start = new Date(`${event.event_date}T${event.start_time}`)
+
+  // La fecha y la hora del evento se cargan como hora local argentina. No se
+  // deben serializar con `toISOString()` porque eso las transforma a UTC y
+  // Google Calendar las muestra tres horas antes en Buenos Aires.
+  const [year, month, day] = event.event_date.split('-').map(Number)
+  const [hours, minutes] = event.start_time.split(':').map(Number)
+  const start = new Date(Date.UTC(year, month - 1, day, hours, minutes))
   const end = new Date(start.getTime() + 4 * 60 * 60 * 1000)
-  const fmt = (value: Date) => value.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'
+  const fmt = (value: Date) =>
+    [
+      value.getUTCFullYear(),
+      String(value.getUTCMonth() + 1).padStart(2, '0'),
+      String(value.getUTCDate()).padStart(2, '0'),
+    ].join('') + `T${String(value.getUTCHours()).padStart(2, '0')}${String(value.getUTCMinutes()).padStart(2, '0')}00`
   const details = [event.description, event.venue_name, event.venue_address].filter(Boolean).join('\n')
   return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(
     'Cumple de Dharma'
-  )}&dates=${fmt(start)}/${fmt(end)}&details=${encodeURIComponent(details)}&location=${encodeURIComponent(
+  )}&dates=${fmt(start)}/${fmt(end)}&ctz=America%2FArgentina%2FBuenos_Aires&details=${encodeURIComponent(details)}&location=${encodeURIComponent(
     event.venue_address || event.venue_name || ''
   )}`
 }

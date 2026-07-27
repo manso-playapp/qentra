@@ -1010,7 +1010,7 @@ export default function EventGuestsManager({
 
     return {
       invitationUrl,
-      whatsappText: `Hola ${guest.first_name}!\n\nSe acerca mi fiesta de 15,\n\n\uD83C\uDFAB Tu pr\u00f3xima aventura comienza ac\u00e1!!!!!!\n\nRealiz\u00e1 tu check-in y preparate para despegar...\nTe mando el link para que te registres, te espero!\n\n${invitationUrl}`,
+      whatsappText: `Hola ${guest.first_name}!\n\nSe acerca mi fiesta de 15,\n\n\uD83C\uDFAB Tu pr\u00f3xima aventura comienza ac\u00e1!!!!!!\n\nRealiz\u00e1 tu check-in y preparate para despegar...\nTe mando el link para que te registres, te espero!\n\n${invitationUrl}\n\nFecha limite para confirmar: Domingo 2 de Agosto`,
       emailSubject: `Tu acceso para ${event.name}`,
       emailBody: `Hola ${guestName},\n\nTe compartimos tu acceso para ${event.name}.\n\nAbre este enlace desde tu celular y muestra el QR en puerta:\n${invitationUrl}\n\nVigencia: ${formatDateTime(token.expires_at)}\n`,
     }
@@ -2832,6 +2832,32 @@ export default function EventGuestsManager({
                     className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                   />
                 </div>
+                <div>
+                  <label htmlFor="sidebar-guest-type-policy" className="text-xs font-semibold uppercase tracking-wide text-gray-500">Etiqueta de acceso</label>
+                  <input id="sidebar-guest-type-policy" name="access_policy_label" value={guestTypeForm.access_policy_label} onChange={handleGuestTypeInputChange} placeholder="Ej: Desde medianoche" className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">Desde</label>
+                    <input name="access_start_time" type="time" value={guestTypeForm.access_start_time} onChange={handleGuestTypeInputChange} className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">Hasta</label>
+                    <input name="access_end_time" type="time" value={guestTypeForm.access_end_time} onChange={handleGuestTypeInputChange} className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">Día inicio</label>
+                    <input name="access_start_day_offset" type="number" value={guestTypeForm.access_start_day_offset} onChange={handleGuestTypeInputChange} className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">Día fin</label>
+                    <input name="access_end_day_offset" type="number" value={guestTypeForm.access_end_day_offset} onChange={handleGuestTypeInputChange} className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">Importe por invitado (ARS)</label>
+                  <input name="payment_amount_ars" type="number" min="0" step="1" value={guestTypeForm.payment_amount_ars} onChange={handleGuestTypeInputChange} className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                </div>
                 {guestTypeSubmitError && <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{guestTypeSubmitError}</p>}
                 <button
                   type="submit"
@@ -2850,21 +2876,69 @@ export default function EventGuestsManager({
                 visibleGuestTypes.map((guestType) => (
                   <div key={guestType.id} className="rounded-lg border border-gray-100 px-3 py-2.5">
                     {editingGuestTypeId === guestType.id && editGuestTypeForm ? (
-                      <div className="space-y-2">
-                        <input
-                          name="name"
-                          value={editGuestTypeForm.name}
-                          onChange={handleEditGuestTypeInputChange}
-                          aria-label="Nombre del tipo"
-                          className="block w-full rounded-md border border-gray-300 px-2.5 py-2 text-sm"
-                        />
-                        <input
-                          name="description"
-                          value={editGuestTypeForm.description}
-                          onChange={handleEditGuestTypeInputChange}
-                          aria-label="Descripción del tipo"
-                          className="block w-full rounded-md border border-gray-300 px-2.5 py-2 text-sm"
-                        />
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between gap-3 border-b border-gray-100 pb-3">
+                          <div>
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-500">Editando tipo</p>
+                            <h3 className="mt-1 text-base font-semibold text-gray-950">{guestType.name}</h3>
+                          </div>
+                          <span className={`rounded-full px-2 py-1 text-[10px] font-semibold ${guestType.is_active === false ? 'bg-gray-100 text-gray-600' : 'bg-emerald-100 text-emerald-800'}`}>
+                            {guestType.is_active === false ? 'Inactivo' : 'Activo'}
+                          </span>
+                        </div>
+                        <div className="grid gap-2 sm:grid-cols-2">
+                          <div>
+                            <label className="text-xs font-semibold text-gray-600">Nombre</label>
+                            <input
+                              name="name"
+                              value={editGuestTypeForm.name}
+                              onChange={handleEditGuestTypeInputChange}
+                              className="mt-1 block w-full rounded-md border border-gray-300 px-2.5 py-2 text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs font-semibold text-gray-600">Etiqueta de acceso</label>
+                            <input
+                              name="access_policy_label"
+                              value={editGuestTypeForm.access_policy_label}
+                              onChange={handleEditGuestTypeInputChange}
+                              placeholder="Ej: Desde medianoche"
+                              className="mt-1 block w-full rounded-md border border-gray-300 px-2.5 py-2 text-sm"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="text-xs font-semibold text-gray-600">Descripción</label>
+                          <textarea
+                            name="description"
+                            rows={2}
+                            value={editGuestTypeForm.description}
+                            onChange={handleEditGuestTypeInputChange}
+                            className="mt-1 block w-full rounded-md border border-gray-300 px-2.5 py-2 text-sm"
+                          />
+                        </div>
+                        <div className="grid gap-2 sm:grid-cols-2">
+                          <div>
+                            <label className="text-xs font-semibold text-gray-600">Hora desde</label>
+                            <input name="access_start_time" type="time" value={editGuestTypeForm.access_start_time} onChange={handleEditGuestTypeInputChange} className="mt-1 block w-full rounded-md border border-gray-300 px-2.5 py-2 text-sm" />
+                          </div>
+                          <div>
+                            <label className="text-xs font-semibold text-gray-600">Hora hasta</label>
+                            <input name="access_end_time" type="time" value={editGuestTypeForm.access_end_time} onChange={handleEditGuestTypeInputChange} className="mt-1 block w-full rounded-md border border-gray-300 px-2.5 py-2 text-sm" />
+                          </div>
+                          <div>
+                            <label className="text-xs font-semibold text-gray-600">Día de inicio</label>
+                            <input name="access_start_day_offset" type="number" value={editGuestTypeForm.access_start_day_offset} onChange={handleEditGuestTypeInputChange} className="mt-1 block w-full rounded-md border border-gray-300 px-2.5 py-2 text-sm" />
+                          </div>
+                          <div>
+                            <label className="text-xs font-semibold text-gray-600">Día de fin</label>
+                            <input name="access_end_day_offset" type="number" value={editGuestTypeForm.access_end_day_offset} onChange={handleEditGuestTypeInputChange} className="mt-1 block w-full rounded-md border border-gray-300 px-2.5 py-2 text-sm" />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="text-xs font-semibold text-gray-600">Importe por invitado (ARS)</label>
+                          <input name="payment_amount_ars" type="number" min="0" step="1" value={editGuestTypeForm.payment_amount_ars} onChange={handleEditGuestTypeInputChange} className="mt-1 block w-full rounded-md border border-gray-300 px-2.5 py-2 text-sm" />
+                        </div>
                         <div className="flex gap-2">
                           <button
                             type="button"
@@ -2880,10 +2954,25 @@ export default function EventGuestsManager({
                     ) : (
                       <div className="flex items-center justify-between gap-3">
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold text-gray-900">{guestType.name}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="truncate text-sm font-semibold text-gray-900">{guestType.name}</p>
+                            <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${guestType.is_active === false ? 'bg-gray-100 text-gray-600' : 'bg-emerald-100 text-emerald-800'}`}>
+                              {guestType.is_active === false ? 'Inactivo' : 'Activo'}
+                            </span>
+                          </div>
                           <p className="mt-0.5 truncate text-xs text-gray-500">{guestType.description || 'Sin descripción'}</p>
                         </div>
-                        <button type="button" onClick={() => startEditingGuestType(guestType)} className="flex-none text-xs font-semibold text-blue-700 hover:text-blue-900">Editar</button>
+                        <div className="flex flex-none items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => void toggleGuestTypeActiveState(guestType, guestType.is_active === false)}
+                            disabled={guestTypeActionLoadingId === guestType.id}
+                            className="text-xs font-semibold text-gray-600 hover:text-gray-950 disabled:opacity-60"
+                          >
+                            {guestType.is_active === false ? 'Reactivar' : 'Desactivar'}
+                          </button>
+                          <button type="button" onClick={() => startEditingGuestType(guestType)} className="text-xs font-semibold text-blue-700 hover:text-blue-900">Editar</button>
+                        </div>
                       </div>
                     )}
                   </div>
