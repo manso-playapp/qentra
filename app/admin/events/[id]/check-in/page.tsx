@@ -38,8 +38,10 @@ export default async function EventCheckinPage({ params }: EventCheckinPageProps
 
   return (
     <AdminLayout>
-      <DoorScannerLink eventId={id} />
-      <EventCheckinManager event={data as Pick<Event, 'id' | 'name' | 'slug' | 'event_date' | 'start_time' | 'max_capacity'>} />
+      <EventCheckinManager
+        event={data as Pick<Event, 'id' | 'name' | 'slug' | 'event_date' | 'start_time' | 'max_capacity'>}
+        sidebarSlot={<DoorScannerLink eventId={id} />}
+      />
     </AdminLayout>
   )
 }

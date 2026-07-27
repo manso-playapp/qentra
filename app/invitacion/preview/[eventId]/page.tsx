@@ -65,29 +65,29 @@ export default async function InvitationPreviewPage({ params }: PreviewPageProps
         <h3 className="mt-4 text-xl font-semibold text-slate-950">{accessState.title}</h3>
         <p className="mt-2 text-sm leading-6 text-slate-600">{accessState.detail}</p>
 
-        <div className="mt-5 space-y-3 opacity-60" aria-hidden="true">
-          <div className="rounded-[14px] border border-white/15 bg-white/5 p-3">
-            <p className="text-[11px] uppercase tracking-[0.2em] text-white/50">Nombre y apellido</p>
-            <div className="mt-2 h-9 rounded-lg bg-white/10" />
+        <div className="mt-5 space-y-3" aria-hidden="true">
+          <div className="rounded-[14px] border border-slate-300 bg-white/80 p-3">
+            <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500">Nombre y apellido</p>
+            <div className="mt-2 h-9 rounded-lg border border-slate-200 bg-slate-100" />
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-[14px] border border-white/15 bg-white/5 p-3">
-              <p className="text-[11px] uppercase tracking-[0.2em] text-white/50">DNI</p>
-              <div className="mt-2 h-9 rounded-lg bg-white/10" />
+            <div className="rounded-[14px] border border-slate-300 bg-white/80 p-3">
+              <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500">DNI</p>
+              <div className="mt-2 h-9 rounded-lg border border-slate-200 bg-slate-100" />
             </div>
-            <div className="rounded-[14px] border border-white/15 bg-white/5 p-3">
-              <p className="text-[11px] uppercase tracking-[0.2em] text-white/50">Teléfono</p>
-              <div className="mt-2 h-9 rounded-lg bg-white/10" />
+            <div className="rounded-[14px] border border-slate-300 bg-white/80 p-3">
+              <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500">Teléfono</p>
+              <div className="mt-2 h-9 rounded-lg border border-slate-200 bg-slate-100" />
             </div>
           </div>
-          <div className="rounded-[14px] border border-white/15 bg-white/5 p-3">
-            <p className="text-[11px] uppercase tracking-[0.2em] text-white/50">Asistencia</p>
+          <div className="rounded-[14px] border border-slate-300 bg-white/80 p-3">
+            <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500">Asistencia</p>
             <div className="mt-2 flex gap-2">
-              <div className="h-9 flex-1 rounded-lg bg-white/10" />
-              <div className="h-9 flex-1 rounded-lg bg-white/10" />
+              <div className="h-9 flex-1 rounded-lg border border-slate-200 bg-slate-100" />
+              <div className="h-9 flex-1 rounded-lg border border-slate-200 bg-slate-100" />
             </div>
           </div>
-          <div className="rounded-[14px] border border-dashed border-amber-300/30 bg-amber-300/5 p-3 text-center text-xs text-amber-100/70">
+          <div className="rounded-[14px] border border-dashed border-amber-400/60 bg-amber-100/80 p-3 text-center text-xs font-medium text-amber-950">
             Vista previa · el botón de envío está deshabilitado
           </div>
         </div>

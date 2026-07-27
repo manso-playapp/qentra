@@ -276,7 +276,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         </aside>
 
         <div className="min-w-0 flex-1">
-          <header className="rounded-[32px] border border-border/70 bg-admin-panel px-6 py-5 shadow-[0_20px_60px_rgba(22,33,90,0.08)] backdrop-blur">
+          {/* El contexto vive en el sidebar y en cada superficie de trabajo. */}
+          <header aria-hidden="true" className="hidden">
             <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
               <div>
                 <p className="text-[11px] uppercase tracking-[0.32em] text-muted-foreground">
@@ -302,7 +303,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             </div>
           </header>
 
-          <main className="pb-8 pt-6">
+          <main className="pb-8">
             {children}
           </main>
         </div>

@@ -16,6 +16,11 @@ import { isInvitationAccessReady, parseInvitationDetails } from '@/lib/invitatio
 import { useGuestTypes, useGuests } from '@/lib/hooks'
 import { buildAbsoluteAppUrl } from '@/lib/public-url'
 import { toE164 } from '@/lib/phone'
+import {
+  normalizeGuestTypeName,
+  parseGuestImportRows,
+  type GuestImportRow,
+} from '@/lib/guest-import'
 import type {
   CreateGuestForm,
   CreateGuestTypeForm,
@@ -200,47 +205,6 @@ function buildGuestImportTemplateCsv(): string {
   return ['Nombre', 'Apellido', 'Email', 'Telefono', 'Destino'].join(',') + '\r\n'
 }
 
-type ImportRow = {
-  first_name: string
-  last_name: string
-  email: string
-  phone: string
-  table_assignment: string
-}
-
-// Parser de la carga masiva. Una fila por linea; columnas separadas por coma,
-// tab (pegado de planilla) o punto y coma: Nombre, Apellido, Email, Telefono,
-// Destino (mesa/sector). Solo el nombre es obligatorio; las filas sin nombre
-// se descartan.
-function parseGuestRows(text: string): ImportRow[] {
-  return text
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter(Boolean)
-    // Una plantilla descargada incluye esta cabecera; no debe crear por error
-    // un invitado llamado "Nombre" al volver a importarla.
-    .filter((line, index) => {
-      if (index !== 0) return true
-      const firstColumn = (line.split(/\t|,|;/)[0] ?? '')
-        .trim()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .toLocaleLowerCase('es-AR')
-      return firstColumn !== 'nombre'
-    })
-    .map((line) => {
-      const cols = line.split(/\t|,|;/).map((cell) => cell.trim())
-      return {
-        first_name: cols[0] ?? '',
-        last_name: cols[1] ?? '',
-        email: cols[2] ?? '',
-        phone: cols[3] ?? '',
-        table_assignment: cols[4] ?? '',
-      }
-    })
-    .filter((row) => row.first_name.length > 0)
-}
-
 function buildInvitationPath(token: string, guestName?: string) {
   const params = new URLSearchParams()
 
@@ -306,6 +270,7 @@ export default function EventGuestsManager({
   const [showImport, setShowImport] = useState(false)
   const [importText, setImportText] = useState('')
   const [importGuestTypeId, setImportGuestTypeId] = useState('')
+  const [importGuestTypeIdsBySource, setImportGuestTypeIdsBySource] = useState<Record<string, string>>({})
   const [importLoading, setImportLoading] = useState(false)
   const [importError, setImportError] = useState<string | null>(null)
   const [guestSubmitError, setGuestSubmitError] = useState<string | null>(null)
@@ -321,15 +286,28 @@ export default function EventGuestsManager({
   // Lista desplegable: cada invitado arranca colapsado y se expande al tocarlo.
   const [expandedGuestIds, setExpandedGuestIds] = useState<Set<string>>(new Set())
 
+  const parsedImportRows = useMemo(() => parseGuestImportRows(importText), [importText])
+  const importSourceTypes = useMemo(
+    () =>
+      [...new Set(parsedImportRows.map((row) => row.source_type.trim()).filter(Boolean))].sort((a, b) =>
+        a.localeCompare(b, 'es-AR')
+      ),
+    [parsedImportRows]
+  )
+
+  const matchingGuestTypeId = (sourceType: string) => {
+    const normalizedSourceType = normalizeGuestTypeName(sourceType)
+    return visibleGuestTypes.find(
+      (guestType) => normalizeGuestTypeName(guestType.name) === normalizedSourceType
+    )?.id
+  }
+
   const toggleGuestExpanded = (guestId: string) => {
     setExpandedGuestIds((current) => {
-      const next = new Set(current)
-      if (next.has(guestId)) {
-        next.delete(guestId)
-      } else {
-        next.add(guestId)
+      if (current.has(guestId)) {
+        return new Set()
       }
-      return next
+      return new Set([guestId])
     })
   }
   const [editGuestForm, setEditGuestForm] = useState<GuestEditFormState | null>(null)
@@ -344,6 +322,14 @@ export default function EventGuestsManager({
   const [destinationError, setDestinationError] = useState<string | null>(null)
   const [destinationNotice, setDestinationNotice] = useState<string | null>(null)
   const [destinationFilter, setDestinationFilter] = useState('')
+  const [guestQuery, setGuestQuery] = useState('')
+  const [guestStatusFilter, setGuestStatusFilter] = useState<'all' | Guest['status']>('all')
+  const [guestTypeFilter, setGuestTypeFilter] = useState('all')
+  const [guestPage, setGuestPage] = useState(0)
+  const [guestsPerPage, setGuestsPerPage] = useState<25 | 50 | 'all'>(25)
+  const [selectedGuestIds, setSelectedGuestIds] = useState<Set<string>>(new Set())
+  const [bulkGuestTypeId, setBulkGuestTypeId] = useState('')
+  const [bulkActionLoading, setBulkActionLoading] = useState(false)
   const selectedGuestTypeId = guestForm.guest_type_id || visibleGuestTypes[0]?.id || ''
   const latestInvitationTokenByGuestId = useMemo(() => {
     const map = new Map<string, InvitationToken>()
@@ -446,6 +432,34 @@ export default function EventGuestsManager({
     () => visibleGuestTypes.filter((guestType) => guestType.is_active !== false).length,
     [visibleGuestTypes]
   )
+
+  const filteredGuests = useMemo(() => {
+    const query = guestQuery.trim().toLocaleLowerCase('es-AR')
+
+    return [...visibleGuests]
+      .filter((guest) => {
+        if (guestStatusFilter !== 'all' && guest.status !== guestStatusFilter) return false
+        if (guestTypeFilter !== 'all' && guest.guest_type_id !== guestTypeFilter) return false
+        if (!query) return true
+
+        return `${guest.first_name} ${guest.last_name} ${guest.email ?? ''} ${guest.phone ?? ''} ${guest.table_assignment ?? ''}`
+          .toLocaleLowerCase('es-AR')
+          .includes(query)
+      })
+      .sort((a, b) =>
+        `${a.last_name} ${a.first_name}`.localeCompare(`${b.last_name} ${b.first_name}`, 'es-AR')
+      )
+  }, [guestQuery, guestStatusFilter, guestTypeFilter, visibleGuests])
+
+  const effectiveGuestsPerPage = guestsPerPage === 'all' ? Math.max(filteredGuests.length, 1) : guestsPerPage
+  const guestPageCount = Math.max(1, Math.ceil(filteredGuests.length / effectiveGuestsPerPage))
+  const currentGuestPage = Math.min(guestPage, guestPageCount - 1)
+  const pagedGuests = filteredGuests.slice(
+    currentGuestPage * effectiveGuestsPerPage,
+    currentGuestPage * effectiveGuestsPerPage + effectiveGuestsPerPage
+  )
+  const selectedGuests = visibleGuests.filter((guest) => selectedGuestIds.has(guest.id))
+  const allPageGuestsSelected = pagedGuests.length > 0 && pagedGuests.every((guest) => selectedGuestIds.has(guest.id))
 
   const handleGuestInputChange = (
     eventInput: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -742,6 +756,82 @@ export default function EventGuestsManager({
     setGuestRowActionLoadingId(null)
   }
 
+  const toggleGuestSelection = (guestId: string) => {
+    setSelectedGuestIds((current) => {
+      const next = new Set(current)
+      if (next.has(guestId)) next.delete(guestId)
+      else next.add(guestId)
+      return next
+    })
+  }
+
+  const togglePageSelection = () => {
+    setSelectedGuestIds((current) => {
+      const next = new Set(current)
+      const shouldSelect = !pagedGuests.every((guest) => next.has(guest.id))
+      for (const guest of pagedGuests) {
+        if (shouldSelect) next.add(guest.id)
+        else next.delete(guest.id)
+      }
+      return next
+    })
+  }
+
+  const runBulkStatusUpdate = async (status: 'confirmed' | 'cancelled') => {
+    if (selectedGuests.length === 0) return
+
+    setBulkActionLoading(true)
+    setGuestRowActionError(null)
+    setGuestRowActionNotice(null)
+
+    const results = await Promise.all(
+      selectedGuests.map((guest) =>
+        updateGuest(guest.id, {
+          status,
+          ...(status === 'confirmed' && guest.status === 'checked_in'
+            ? { restore_invitation_access: true }
+            : {}),
+        })
+      )
+    )
+    const failed = results.filter((result) => result.error)
+
+    if (failed.length > 0) {
+      setGuestRowActionError(`No se pudieron actualizar ${failed.length} de ${selectedGuests.length} invitados.`)
+    } else {
+      setGuestRowActionNotice(
+        `${selectedGuests.length} invitados quedaron ${status === 'confirmed' ? 'confirmados' : 'cancelados'}.`
+      )
+      setSelectedGuestIds(new Set())
+    }
+
+    setBulkActionLoading(false)
+  }
+
+  const runBulkGuestTypeUpdate = async () => {
+    if (!bulkGuestTypeId || selectedGuests.length === 0) return
+
+    setBulkActionLoading(true)
+    setGuestRowActionError(null)
+    setGuestRowActionNotice(null)
+
+    const results = await Promise.all(
+      selectedGuests.map((guest) => updateGuest(guest.id, { guest_type_id: bulkGuestTypeId }))
+    )
+    const failed = results.filter((result) => result.error)
+
+    if (failed.length > 0) {
+      setGuestRowActionError(`No se pudieron cambiar ${failed.length} de ${selectedGuests.length} tipos.`)
+    } else {
+      const guestTypeName = visibleGuestTypes.find((guestType) => guestType.id === bulkGuestTypeId)?.name ?? 'seleccionado'
+      setGuestRowActionNotice(`${selectedGuests.length} invitados pasaron al tipo ${guestTypeName}.`)
+      setSelectedGuestIds(new Set())
+      setBulkGuestTypeId('')
+    }
+
+    setBulkActionLoading(false)
+  }
+
   // Conciliacion de pagos: el admin marca el aporte como sin cobro / pendiente /
   // confirmado. Confirmarlo destraba la emision del acceso (isInvitationAccessReady).
   const runPaymentUpdate = async (guest: GuestWithType, paymentStatus: GuestPaymentStatus) => {
@@ -787,9 +877,25 @@ export default function EventGuestsManager({
     URL.revokeObjectURL(url)
   }
 
+  const handleImportFile = async (file?: File) => {
+    if (!file) return
+
+    setImportError(null)
+    try {
+      const bytes = await file.arrayBuffer()
+      const utf8 = new TextDecoder('utf-8').decode(bytes)
+      // Muchas listas exportadas por Excel en Windows usan ANSI/Windows-1252.
+      // Si UTF-8 deja caracteres de reemplazo o mojibake, leemos esa variante.
+      const text = /\uFFFD|\u00C3/.test(utf8) ? new TextDecoder('windows-1252').decode(bytes) : utf8
+      setImportText(text)
+    } catch {
+      setImportError('No se pudo leer el archivo. Probá exportarlo como CSV UTF-8 o pegá su contenido.')
+    }
+  }
+
   const handleBulkImport = async () => {
     setImportError(null)
-    const rows = parseGuestRows(importText)
+    const rows = parsedImportRows
     const guestTypeId = importGuestTypeId || visibleGuestTypes[0]?.id
 
     if (!guestTypeId) {
@@ -801,19 +907,56 @@ export default function EventGuestsManager({
       return
     }
 
+    const guestTypeIdForRow = (row: GuestImportRow) => {
+      if (!row.source_type.trim()) return guestTypeId
+      return importGuestTypeIdsBySource[row.source_type] || matchingGuestTypeId(row.source_type) || ''
+    }
+    const unmappedTypes = [
+      ...new Set(rows.filter((row) => !guestTypeIdForRow(row)).map((row) => row.source_type)),
+    ]
+
+    if (unmappedTypes.length > 0) {
+      setImportError(`Asigná un tipo de invitado para: ${unmappedTypes.join(', ')}.`)
+      return
+    }
+
+    const batches = new Map<string, GuestImportRow[]>()
+    for (const row of rows) {
+      const typeId = guestTypeIdForRow(row)
+      const batch = batches.get(typeId) ?? []
+      batch.push(row)
+      batches.set(typeId, batch)
+    }
+
     setImportLoading(true)
-    const result = await bulkCreateGuests(guestTypeId, rows)
+    let importedCount = 0
+    let importFailure: string | undefined
+
+    for (const [typeId, batch] of batches) {
+      const result = await bulkCreateGuests(typeId, batch)
+      if (result.error) {
+        importFailure = result.error
+        break
+      }
+      importedCount += result.data?.count ?? batch.length
+    }
+
     setImportLoading(false)
 
-    if (result.error) {
-      setImportError(result.error)
+    if (importFailure) {
+      setImportError(
+        importedCount > 0
+          ? `${importFailure} Ya se importaron ${importedCount} invitados de los lotes anteriores.`
+          : importFailure
+      )
       return
     }
 
     setImportText('')
+    setImportGuestTypeIdsBySource({})
     setShowImport(false)
     setGuestRowActionError(null)
-    setGuestRowActionNotice(`Se importaron ${result.data?.count ?? rows.length} invitados.`)
+    setGuestRowActionNotice(`Se importaron ${importedCount} invitados.`)
   }
 
   const issueGuestAccess = async (guest: GuestWithType) => {
@@ -1000,12 +1143,6 @@ export default function EventGuestsManager({
           </p>
         </div>
 
-        <Link
-          href="/admin/events/new"
-          className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-        >
-          Crear otro evento
-        </Link>
       </div>
 
       <div className="mb-8 grid gap-4 md:grid-cols-4">
@@ -1034,7 +1171,7 @@ export default function EventGuestsManager({
         </div>
       </div>
 
-      <section aria-labelledby="destinations-heading" className="mb-8 rounded-xl border border-sky-200 bg-sky-50/50 p-6 shadow-sm">
+      <section aria-labelledby="destinations-heading" className="hidden">
         <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
           <div>
             <h2 id="destinations-heading" className="text-lg font-semibold text-gray-900">Mesas y destinos</h2>
@@ -1150,7 +1287,7 @@ export default function EventGuestsManager({
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.7fr)_minmax(360px,1fr)]">
         <section className="space-y-6">
-          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <div id="guest-types" className="hidden">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-semibold text-gray-900">Tipos de invitado</h2>
@@ -1639,6 +1776,19 @@ export default function EventGuestsManager({
                   </select>
                 </div>
 
+                <div className="mt-4">
+                  <label htmlFor="guest-import-file" className="block text-sm font-medium text-gray-700">
+                    Archivo CSV
+                  </label>
+                  <input
+                    id="guest-import-file"
+                    type="file"
+                    accept=".csv,text/csv,text/plain"
+                    onChange={(event) => void handleImportFile(event.target.files?.[0])}
+                    className="mt-1 block w-full text-sm text-gray-600 file:mr-3 file:rounded-md file:border-0 file:bg-white file:px-3 file:py-2 file:text-sm file:font-medium file:text-gray-700 hover:file:bg-gray-100"
+                  />
+                </div>
+
                 <textarea
                   value={importText}
                   onChange={(event) => setImportText(event.target.value)}
@@ -1646,6 +1796,38 @@ export default function EventGuestsManager({
                   placeholder={'Sofia, Gimenez, sofia@mail.com, 3415551234, Mesa 4\nMateo, Ledesma\n...'}
                   className="mt-4 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 font-mono text-xs focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                 />
+
+                {importSourceTypes.length > 0 && (
+                  <div className="mt-4 space-y-3">
+                    <p className="text-sm font-medium text-gray-700">{'Asignaci\\u00f3n de tipos detectados'}</p>
+                    {importSourceTypes.map((sourceType) => (
+                      <div key={sourceType} className="flex flex-wrap items-center gap-3">
+                        <span className="min-w-28 rounded bg-white px-2 py-1 font-mono text-xs text-gray-700">
+                          {sourceType}
+                        </span>
+                        <select
+                          aria-label={`Tipo para ${sourceType}`}
+                          value={importGuestTypeIdsBySource[sourceType] || matchingGuestTypeId(sourceType) || ''}
+                          onChange={(event) =>
+                            setImportGuestTypeIdsBySource((current) => ({
+                              ...current,
+                              [sourceType]: event.target.value,
+                            }))
+                          }
+                          disabled={visibleGuestTypes.length === 0}
+                          className="block rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                        >
+                          <option value="">{'Seleccion\\u00e1 un tipo'}</option>
+                          {visibleGuestTypes.map((guestType) => (
+                            <option key={guestType.id} value={guestType.id}>
+                              {guestType.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    ))}
+                  </div>
+                )}
 
                 {importError && (
                   <div className="mt-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
@@ -1657,16 +1839,138 @@ export default function EventGuestsManager({
                   <button
                     type="button"
                     onClick={handleBulkImport}
-                    disabled={importLoading || parseGuestRows(importText).length === 0}
+                    disabled={importLoading || parsedImportRows.length === 0}
                     className="inline-flex items-center rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {importLoading
                       ? 'Importando...'
-                      : `Importar ${parseGuestRows(importText).length} invitados`}
+                      : `Importar ${parsedImportRows.length} invitados`}
                   </button>
                   <span className="text-sm text-gray-500">
-                    {parseGuestRows(importText).length} filas detectadas
+                    {parsedImportRows.length} filas detectadas
                   </span>
+                </div>
+              </div>
+            )}
+
+            <div className="mt-5 grid gap-3 border-y border-gray-100 py-4 lg:grid-cols-[minmax(0,1fr)_170px_190px_120px_auto] lg:items-end">
+              <div>
+                <label htmlFor="guest-search" className="sr-only">Buscar invitados</label>
+                <input
+                  id="guest-search"
+                  value={guestQuery}
+                  onChange={(eventInput) => {
+                    setGuestQuery(eventInput.target.value)
+                    setGuestPage(0)
+                  }}
+                  placeholder="Buscar por nombre, teléfono, email o destino..."
+                  className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                />
+              </div>
+              <div>
+                <label htmlFor="guest-status-filter" className="sr-only">Filtrar por estado</label>
+                <select
+                  id="guest-status-filter"
+                  value={guestStatusFilter}
+                  onChange={(eventInput) => {
+                    setGuestStatusFilter(eventInput.target.value as 'all' | Guest['status'])
+                    setGuestPage(0)
+                  }}
+                  className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                >
+                  <option value="all">Todos los estados</option>
+                  {Object.entries(GUEST_STATUS_LABELS).map(([status, label]) => (
+                    <option key={status} value={status}>{label}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label htmlFor="guest-type-filter" className="sr-only">Filtrar por tipo</label>
+                <select
+                  id="guest-type-filter"
+                  value={guestTypeFilter}
+                  onChange={(eventInput) => {
+                    setGuestTypeFilter(eventInput.target.value)
+                    setGuestPage(0)
+                  }}
+                  className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                >
+                  <option value="all">Todos los tipos</option>
+                  {visibleGuestTypes.map((guestType) => (
+                    <option key={guestType.id} value={guestType.id}>{guestType.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label htmlFor="guests-per-page" className="sr-only">Invitados por página</label>
+                <select
+                  id="guests-per-page"
+                  value={guestsPerPage}
+                  onChange={(eventInput) => {
+                    const value = eventInput.target.value
+                    setGuestsPerPage(value === 'all' ? 'all' : Number(value) as 25 | 50)
+                    setGuestPage(0)
+                  }}
+                  className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                >
+                  <option value="25">25 por página</option>
+                  <option value="50">50 por página</option>
+                  <option value="all">Mostrar todos</option>
+                </select>
+              </div>
+              <p className="text-sm font-medium text-gray-500">
+                {filteredGuests.length} de {visibleGuests.length}
+              </p>
+            </div>
+
+            {selectedGuests.length > 0 && (
+              <div className="sticky top-3 z-20 mt-4 flex flex-col gap-3 rounded-xl border border-slate-800 bg-slate-950 p-3 text-white shadow-lg lg:flex-row lg:items-center lg:justify-between">
+                <p className="text-sm font-semibold">{selectedGuests.length} invitados seleccionados</p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => void runBulkStatusUpdate('confirmed')}
+                    disabled={bulkActionLoading}
+                    className="rounded-lg bg-emerald-400 px-3 py-2 text-xs font-semibold text-emerald-950 hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    Confirmar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void runBulkStatusUpdate('cancelled')}
+                    disabled={bulkActionLoading}
+                    className="rounded-lg border border-white/20 px-3 py-2 text-xs font-semibold text-white hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    Cancelar
+                  </button>
+                  <select
+                    value={bulkGuestTypeId}
+                    onChange={(eventInput) => setBulkGuestTypeId(eventInput.target.value)}
+                    disabled={bulkActionLoading}
+                    className="rounded-lg border border-white/20 bg-slate-900 px-3 py-2 text-xs text-white disabled:cursor-not-allowed disabled:opacity-60"
+                    aria-label="Cambiar tipo de los seleccionados"
+                  >
+                    <option value="">Mover a tipo...</option>
+                    {visibleGuestTypes.map((guestType) => (
+                      <option key={guestType.id} value={guestType.id}>{guestType.name}</option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => void runBulkGuestTypeUpdate()}
+                    disabled={bulkActionLoading || !bulkGuestTypeId}
+                    className="rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-950 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    Mover
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedGuestIds(new Set())}
+                    disabled={bulkActionLoading}
+                    className="px-2 py-2 text-xs font-medium text-slate-300 hover:text-white disabled:cursor-not-allowed"
+                  >
+                    Limpiar
+                  </button>
                 </div>
               </div>
             )}
@@ -1697,8 +2001,25 @@ export default function EventGuestsManager({
                     {guestRowActionNotice}
                   </div>
                 )}
-                {visibleGuests.map((guest) => (
-                  <div key={guest.id} className="rounded-lg border border-gray-200 p-4">
+                {filteredGuests.length === 0 ? (
+                  <div className="rounded-lg border border-dashed border-gray-200 bg-gray-50 p-6 text-center text-sm text-gray-600">
+                    No hay invitados que coincidan con estos filtros.
+                  </div>
+                ) : (
+                  <>
+                    <div className="overflow-hidden rounded-xl border border-gray-200">
+                      <div className="grid grid-cols-[32px_minmax(0,1fr)] items-center gap-3 border-b border-gray-200 bg-gray-50 px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+                        <input
+                          type="checkbox"
+                          checked={allPageGuestsSelected}
+                          onChange={togglePageSelection}
+                          aria-label="Seleccionar invitados de esta página"
+                          className="size-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span>Invitado · tipo · estado</span>
+                      </div>
+                {pagedGuests.map((guest) => (
+                  <div key={guest.id} className="border-b border-gray-200 bg-white px-3 py-2 last:border-b-0">
                     {editingGuestId === guest.id && editGuestForm ? (
                       <div className="space-y-4">
                         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -1899,11 +2220,20 @@ export default function EventGuestsManager({
                           return (
                             <>
                         {/* Fila colapsada: lo minimo para escanear la lista de un vistazo. */}
+                        <div className="grid grid-cols-[32px_minmax(0,1fr)] items-center gap-3">
+                        <input
+                          type="checkbox"
+                          checked={selectedGuestIds.has(guest.id)}
+                          onChange={() => toggleGuestSelection(guest.id)}
+                          onClick={(eventInput) => eventInput.stopPropagation()}
+                          aria-label={`Seleccionar a ${guest.first_name} ${guest.last_name}`}
+                          className="size-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
                         <button
                           type="button"
                           onClick={() => toggleGuestExpanded(guest.id)}
                           aria-expanded={isExpanded}
-                          className="flex w-full items-center gap-3 text-left"
+                          className="flex min-w-0 items-center gap-3 rounded-lg px-1 py-1 text-left hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                         >
                           {guest.photo_url ? (
                             // eslint-disable-next-line @next/next/no-img-element
@@ -1947,6 +2277,7 @@ export default function EventGuestsManager({
                             <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 0 1 .02-1.06L11.168 10 7.23 6.29a.75.75 0 1 1 1.04-1.08l4.5 4.25a.75.75 0 0 1 0 1.08l-4.5 4.25a.75.75 0 0 1-1.06-.02Z" clipRule="evenodd" />
                           </svg>
                         </button>
+                        </div>
 
                         {isExpanded && (
                           <div className="mt-4 border-t border-gray-100 pt-4">
@@ -2264,6 +2595,33 @@ export default function EventGuestsManager({
                     )}
                   </div>
                 ))}
+                    </div>
+                    <div className="mt-4 flex flex-col gap-3 border-t border-gray-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                      <p className="text-sm text-gray-500">
+                        Mostrando {currentGuestPage * effectiveGuestsPerPage + 1}-{Math.min((currentGuestPage + 1) * effectiveGuestsPerPage, filteredGuests.length)} de {filteredGuests.length}
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setGuestPage((current) => Math.max(0, current - 1))}
+                          disabled={currentGuestPage === 0}
+                          className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                          Anterior
+                        </button>
+                        <span className="text-sm font-medium text-gray-600">Página {currentGuestPage + 1} de {guestPageCount}</span>
+                        <button
+                          type="button"
+                          onClick={() => setGuestPage((current) => Math.min(guestPageCount - 1, current + 1))}
+                          disabled={currentGuestPage >= guestPageCount - 1}
+                          className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                          Siguiente
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             )}
           </div>
@@ -2420,6 +2778,121 @@ export default function EventGuestsManager({
               </button>
             </form>
           </div>
+
+          <Link
+            href={`/admin/events/${event.id}/tables`}
+            className="group block rounded-xl border border-sky-200 bg-sky-50 p-5 shadow-sm transition hover:border-sky-300 hover:bg-sky-100/70"
+          >
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-sky-700">Operación</p>
+            <h2 className="mt-2 text-lg font-semibold text-slate-950">Conformación de mesas</h2>
+            <p className="mt-1 text-sm leading-6 text-slate-600">
+              Distribuí confirmados por mesa o sector y controlá la cantidad de personas.
+            </p>
+            <span className="mt-4 inline-flex text-sm font-semibold text-sky-800 group-hover:text-sky-950">Abrir mesas →</span>
+          </Link>
+
+          <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm" aria-labelledby="sidebar-guest-types-heading">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-gray-500">Configuración</p>
+                <h2 id="sidebar-guest-types-heading" className="mt-2 text-lg font-semibold text-gray-900">Tipos de invitados</h2>
+                <p className="mt-1 text-sm leading-6 text-gray-600">{activeGuestTypesCount} tipos activos.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowGuestTypeForm((current) => !current)}
+                className="rounded-lg border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+              >
+                {showGuestTypeForm ? 'Cerrar' : '+ Nuevo'}
+              </button>
+            </div>
+
+            {showGuestTypeForm && (
+              <form onSubmit={handleCreateGuestType} className="mt-4 space-y-3 border-t border-gray-100 pt-4">
+                <div>
+                  <label htmlFor="sidebar-guest-type-name" className="text-xs font-semibold uppercase tracking-wide text-gray-500">Nombre</label>
+                  <input
+                    id="sidebar-guest-type-name"
+                    name="name"
+                    required
+                    value={guestTypeForm.name}
+                    onChange={handleGuestTypeInputChange}
+                    placeholder="Ej: VIP, Cena, Staff"
+                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="sidebar-guest-type-description" className="text-xs font-semibold uppercase tracking-wide text-gray-500">Descripción</label>
+                  <input
+                    id="sidebar-guest-type-description"
+                    name="description"
+                    value={guestTypeForm.description}
+                    onChange={handleGuestTypeInputChange}
+                    placeholder="Uso interno"
+                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  />
+                </div>
+                {guestTypeSubmitError && <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{guestTypeSubmitError}</p>}
+                <button
+                  type="submit"
+                  disabled={guestTypeSubmitting}
+                  className="w-full rounded-lg bg-slate-950 px-3 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {guestTypeSubmitting ? 'Guardando...' : 'Crear tipo'}
+                </button>
+              </form>
+            )}
+
+            <div className="mt-4 space-y-2 border-t border-gray-100 pt-4">
+              {visibleGuestTypes.length === 0 ? (
+                <p className="rounded-lg bg-gray-50 p-3 text-sm text-gray-600">Todavía no hay tipos creados.</p>
+              ) : (
+                visibleGuestTypes.map((guestType) => (
+                  <div key={guestType.id} className="rounded-lg border border-gray-100 px-3 py-2.5">
+                    {editingGuestTypeId === guestType.id && editGuestTypeForm ? (
+                      <div className="space-y-2">
+                        <input
+                          name="name"
+                          value={editGuestTypeForm.name}
+                          onChange={handleEditGuestTypeInputChange}
+                          aria-label="Nombre del tipo"
+                          className="block w-full rounded-md border border-gray-300 px-2.5 py-2 text-sm"
+                        />
+                        <input
+                          name="description"
+                          value={editGuestTypeForm.description}
+                          onChange={handleEditGuestTypeInputChange}
+                          aria-label="Descripción del tipo"
+                          className="block w-full rounded-md border border-gray-300 px-2.5 py-2 text-sm"
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => void saveGuestTypeUpdates(guestType.id)}
+                            disabled={guestTypeActionLoadingId === guestType.id}
+                            className="rounded-md bg-slate-950 px-3 py-2 text-xs font-semibold text-white disabled:opacity-60"
+                          >
+                            Guardar
+                          </button>
+                          <button type="button" onClick={cancelEditingGuestType} className="rounded-md px-2 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-100">Cancelar</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-gray-900">{guestType.name}</p>
+                          <p className="mt-0.5 truncate text-xs text-gray-500">{guestType.description || 'Sin descripción'}</p>
+                        </div>
+                        <button type="button" onClick={() => startEditingGuestType(guestType)} className="flex-none text-xs font-semibold text-blue-700 hover:text-blue-900">Editar</button>
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+            {guestTypeActionError && <p className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-700">{guestTypeActionError}</p>}
+            {guestTypeActionNotice && <p className="mt-3 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-800">{guestTypeActionNotice}</p>}
+          </section>
         </aside>
       </div>
     </div>

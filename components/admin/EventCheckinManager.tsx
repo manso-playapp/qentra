@@ -2,7 +2,7 @@
 
 import jsQR from 'jsqr'
 import { UserRound } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { formatGuestTypeAccessPolicy } from '@/lib/access-policy'
@@ -20,6 +20,7 @@ type EventCheckinManagerProps = {
   event: Pick<Event, 'id' | 'name' | 'slug' | 'event_date' | 'start_time' | 'max_capacity'>
   branding?: SurfaceBranding | null
   mode?: 'admin' | 'door' | 'totem'
+  sidebarSlot?: ReactNode
 }
 
 type AccessPayload = {
@@ -166,14 +167,16 @@ function formatEventDate(date: string) {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
-  }).format(new Date(date))
+  // event_date es una fecha civil (sin zona horaria). Al pasar solo YYYY-MM-DD
+  // Date la interpreta como UTC y en Argentina retrocede al día anterior.
+  }).format(new Date(`${date}T00:00:00`))
 }
 
 function buildEventDateTime(eventDate: string, startTime: string) {
   const timeParts = startTime.trim().split(':').filter(Boolean)
 
   if (timeParts.length === 0) {
-    return eventDate
+    return `${eventDate}T00:00:00`
   }
 
   const normalizedTime = [
@@ -224,6 +227,7 @@ export default function EventCheckinManager({
   event,
   branding = null,
   mode = 'admin',
+  sidebarSlot,
 }: EventCheckinManagerProps) {
   const isDoorMode = mode === 'door'
   const isTotemMode = mode === 'totem'
@@ -567,9 +571,7 @@ export default function EventCheckinManager({
   const filteredGuests = useMemo(() => {
     const normalizedQuery = guestSearchQuery.trim().toLowerCase()
 
-    if (!normalizedQuery) {
-      return guestDirectory.slice(0, 12)
-    }
+    if (!normalizedQuery) return []
 
     return guestDirectory.filter((guest) => {
       const haystack = [
@@ -582,7 +584,7 @@ export default function EventCheckinManager({
         .toLowerCase()
 
       return haystack.includes(normalizedQuery)
-    })
+    }).slice(0, 12)
   }, [guestDirectory, guestSearchQuery])
 
   const doorMetrics = useMemo(() => {
@@ -1511,8 +1513,8 @@ export default function EventCheckinManager({
   }
 
   return (
-    <div className={isImmersiveMode ? 'min-h-screen bg-[linear-gradient(180deg,#0f172a_0%,#111827_16%,#f8fafc_16%,#f8fafc_100%)] px-4 py-6 sm:px-6' : 'px-4 py-6 sm:px-0'}>
-      <div className={`mb-8 flex flex-col gap-4 ${isImmersiveMode ? 'rounded-[28px] border border-slate-800 bg-slate-950/95 px-6 py-6 text-white shadow-[0_24px_80px_rgba(15,23,42,0.34)] md:flex-row md:items-end md:justify-between' : 'border-b border-gray-200 pb-6 md:flex-row md:items-end md:justify-between'}`}>
+    <div className={isImmersiveMode ? 'min-h-screen bg-[linear-gradient(180deg,#0f172a_0%,#111827_16%,#f8fafc_16%,#f8fafc_100%)] px-4 py-6 sm:px-6' : 'px-4 py-5 sm:px-0'}>
+      <div className={`mb-5 flex flex-col gap-3 ${isImmersiveMode ? 'rounded-[28px] border border-slate-800 bg-slate-950/95 px-6 py-6 text-white shadow-[0_24px_80px_rgba(15,23,42,0.34)] md:flex-row md:items-end md:justify-between' : 'rounded-2xl border border-border/70 bg-admin-panel px-4 py-3 md:flex-row md:items-center md:justify-between'}`}>
         <div>
           {isImmersiveMode ? (
             <p className={`text-sm font-semibold uppercase tracking-[0.28em] ${isTotemMode ? 'text-amber-300' : 'text-sky-300'}`}>
@@ -1523,10 +1525,10 @@ export default function EventCheckinManager({
               ← Volver al evento
             </Link>
           )}
-          <h1 className={`mt-3 text-3xl font-bold ${isImmersiveMode ? 'text-white' : 'text-gray-900'}`}>
+          <h1 className={`mt-1 text-xl font-semibold ${isImmersiveMode ? 'text-white' : 'text-gray-900'}`}>
             {isTotemMode ? `Totem · ${event.name}` : isDoorMode ? `Puerta · ${event.name}` : `Check-In de ${event.name}`}
           </h1>
-          <p className={`mt-2 ${isImmersiveMode ? 'text-slate-300' : 'text-gray-600'}`}>
+          <p className={`mt-1 text-xs ${isImmersiveMode ? 'text-slate-300' : 'text-gray-600'}`}>
             {formatDateTime(buildEventDateTime(event.event_date, event.start_time))} · slug <span className="font-mono text-sm">{event.slug}</span>
           </p>
         </div>
@@ -1576,42 +1578,36 @@ export default function EventCheckinManager({
               >
                 Ver invitados
               </Link>
-              <Link
-                href="/admin/events/new"
-                className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-              >
-                Crear otro evento
-              </Link>
             </>
           )}
         </div>
       </div>
 
-      <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <div className="rounded-2xl border border-slate-200 bg-slate-950 p-5 text-white shadow-sm">
+      <div className="mb-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <div className="rounded-xl border border-slate-200 bg-slate-950 p-4 text-white shadow-sm">
           <p className="text-sm text-slate-300">Hora de puerta</p>
-          <p className="mt-2 text-3xl font-semibold">{now ? formatClock(now) : '--:--'}</p>
+          <p className="mt-1 text-2xl font-semibold">{now ? formatClock(now) : '--:--'}</p>
           <p className="mt-1 text-sm text-slate-300">
             Evento {formatDateTime(buildEventDateTime(event.event_date, event.start_time))}
           </p>
         </div>
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 shadow-sm">
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 shadow-sm">
           <p className="text-sm text-emerald-800">Invitados dentro</p>
-          <p className="mt-2 text-3xl font-semibold text-emerald-950">{doorMetrics.checkedInGuests}</p>
+          <p className="mt-1 text-2xl font-semibold text-emerald-950">{doorMetrics.checkedInGuests}</p>
           <p className="mt-1 text-sm text-emerald-900">
             {doorMetrics.insidePeople} personas estimadas con acompanantes
           </p>
         </div>
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 shadow-sm">
           <p className="text-sm text-amber-800">Pendientes por validar</p>
-          <p className="mt-2 text-3xl font-semibold text-amber-950">{doorMetrics.pendingGuests + doorMetrics.confirmedGuests}</p>
+          <p className="mt-1 text-2xl font-semibold text-amber-950">{doorMetrics.pendingGuests + doorMetrics.confirmedGuests}</p>
           <p className="mt-1 text-sm text-amber-900">
             {doorMetrics.pendingGuests} pendientes y {doorMetrics.confirmedGuests} confirmados sin ingreso
           </p>
         </div>
-        <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5 shadow-sm">
+        <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 shadow-sm">
           <p className="text-sm text-blue-800">Refresh operativo</p>
-          <p className="mt-2 text-3xl font-semibold text-blue-950">15s</p>
+          <p className="mt-1 text-2xl font-semibold text-blue-950">15s</p>
           <p className="mt-1 text-sm text-blue-900">
             {doorMetrics.cancelledGuests} cancelados y {recentCheckins.length} movimientos recientes
           </p>
@@ -1620,7 +1616,7 @@ export default function EventCheckinManager({
 
       <div className={`grid gap-4 ${isTotemMode ? 'xl:grid-cols-1' : isDoorMode ? 'xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.85fr)]' : 'xl:grid-cols-[minmax(0,1.2fr)_minmax(360px,0.8fr)]'}`}>
         <section className="space-y-4">
-          <div className={`rounded-2xl border p-4 shadow-sm ${statusTone.shell}`}>
+          <div className={`hidden rounded-2xl border p-4 shadow-sm ${statusTone.shell}`}>
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] ${statusTone.badge}`}>
@@ -1802,6 +1798,7 @@ export default function EventCheckinManager({
 
         {!isTotemMode && (
         <aside className="flex flex-col gap-4">
+          {sidebarSlot}
           <div className="hidden rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between gap-3">
               <div>
@@ -1867,27 +1864,28 @@ export default function EventCheckinManager({
               <div className="mt-4 flex h-24 items-center justify-center">
                 <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-blue-600"></div>
               </div>
+            ) : !guestSearchQuery.trim() ? (
+              <div className="mt-4 rounded-lg border border-dashed border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">
+                Escribi al menos una parte del nombre o telefono para buscar en la lista completa.
+              </div>
             ) : filteredGuests.length === 0 ? (
               <div className="mt-4 rounded-lg border border-dashed border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">
                 No hay invitados que coincidan con la busqueda.
               </div>
             ) : (
-              <div className="mt-4 space-y-3">
+              <div className="mt-4 divide-y divide-gray-100 overflow-hidden rounded-xl border border-gray-200 bg-white">
                 {filteredGuests.map((guest) => (
-                  <div key={guest.id} className="rounded-lg border border-gray-200 p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
+                  <div key={guest.id} className="flex items-center gap-3 px-4 py-3">
+                    <div className="min-w-0 flex-1">
                         <p className="font-medium text-gray-900">
                           {guest.first_name} {guest.last_name}
                         </p>
-                        <div className="mt-1 space-y-1 text-sm text-gray-600">
-                          <p>{guest.email || 'Sin email'}</p>
-                          <p>{guest.phone || 'Sin telefono'}</p>
-                          <p>{guest.guest_types?.name || 'Sin tipo asignado'}</p>
-                          <p>{formatGuestTypeAccessPolicy(guest.guest_types, event.start_time)}</p>
-                        </div>
-                      </div>
-                      <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                        <p className="mt-1 truncate text-xs text-gray-500">
+                          {guest.phone || guest.email || 'Sin dato de contacto'} · {guest.guest_types?.name || 'Sin tipo'}
+                        </p>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <span className={`hidden rounded-full px-2.5 py-1 text-[11px] font-semibold sm:inline-flex ${
                         guest.status === 'checked_in'
                           ? 'bg-blue-100 text-blue-800'
                           : guest.status === 'confirmed'
@@ -1904,16 +1902,13 @@ export default function EventCheckinManager({
                           ? 'Cancelado'
                           : 'Pendiente'}
                       </span>
-                    </div>
-
-                    <div className="mt-4 flex flex-wrap items-center justify-end gap-3">
                       <button
                         type="button"
                         onClick={() => handleManualCheckin(guest)}
                         disabled={manualCheckinGuestId === guest.id}
-                        className="inline-flex items-center rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-60"
+                        className="inline-flex items-center rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-60"
                       >
-                        {manualCheckinGuestId === guest.id ? 'Registrando...' : 'Check-in manual'}
+                        {manualCheckinGuestId === guest.id ? 'Registrando...' : 'Ingresar'}
                       </button>
                     </div>
                   </div>
@@ -1922,7 +1917,7 @@ export default function EventCheckinManager({
             )}
           </div>
 
-          <details className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+          <details className="hidden rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
             <summary className="cursor-pointer text-lg font-semibold text-gray-900">Reglas actuales</summary>
             <div className="mt-4 space-y-3 text-sm text-gray-600">
               <p>Solo se aceptan tokens del evento actual.</p>

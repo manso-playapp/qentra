@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, CalendarRange, Phone, Save, Sparkles } from 'lucide-react'
+import { ArrowLeft, Save } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -306,28 +306,6 @@ export default function EditEventForm({ event }: EditEventFormProps) {
                     className="mt-2 border-white/10 bg-white/6 text-white"
                   />
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card className="event-theme-surface">
-              <CardHeader>
-                <CardDescription>Personalizacion posterior</CardDescription>
-                <CardTitle className="admin-heading text-3xl">Elementos editables por evento</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4 text-sm leading-6 text-muted-foreground">
-                <div className="flex items-center gap-3">
-                  <Sparkles className="size-4 text-primary" />
-                  Acento cromatico y superficies publicas
-                </div>
-                <div className="flex items-center gap-3">
-                  <CalendarRange className="size-4 text-primary" />
-                  Hero de invitacion y pantalla publica
-                </div>
-                <div className="flex items-center gap-3">
-                  <Phone className="size-4 text-primary" />
-                  Canal visible y branding puntual
-                </div>
-                <p>La tipografia, la estructura y los componentes base permanecen fijos para cuidar consistencia operativa.</p>
               </CardContent>
             </Card>
           </div>

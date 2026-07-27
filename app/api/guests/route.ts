@@ -1,6 +1,7 @@
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
 import { ensureAuthorizedApiAccess } from '@/lib/operator-auth'
 import { buildGuestFullName, normalizeGuestRecord } from '@/lib/guest-schema'
+import { toE164 } from '@/lib/phone'
 import {
   isTableAssignmentColumnMissingError,
   upsertTableAssignmentInNotes,
@@ -18,6 +19,10 @@ type CreateGuestRequestBody = {
 }
 
 export const runtime = 'nodejs'
+
+function normalizePhone(value?: string) {
+  return value && /\d/.test(value) ? toE164(value) : null
+}
 
 export async function GET(request: Request) {
   const { response: authErrorResponse } = await ensureAuthorizedApiAccess(['admin'])
@@ -129,7 +134,7 @@ export async function POST(request: Request) {
     last_name: lastName,
     full_name: buildGuestFullName(firstName, lastName),
     email: body.email?.trim() || null,
-    phone: body.phone?.trim() || null,
+    phone: normalizePhone(body.phone?.trim()),
     notes: body.special_requests?.trim() || null,
     table_assignment: body.table_assignment?.trim() || null,
     created_manually: true,
