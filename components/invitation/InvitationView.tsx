@@ -21,6 +21,11 @@ export type InvitationConfigInfo = {
   directionsUrl?: string
 }
 
+export type InvitationSchedule = {
+  startTime?: string | null
+  startDayOffset?: number | null
+}
+
 export type AccessState = {
   label: string
   title: string
@@ -63,15 +68,21 @@ export function buildPhoneHref(phone?: string) {
   return `tel:${phone.replace(/\s+/g, '')}`
 }
 
-export function buildCalendarUrl(event: InvitationEventInfo) {
-  if (!event.event_date || !event.start_time) return null
+export function getInvitationStartTime(event: InvitationEventInfo, schedule?: InvitationSchedule) {
+  return schedule?.startTime?.slice(0, 5) || event.start_time?.slice(0, 5) || null
+}
+
+export function buildCalendarUrl(event: InvitationEventInfo, schedule?: InvitationSchedule) {
+  const startTime = getInvitationStartTime(event, schedule)
+  if (!event.event_date || !startTime) return null
 
   // La fecha y la hora del evento se cargan como hora local argentina. No se
   // deben serializar con `toISOString()` porque eso las transforma a UTC y
   // Google Calendar las muestra tres horas antes en Buenos Aires.
   const [year, month, day] = event.event_date.split('-').map(Number)
-  const [hours, minutes] = event.start_time.split(':').map(Number)
-  const start = new Date(Date.UTC(year, month - 1, day, hours, minutes))
+  const [hours, minutes] = startTime.split(':').map(Number)
+  const startDayOffset = schedule?.startTime ? schedule.startDayOffset ?? 0 : 0
+  const start = new Date(Date.UTC(year, month - 1, day + startDayOffset, hours, minutes))
   const end = new Date(start.getTime() + 4 * 60 * 60 * 1000)
   const fmt = (value: Date) =>
     [
@@ -178,6 +189,7 @@ type InvitationViewProps = {
   event: InvitationEventInfo
   branding: SurfaceBranding | null
   guestDisplayName: string
+  schedule?: InvitationSchedule
   calendarUrl?: string | null
   isPreview?: boolean
   children?: ReactNode
@@ -189,7 +201,6 @@ const FIESTA_DRESSCODE = {
   ellos: 'Ellos: gorra y ropa deportiva.',
 }
 const FIESTA_CONTACT_PHONE = '+54 9 3496 54-9307'
-const BOARDING_TIME = '20:30'
 
 function BoardingPassBarcode({ value }: { value: string }) {
   const source = value.replace(/[^A-Z0-9]/gi, '').toUpperCase() || 'ALISTA15'
@@ -226,11 +237,13 @@ export default function InvitationView({
   event,
   branding,
   guestDisplayName,
+  schedule,
   calendarUrl,
   isPreview = false,
   children,
 }: InvitationViewProps) {
   const airportCode = (event.name || 'DRM').replace(/[^a-zA-Z0-9]/g, '').slice(0, 3).toUpperCase() || 'DRM'
+  const boardingTime = getInvitationStartTime(event, schedule)
 
   return (
     <main
@@ -308,7 +321,7 @@ export default function InvitationView({
             </div>
             <div>
               <dt className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500"><Clock3 className="size-3" aria-hidden="true" /> Boarding</dt>
-              <dd className="mt-1 font-mono text-base font-bold uppercase tracking-[0.05em] sm:text-lg">{BOARDING_TIME} hs</dd>
+              <dd className="mt-1 font-mono text-base font-bold uppercase tracking-[0.05em] sm:text-lg">{boardingTime ? `${boardingTime} hs` : 'A confirmar'}</dd>
             </div>
             <div>
               <dt className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500"><MapPin className="size-3" aria-hidden="true" /> Gate</dt>

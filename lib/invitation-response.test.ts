@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildAccessState } from '@/components/invitation/InvitationView'
+import { buildAccessState, buildCalendarUrl, getInvitationStartTime } from '@/components/invitation/InvitationView'
 
 import {
   isInvitationAccessReady,
@@ -22,6 +22,19 @@ const LABELS = {
   observations: 'Observaciones',
   payment: 'Pago',
 }
+
+describe('invitation schedule', () => {
+  const event = { event_date: '2026-08-16', start_time: '20:30' }
+
+  it('uses the guest type access time instead of the event start time', () => {
+    expect(getInvitationStartTime(event, { startTime: '00:00' })).toBe('00:00')
+  })
+
+  it('uses the guest type day offset when creating the calendar entry', () => {
+    const calendarUrl = buildCalendarUrl(event, { startTime: '00:00', startDayOffset: 1 })
+    expect(calendarUrl).toContain('dates=20260817T000000/20260817T040000')
+  })
+})
 
 describe('serializeInvitationDetails', () => {
   it('serializes all fields in the documented label order', () => {

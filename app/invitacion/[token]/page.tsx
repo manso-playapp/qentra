@@ -69,7 +69,7 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
     .from('guests')
     .select(`
       id, event_id, guest_type_id, first_name, last_name, email, phone, status, notes, payment_status, photo_url,
-      guest_types (name, payment_amount_cents)
+      guest_types (name, payment_amount_cents, access_start_time, access_start_day_offset)
     `)
     .eq('id', invitationToken.guest_id)
     .maybeSingle()
@@ -99,6 +99,10 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
   const paymentStatus = (guest?.payment_status ?? 'not_required') as 'not_required' | 'pending' | 'approved'
   const guestType = Array.isArray(guest?.guest_types) ? guest.guest_types[0] : guest?.guest_types
   const paymentAmountCents = guestType?.payment_amount_cents ?? 0
+  const invitationSchedule = {
+    startTime: guestType?.access_start_time,
+    startDayOffset: guestType?.access_start_day_offset,
+  }
 
   const fallbackGuestName = [guest?.first_name, guest?.last_name].filter(Boolean).join(' ').trim()
   const guestDisplayName = resolvedSearchParams?.guest?.trim() || fallbackGuestName
@@ -136,7 +140,7 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
     resolvedSearchParams?.confirmed === '1' && invitationResponse === 'confirmed' && accessReady && !invitationUsed
 
   const eventInfo = (event ?? {}) as InvitationEventInfo
-  const calendarUrl = buildCalendarUrl(eventInfo)
+  const calendarUrl = buildCalendarUrl(eventInfo, invitationSchedule)
 
   // El QR y su payload solo se generan si el acceso está listo: en la rama
   // pendiente no se muestran y no tiene sentido gastar el render.
@@ -162,6 +166,7 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
       event={eventInfo}
       branding={branding}
       guestDisplayName={guestDisplayName}
+      schedule={invitationSchedule}
       calendarUrl={calendarUrl}
     >
       {canEditInvitation ? (
