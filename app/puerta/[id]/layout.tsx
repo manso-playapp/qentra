@@ -3,6 +3,7 @@ import RoleAccessDeniedNotice from '@/components/auth/RoleAccessDeniedNotice'
 import { requireAuthorizedPageAccess } from '@/lib/operator-auth'
 
 export const metadata = {
+  robots: { index: false, follow: false },
   title: 'Puerta',
 }
 

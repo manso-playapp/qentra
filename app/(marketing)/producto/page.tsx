@@ -1,11 +1,19 @@
 import { CalendarCheck, Users, Mail, Wallet, ScanLine, Gauge, ShieldCheck, Sparkles } from 'lucide-react'
 import { PageHero, Section, ClosingCta } from '@/components/marketing/sections'
+import { createMarketingMetadata } from '@/lib/marketing-seo'
 
-export const metadata = {
+export const legacyMetadata = {
   title: 'Producto',
   description:
     'Eventos, invitados, invitaciones, pago vinculado, acceso, cupo, equipo y experiencia. La plataforma que vincula invitación, pago y acceso en fiestas privadas con cupo.',
 }
+
+export const metadata = createMarketingMetadata({
+  title: 'Software para gestionar invitados y accesos a eventos',
+  description:
+    'Gestiona eventos, invitados, invitaciones, pagos, accesos QR y cupo desde una sola plataforma para fiestas privadas.',
+  path: '/producto',
+})
 
 const MODULES = [
   {

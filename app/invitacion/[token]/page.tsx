@@ -18,6 +18,7 @@ import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { SURFACE_BRANDING_COLUMNS, type SurfaceBranding } from '@/types'
 
 export const metadata = {
+  robots: { index: false, follow: false },
   title: 'Invitación',
   description: 'Estás invitado/a a una fiesta de 15.',
   openGraph: {

@@ -6,6 +6,7 @@ import { isMissingAuthSessionError } from '@/lib/supabase-auth-errors'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 
 export const metadata = {
+  robots: { index: false, follow: false },
   title: 'Acceso',
 }
 

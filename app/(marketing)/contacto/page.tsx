@@ -1,10 +1,17 @@
 import { Mail, MessageCircle } from 'lucide-react'
 import { ContactForm } from '@/components/marketing/ContactForm'
+import { createMarketingMetadata } from '@/lib/marketing-seo'
 
-export const metadata = {
+export const legacyMetadata = {
   title: 'Contacto',
   description: 'Hablá con el equipo de Alista. Respondemos con claridad y sin vueltas.',
 }
+
+export const metadata = createMarketingMetadata({
+  title: 'Contacto',
+  description: 'Habla con el equipo de Alista para organizar invitados, pagos y accesos de tu evento.',
+  path: '/contacto',
+})
 
 export default function ContactoPage() {
   return (

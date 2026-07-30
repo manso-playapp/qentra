@@ -2,6 +2,11 @@ import type { ReactNode } from 'react'
 import RoleAccessDeniedNotice from '@/components/auth/RoleAccessDeniedNotice'
 import { requireAuthorizedPageAccess } from '@/lib/operator-auth'
 
+export const metadata = {
+  title: 'Totem',
+  robots: { index: false, follow: false },
+}
+
 type ShortTotemProtectedLayoutProps = {
   children: ReactNode
   params: Promise<{ slug: string }>

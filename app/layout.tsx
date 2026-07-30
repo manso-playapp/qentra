@@ -10,12 +10,23 @@ const nunito = Nunito({
 })
 
 export const metadata: Metadata = {
+  applicationName: 'Alista',
+  verification: process.env.GOOGLE_SITE_VERIFICATION
+    ? { google: process.env.GOOGLE_SITE_VERIFICATION }
+    : undefined,
   ...(getPublicAppUrl() ? { metadataBase: new URL(getPublicAppUrl()) } : {}),
   title: {
-    default: 'Alista',
-    template: '%s · Alista',
+    default: 'Alista | Gesti\u00f3n de invitados para eventos',
+    template: '%s | Alista',
   },
-  description: 'Event management platform',
+  description: 'Gesti\u00f3n de invitados, pagos, accesos y cupo para eventos privados.',
+  category: 'Event management',
+  referrer: 'origin-when-cross-origin',
+  formatDetection: {
+    telephone: false,
+    email: false,
+    address: false,
+  },
 }
 
 export default function RootLayout({

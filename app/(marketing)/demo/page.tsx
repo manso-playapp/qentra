@@ -1,10 +1,17 @@
 import { ContactForm } from '@/components/marketing/ContactForm'
+import { createMarketingMetadata } from '@/lib/marketing-seo'
 
-export const metadata = {
+export const legacyMetadata = {
   title: 'Solicitar demo',
   description:
     'Contanos qué fiesta estás organizando y te mostramos cómo vincular invitación, pago y acceso con Alista.',
 }
+
+export const metadata = createMarketingMetadata({
+  title: 'Solicita una demo de Alista',
+  description: 'Conoce Alista para organizar invitaciones, pagos, acceso QR y cupo en tu proximo evento.',
+  path: '/demo',
+})
 
 const EXPECT = [
   'Una recorrida por el producto según tu tipo de fiesta.',

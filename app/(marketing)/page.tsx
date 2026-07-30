@@ -5,12 +5,20 @@ import { EventControlPanel } from '@/components/marketing/EventControlPanel'
 import { FestiveBackdrop } from '@/components/marketing/FestiveBackdrop'
 import { ProductSurfaces } from '@/components/marketing/ProductSurfaces'
 import { FaqSection } from '@/components/marketing/FaqSection'
+import { createMarketingMetadata } from '@/lib/marketing-seo'
 
-export const metadata = {
+export const legacyMetadata = {
   title: { absolute: 'Alista · Abrí la fiesta sin abrir un problema.' },
   description:
     'Alista vincula invitación, pago y acceso en fiestas privadas con cupo limitado. Para salones, productores y organizadores que abren fiestas de 15, egresados y celebraciones juveniles con entrada o aporte.',
 }
+
+export const metadata = createMarketingMetadata({
+  title: 'Gesti\u00f3n de invitados, pagos y accesos para eventos',
+  description:
+    'Alista vincula invitaciones, pagos y accesos QR en fiestas privadas con cupo limitado. Para salones, productores y organizadores de eventos.',
+  path: '/',
+})
 
 const PROBLEMS = [
   'El alias que circula',

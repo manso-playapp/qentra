@@ -1,10 +1,18 @@
 import { PageHero, Section, ClosingCta } from '@/components/marketing/sections'
+import { createMarketingMetadata } from '@/lib/marketing-seo'
 
-export const metadata = {
+export const legacyMetadata = {
   title: 'Cómo funciona',
   description:
     'Invitar, identificar, vincular el pago, emitir el acceso y validar en la puerta. Un recorrido claro donde cada persona queda vinculada con su pago y su acceso.',
 }
+
+export const metadata = createMarketingMetadata({
+  title: 'C\u00f3mo funciona la gesti\u00f3n de invitados y accesos',
+  description:
+    'Invita, confirma asistentes, vincula pagos, emite QR y valida ingresos. Todo el recorrido del evento en una sola plataforma.',
+  path: '/como-funciona',
+})
 
 const STEPS = [
   {

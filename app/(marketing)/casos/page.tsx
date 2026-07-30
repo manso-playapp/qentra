@@ -1,10 +1,18 @@
 import { PageHero, ClosingCta } from '@/components/marketing/sections'
+import { createMarketingMetadata } from '@/lib/marketing-seo'
 
-export const metadata = {
+export const legacyMetadata = {
   title: 'Casos de uso',
   description:
     'Fiestas de 15, egresados y recepciones, y salones o productores recurrentes. La misma base para vincular invitación, pago y acceso según cada fiesta.',
 }
+
+export const metadata = createMarketingMetadata({
+  title: 'Gesti\u00f3n de invitados para fiestas de 15, egresados y salones',
+  description:
+    'Alista ayuda a organizar fiestas de 15, egresados, recepciones y eventos de salones con pagos, cupo y accesos QR.',
+  path: '/casos',
+})
 
 const CASES = [
   {

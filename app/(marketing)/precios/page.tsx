@@ -1,12 +1,20 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { PageHero, Section, ClosingCta } from '@/components/marketing/sections'
+import { createMarketingMetadata } from '@/lib/marketing-seo'
 
-export const metadata = {
+export const legacyMetadata = {
   title: 'Precios',
   description:
     'Planes que se adaptan a cada fiesta y a cada salón. Durante la etapa de pilotos trabajamos acompañados y armamos una propuesta a medida.',
 }
+
+export const metadata = createMarketingMetadata({
+  title: 'Precios para gesti\u00f3n de eventos e invitados',
+  description:
+    'Planes para fiestas, salones y productores que necesitan gestionar invitados, pagos y accesos. Propuestas a medida.',
+  path: '/precios',
+})
 
 const PLANS = [
   {

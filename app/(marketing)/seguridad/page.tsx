@@ -1,11 +1,19 @@
 import { Lock, EyeOff, ServerCog, UserCheck } from 'lucide-react'
 import { PageHero, Section, ClosingCta } from '@/components/marketing/sections'
+import { createMarketingMetadata } from '@/lib/marketing-seo'
 
-export const metadata = {
+export const legacyMetadata = {
   title: 'Seguridad y privacidad',
   description:
     'Datos tratados con proporcionalidad, consentimiento y cuidado, incluidos los de menores. La lógica sensible vive en el backend, no en la puerta.',
 }
+
+export const metadata = createMarketingMetadata({
+  title: 'Seguridad y privacidad para eventos',
+  description:
+    'Alista protege los datos de invitados y mantiene la validacion de pagos, accesos y cupo en el servidor.',
+  path: '/seguridad',
+})
 
 const PRINCIPLES = [
   {
