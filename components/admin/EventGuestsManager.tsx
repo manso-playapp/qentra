@@ -325,6 +325,7 @@ export default function EventGuestsManager({
   const [guestQuery, setGuestQuery] = useState('')
   const [guestStatusFilter, setGuestStatusFilter] = useState<'all' | Guest['status']>('all')
   const [guestTypeFilter, setGuestTypeFilter] = useState('all')
+  const [csvGuestTypeId, setCsvGuestTypeId] = useState('all')
   const [guestPage, setGuestPage] = useState(0)
   const [guestsPerPage, setGuestsPerPage] = useState<25 | 50 | 'all'>(25)
   const [selectedGuestIds, setSelectedGuestIds] = useState<Set<string>>(new Set())
@@ -450,6 +451,14 @@ export default function EventGuestsManager({
         `${a.last_name} ${a.first_name}`.localeCompare(`${b.last_name} ${b.first_name}`, 'es-AR')
       )
   }, [guestQuery, guestStatusFilter, guestTypeFilter, visibleGuests])
+
+  const guestsForCsv = useMemo(
+    () =>
+      csvGuestTypeId === 'all'
+        ? visibleGuests
+        : visibleGuests.filter((guest) => guest.guest_type_id === csvGuestTypeId),
+    [csvGuestTypeId, visibleGuests]
+  )
 
   const effectiveGuestsPerPage = guestsPerPage === 'all' ? Math.max(filteredGuests.length, 1) : guestsPerPage
   const guestPageCount = Math.max(1, Math.ceil(filteredGuests.length / effectiveGuestsPerPage))
@@ -854,13 +863,15 @@ export default function EventGuestsManager({
 
   const downloadGuestsCsv = () => {
     // BOM (﻿) al inicio para que Excel abra el CSV como UTF-8 y no rompa acentos.
-    const blob = new Blob(['﻿' + buildGuestsCsv(visibleGuests)], {
+    const blob = new Blob(['﻿' + buildGuestsCsv(guestsForCsv)], {
       type: 'text/csv;charset=utf-8;',
     })
     const url = URL.createObjectURL(blob)
     const anchor = document.createElement('a')
     anchor.href = url
-    anchor.download = `invitados-${event.slug}.csv`
+    const guestType = visibleGuestTypes.find((item) => item.id === csvGuestTypeId)
+    const typeSuffix = guestType ? `-${guestType.name.toLocaleLowerCase('es-AR').replace(/[^a-z0-9]+/g, '-')}` : ''
+    anchor.download = `invitados-${event.slug}${typeSuffix}.csv`
     anchor.click()
     URL.revokeObjectURL(url)
   }
@@ -1713,7 +1724,7 @@ export default function EventGuestsManager({
                 <h2 className="text-lg font-semibold text-gray-900">Listado de invitados</h2>
                 <p className="mt-1 text-sm text-gray-600">Vista operativa para confirmar, revisar contactos y capacidad.</p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center justify-end gap-2">
                 <span className="whitespace-nowrap rounded-full bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700">
                   {visibleGuests.length} registros
                 </span>
@@ -1732,10 +1743,26 @@ export default function EventGuestsManager({
                 >
                   Descargar plantilla
                 </button>
+                <label htmlFor="csv-guest-type" className="sr-only">
+                  Tipo de invitados a exportar
+                </label>
+                <select
+                  id="csv-guest-type"
+                  value={csvGuestTypeId}
+                  onChange={(eventInput) => setCsvGuestTypeId(eventInput.target.value)}
+                  className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                >
+                  <option value="all">Todos los tipos</option>
+                  {visibleGuestTypes.map((guestType) => (
+                    <option key={guestType.id} value={guestType.id}>
+                      {guestType.name}
+                    </option>
+                  ))}
+                </select>
                 <button
                   type="button"
                   onClick={downloadGuestsCsv}
-                  disabled={visibleGuests.length === 0}
+                  disabled={guestsForCsv.length === 0}
                   className="inline-flex flex-none items-center whitespace-nowrap rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   Exportar CSV

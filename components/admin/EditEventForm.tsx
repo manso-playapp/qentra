@@ -13,7 +13,6 @@ import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { getErrorMessage } from '@/lib/errors'
 import { useDeliveryProfiles } from '@/lib/hooks'
-import { supabase } from '@/lib/supabase'
 import type { Event } from '@/types'
 
 type EditEventFormProps = {
@@ -125,13 +124,15 @@ export default function EditEventForm({ event }: EditEventFormProps) {
         status: formData.status,
       }
 
-      const { error: updateError } = await supabase
-        .from('events')
-        .update(payload)
-        .eq('id', event.id)
+      const response = await fetch(`/api/events/${event.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      const result = (await response.json().catch(() => null)) as { error?: string } | null
 
-      if (updateError) {
-        throw updateError
+      if (!response.ok) {
+        throw new Error(result?.error || 'No se pudo actualizar el evento.')
       }
 
       setNotice('Evento actualizado correctamente.')

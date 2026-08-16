@@ -1,5 +1,6 @@
 import QRCode from 'qrcode'
 import { buildGuestAccessQrPayload } from '@/lib/guest-access'
+import { buildInvitationExpiry } from '@/lib/invitation-expiry'
 import { isInvitationAccessReady } from '@/lib/invitation-response'
 import { ensureAuthorizedApiAccess } from '@/lib/operator-auth'
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
@@ -11,19 +12,6 @@ type IssueGuestAccessRequestBody = {
   eventDate?: string
   eventStartTime?: string
   guestName?: string
-}
-
-function buildInvitationExpiry(eventDate: string, eventStartTime: string) {
-  const baseDate = new Date(`${eventDate}T${eventStartTime || '20:00'}:00`)
-
-  if (Number.isNaN(baseDate.getTime())) {
-    const fallback = new Date()
-    fallback.setDate(fallback.getDate() + 7)
-    return fallback.toISOString()
-  }
-
-  baseDate.setHours(baseDate.getHours() + 12)
-  return baseDate.toISOString()
 }
 
 function buildGuestAccessToken() {
