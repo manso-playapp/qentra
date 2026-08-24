@@ -22,3 +22,15 @@ export function buildInvitationExpiry(eventDate: string, eventStartTime: string)
 
   return new Date(eventStartUtc + 12 * 60 * 60 * 1000).toISOString()
 }
+
+/**
+ * Un vencimiento inválido no debe bloquear accesos por accidente. La misma
+ * comparación se usa en puerta y en las superficies que muestran el QR para
+ * que todas cambien de estado en el mismo instante.
+ */
+export function isInvitationExpired(expiresAt: string | null | undefined, now = new Date()) {
+  if (!expiresAt) return false
+
+  const expiry = new Date(expiresAt)
+  return !Number.isNaN(expiry.getTime()) && expiry.getTime() <= now.getTime()
+}

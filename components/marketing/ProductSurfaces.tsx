@@ -121,7 +121,7 @@ export function ProductSurfaces() {
         <p className="text-sm font-semibold uppercase tracking-[0.16em] text-primary">
           Una plataforma, tres momentos
         </p>
-        <h2 className="mt-3 text-balance font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+        <h2 className="mt-3 text-balance font-display text-2xl font-semibold tracking-[-0.01em] text-foreground sm:text-3xl">
           Cuida la experiencia de punta a punta.
         </h2>
       </div>

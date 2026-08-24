@@ -1,7 +1,13 @@
 import type { NextRequest } from 'next/server'
+import { NextResponse } from 'next/server'
 import { updateSupabaseSession } from '@/lib/supabase-proxy'
+import { requiresSupabaseSessionRefresh } from '@/lib/supabase-proxy-paths'
 
 export async function proxy(request: NextRequest) {
+  if (!requiresSupabaseSessionRefresh(request.nextUrl.pathname)) {
+    return NextResponse.next({ request })
+  }
+
   return updateSupabaseSession(request)
 }
 

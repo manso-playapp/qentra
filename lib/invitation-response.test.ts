@@ -323,11 +323,25 @@ describe('buildAccessState', () => {
     expect(
       buildAccessState({
         invitationUsed: false,
+        invitationExpired: false,
         eventInactive: false,
         accessReady: false,
         invitationResponse: 'checked_in',
         paymentStatus: 'not_required',
       }).title
     ).toBe('Tu ingreso ya fue registrado en puerta')
+  })
+
+  it('informa que el QR venció aunque el invitado siga confirmado', () => {
+    expect(
+      buildAccessState({
+        invitationUsed: false,
+        invitationExpired: true,
+        eventInactive: false,
+        accessReady: true,
+        invitationResponse: 'confirmed',
+        paymentStatus: 'approved',
+      }).label
+    ).toBe('Acceso vencido')
   })
 })

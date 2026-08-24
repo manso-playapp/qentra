@@ -1,5 +1,6 @@
 import type { Event, Guest, GuestType, InvitationToken } from '@/types'
 import type { DbGuestStatus } from '@/lib/guest-schema'
+import { isInvitationExpired } from '@/lib/invitation-expiry'
 
 type AccessDecision = 'allow' | 'warn' | 'deny'
 type AccessCode =
@@ -189,7 +190,7 @@ export function evaluateGuestAccess({
   if (invitationToken) {
     const expiryDate = new Date(invitationToken.expires_at)
 
-    if (!Number.isNaN(expiryDate.getTime()) && expiryDate.getTime() < now.getTime()) {
+    if (isInvitationExpired(invitationToken.expires_at, now)) {
       return {
         decision: 'deny',
         code: 'expired',

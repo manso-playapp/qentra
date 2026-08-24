@@ -1,5 +1,6 @@
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
+import { connection } from 'next/server'
 import QRCode from 'qrcode'
 import InvitationPaymentButton from '@/components/invitation/InvitationPaymentButton'
 import InvitationPaymentStatusSyncButton from '@/components/invitation/InvitationPaymentStatusSyncButton'
@@ -12,6 +13,7 @@ import InvitationView, {
 } from '@/components/invitation/InvitationView'
 import { buildGuestAccessQrPayload } from '@/lib/guest-access'
 import { normalizeGuestStatus } from '@/lib/guest-schema'
+import { isInvitationExpired } from '@/lib/invitation-expiry'
 import { isInvitationAccessReady, parseInvitationDetails } from '@/lib/invitation-response'
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
@@ -38,6 +40,10 @@ type InvitationPageProps = {
 }
 
 export default async function InvitationPage({ params, searchParams }: InvitationPageProps) {
+  // La vigencia depende de la hora de cada solicitud. Evita que Next conserve
+  // una pagina con QR generada antes del vencimiento.
+  await connection()
+
   const { token } = await params
   const resolvedSearchParams = searchParams ? await searchParams : undefined
   const supabase = getSupabaseAdminClient() ?? (await createServerSupabaseClient())
@@ -125,12 +131,14 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
     Boolean(invitationToken.last_used_at) ||
     (invitationToken.used_count ?? 0) > 0 ||
     invitationToken.is_active === false
+  const invitationExpired = isInvitationExpired(invitationToken.expires_at)
   const canEditInvitation =
-    !accessReady && !invitationUsed && invitationResponse !== 'checked_in'
+    !accessReady && !invitationUsed && !invitationExpired && invitationResponse !== 'checked_in'
   const eventInactive = event?.status === 'cancelled' || event?.status === 'inactive'
 
   const accessState = buildAccessState({
     invitationUsed,
+    invitationExpired,
     eventInactive,
     accessReady,
     invitationResponse,
@@ -146,7 +154,7 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
   // El QR y su payload solo se generan si el acceso está listo: en la rama
   // pendiente no se muestran y no tiene sentido gastar el render.
   let qrCodeUrl: string | null = null
-  if (accessReady && !invitationUsed && !eventInactive) {
+  if (accessReady && !invitationUsed && !invitationExpired && !eventInactive) {
     const qrPayload = buildGuestAccessQrPayload({
       eventId: guest?.event_id,
       eventSlug: event?.slug,
@@ -170,7 +178,18 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
       schedule={invitationSchedule}
       calendarUrl={calendarUrl}
     >
-      {canEditInvitation ? (
+      {invitationExpired ? (
+        <section className="relative overflow-hidden rounded-[28px] border border-rose-300 bg-[#eed8d2] p-6 pt-7 text-slate-950 shadow-2xl before:absolute before:inset-x-0 before:top-0 before:h-1.5 before:bg-rose-500">
+          <div className="flex items-center justify-between gap-3 border-b-2 border-dashed border-slate-300 pb-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Estado del acceso</p>
+            <span className="rounded-full bg-rose-700 px-3 py-1 text-[11px] font-semibold text-white">
+              {accessState.label}
+            </span>
+          </div>
+          <h3 className="mt-4 text-xl font-semibold text-slate-950">{accessState.title}</h3>
+          <p className="mt-2 text-sm leading-6 text-slate-600">{accessState.detail}</p>
+        </section>
+      ) : canEditInvitation ? (
         <section className="relative overflow-hidden rounded-[28px] border border-slate-300 bg-[#eed8d2] p-6 pt-7 text-slate-950 shadow-2xl before:absolute before:inset-x-0 before:top-0 before:h-1.5 before:bg-[#fcb39e]">
           <div className="flex items-center justify-between gap-3 border-b-2 border-dashed border-slate-300 pb-4">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Estado del vuelo</p>

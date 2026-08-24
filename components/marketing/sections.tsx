@@ -1,7 +1,6 @@
 import Link from 'next/link'
 import type { ReactNode } from 'react'
-import { Button } from '@/components/ui/button'
-import { FestiveBackdrop } from '@/components/marketing/FestiveBackdrop'
+import { ArrowUpRight } from 'lucide-react'
 
 type Cta = { href: string; label: string }
 
@@ -21,31 +20,40 @@ export function PageHero({
   secondaryCta?: Cta
 }) {
   return (
-    <section className="relative overflow-hidden">
-      <FestiveBackdrop />
-      <div className="relative z-10 mx-auto w-full max-w-6xl px-6 pb-12 pt-16 sm:pt-24">
-      <span className="inline-flex items-center rounded-full border border-border/70 bg-card px-3 py-1 text-xs font-medium text-muted-foreground">
-        {eyebrow}
-      </span>
-      <h1 className="mt-6 max-w-3xl text-balance font-display text-[2.5rem] font-semibold leading-[1.05] tracking-[-0.03em] text-foreground sm:text-5xl">
-        {title}
-        {highlight ? <span className="text-brand-cyan"> {highlight}</span> : null}
-      </h1>
-      <p className="mt-6 max-w-2xl text-pretty text-lg leading-relaxed text-muted-foreground">{description}</p>
-      {(primaryCta || secondaryCta) && (
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-          {primaryCta && (
-            <Button asChild size="lg">
-              <Link href={primaryCta.href}>{primaryCta.label}</Link>
-            </Button>
-          )}
-          {secondaryCta && (
-            <Button asChild size="lg" variant="outline">
-              <Link href={secondaryCta.href}>{secondaryCta.label}</Link>
-            </Button>
+    <section className="overflow-hidden border-b border-black/10 bg-[#f0eee8] px-5 py-20 sm:px-8 sm:py-28 lg:px-14">
+      <div className="mx-auto grid w-full max-w-[1320px] gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.22em] text-[#c65035]">{eyebrow}</p>
+          <h1 className="marketing-display mt-6 max-w-4xl text-[clamp(2.8rem,5vw,4.8rem)] font-black leading-[0.91] tracking-[-0.005em] text-[#171714]">
+            {title}
+            {highlight ? <span className="text-[#213480]"> {highlight}</span> : null}
+          </h1>
+        </div>
+
+        <div className="lg:pb-1">
+          <p className="max-w-xl text-base leading-7 text-black/58">{description}</p>
+          {(primaryCta || secondaryCta) && (
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              {primaryCta && (
+                <Link
+                  href={primaryCta.href}
+                  className="inline-flex min-h-12 items-center justify-center gap-4 rounded-full bg-[#213480] px-6 text-sm font-black text-white transition hover:bg-[#009cdd] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#213480] focus-visible:ring-offset-2"
+                >
+                  {primaryCta.label}
+                  <ArrowUpRight className="size-4" aria-hidden="true" />
+                </Link>
+              )}
+              {secondaryCta && (
+                <Link
+                  href={secondaryCta.href}
+                  className="inline-flex min-h-12 items-center justify-center rounded-full border border-black/20 px-6 text-sm font-black text-[#171714] transition hover:border-black hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2"
+                >
+                  {secondaryCta.label}
+                </Link>
+              )}
+            </div>
           )}
         </div>
-      )}
       </div>
     </section>
   )
@@ -65,23 +73,21 @@ export function Section({
   muted?: boolean
 }) {
   return (
-    <section className={muted ? 'border-y border-border/60 bg-secondary/30' : ''}>
-      <div className="mx-auto w-full max-w-6xl px-6 py-16 sm:py-20">
+    <section className={muted ? 'bg-[#e7ded0]' : 'bg-[#f0eee8]'}>
+      <div className="mx-auto w-full max-w-[1320px] px-5 py-20 sm:px-8 sm:py-28 lg:px-14">
         {(eyebrow || title || description) && (
-          <div className="max-w-2xl">
-            {eyebrow && (
-              <p className="text-sm font-semibold uppercase tracking-[0.16em] text-primary">
-                {eyebrow}
-              </p>
-            )}
-            {title && (
-              <h2 className="mt-3 text-balance font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-                {title}
-              </h2>
-            )}
-            {description && (
-              <p className="mt-5 text-pretty text-lg leading-relaxed text-muted-foreground">{description}</p>
-            )}
+          <div className="grid gap-7 lg:grid-cols-[0.75fr_1.25fr] lg:items-end">
+            <div>
+              {eyebrow && (
+                <p className="text-xs font-black uppercase tracking-[0.22em] text-[#c65035]">{eyebrow}</p>
+              )}
+              {title && (
+                <h2 className="marketing-display mt-5 max-w-3xl text-[clamp(2.5rem,4.25vw,4.25rem)] font-black leading-[0.92] tracking-[-0.005em] text-[#171714]">
+                  {title}
+                </h2>
+              )}
+            </div>
+            {description && <p className="max-w-xl text-base leading-7 text-black/58">{description}</p>}
           </div>
         )}
         {children}
@@ -93,7 +99,7 @@ export function Section({
 export function ClosingCta({
   title,
   description,
-  primary = { href: '/demo', label: 'Solicitar una demostración' },
+  primary = { href: '/demo', label: 'Quiero conocer Alista' },
   secondary = { href: '/contacto', label: 'Hablar con el equipo' },
 }: {
   title: string
@@ -102,24 +108,28 @@ export function ClosingCta({
   secondary?: Cta
 }) {
   return (
-    <section className="mx-auto w-full max-w-6xl px-6 py-20">
-      <div className="overflow-hidden rounded-[2.5rem] bg-admin-navy px-8 py-16 text-center text-white sm:px-16">
-        <h2 className="mx-auto max-w-2xl text-balance font-display text-3xl font-semibold tracking-tight sm:text-4xl">
-          {title}
-        </h2>
-        <p className="mx-auto mt-4 max-w-xl text-pretty text-white/70">{description}</p>
-        <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-          <Button asChild size="lg">
-            <Link href={primary.href}>{primary.label}</Link>
-          </Button>
-          <Button
-            asChild
-            size="lg"
-            variant="outline"
-            className="border-white/25 bg-transparent text-white hover:bg-white/10 hover:text-white"
+    <section className="bg-[#213480] px-5 py-20 text-white sm:px-8 sm:py-24 lg:px-14">
+      <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-10 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <h2 className="marketing-display max-w-3xl text-[clamp(2.7rem,4.75vw,4.75rem)] font-black leading-[0.91] tracking-[-0.005em]">
+            {title}
+          </h2>
+          <p className="mt-6 max-w-xl text-base leading-7 text-white/62">{description}</p>
+        </div>
+        <div className="flex shrink-0 flex-col gap-3 sm:flex-row">
+          <Link
+            href={primary.href}
+            className="inline-flex min-h-12 items-center justify-center gap-4 rounded-full bg-[#d9ee73] px-6 text-sm font-black text-[#171714] transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
           >
-            <Link href={secondary.href}>{secondary.label}</Link>
-          </Button>
+            {primary.label}
+            <ArrowUpRight className="size-4" aria-hidden="true" />
+          </Link>
+          <Link
+            href={secondary.href}
+            className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/24 px-6 text-sm font-black text-white transition hover:bg-white hover:text-[#171714] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+          >
+            {secondary.label}
+          </Link>
         </div>
       </div>
     </section>

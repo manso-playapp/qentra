@@ -100,13 +100,22 @@ export function buildCalendarUrl(event: InvitationEventInfo, schedule?: Invitati
 
 export function buildAccessState(input: {
   invitationUsed: boolean
+  invitationExpired: boolean
   eventInactive: boolean
   accessReady: boolean
   invitationResponse: 'pending' | 'confirmed' | 'declined' | 'checked_in'
   paymentStatus: 'not_required' | 'pending' | 'approved'
   lastUsedAt?: string | null
 }): AccessState {
-  const { invitationUsed, eventInactive, accessReady, invitationResponse, paymentStatus, lastUsedAt } = input
+  const {
+    invitationUsed,
+    invitationExpired,
+    eventInactive,
+    accessReady,
+    invitationResponse,
+    paymentStatus,
+    lastUsedAt,
+  } = input
 
   if (invitationUsed) {
     return {
@@ -130,6 +139,16 @@ export function buildAccessState(input: {
       detail: 'El evento fue pausado o cancelado. Si creés que es un error, contactá a la organización.',
       tone: 'border-white/20 bg-black/80 text-white',
       pill: 'bg-white/15 text-white',
+    }
+  }
+
+  if (invitationExpired) {
+    return {
+      label: 'Acceso vencido',
+      title: 'Este QR ya no está vigente',
+      detail: 'La vigencia del acceso terminó. Si necesitás ayuda, contactá a la organización.',
+      tone: 'border-rose-300/35 bg-rose-950/80 text-rose-50',
+      pill: 'bg-rose-300/15 text-rose-100',
     }
   }
 

@@ -1,3 +1,4 @@
+import { Check, Eye, Mail } from 'lucide-react'
 import { ContactForm } from '@/components/marketing/ContactForm'
 import { createMarketingMetadata } from '@/lib/marketing-seo'
 
@@ -14,44 +15,60 @@ export const metadata = createMarketingMetadata({
 })
 
 const EXPECT = [
-  'Una recorrida por el producto según tu tipo de fiesta.',
-  'Cómo se vinculan invitación, pago y acceso en un solo lugar.',
-  'Qué necesitás para preparar la apertura de tu próxima fiesta.',
+  'Cómo se verían la invitación y el recorrido de tus 15.',
+  'Cómo se ordenan confirmaciones, grupos, pagos y restricciones.',
+  'Qué llega preparado a la recepción esa noche.',
 ]
 
 export default function DemoPage() {
   return (
-    <section className="mx-auto w-full max-w-6xl px-6 pb-20 pt-16 sm:pt-24">
-      <div className="grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
-        <div>
-          <span className="inline-flex items-center rounded-full border border-border/70 bg-card px-3 py-1 text-xs font-medium text-muted-foreground">
-            Solicitar demo
+    <section className="bg-[#213480] px-5 py-20 sm:px-8 sm:py-28 lg:px-14">
+      <div className="mx-auto grid w-full max-w-[1180px] gap-12 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-start">
+        <div className="min-w-0">
+          <span className="inline-flex items-center rounded-full border border-white/18 bg-white/[0.06] px-4 py-2 text-xs font-bold text-white/65">
+            Demo para tu familia
           </span>
-          <h1 className="mt-6 text-balance font-display text-[2.5rem] font-semibold leading-[1.05] tracking-[-0.03em] text-foreground sm:text-5xl">
-            Preparemos la apertura de tu próxima fiesta
-            <span className="text-brand-cyan"> juntos.</span>
+          <h1 className="marketing-display mt-7 max-w-xl text-[clamp(3rem,5.25vw,5.25rem)] font-black leading-[0.9] tracking-[-0.005em] text-white">
+            Primero entendelo. Después decidí.
           </h1>
-          <p className="mt-6 max-w-xl text-pretty text-lg leading-relaxed text-muted-foreground">
-            Dejanos tus datos y te mostramos cómo Alista vincula cada invitado con su pago y su
-            acceso, para que el equipo sepa quién entra y cuánto cupo queda.
+          <p className="mt-7 max-w-xl text-base leading-7 text-white/65">
+            Te mostramos cómo Alista puede acompañar tus 15 desde la invitación hasta la llegada. Esta solicitud no crea un evento ni inicia un pago.
           </p>
 
           <div className="mt-10">
-            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-primary">
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-[#d9ee73]">
               Qué vas a ver
             </p>
             <ul className="mt-4 space-y-3">
               {EXPECT.map((item) => (
-                <li key={item} className="flex items-start gap-3 text-sm leading-6 text-foreground">
-                  <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-brand-cyan" aria-hidden />
+                <li key={item} className="flex items-start gap-3 text-sm leading-6 text-white/68">
+                  <span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-[#d9ee73] text-[#171714]">
+                    <Check className="size-3" strokeWidth={3} aria-hidden="true" />
+                  </span>
                   {item}
                 </li>
               ))}
             </ul>
           </div>
+
+          <div className="mt-10 grid gap-3 sm:grid-cols-2">
+            <div className="rounded-2xl border border-white/12 bg-white/[0.05] p-4 text-white">
+              <Eye className="size-4 text-[#ff8b70]" aria-hidden="true" />
+              <p className="mt-3 text-xs font-bold">Sin compromiso de compra</p>
+            </div>
+            <div className="rounded-2xl border border-white/12 bg-white/[0.05] p-4 text-white">
+              <Mail className="size-4 text-[#ff8b70]" aria-hidden="true" />
+              <p className="mt-3 text-xs font-bold">Vos confirmás el envío</p>
+            </div>
+          </div>
         </div>
 
-        <ContactForm subject="Solicitud de demo — Alista" cta="Solicitar demo" />
+        <ContactForm
+          subject="Quiero Alista en mis 15"
+          cta="Preparar solicitud de demo"
+          source="familia-demo"
+          audience="family"
+        />
       </div>
     </section>
   )

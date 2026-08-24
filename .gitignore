@@ -35,10 +35,9 @@ yarn-error.log*
 .env*
 !.env.example
 
-# internal work docs not intended for public repo
+# local-only agent context
 AGENTS.md
 CLAUDE.md
-docs/
 qentra_vscode_codex_playbook.md
 /web/
 

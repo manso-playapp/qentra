@@ -37,23 +37,25 @@ const SECTIONS = [
 
 export default function PrivacidadPage() {
   return (
-    <section className="mx-auto w-full max-w-3xl px-6 pb-20 pt-16 sm:pt-24">
-      <p className="text-sm font-semibold uppercase tracking-[0.16em] text-primary">Legal</p>
-      <h1 className="mt-3 font-display text-4xl font-semibold tracking-tight text-foreground">
+    <section className="bg-[#f0eee8] px-5 py-20 sm:px-8 sm:py-28 lg:px-14">
+      <div className="mx-auto w-full max-w-[900px]">
+      <p className="text-xs font-black uppercase tracking-[0.22em] text-[#c65035]">Legal</p>
+      <h1 className="marketing-display mt-6 text-[clamp(2.8rem,5vw,4.8rem)] font-black leading-[0.92] tracking-[-0.005em] text-[#171714]">
         Política de privacidad
       </h1>
-      <p className="mt-4 text-sm text-muted-foreground">
+      <p className="mt-7 max-w-2xl text-sm leading-6 text-black/58">
         Este documento describe el enfoque de Alista sobre el tratamiento de datos personales. Es
         una versión base y debe revisarse con asesoría legal antes de su publicación definitiva.
       </p>
 
-      <div className="mt-12 space-y-8">
+      <div className="mt-14 border-t border-black/15">
         {SECTIONS.map((section) => (
-          <div key={section.title}>
-            <h2 className="font-display text-xl font-semibold text-foreground">{section.title}</h2>
-            <p className="mt-3 text-sm leading-7 text-muted-foreground">{section.body}</p>
+          <div key={section.title} className="grid gap-4 border-b border-black/15 py-7 sm:grid-cols-[0.55fr_1.45fr]">
+            <h2 className="text-sm font-black text-[#171714]">{section.title}</h2>
+            <p className="text-sm leading-7 text-black/58">{section.body}</p>
           </div>
         ))}
+      </div>
       </div>
     </section>
   )

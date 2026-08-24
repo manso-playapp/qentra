@@ -1,0 +1,250 @@
+import {
+  ArrowRight,
+  Check,
+  CircleAlert,
+  Clock3,
+  MessageCircle,
+  QrCode,
+  ReceiptText,
+  Users,
+} from 'lucide-react'
+
+function InviteScene() {
+  return (
+    <div className="overflow-hidden rounded-[2.5rem_2.5rem_0.75rem_2.5rem] bg-[#171714] p-5 text-white shadow-[0_28px_70px_rgba(23,23,20,0.16)] sm:p-8">
+      <div className="flex items-center gap-3 border-b border-white/10 pb-5">
+        <span className="grid size-10 place-items-center rounded-full bg-[#ff8b70] text-sm font-black text-black">D</span>
+        <div>
+          <p className="text-sm font-bold">Dharma</p>
+          <p className="text-xs text-white/40">para Martina · Colegio</p>
+        </div>
+        <MessageCircle className="ml-auto size-4 text-[#d9ee73]" aria-hidden="true" />
+      </div>
+      <div className="ml-auto mt-7 max-w-[90%] rounded-[1.5rem_1.5rem_0.35rem_1.5rem] bg-[#d9ee73] p-4 text-[#171714]">
+        <p className="text-sm font-semibold leading-6">Martu, te invito a mis 15 ✨</p>
+        <div className="mt-3 rounded-2xl bg-[#f0eee8] p-4">
+          <p className="text-[10px] font-black uppercase tracking-[0.14em] text-black/40">Invitación personal</p>
+          <p className="marketing-display mt-2 text-2xl font-black tracking-[-0.01em]">Dharma te invita.</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ConfirmScene() {
+  return (
+    <div className="grid gap-4 sm:grid-cols-[1fr_150px] sm:items-stretch">
+      <div className="rounded-[2.25rem] border border-black/10 bg-white/65 p-5 sm:p-7">
+        <p className="text-[10px] font-black uppercase tracking-[0.16em] text-black/40">Familia Pérez · Cena</p>
+        <div className="mt-5 divide-y divide-black/10">
+          {['María Pérez', 'Tomás Pérez', 'Juana Pérez'].map((name) => (
+            <div key={name} className="flex items-center justify-between py-3.5 text-sm font-bold">
+              {name}
+              <span className="grid size-6 place-items-center rounded-full bg-[#173b36] text-white">
+                <Check className="size-3.5" strokeWidth={3} aria-hidden="true" />
+              </span>
+            </div>
+          ))}
+        </div>
+        <p className="mt-4 rounded-2xl bg-[#ffcfbf] px-4 py-3 text-xs font-bold">Juana · menú vegetariano</p>
+      </div>
+      <div className="flex min-h-40 flex-col justify-between rounded-[2.25rem_0.75rem_2.25rem_2.25rem] bg-[#c65035] p-5 text-white">
+        <Users className="size-5" aria-hidden="true" />
+        <div>
+          <p className="marketing-display text-6xl font-black tracking-[-0.02em]">3</p>
+          <p className="mt-1 text-xs font-bold uppercase tracking-[0.14em] text-white/65">confirmados</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function KnowScene() {
+  const accessGroups = [
+    { label: 'Cena', value: '86', color: 'bg-[#173b36] text-white' },
+    { label: 'Trasnoche', value: '54', color: 'bg-[#d9ee73] text-[#171714]' },
+    { label: 'Trasnoche con entrada', value: '23', color: 'bg-[#ff8b70] text-[#171714]' },
+  ]
+
+  return (
+    <div className="overflow-hidden rounded-[0.75rem_2.5rem_2.5rem_2.5rem] border border-black/10 bg-[#e7ded0]">
+      <div className="flex items-center justify-between gap-4 border-b border-black/10 px-5 py-4 sm:px-7">
+        <p className="text-[10px] font-black uppercase tracking-[0.16em] text-black/45">Escenario demo · quién viene</p>
+        <span className="text-xs font-bold text-black/45">163 personas</span>
+      </div>
+      <div className="grid sm:grid-cols-3">
+        {accessGroups.map((group) => (
+          <div key={group.label} className={`${group.color} flex min-h-44 flex-col justify-between p-5 sm:p-6`}>
+            <p className="max-w-32 text-xs font-black uppercase tracking-[0.14em] opacity-65">{group.label}</p>
+            <p className="marketing-display text-6xl font-black tracking-[-0.02em]">{group.value}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function PrepareScene() {
+  return (
+    <div className="rounded-[2.5rem] bg-[#162c29] p-5 text-white shadow-[0_28px_70px_rgba(22,44,41,0.18)] sm:p-8">
+      <div className="flex items-start justify-between gap-5">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#d9ee73]">Necesita tu atención</p>
+          <p className="marketing-display mt-3 text-4xl font-black tracking-[-0.015em]">Todavía estás a tiempo.</p>
+        </div>
+        <CircleAlert className="size-6 shrink-0 text-[#ff8b70]" aria-hidden="true" />
+      </div>
+      <div className="mt-7 divide-y divide-white/10 border-y border-white/10">
+        {[
+          ['2 pagos pendientes', 'Revisar comprobantes'],
+          ['3 grupos incompletos', 'Pedir confirmación'],
+          ['1 restricción nueva', 'Avisar al salón'],
+        ].map(([issue, action]) => (
+          <div key={issue} className="grid gap-2 py-4 sm:grid-cols-[1fr_auto] sm:items-center">
+            <p className="text-sm font-bold">{issue}</p>
+            <span className="inline-flex items-center gap-2 text-xs font-black text-[#d9ee73]">
+              {action}
+              <ArrowRight className="size-3.5" aria-hidden="true" />
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function ChargeScene() {
+  const paymentFlow = [
+    { icon: ReceiptText, label: 'Comprobante recibido', detail: 'Tomás · Trasnoche con entrada' },
+    { icon: Users, label: 'Pago asociado', detail: 'La persona ya está identificada' },
+    { icon: QrCode, label: 'Acceso listo', detail: 'Sin perseguir capturas por chat' },
+  ]
+
+  return (
+    <div className="rounded-[2.5rem_0.75rem_2.5rem_2.5rem] bg-[#d9ee73] p-5 text-[#171714] sm:p-8">
+      <div className="flex items-center justify-between gap-4">
+        <p className="text-[10px] font-black uppercase tracking-[0.16em] text-black/45">Escenario demo · pago revisado</p>
+        <span className="rounded-full bg-[#171714] px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-white">Resuelto</span>
+      </div>
+      <ol className="mt-7 grid gap-3">
+        {paymentFlow.map((step, index) => {
+          const Icon = step.icon
+
+          return (
+            <li key={step.label} className="grid grid-cols-[42px_1fr_auto] items-center gap-3 rounded-2xl bg-white/55 p-3.5">
+              <span className="grid size-10 place-items-center rounded-xl bg-[#171714] text-white">
+                <Icon className="size-4.5" aria-hidden="true" />
+              </span>
+              <div>
+                <p className="text-sm font-black">{step.label}</p>
+                <p className="mt-1 text-xs leading-5 text-black/50">{step.detail}</p>
+              </div>
+              <span className="text-xs font-black text-black/35">0{index + 1}</span>
+            </li>
+          )
+        })}
+      </ol>
+    </div>
+  )
+}
+
+function ReceiveScene() {
+  return (
+    <div className="grid overflow-hidden rounded-[0.75rem_2.5rem_2.5rem_2.5rem] bg-[#171714] text-white sm:grid-cols-[0.72fr_1.28fr]">
+      <div className="flex min-h-52 flex-col justify-between bg-[#c65035] p-5 sm:p-7">
+        <Clock3 className="size-5" aria-hidden="true" />
+        <div>
+          <p className="marketing-display text-5xl font-black tracking-[-0.02em]">00:34</p>
+          <p className="mt-2 text-xs font-black uppercase tracking-[0.14em] text-white/60">Llegada · Familia Pérez</p>
+        </div>
+      </div>
+      <div className="p-5 sm:p-7">
+        <div className="flex items-center justify-between gap-4 border-b border-white/10 pb-4">
+          <div>
+            <p className="text-sm font-black">3 personas · Cena</p>
+            <p className="mt-1 text-xs text-white/45">Un grupo, un acceso</p>
+          </div>
+          <span className="grid size-9 place-items-center rounded-full bg-[#d9ee73] text-black">
+            <Check className="size-4" strokeWidth={3} aria-hidden="true" />
+          </span>
+        </div>
+        <ul className="mt-3 divide-y divide-white/10">
+          {['María', 'Tomás', 'Juana'].map((name) => (
+            <li key={name} className="flex items-center justify-between py-3 text-sm font-bold">
+              {name} Pérez
+              <span className="text-[10px] font-black uppercase tracking-[0.12em] text-[#d9ee73]">Ingresa</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  )
+}
+
+const journeyStages = [
+  {
+    number: '01',
+    title: 'Invitá',
+    detail: 'Tu fiesta ya tiene identidad. La invitación sale de una persona conocida y llega con un link personal.',
+    scene: InviteScene,
+    reverse: false,
+  },
+  {
+    number: '02',
+    title: 'Confirmá',
+    detail: 'Cada familia responde quién viene y lo necesario para recibirla bien, sin formularios eternos.',
+    scene: ConfirmScene,
+    reverse: true,
+  },
+  {
+    number: '03',
+    title: 'Conocé',
+    detail: 'Cena, Trasnoche y Trasnoche con entrada dejan de ser listas separadas y empiezan a formar una sola noche.',
+    scene: KnowScene,
+    reverse: false,
+  },
+  {
+    number: '04',
+    title: 'Prepará',
+    detail: 'Lo pendiente aparece con tiempo y con una acción concreta: revisar, completar o avisar.',
+    scene: PrepareScene,
+    reverse: true,
+  },
+  {
+    number: '05',
+    title: 'Cobrá',
+    detail: 'Un comprobante deja de ser una captura suelta cuando queda asociado a una persona y a su acceso.',
+    scene: ChargeScene,
+    reverse: false,
+  },
+  {
+    number: '06',
+    title: 'Recibí',
+    detail: 'Cuando llega la noche, recepción ya conoce el grupo y puede hacerlo entrar junto.',
+    scene: ReceiveScene,
+    reverse: true,
+  },
+] as const
+
+export function JourneyScenes() {
+  return (
+    <ol className="mt-20 space-y-24 sm:space-y-32">
+      {journeyStages.map((stage) => {
+        const Scene = stage.scene
+
+        return (
+          <li key={stage.number} className="grid gap-8 border-t border-black/20 pt-7 lg:grid-cols-[0.72fr_1.28fr] lg:items-center lg:gap-16">
+            <div className={stage.reverse ? 'lg:order-2' : undefined}>
+              <p className="text-xs font-black text-[#d75437]">{stage.number}</p>
+              <h3 className="marketing-display mt-5 text-5xl font-black tracking-[-0.01em] sm:text-6xl">{stage.title}</h3>
+              <p className="mt-5 max-w-md text-sm leading-6 text-black/55">{stage.detail}</p>
+            </div>
+            <div className={stage.reverse ? 'lg:order-1' : undefined}>
+              <Scene />
+            </div>
+          </li>
+        )
+      })}
+    </ol>
+  )
+}

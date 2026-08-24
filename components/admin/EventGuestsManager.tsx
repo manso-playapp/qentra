@@ -5,6 +5,7 @@ import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { formatGuestTypeAccessPolicy } from '@/lib/access-policy'
 import { mapGuestStatusToDb, type DbGuestStatus } from '@/lib/guest-schema'
+import { isInvitationExpired } from '@/lib/invitation-expiry'
 import {
   GUEST_DB_STATUS_LABELS,
   GUEST_DB_STATUS_STYLES,
@@ -2231,10 +2232,12 @@ export default function EventGuestsManager({
                           const invitationWasUsed = Boolean(
                             latestToken?.last_used_at || (latestToken?.used_count ?? 0) > 0 || latestToken?.is_active === false
                           )
+                          const invitationExpired = isInvitationExpired(latestToken?.expires_at)
                           const accessReady =
                             isInvitationAccessReady(dbStatus, guest.payment_status ?? 'not_required') &&
                             Boolean(latestToken) &&
-                            !invitationWasUsed
+                            !invitationWasUsed &&
+                            !invitationExpired
                           const renderableQrImageUrl =
                             accessReady &&
                               latestQrCode?.qr_image_url &&
@@ -2340,30 +2343,36 @@ export default function EventGuestsManager({
                                 <p className="mt-1 text-sm font-medium text-gray-900">
                                   {guest.status === 'checked_in'
                                     ? 'Ingreso registrado'
+                                    : invitationWasUsed
+                                    ? 'Acceso ya utilizado'
+                                    : invitationExpired
+                                    ? 'Acceso vencido'
                                     : accessReady
                                     ? 'QR final habilitado'
                                     : latestToken
-                                    ? invitationWasUsed
-                                      ? 'Acceso ya utilizado'
-                                      : 'Link de gestion emitido'
+                                    ? 'Link de gestion emitido'
                                     : 'Sin invitacion emitida'}
                                 </p>
                               </div>
                               <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
                                 guest.status === 'checked_in'
                                   ? 'bg-blue-100 text-blue-800'
-                                  : accessReady
-                                  ? 'bg-emerald-100 text-emerald-800'
                                   : invitationWasUsed
                                   ? 'bg-amber-100 text-amber-800'
+                                  : invitationExpired
+                                  ? 'bg-rose-100 text-rose-800'
+                                  : accessReady
+                                  ? 'bg-emerald-100 text-emerald-800'
                                   : 'bg-gray-100 text-gray-700'
                               }`}>
                                 {guest.status === 'checked_in'
                                   ? 'Ingresado'
-                                  : accessReady
-                                  ? 'Habilitado'
                                   : invitationWasUsed
                                   ? 'Usado'
+                                  : invitationExpired
+                                  ? 'Vencido'
+                                  : accessReady
+                                  ? 'Habilitado'
                                   : 'Pendiente'}
                               </span>
                             </div>
@@ -2401,7 +2410,7 @@ export default function EventGuestsManager({
                                   'No disponible'
                                 )}
                               </p>
-                              {!accessReady && guest.status !== 'checked_in' && latestToken && (
+                              {!accessReady && !invitationExpired && guest.status !== 'checked_in' && latestToken && (
                                 <p className="text-amber-700">
                                   El QR final se habilita cuando el invitado confirma asistencia y queda listo para ingresar.
                                 </p>

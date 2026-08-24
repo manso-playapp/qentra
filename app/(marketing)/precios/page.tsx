@@ -1,115 +1,108 @@
 import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { PageHero, Section, ClosingCta } from '@/components/marketing/sections'
+import { ArrowUpRight } from 'lucide-react'
+import { ClosingCta, PageHero } from '@/components/marketing/sections'
 import { createMarketingMetadata } from '@/lib/marketing-seo'
 
-export const legacyMetadata = {
-  title: 'Precios',
-  description:
-    'Planes que se adaptan a cada fiesta y a cada salón. Durante la etapa de pilotos trabajamos acompañados y armamos una propuesta a medida.',
-}
-
 export const metadata = createMarketingMetadata({
-  title: 'Precios para gesti\u00f3n de eventos e invitados',
+  title: 'Cómo contratar Alista',
   description:
-    'Planes para fiestas, salones y productores que necesitan gestionar invitados, pagos y accesos. Propuestas a medida.',
+    'Conocé cómo armamos una propuesta para tu fiesta de 15, salón, productora o equipo de planificación.',
   path: '/precios',
 })
 
-const PLANS = [
+const PATHS = [
   {
-    name: 'Por evento',
-    forWho: 'Tu primera fiesta con Alista.',
-    features: [
-      'Invitaciones y confirmaciones',
-      'Invitados y acompañantes',
-      'Pago vinculado a cada persona',
-      'Acceso con QR y check-in',
-    ],
-    featured: false,
+    eyebrow: 'Para una familia',
+    title: 'Alista en tus 15.',
+    body: 'Primero vemos cómo sería el recorrido de tu fiesta: invitación, confirmaciones, grupos, preparación y llegada. La demo no crea un evento ni inicia un pago.',
+    detail: 'La propuesta se conversa después de entender la fecha, el lugar y el alcance.',
+    href: '/demo',
+    cta: 'Pedir una demo para mis 15',
+    tone: 'bg-[#d9ee73] text-[#171714]',
   },
   {
-    name: 'Salón o productor',
-    forWho: 'Quienes abren varias fiestas al año.',
-    features: [
-      'Todo lo de Por evento',
-      'Configuración reutilizable entre fiestas',
-      'Roles y permisos para el equipo',
-      'Cupo, pagos e ingresos a la vista',
-    ],
-    featured: true,
+    eyebrow: 'Para profesionales',
+    title: 'Alista en tu servicio.',
+    body: 'Para planners, salones y productoras que organizan varios eventos y necesitan una operación repetible, un equipo coordinado y una experiencia con identidad.',
+    detail: 'Las condiciones se definen según el volumen y la forma de trabajo del equipo.',
+    href: '/profesionales#contacto-profesional',
+    cta: 'Conversar sobre mi operación',
+    tone: 'bg-[#213480] text-white',
   },
-  {
-    name: 'Marca blanca',
-    forWho: 'Alista dentro de tu propio servicio.',
-    features: [
-      'Todo lo de Salón o productor',
-      'Presencia de tu marca en la experiencia',
-      'Acompañamiento en la puesta en marcha',
-      'Criterios de privacidad a medida',
-    ],
-    featured: false,
-  },
+]
+
+const VARIABLES = [
+  ['01', 'Tipo de operación', 'Una familia y un equipo que abre eventos todas las semanas necesitan recorridos distintos.'],
+  ['02', 'Volumen de eventos', 'La cantidad y frecuencia permiten definir acompañamiento, configuración y continuidad.'],
+  ['03', 'Alcance del servicio', 'Revisamos qué momentos del recorrido necesita resolver cada fiesta o profesional.'],
+  ['04', 'Puesta en marcha', 'Acordamos cómo preparar al equipo y llegar al primer evento con criterios claros.'],
 ]
 
 export default function PreciosPage() {
   return (
     <>
       <PageHero
-        eyebrow="Precios"
-        title="Un plan para cada"
-        highlight="tipo de fiesta."
-        description="Cada operación es distinta, así que la propuesta se adapta a la fiesta y al salón. Estamos en etapa de pilotos acompañados: contanos qué necesitás y armamos algo a medida, sin sorpresas."
+        eyebrow="Cómo contratar Alista"
+        title="Primero entendemos la fiesta."
+        highlight="Después armamos la propuesta."
+        description="Alista está en una etapa de implementación acompañada. Por eso no publicamos importes ni paquetes genéricos que todavía no representan una oferta comercial cerrada."
+        primaryCta={{ href: '/demo', label: 'Quiero verlo para mis 15' }}
+        secondaryCta={{ href: '/profesionales', label: 'Trabajo con eventos' }}
       />
 
-      <Section muted>
-        <div className="grid gap-6 lg:grid-cols-3">
-          {PLANS.map((plan) => (
-            <div
-              key={plan.name}
-              className={
-                plan.featured
-                  ? 'rounded-3xl border-2 border-primary bg-card p-8 shadow-[0_18px_50px_rgba(22,33,90,0.1)]'
-                  : 'rounded-3xl border border-border/70 bg-card p-8'
-              }
-            >
-              {plan.featured && (
-                <span className="inline-flex items-center rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground">
-                  Recomendado
-                </span>
-              )}
-              <h3 className="mt-4 font-display text-2xl font-semibold text-foreground">{plan.name}</h3>
-              <p className="mt-2 text-sm text-muted-foreground">{plan.forWho}</p>
-              <p className="mt-6 font-display text-lg font-semibold text-foreground">A medida</p>
-              <p className="text-sm text-muted-foreground">según la fiesta y el volumen del salón</p>
-              <ul className="mt-6 space-y-3">
-                {plan.features.map((feature) => (
-                  <li key={feature} className="flex items-start gap-2 text-sm text-foreground">
-                    <span className="mt-1 size-1.5 shrink-0 rounded-full bg-brand-cyan" aria-hidden />
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-              <Button asChild className="mt-8 w-full" variant={plan.featured ? 'default' : 'outline'}>
-                <Link href="/demo">Consultar</Link>
-              </Button>
-            </div>
-          ))}
+      <section className="bg-[#f0eee8] px-5 py-20 sm:px-8 sm:py-28 lg:px-14">
+        <div className="mx-auto max-w-[1320px]">
+          <div className="grid gap-5 lg:grid-cols-2">
+            {PATHS.map((path) => (
+              <article key={path.title} className={`flex min-h-[420px] flex-col justify-between rounded-[2.25rem] p-7 sm:p-10 ${path.tone}`}>
+                <div>
+                  <p className="text-xs font-black uppercase tracking-[0.22em] opacity-55">{path.eyebrow}</p>
+                  <h2 className="marketing-display mt-6 max-w-lg text-[clamp(2.5rem,4vw,4rem)] font-black leading-[0.92] tracking-[-0.005em]">
+                    {path.title}
+                  </h2>
+                  <p className="mt-7 max-w-xl text-base leading-7 opacity-65">{path.body}</p>
+                </div>
+                <div className="mt-12 border-t border-current/15 pt-6">
+                  <p className="max-w-lg text-sm font-bold leading-6 opacity-70">{path.detail}</p>
+                  <Link
+                    href={path.href}
+                    className="mt-6 inline-flex min-h-12 items-center gap-4 rounded-full border border-current/25 px-5 text-sm font-black transition hover:bg-white hover:text-[#171714] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current"
+                  >
+                    {path.cta}
+                    <ArrowUpRight className="size-4" aria-hidden="true" />
+                  </Link>
+                </div>
+              </article>
+            ))}
+          </div>
         </div>
-        <p className="mt-8 text-center text-sm text-muted-foreground">
-          ¿No sabés qué plan necesitás?{' '}
-          <Link href="/contacto" className="font-medium text-primary hover:underline">
-            Escribinos
-          </Link>{' '}
-          y lo vemos juntos.
-        </p>
-      </Section>
+      </section>
+
+      <section className="bg-[#162c29] px-5 py-20 text-white sm:px-8 sm:py-28 lg:px-14">
+        <div className="mx-auto grid max-w-[1320px] gap-14 lg:grid-cols-[0.7fr_1.3fr]">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-[#d9ee73]">Una propuesta con contexto</p>
+            <h2 className="marketing-display mt-5 text-[clamp(2.6rem,4.25vw,4.25rem)] font-black leading-[0.92] tracking-[-0.005em]">
+              Qué necesitamos entender.
+            </h2>
+          </div>
+          <ol className="divide-y divide-white/14 border-y border-white/14">
+            {VARIABLES.map(([number, title, body]) => (
+              <li key={number} className="grid gap-4 py-6 sm:grid-cols-[3rem_0.65fr_1.35fr] sm:items-start">
+                <span className="marketing-display text-2xl font-black text-[#d9ee73]">{number}</span>
+                <h3 className="text-sm font-black">{title}</h3>
+                <p className="text-sm leading-6 text-white/58">{body}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
 
       <ClosingCta
-        title="Empecemos por tu próxima fiesta."
-        description="Contanos qué estás organizando y te mostramos cómo preparar la apertura con Alista."
-        primary={{ href: '/demo', label: 'Solicitar demo' }}
-        secondary={{ href: '/contacto', label: 'Hablar con el equipo' }}
+        title="La conversación empieza por tu fiesta."
+        description="Te mostramos el recorrido, entendemos qué necesitás y recién entonces definimos una propuesta clara."
+        primary={{ href: '/demo', label: 'Pedir una demo' }}
+        secondary={{ href: '/contacto', label: 'Hacer una consulta' }}
       />
     </>
   )

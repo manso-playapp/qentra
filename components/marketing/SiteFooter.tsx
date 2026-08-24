@@ -1,59 +1,55 @@
+import Image from 'next/image'
 import Link from 'next/link'
 
-const FOOTER_GROUPS = [
+const groups = [
   {
-    title: 'Producto',
+    title: 'Conocé Alista',
     links: [
-      { href: '/producto', label: 'Qué hace' },
+      { href: '/producto', label: 'Producto' },
       { href: '/como-funciona', label: 'Cómo funciona' },
-      { href: '/casos', label: 'Casos de uso' },
-      { href: '/precios', label: 'Precios' },
+      { href: '/casos', label: 'Caso Dharma' },
+      { href: '/seguridad', label: 'Seguridad' },
     ],
   },
   {
     title: 'Para quién',
     links: [
-      { href: '/casos#fiestas-15', label: 'Fiestas de 15' },
-      { href: '/casos#egresados', label: 'Egresados y recepciones' },
-      { href: '/casos#salones', label: 'Salones y productores' },
+      { href: '/demo', label: 'Estoy organizando mis 15' },
+      { href: '/profesionales', label: 'Organizo fiestas de 15' },
+      { href: '/precios', label: 'Cómo contratar Alista' },
     ],
   },
   {
-    title: 'Compañía',
+    title: 'Alista',
     links: [
-      { href: '/seguridad', label: 'Seguridad y privacidad' },
       { href: '/contacto', label: 'Contacto' },
-      { href: '/admin', label: 'Acceder a la plataforma' },
+      { href: '/privacidad', label: 'Privacidad' },
+      { href: '/admin', label: 'Acceder' },
     ],
   },
 ]
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-border/60 bg-background/60">
-      <div className="mx-auto w-full max-w-6xl px-6 py-14">
-        <div className="grid gap-10 md:grid-cols-[1.4fr_repeat(3,1fr)]">
-          <div className="max-w-xs">
-            <Link href="/" className="flex items-center" aria-label="Alista, inicio">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/alista-logo.svg" alt="Alista" className="h-7 w-auto" />
+    <footer className="border-t border-white/10 bg-[#11110f] text-white">
+      <div className="mx-auto w-full max-w-[1440px] px-5 py-16 sm:px-8 lg:px-14 lg:py-20">
+        <div className="grid gap-14 lg:grid-cols-[1.25fr_repeat(3,0.75fr)]">
+          <div className="max-w-sm">
+            <Link href="/" className="inline-flex" aria-label="Alista, inicio">
+              <Image src="/alista-logo-white.svg" alt="Alista" width={1890} height={387} className="h-7 w-auto" />
             </Link>
-            <p className="mt-4 text-sm leading-6 text-muted-foreground">
-              Vinculamos invitación, pago y acceso en fiestas privadas con cupo limitado. Abrí la
-              fiesta sin abrir un problema.
+            <p className="mt-6 text-sm leading-6 text-white/50">
+              La fiesta dura una noche. Alista todo lo que pasa antes.
             </p>
           </div>
 
-          {FOOTER_GROUPS.map((group) => (
+          {groups.map((group) => (
             <div key={group.title}>
-              <h3 className="text-sm font-semibold text-foreground">{group.title}</h3>
-              <ul className="mt-4 space-y-3">
+              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/35">{group.title}</h3>
+              <ul className="mt-5 space-y-3">
                 {group.links.map((link) => (
                   <li key={link.href}>
-                    <Link
-                      href={link.href}
-                      className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-                    >
+                    <Link href={link.href} className="text-sm text-white/58 transition-colors hover:text-white">
                       {link.label}
                     </Link>
                   </li>
@@ -63,15 +59,11 @@ export function SiteFooter() {
           ))}
         </div>
 
-        <div className="mt-12 flex flex-col gap-3 border-t border-border/60 pt-6 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-          <p>© {new Date().getFullYear()} Alista. Cada pago, una persona. Cada persona, un acceso.</p>
+        <div className="mt-16 flex flex-col gap-4 border-t border-white/10 pt-6 text-xs text-white/38 sm:flex-row sm:items-center sm:justify-between">
+          <p>© {new Date().getFullYear()} Alista. Cumpleaños de 15, mejor preparados.</p>
           <div className="flex gap-5">
-            <Link href="/privacidad" className="hover:text-foreground">
-              Privacidad
-            </Link>
-            <Link href="/terminos" className="hover:text-foreground">
-              Términos
-            </Link>
+            <Link href="/privacidad" className="hover:text-white">Privacidad</Link>
+            <Link href="/terminos" className="hover:text-white">Términos</Link>
           </div>
         </div>
       </div>

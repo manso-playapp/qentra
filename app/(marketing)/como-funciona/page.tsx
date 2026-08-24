@@ -1,52 +1,52 @@
-import { PageHero, Section, ClosingCta } from '@/components/marketing/sections'
+import Link from 'next/link'
+import { ArrowUpRight } from 'lucide-react'
+import { FaqSection } from '@/components/marketing/FaqSection'
+import { ClosingCta, PageHero } from '@/components/marketing/sections'
 import { createMarketingMetadata } from '@/lib/marketing-seo'
 
-export const legacyMetadata = {
-  title: 'Cómo funciona',
-  description:
-    'Invitar, identificar, vincular el pago, emitir el acceso y validar en la puerta. Un recorrido claro donde cada persona queda vinculada con su pago y su acceso.',
-}
-
 export const metadata = createMarketingMetadata({
-  title: 'C\u00f3mo funciona la gesti\u00f3n de invitados y accesos',
+  title: 'Cómo funciona Alista para una fiesta de 15',
   description:
-    'Invita, confirma asistentes, vincula pagos, emite QR y valida ingresos. Todo el recorrido del evento en una sola plataforma.',
+    'Recorré cómo Alista conecta invitación, confirmaciones, grupos, preparación, aportes y llegada.',
   path: '/como-funciona',
 })
 
 const STEPS = [
   {
-    step: 'Invitá',
-    body: 'Enviás una invitación que se reconoce, desde el mismo lugar donde vas a operar toda la fiesta.',
+    number: '01',
+    name: 'Invitá',
+    title: 'Una invitación que se reconoce.',
+    body: 'Alista prepara el link personal y el mensaje. La invitación sale desde el WhatsApp de alguien conocido, sin pedir que el invitado instale una app.',
   },
   {
-    step: 'Identificá',
-    body: 'El invitado confirma en pocos pasos y suma a sus acompañantes, sin instalar una app ni crear una cuenta.',
+    number: '02',
+    name: 'Confirmá',
+    title: 'Cada respuesta conserva su contexto.',
+    body: 'La persona confirma, suma acompañantes y completa lo necesario en pocos pasos. El grupo queda unido desde el comienzo.',
   },
   {
-    step: 'Vinculá el pago',
-    body: 'Cada aporte queda asociado a una persona. Diseñado para distinguir un pago confirmado de una captura reenviada.',
+    number: '03',
+    name: 'Conocé',
+    title: 'Preparar también es conocer.',
+    body: 'Restricciones, necesidades y respuestas llegan organizadas para que la fiesta pueda anticiparse sin preguntar lo mismo varias veces.',
   },
   {
-    step: 'Emití el acceso',
-    body: 'Cuando el acceso queda habilitado, Alista genera un QR único por invitado, que cuenta dentro del cupo.',
+    number: '04',
+    name: 'Prepará',
+    title: 'Los pendientes se vuelven acciones.',
+    body: 'La familia y el equipo pueden ver qué falta, qué cambió y qué necesita atención antes de que la recepción tenga que resolverlo.',
   },
   {
-    step: 'Validá',
-    body: 'En la puerta, el equipo valida en segundos, detecta duplicados y resuelve excepciones con autorización.',
-  },
-]
-
-const AUDIENCES = [
-  {
-    title: 'Para el salón o productor',
-    body: 'Una operación repetible que reduce reclamos y profesionaliza la apertura. Preparás con anticipación, das autonomía al equipo y mantenés el cupo bajo control, evento tras evento.',
-    points: ['Configuración reutilizable', 'Cupo y pagos a la vista', 'Menos consultas a la familia'],
+    number: '05',
+    name: 'Cobrá',
+    title: 'El aporte no queda separado de la persona.',
+    body: 'Cuando la fiesta incluye un aporte, Alista está diseñado para conservar ese vínculo. Durante los pilotos, la conciliación es acompañada.',
   },
   {
-    title: 'Para el equipo de puerta',
-    body: 'Información inmediata, estados claros y un camino simple para resolver excepciones. Buscar, validar y decidir en pocos pasos, sin interpretar comprobantes.',
-    points: ['Buscar y encontrar', 'Validar el acceso', 'Resolver excepciones'],
+    number: '06',
+    name: 'Recibí',
+    title: 'La llegada ya tiene una historia.',
+    body: 'Recepción busca, valida y entiende el grupo con información preparada. Llegan juntos y pueden entrar juntos.',
   },
 ]
 
@@ -54,55 +54,67 @@ export default function ComoFuncionaPage() {
   return (
     <>
       <PageHero
-        eyebrow="El recorrido"
-        title="De la invitación a la puerta,"
-        highlight="todo vinculado."
-        description="El problema de la puerta no empieza en la puerta: empieza cuando el pago y la lista viven en lugares distintos. Alista ordena ese recorrido en cinco momentos, de la invitación a la validación."
-        primaryCta={{ href: '/demo', label: 'Solicitar demo' }}
+        eyebrow="Cómo funciona"
+        title="Todo lo que pasa antes,"
+        highlight="conectado."
+        description="Alista convierte una serie de mensajes, respuestas y decisiones sueltas en un recorrido que llega preparado hasta la puerta."
+        primaryCta={{ href: '/demo', label: 'Ver una demo' }}
+        secondaryCta={{ href: '/producto', label: 'Conocer el producto' }}
       />
 
-      <Section muted>
-        <ol className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-          {STEPS.map((item, index) => (
+      <section className="bg-[#f0eee8] px-5 py-20 sm:px-8 sm:py-28 lg:px-14">
+        <ol className="mx-auto max-w-[1180px] border-t border-black/15">
+          {STEPS.map((step, index) => (
             <li
-              key={item.step}
-              className="flex flex-col rounded-2xl border border-border/60 bg-card p-5"
+              key={step.number}
+              className="grid gap-5 border-b border-black/15 py-9 sm:grid-cols-[4rem_0.5fr_1fr] sm:items-start lg:grid-cols-[5rem_0.55fr_0.9fr_1.2fr]"
             >
-              <span className="grid size-9 place-items-center rounded-full bg-admin-navy font-display text-sm font-semibold text-white">
-                {index + 1}
-              </span>
-              <p className="mt-4 text-balance font-display text-lg font-semibold text-foreground">{item.step}</p>
-              <p className="mt-2 text-pretty text-sm leading-6 text-muted-foreground">{item.body}</p>
+              <span className="marketing-display text-3xl font-black text-[#c65035]">{step.number}</span>
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-black/45">{step.name}</p>
+              <h2 className="marketing-display text-3xl font-black leading-[0.96] tracking-[-0.005em] text-[#171714] sm:text-4xl">
+                {step.title}
+              </h2>
+              <p className="text-sm leading-6 text-black/58 sm:col-start-3 lg:col-start-auto">{step.body}</p>
+              {index < STEPS.length - 1 ? null : (
+                <span className="sr-only">Fin del recorrido</span>
+              )}
             </li>
           ))}
         </ol>
-      </Section>
+      </section>
 
-      <Section
-        eyebrow="Dos miradas, una misma base"
-        title="Preparar la apertura sirve al salón y a la puerta."
-      >
-        <div className="mt-12 grid gap-6 md:grid-cols-2">
-          {AUDIENCES.map((aud) => (
-            <div key={aud.title} className="rounded-3xl border border-border/70 bg-card p-8">
-              <h3 className="text-balance font-display text-xl font-semibold text-foreground">{aud.title}</h3>
-              <p className="mt-3 text-pretty text-sm leading-6 text-muted-foreground">{aud.body}</p>
-              <ul className="mt-5 space-y-2">
-                {aud.points.map((point) => (
-                  <li key={point} className="flex items-center gap-2 text-sm text-foreground">
-                    <span className="size-1.5 rounded-full bg-brand-cyan" aria-hidden />
-                    {point}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+      <section className="bg-[#d9ee73] px-5 py-20 sm:px-8 sm:py-28 lg:px-14">
+        <div className="mx-auto grid max-w-[1180px] gap-12 lg:grid-cols-[1fr_0.9fr] lg:items-end">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-black/45">Dos formas de empezar</p>
+            <h2 className="marketing-display mt-5 max-w-3xl text-[clamp(2.7rem,4.5vw,4.5rem)] font-black leading-[0.92] tracking-[-0.005em]">
+              La experiencia cambia. La base se mantiene.
+            </h2>
+          </div>
+          <div className="space-y-3">
+            <Link
+              href="/demo"
+              className="flex min-h-16 items-center justify-between gap-5 rounded-full border border-black/20 px-6 text-sm font-black transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
+            >
+              Estoy organizando mis 15
+              <ArrowUpRight className="size-4" aria-hidden="true" />
+            </Link>
+            <Link
+              href="/profesionales"
+              className="flex min-h-16 items-center justify-between gap-5 rounded-full bg-[#171714] px-6 text-sm font-black text-white transition hover:bg-[#213480] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
+            >
+              Organizo fiestas profesionalmente
+              <ArrowUpRight className="size-4" aria-hidden="true" />
+            </Link>
+          </div>
         </div>
-      </Section>
+      </section>
+
+      <FaqSection />
 
       <ClosingCta
-        title="Cada pago, una persona. Cada persona, un acceso."
-        description="Conservá el carácter personal de la fiesta mientras profesionalizás su apertura."
+        title="La puerta se prepara mucho antes."
+        description="Mostranos cómo organizás hoy tu fiesta y te enseñamos dónde Alista puede ordenar el recorrido."
       />
     </>
   )

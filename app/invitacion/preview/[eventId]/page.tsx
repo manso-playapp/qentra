@@ -41,6 +41,7 @@ export default async function InvitationPreviewPage({ params }: PreviewPageProps
   // Estado inicial modelo: invitado pendiente de confirmar, sin pago, sin QR.
   const accessState = buildAccessState({
     invitationUsed: false,
+    invitationExpired: false,
     eventInactive: false,
     accessReady: false,
     invitationResponse: 'pending',

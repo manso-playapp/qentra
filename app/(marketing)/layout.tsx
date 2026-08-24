@@ -47,7 +47,7 @@ const structuredData = {
       url: siteUrl,
       inLanguage: 'es-AR',
       description:
-        'Plataforma para vincular invitaciones, pagos y accesos en eventos privados con cupo limitado.',
+        'Alista prepara invitaciones, confirmaciones, grupos, entradas y accesos para cumpleaños de 15.',
       provider: { '@id': `${siteUrl}/#organization` },
     },
   ],
@@ -55,7 +55,7 @@ const structuredData = {
 
 export default function MarketingLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col bg-[#f0eee8]">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}

@@ -1,61 +1,45 @@
-import { CalendarCheck, Users, Mail, Wallet, ScanLine, Gauge, ShieldCheck, Sparkles } from 'lucide-react'
-import { PageHero, Section, ClosingCta } from '@/components/marketing/sections'
+import { ClosingCta, PageHero, Section } from '@/components/marketing/sections'
 import { createMarketingMetadata } from '@/lib/marketing-seo'
 
-export const legacyMetadata = {
-  title: 'Producto',
-  description:
-    'Eventos, invitados, invitaciones, pago vinculado, acceso, cupo, equipo y experiencia. La plataforma que vincula invitación, pago y acceso en fiestas privadas con cupo.',
-}
-
 export const metadata = createMarketingMetadata({
-  title: 'Software para gestionar invitados y accesos a eventos',
+  title: 'Alista: invitaciones, preparación y acceso para tus 15',
   description:
-    'Gestiona eventos, invitados, invitaciones, pagos, accesos QR y cupo desde una sola plataforma para fiestas privadas.',
+    'Conocé cómo Alista conecta invitaciones, confirmaciones, grupos, preparación y llegada en una fiesta de 15.',
   path: '/producto',
 })
 
-const MODULES = [
+const MOMENTS = [
   {
-    icon: CalendarCheck,
-    title: 'Eventos',
-    body: 'Creá y administrá cada fiesta con su fecha, lugar, cupo y tipos de acceso.',
+    number: '01',
+    eyebrow: 'Invitación',
+    title: 'Cada persona entra al recorrido desde un lugar propio.',
+    body: 'La invitación se abre desde WhatsApp, sin instalar una app. Desde ahí, cada invitado puede confirmar, completar su grupo y responder lo que la fiesta necesita saber.',
+    items: ['Invitación con identidad', 'Confirmaciones y grupos', 'Datos necesarios, sin pasos de más'],
+    tone: 'bg-[#d9ee73] text-[#171714]',
   },
   {
-    icon: Users,
-    title: 'Invitados y acompañantes',
-    body: 'Invitados nominados y sus acompañantes, con categorías, estados y contexto de acceso.',
+    number: '02',
+    eyebrow: 'Preparación',
+    title: 'Lo que falta se vuelve visible antes de la fiesta.',
+    body: 'Alista reúne las respuestas y organiza los pendientes para que la familia y el equipo sepan qué necesita atención, sin reconstruir la historia desde mensajes y planillas.',
+    items: ['Pendientes accionables', 'Grupos y restricciones', 'Estados compartidos por el equipo'],
+    tone: 'bg-[#162c29] text-white',
   },
   {
-    icon: Mail,
-    title: 'Invitaciones',
-    body: 'Un enlace seguro que se abre desde WhatsApp, sin instalar nada ni crear una cuenta.',
+    number: '03',
+    eyebrow: 'Llegada',
+    title: 'La recepción recibe contexto, no una lista suelta.',
+    body: 'Los accesos y los grupos llegan preparados para que el equipo pueda buscar, validar y resolver la llegada con un criterio compartido.',
+    items: ['Accesos preparados', 'Ingreso individual o grupal', 'Búsqueda y estados claros'],
+    tone: 'bg-[#c65035] text-white',
   },
-  {
-    icon: Wallet,
-    title: 'Pago vinculado',
-    body: 'Diseñado para asociar cada aporte a una persona y distinguirlo de una captura reenviada.',
-  },
-  {
-    icon: ScanLine,
-    title: 'Acceso y puerta',
-    body: 'QR único por invitado, check-in móvil, búsqueda manual y excepciones con autorización.',
-  },
-  {
-    icon: Gauge,
-    title: 'Cupo en tiempo real',
-    body: 'Aforo, confirmaciones e ingresos a la vista, con la lógica sensible resuelta en el backend.',
-  },
-  {
-    icon: Sparkles,
-    title: 'Experiencia',
-    body: 'Trivia, música, saludos y personalización opcionales, para que la invitación se sienta propia.',
-  },
-  {
-    icon: ShieldCheck,
-    title: 'Privacidad',
-    body: 'Se pide solo la información con un uso claro, con consentimiento y cuidado de datos de menores.',
-  },
+]
+
+const RELATIONSHIPS = [
+  ['Invitación', 'Identidad', 'La experiencia empieza reconociendo a quién fue invitado.'],
+  ['Identidad', 'Grupo', 'Acompañantes y respuestas quedan vinculados a la persona correcta.'],
+  ['Preparación', 'Llegada', 'Lo resuelto antes evita improvisaciones en recepción.'],
+  ['Equipo', 'Criterio', 'Todos trabajan sobre los mismos estados y decisiones.'],
 ]
 
 export default function ProductoPage() {
@@ -63,46 +47,63 @@ export default function ProductoPage() {
     <>
       <PageHero
         eyebrow="El producto"
-        title="Invitación, pago y acceso,"
-        highlight="en una sola plataforma."
-        description="Alista reúne el recorrido completo de una fiesta privada con cupo: invitar, identificar, vincular el pago, emitir el acceso y validar en la puerta. La capa de experiencia mantiene el tono personal de la celebración."
-        primaryCta={{ href: '/demo', label: 'Solicitar demo' }}
-        secondaryCta={{ href: '/como-funciona', label: 'Ver cómo funciona' }}
+        title="Una fiesta no empieza"
+        highlight="cuando se abren las puertas."
+        description="Alista acompaña todo lo que pasa antes: la invitación, las respuestas, los grupos y la preparación que hace posible una llegada más simple."
+        primaryCta={{ href: '/demo', label: 'Verlo para mis 15' }}
+        secondaryCta={{ href: '/como-funciona', label: 'Recorrer cómo funciona' }}
       />
 
+      <section className="bg-[#f0eee8] px-5 py-20 sm:px-8 sm:py-28 lg:px-14">
+        <div className="mx-auto max-w-[1320px]">
+          <p className="text-xs font-black uppercase tracking-[0.22em] text-[#c65035]">Tres momentos, una misma historia</p>
+          <div className="mt-10 grid gap-5 lg:grid-cols-3">
+            {MOMENTS.map((moment) => (
+              <article key={moment.number} className={`flex min-h-[500px] flex-col justify-between rounded-[2.25rem] p-7 sm:p-9 ${moment.tone}`}>
+                <div>
+                  <div className="flex items-center justify-between gap-5">
+                    <p className="text-xs font-black uppercase tracking-[0.2em] opacity-50">{moment.eyebrow}</p>
+                    <span className="marketing-display text-3xl font-black opacity-35">{moment.number}</span>
+                  </div>
+                  <h2 className="marketing-display mt-10 text-[clamp(2.3rem,3.25vw,3.35rem)] font-black leading-[0.94] tracking-[-0.005em]">
+                    {moment.title}
+                  </h2>
+                  <p className="mt-6 text-sm leading-6 opacity-65">{moment.body}</p>
+                </div>
+                <ul className="mt-10 divide-y divide-current/15 border-y border-current/15">
+                  {moment.items.map((item) => (
+                    <li key={item} className="py-3 text-xs font-black uppercase tracking-[0.12em] opacity-70">
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <Section
-        eyebrow="Módulos"
-        title="Una base que conecta persona, pago, acceso y cupo."
+        eyebrow="Cómo pensamos Alista"
+        title="Cada función tiene que fortalecer una relación."
+        description="No sumamos herramientas para llenar un panel. El núcleo existe para que la información conserve su contexto desde la invitación hasta la recepción."
         muted
       >
-        <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {MODULES.map((mod) => {
-            const Icon = mod.icon
-            return (
-              <div
-                key={mod.title}
-                className="rounded-3xl border border-border/70 bg-card p-6 shadow-[0_18px_50px_rgba(22,33,90,0.08)]"
-              >
-                <span className="grid size-11 place-items-center rounded-2xl bg-event-surface text-primary ring-1 ring-primary/15">
-                  <Icon className="size-5" strokeWidth={1.75} />
-                </span>
-                <h3 className="mt-5 font-display text-lg font-semibold text-foreground">{mod.title}</h3>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">{mod.body}</p>
-              </div>
-            )
-          })}
+        <div className="mt-14 divide-y divide-black/12 border-y border-black/12">
+          {RELATIONSHIPS.map(([from, to, detail], index) => (
+            <div key={from} className="grid gap-3 py-6 sm:grid-cols-[3rem_0.65fr_0.65fr_1.3fr] sm:items-center">
+              <span className="marketing-display text-2xl font-black text-[#c65035]">0{index + 1}</span>
+              <p className="text-sm font-black">{from}</p>
+              <p className="text-sm font-black text-[#213480]">{to}</p>
+              <p className="text-sm leading-6 text-black/55">{detail}</p>
+            </div>
+          ))}
         </div>
       </Section>
 
-      <Section
-        eyebrow="Cómo pensamos el producto"
-        title="Cada función refuerza una relación."
-        description="Toda función nueva debe fortalecer al menos una de estas relaciones: invitado e identidad, identidad y pago, pago y acceso, acceso y cupo, o invitación y experiencia. Si no fortalece ninguna, no pertenece al núcleo. No construimos un editor libre ni sumamos plantillas por cantidad: preferimos una operación confiable a un panel decorativo."
-      />
-
       <ClosingCta
-        title="Abrí la fiesta sin abrir un problema."
-        description="Conservá el carácter personal de la celebración mientras profesionalizás su apertura."
+        title="Primero entendelo. Después decidí."
+        description="La demo muestra cómo se vería Alista en tu fiesta y no inicia un pago ni crea un evento."
       />
     </>
   )

@@ -1,4 +1,3 @@
-import { Mail, MessageCircle } from 'lucide-react'
 import { ContactForm } from '@/components/marketing/ContactForm'
 import { createMarketingMetadata } from '@/lib/marketing-seo'
 
@@ -15,42 +14,28 @@ export const metadata = createMarketingMetadata({
 
 export default function ContactoPage() {
   return (
-    <section className="mx-auto w-full max-w-6xl px-6 pb-20 pt-16 sm:pt-24">
-      <div className="grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+    <section className="bg-[#f0eee8] px-5 py-20 sm:px-8 sm:py-28 lg:px-14">
+      <div className="mx-auto grid w-full max-w-[1180px] gap-12 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
         <div>
-          <span className="inline-flex items-center rounded-full border border-border/70 bg-card px-3 py-1 text-xs font-medium text-muted-foreground">
-            Contacto
-          </span>
-          <h1 className="mt-6 text-balance font-display text-[2.5rem] font-semibold leading-[1.05] tracking-[-0.03em] text-foreground sm:text-5xl">
-            Hablemos de tu
-            <span className="text-brand-cyan"> apertura.</span>
+          <p className="text-xs font-black uppercase tracking-[0.22em] text-[#c65035]">Contacto</p>
+          <h1 className="marketing-display mt-6 max-w-xl text-[clamp(2.8rem,5vw,4.8rem)] font-black leading-[0.91] tracking-[-0.005em] text-[#171714]">
+            Empecemos por entender qué estás organizando.
           </h1>
-          <p className="mt-6 max-w-xl text-pretty text-lg leading-relaxed text-muted-foreground">
-            Escribinos y te respondemos con claridad. Ya sea una consulta, una propuesta piloto o una
-            duda sobre cómo vincular pago, persona y acceso en tu fiesta, estamos para ayudarte.
+          <p className="mt-7 max-w-xl text-base leading-7 text-black/58">
+            Puede ser una fiesta de 15, una propuesta piloto o una operación profesional. Contanos el contexto y te respondemos con claridad.
           </p>
 
-          <div className="mt-10 space-y-4">
+          <div className="mt-12 border-y border-black/15">
             <a
               href="mailto:hola@alista.com.ar"
-              className="flex items-center gap-3 rounded-2xl border border-border/70 bg-card px-5 py-4 transition hover:border-primary/40"
+              className="grid gap-1 border-b border-black/15 py-5 transition hover:pl-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#213480] focus-visible:ring-inset"
             >
-              <span className="grid size-10 place-items-center rounded-xl bg-event-surface text-primary ring-1 ring-primary/15">
-                <Mail className="size-5" strokeWidth={1.75} />
-              </span>
-              <div>
-                <p className="text-sm font-semibold text-foreground">Email</p>
-                <p className="text-sm text-muted-foreground">hola@alista.com.ar</p>
-              </div>
+              <span className="text-[10px] font-black uppercase tracking-[0.18em] text-black/42">Email</span>
+              <span className="text-sm font-black text-[#213480]">hola@alista.com.ar</span>
             </a>
-            <div className="flex items-center gap-3 rounded-2xl border border-border/70 bg-card px-5 py-4">
-              <span className="grid size-10 place-items-center rounded-xl bg-event-surface text-primary ring-1 ring-primary/15">
-                <MessageCircle className="size-5" strokeWidth={1.75} />
-              </span>
-              <div>
-                <p className="text-sm font-semibold text-foreground">Respuesta clara y sin vueltas</p>
-                <p className="text-sm text-muted-foreground">Te contestamos a la brevedad.</p>
-              </div>
+            <div className="grid gap-1 py-5">
+              <span className="text-[10px] font-black uppercase tracking-[0.18em] text-black/42">Qué sigue</span>
+              <span className="text-sm font-black text-[#171714]">Leemos el contexto antes de responder.</span>
             </div>
           </div>
         </div>

@@ -1,41 +1,43 @@
-import { Lock, EyeOff, ServerCog, UserCheck } from 'lucide-react'
-import { PageHero, Section, ClosingCta } from '@/components/marketing/sections'
+import Link from 'next/link'
+import { ArrowUpRight } from 'lucide-react'
+import { ClosingCta, PageHero } from '@/components/marketing/sections'
 import { createMarketingMetadata } from '@/lib/marketing-seo'
 
-export const legacyMetadata = {
-  title: 'Seguridad y privacidad',
-  description:
-    'Datos tratados con proporcionalidad, consentimiento y cuidado, incluidos los de menores. La lógica sensible vive en el backend, no en la puerta.',
-}
-
 export const metadata = createMarketingMetadata({
-  title: 'Seguridad y privacidad para eventos',
+  title: 'Seguridad y privacidad en Alista',
   description:
-    'Alista protege los datos de invitados y mantiene la validacion de pagos, accesos y cupo en el servidor.',
+    'Conocé los criterios con los que Alista trata datos de invitados, grupos, aportes y accesos.',
   path: '/seguridad',
 })
 
 const PRINCIPLES = [
   {
-    icon: UserCheck,
-    title: 'Datos con un uso claro',
-    body: 'Se pide solo la información necesaria para vincular a una persona con su pago y su acceso. Nada de acumular datos para aparentar sofisticación.',
+    number: '01',
+    title: 'Pedir solo lo que tiene un uso.',
+    body: 'Cada dato debe ayudar a preparar la invitación, el grupo o la llegada. Si no cumple una función concreta, no debería formar parte del recorrido.',
   },
   {
-    icon: EyeOff,
-    title: 'Sin lógica de vigilancia',
-    body: 'La información sirve para ordenar la apertura, no para vigilar. Nadie es tratado como sospechoso: distinguir un pago de una captura no es señalar a una persona.',
+    number: '02',
+    title: 'Cuidar especialmente a los menores.',
+    body: 'Las fiestas de 15 involucran adolescentes. La información se limita a lo necesario y su tratamiento requiere responsabilidad del organizador y las familias.',
   },
   {
-    icon: ServerCog,
-    title: 'Lógica sensible en el backend',
-    body: 'Estados, validación de acceso, duplicados, horarios y cupo se resuelven del lado del servidor, no en el frontend.',
+    number: '03',
+    title: 'Resolver la lógica sensible en el servidor.',
+    body: 'Estados, permisos y validaciones no dependen de lo que muestra una pantalla. La decisión operativa se sostiene en la lógica protegida del sistema.',
   },
   {
-    icon: Lock,
-    title: 'Consentimiento y cuidado',
-    body: 'Privacidad, consentimiento y control de datos, con especial cuidado cuando hay menores, y permisos diseñados por responsabilidad.',
+    number: '04',
+    title: 'Ordenar sin convertir la fiesta en vigilancia.',
+    body: 'La información existe para preparar y recibir mejor. No para elaborar perfiles ajenos a esa finalidad ni tratar a cada persona como sospechosa.',
   },
+]
+
+const LIMITS = [
+  'No vender datos personales ni usarlos con una finalidad ajena a la fiesta.',
+  'No tratar una captura como prueba automática de un pago confirmado.',
+  'No prometer automatizaciones que la implementación real todavía no puede demostrar.',
+  'No dar el mismo acceso a todos los roles cuando sus responsabilidades son distintas.',
 ]
 
 export default function SeguridadPage() {
@@ -44,60 +46,73 @@ export default function SeguridadPage() {
       <PageHero
         eyebrow="Seguridad y privacidad"
         title="Cuidar la fiesta también es"
-        highlight="cuidar los datos."
-        description="Alista trata la información con proporcionalidad: pide lo necesario para vincular pago, persona y acceso, y mantiene la lógica sensible protegida. La tecnología debe desaparecer en la experiencia, no volverse un mecanismo de control sobre adolescentes y familias."
+        highlight="cuidar su información."
+        description="Alista usa los datos para preparar el recorrido y la llegada. Ese propósito define qué se pide, quién puede verlo y qué límites no cruzamos."
+        primaryCta={{ href: '/privacidad', label: 'Leer política de privacidad' }}
+        secondaryCta={{ href: '/contacto', label: 'Hacer una consulta' }}
       />
 
-      <Section muted>
-        <div className="grid gap-5 sm:grid-cols-2">
-          {PRINCIPLES.map((p) => {
-            const Icon = p.icon
-            return (
-              <div key={p.title} className="rounded-3xl border border-border/70 bg-card p-6">
-                <span className="grid size-11 place-items-center rounded-2xl bg-event-surface text-primary ring-1 ring-primary/15">
-                  <Icon className="size-5" strokeWidth={1.75} />
-                </span>
-                <h3 className="mt-5 text-balance font-display text-lg font-semibold text-foreground">{p.title}</h3>
-                <p className="mt-2 text-pretty text-sm leading-6 text-muted-foreground">{p.body}</p>
-              </div>
-            )
-          })}
-        </div>
-      </Section>
+      <section className="bg-[#162c29] px-5 py-20 text-white sm:px-8 sm:py-28 lg:px-14">
+        <div className="mx-auto max-w-[1180px]">
+          <div className="grid gap-8 lg:grid-cols-[0.7fr_1.3fr] lg:items-end">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.22em] text-[#d9ee73]">Cuatro criterios</p>
+              <h2 className="marketing-display mt-5 text-[clamp(2.6rem,4.25vw,4.25rem)] font-black leading-[0.92] tracking-[-0.005em]">
+                La confianza se diseña.
+              </h2>
+            </div>
+            <p className="max-w-xl text-base leading-7 text-white/58">
+              No alcanza con agregar una página legal. Estos criterios tienen que aparecer en el producto, en los permisos y en cada decisión de implementación.
+            </p>
+          </div>
 
-      <Section
-        eyebrow="Nuestros límites"
-        title="Lo que Alista no hace."
-        description="Definir qué no hacemos es parte de cómo cuidamos la relación con cada familia, invitado y equipo."
-      >
-        <ul className="mt-8 grid gap-3 sm:grid-cols-2">
-          {[
-            'No prometer validación automática de pagos si la integración real no puede demostrarla.',
-            'No tratar una captura como equivalente automático de un pago confirmado.',
-            'No convertir el control en el centro emocional de la marca.',
-            'No recopilar datos sin un uso claro para la persona o la operación.',
-          ].map((limit) => (
-            <li
-              key={limit}
-              className="rounded-2xl border border-border/70 bg-card px-5 py-4 text-pretty text-sm leading-6 text-foreground"
+          <ol className="mt-16 grid gap-px overflow-hidden rounded-[2rem] bg-white/15 sm:grid-cols-2">
+            {PRINCIPLES.map((principle) => (
+              <li key={principle.number} className="min-h-72 bg-[#162c29] p-7 sm:p-9">
+                <span className="marketing-display text-3xl font-black text-[#d9ee73]">{principle.number}</span>
+                <h3 className="marketing-display mt-9 max-w-md text-3xl font-black leading-[0.96] tracking-[-0.005em]">
+                  {principle.title}
+                </h3>
+                <p className="mt-5 max-w-md text-sm leading-6 text-white/58">{principle.body}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
+      <section className="bg-[#f0eee8] px-5 py-20 sm:px-8 sm:py-28 lg:px-14">
+        <div className="mx-auto grid max-w-[1180px] gap-12 lg:grid-cols-[0.75fr_1.25fr]">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-[#c65035]">Nuestros límites</p>
+            <h2 className="marketing-display mt-5 text-[clamp(2.6rem,4.25vw,4.25rem)] font-black leading-[0.92] tracking-[-0.005em]">
+              Lo que Alista no hace.
+            </h2>
+          </div>
+          <div>
+            <ul className="divide-y divide-black/12 border-y border-black/12">
+              {LIMITS.map((limit, index) => (
+                <li key={limit} className="grid grid-cols-[3rem_1fr] gap-4 py-6">
+                  <span className="marketing-display text-2xl font-black text-[#c65035]">0{index + 1}</span>
+                  <p className="text-sm font-bold leading-6 text-black/65">{limit}</p>
+                </li>
+              ))}
+            </ul>
+            <Link
+              href="/privacidad"
+              className="mt-8 inline-flex min-h-12 items-center gap-4 rounded-full bg-[#171714] px-6 text-sm font-black text-white transition hover:bg-[#213480] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
             >
-              {limit}
-            </li>
-          ))}
-        </ul>
-        <p className="mt-8 max-w-2xl text-pretty text-sm leading-6 text-muted-foreground">
-          El tratamiento de datos personales se rige por la normativa aplicable en Argentina,
-          incluida la Ley 25.326 de Protección de Datos Personales. Ver la{' '}
-          <a href="/privacidad" className="font-medium text-primary hover:underline">
-            política de privacidad
-          </a>
-          .
-        </p>
-      </Section>
+              Ver el tratamiento de datos
+              <ArrowUpRight className="size-4" aria-hidden="true" />
+            </Link>
+          </div>
+        </div>
+      </section>
 
       <ClosingCta
-        title="Ordenar la apertura, sin vigilar a nadie."
-        description="Todo vinculado para que el equipo resuelva en la puerta y cada invitado se sienta esperado."
+        title="La tecnología tiene que dar tranquilidad."
+        description="Si necesitás entender cómo se aplica este criterio a tu fiesta o a tu operación, conversemos antes de implementar."
+        primary={{ href: '/contacto', label: 'Hablar con el equipo' }}
+        secondary={{ href: '/privacidad', label: 'Leer privacidad' }}
       />
     </>
   )
