@@ -83,7 +83,7 @@ export default function SeguridadPage() {
       <section className="bg-[#f0eee8] px-5 py-20 sm:px-8 sm:py-28 lg:px-14">
         <div className="mx-auto grid max-w-[1180px] gap-12 lg:grid-cols-[0.75fr_1.25fr]">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-[#c65035]">Nuestros límites</p>
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-[#9c3926]">Nuestros límites</p>
             <h2 className="marketing-display mt-5 text-[clamp(2.6rem,4.25vw,4.25rem)] font-black leading-[0.92] tracking-[-0.005em]">
               Lo que Alista no hace.
             </h2>
@@ -92,7 +92,7 @@ export default function SeguridadPage() {
             <ul className="divide-y divide-black/12 border-y border-black/12">
               {LIMITS.map((limit, index) => (
                 <li key={limit} className="grid grid-cols-[3rem_1fr] gap-4 py-6">
-                  <span className="marketing-display text-2xl font-black text-[#c65035]">0{index + 1}</span>
+                  <span className="marketing-display text-2xl font-black text-[#9c3926]">0{index + 1}</span>
                   <p className="text-sm font-bold leading-6 text-black/65">{limit}</p>
                 </li>
               ))}

@@ -10,21 +10,21 @@ La nueva web pública está implementada hasta `WEB-033`. La home, la demo, el c
 
 El siguiente bloque es la calidad de lanzamiento:
 
-1. `WEB-040` — instrumentación de conversión;
-2. `WEB-041` — performance y optimización 4G;
-3. `WEB-042` — accesibilidad WCAG 2.2 AA y responsive;
-4. `WEB-043` — crítica y pulido visual final.
+1. `WEB-040` — Vercel Web Analytics integrado y desplegado, pero apagado hasta la activación y revisión legal;
+2. `WEB-041` — performance y optimización 4G; línea de base local medida, validación en dispositivo/red real pendiente;
+3. `WEB-042` — auditoría automatizada lista; dispositivo real, Safari/VoiceOver y contraste sobre frames pendientes;
+4. `WEB-043` — auditoría técnica lista; crítica y aprobación visual final pendientes.
 
-`WEB-033` está técnicamente completo, pero sus páginas secundarias nuevas todavía necesitan una recorrida visual final del owner en mobile y desktop.
+`WEB-033` completó una recorrida técnica y visual en Chrome sobre 320, 390, 768, 1024 y 1440 px. Queda la aprobación visual final del owner en dispositivo real.
 
 ## 2. Decisiones cerradas durante esta implementación
 
 - La web habla específicamente desde el mundo de los cumpleaños de 15.
 - Hay dos entradas comerciales: familias y profesionales recurrentes.
-- La tipografía de títulos es **Inter Tight**, servida localmente desde `app/fonts/InterTight-Variable.ttf`.
-- Nunito se mantiene como tipografía editorial/cuerpo mediante `next/font/google`.
+- La tipografía de títulos es **Inter Tight**, servida localmente desde `app/fonts/InterTight-Variable-Latin.woff2`.
+- Nunito se mantiene como tipografía editorial/cuerpo y también se sirve localmente en WOFF2 latino.
 - Los títulos grandes redujeron su escala aproximadamente 25–30 % y usan interletrado moderado (`-0.005em` a `-0.01em`), sin compresión extrema.
-- El hero usa `public/hero.mp4` como fondo. Se eliminó la imagen anterior superpuesta o translúcida.
+- El hero usa variantes adaptativas de 3,3 MB/1,0 MB y un poster de 184 KB. El caso Dharma difiere la carga del video hasta acercarse al viewport.
 - El logo y el header crecieron aproximadamente 20 % respecto de la primera versión.
 - El CTA **Quiero Alista** usa fondo azul corporativo y texto blanco.
 - El caso Dharma usa material real y no publica métricas sin fuente.
@@ -73,6 +73,40 @@ El siguiente bloque es la calidad de lanzamiento:
 - Admin, puerta e invitación usan el mismo criterio de vencimiento.
 - Los casos de borde están cubiertos por tests.
 
+### Performance web
+
+- El video original de 40,4 MB fue sustituido por variantes desktop/mobile y poster que suman 4,7 MB, una reducción del 88,4 % en assets audiovisuales disponibles.
+- El video del caso Dharma se carga de forma diferida y `prefers-reduced-motion` conserva sólo el poster.
+- Nunito e Inter Tight se sirven localmente como WOFF2 latinos y suman aproximadamente 82 KB.
+- Las imágenes editoriales usan `next/image` con dimensiones y `sizes` explícitos.
+- En build productivo local, Chromium móvil 390 × 844 / DPR 2 / 4× CPU / 150 ms RTT / 1,6 Mbps, las cargas frías de la home registraron FCP entre 1,080 y 2,592 s, LCP entre 2,388 y 3,004 s (poster del hero), CLS 0 y 503 KB transferidos en la muestra de red. Es una línea de base de laboratorio, no datos de campo.
+- El caso Dharma no descarga su poster hasta aproximarse al bloque; en la misma emulación, `/casos` tuvo FCP y LCP de 1,076 s (H1) y CLS 0,000012. El QR de Dharma dejó de precargarse en la home.
+
+### Analítica web
+
+- `lib/marketing-analytics.ts` define eventos y propiedades de baja cardinalidad.
+- CTAs comerciales, formularios, invitación demo, WhatsApp, personalización, preparación, check-in y alcance de secciones ya emiten eventos locales.
+- `@vercel/analytics` recibe pageviews y eventos personalizados sólo dentro de `app/(marketing)`. Quedan excluidos Admin, check-in, tótem e invitaciones para no medir identificadores ni tokens.
+- La capa de Alista no instala cookies ni persiste identificadores; en desarrollo, el paquete de Vercel no envía datos.
+- KPIs, caveats y guardrails están documentados en `docs/WEB_ANALYTICS_PLAN.md`.
+- La producción ya contiene la integración, pero Insights está apagado por `ALISTA_WEB_ANALYTICS_ENABLED`; falta habilitar Web Analytics en Vercel y resolver consentimiento/base legal aplicable.
+
+### Accesibilidad web
+
+- El shell público tiene enlace de salto al contenido y navegación móvil operable con teclado.
+- Header, footer, CTAs y controles interactivos tienen foco visible reforzado y targets táctiles suficientes.
+- `prefers-reduced-motion` cubre animaciones, transiciones, scroll suave y la carga/reproducción de video, incluso si la preferencia cambia durante la sesión.
+- Axe no encontró infracciones en las once rutas públicas a 390 px; el texto emulado al 200 % y 400 % no produjo overflow a 320 px.
+- `docs/WEB_ACCESSIBILITY_AUDIT.md` documenta la evidencia automática y la matriz manual todavía pendiente.
+
+### Auditoría técnica de lanzamiento
+
+- Las once rutas públicas, metadata, canonicals, sitemap, robots, anchors e iconos fueron verificados.
+- `robots.txt` bloquea también las raíces exactas de admin, API, test y demás superficies operativas.
+- Demo y contacto ya no conservan metadata genérica; privacidad y términos tienen canonical.
+- Se agregó Apple touch icon de 180 × 180 y una prueba de regresión para indexación/sitemap.
+- `docs/WEB_LAUNCH_AUDIT.md` separa lo técnicamente verificado de las aprobaciones todavía pendientes.
+
 ## 4. Mapa de tickets
 
 | Ticket | Estado | Nota |
@@ -84,15 +118,15 @@ El siguiente bloque es la calidad de lanzamiento:
 | WEB-030 | Implementado | Caso Dharma. Publicación final sujeta a validar consentimiento de imagen. |
 | WEB-031 | Implementado | Página y bloque para profesionales. |
 | WEB-032 | Implementado | Recorrido familia y CTA final. |
-| WEB-033 | Implementado; revisión visual final pendiente | Precios y páginas secundarias. |
-| WEB-040 | Pendiente | Analítica y consentimiento. |
-| WEB-041 | Pendiente | Performance, video, imágenes, fuentes y 4G. |
-| WEB-042 | Pendiente | WCAG 2.2 AA y matriz responsive. |
-| WEB-043 | Pendiente | Crítica final y aprobación. |
+| WEB-033 | Implementado y verificado en navegador; aprobación final pendiente | Precios y páginas secundarias. |
+| WEB-040 | Integración desplegada, apagada y pendiente de activación | Vercel Web Analytics sólo cubre marketing. Falta habilitarlo en dashboard, configurar la compuerta y completar revisión legal. |
+| WEB-041 | Línea de base local lista; validación de campo pendiente | Video adaptativo, poster, lazy load y fuentes locales. Falta INP representativo y medición en dispositivo/red real. |
+| WEB-042 | Auditoría automatizada lista; validación manual pendiente | Falta dispositivo real, Safari/VoiceOver, orientación y contraste sobre frames reales. |
+| WEB-043 | Auditoría técnica lista; aprobación pendiente | Falta crítica visual, matrices manuales y decisiones legal/comercial. |
 
 ## 5. Próximos pasos concretos
 
-### Primero: revisión visual de WEB-033
+### Primero: aprobación visual de WEB-033
 
 Recorrer en desktop y mobile:
 
@@ -105,32 +139,31 @@ Recorrer en desktop y mobile:
 - `/privacidad`
 - `/terminos`
 
-Revisar especialmente saltos de título, altura de tarjetas, contraste, foco y CTAs.
+La pasada automatizada no encontró overflow ni errores de render y corrigió el panel móvil y el reflow de CTAs con texto al 200 %. El owner debe confirmar especialmente ritmo, saltos de título, altura de tarjetas y criterio visual en dispositivo real.
 
 ### WEB-040 — Analítica
 
-- Definir herramienta y consentimiento antes de instalar scripts.
-- Documentar eventos para hero, demo, “Ver como”, preparación, check-in, interés familia/profesional, WhatsApp y formularios.
-- Medir profundidad y abandono sin registrar datos personales innecesarios.
+- Tras la aprobación legal, habilitar Web Analytics en el dashboard del proyecto de Vercel, configurar `ALISTA_WEB_ANALYTICS_ENABLED=1` en Production y volver a desplegar.
+- Resolver consentimiento/base legal aplicable a la medición sin cookies.
+- Confirmar que el plan admite eventos personalizados y sus propiedades; validar en preview que sólo lleguen rutas y propiedades públicas, sin datos personales ni parámetros de URL.
 
 ### WEB-041 — Performance
 
-- `public/hero.mp4` pesa aproximadamente **40,4 MB**: generar versiones web adaptativas, poster y fallback.
-- Evaluar carga diferida del caso Dharma, que reutiliza el video.
-- Convertir/optimizar imágenes y revisar `sizes`.
-- Medir LCP, INP y CLS en build productivo y red 4G.
-- Nunito se descarga en build desde Google Fonts; considerar alojarla localmente para builds reproducibles/offline.
+- Verificar visualmente las variantes adaptativas y el poster en navegador real.
+- Repetir LCP, INP y CLS en preview remoto o dispositivo real con red 4G; la línea de base local está documentada arriba.
+- Confirmar el presupuesto final de JavaScript con el analizador de Next antes del lanzamiento.
 
 ### WEB-042 — Accesibilidad y responsive
 
-- Teclado, foco, landmarks, labels y lector de pantalla.
-- Contraste sobre video y fondos de color.
-- `prefers-reduced-motion` en todas las interacciones.
+- Ejecutar el guion de `docs/WEB_ACCESSIBILITY_AUDIT.md`.
+- Validar teclado y VoiceOver en Safari.
+- Medir contraste sobre video y fondos de color.
 - Mobile angosto, mobile grande, tablet y desktop.
 - Zoom de texto y orientación.
 
 ### WEB-043 — Cierre
 
+- Tomar `docs/WEB_LAUNCH_AUDIT.md` como checklist de salida.
 - Recorrido visual completo con el owner.
 - Corregir ritmo, crop, tipografía, spacing y motion.
 - Confirmar que no queden claims no demostrables.
@@ -147,9 +180,10 @@ Revisar especialmente saltos de título, altura de tarjetas, contraste, foco y C
 ## 7. Validación realizada antes del handoff
 
 - `npm run lint` — OK.
-- `npm test` — **16 archivos y 253 tests aprobados**.
-- `npm run build` — OK con Next.js 16.2.1 y Turbopack.
-- El build necesita red mientras Nunito siga configurada mediante `next/font/google`.
+- `npm test` — **18 archivos y 259 tests aprobados**.
+- `npm run build` — OK con Next.js 16.3.2 y Turbopack.
+- `npm audit --omit=dev` — 0 vulnerabilidades conocidas después de actualizar `ws` a 8.21.3.
+- El build ya no necesita red para resolver fuentes.
 - Las rutas públicas modificadas respondieron HTTP 200 en desarrollo local.
 
 ## 8. Cómo retomar en otra computadora
@@ -171,4 +205,3 @@ Leer en este orden:
 3. `docs/ALISTA_WEB_ART_DIRECTION.md`
 4. `docs/Product/ALISTA_PRODUCTO_DECISIONES_MUST_HAVE.md`
 5. `docs/PLAN_TICKETS_NUEVA_WEB.md`
-

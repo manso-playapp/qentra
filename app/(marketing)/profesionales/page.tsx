@@ -13,6 +13,7 @@ import {
 import { ContactForm } from '@/components/marketing/ContactForm'
 import { PreparationCenterDemo } from '@/components/marketing/PreparationCenterDemo'
 import { ProfessionalWorkspacePreview } from '@/components/marketing/ProfessionalWorkspacePreview'
+import { TrackedLink } from '@/components/marketing/TrackedLink'
 import { createMarketingMetadata } from '@/lib/marketing-seo'
 
 export const metadata = createMarketingMetadata({
@@ -68,20 +69,28 @@ export default function ProfessionalsPage() {
                 Hacé que cada fiesta llegue mejor preparada.
               </h1>
               <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-                <Link
+                <TrackedLink
                   href="#contacto-profesional"
+                  analytics={{
+                    name: 'cta_clicked',
+                    properties: { placement: 'professionals_hero', audience: 'professional', destination: 'page_section' },
+                  }}
                   className="inline-flex min-h-13 items-center justify-between gap-6 rounded-full bg-[#d9ee73] px-6 text-sm font-black text-[#171714] transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                 >
                   Quiero ofrecer Alista
                   <ArrowDown className="size-4" aria-hidden="true" />
-                </Link>
-                <Link
+                </TrackedLink>
+                <TrackedLink
                   href="#como-se-incorpora"
+                  analytics={{
+                    name: 'cta_clicked',
+                    properties: { placement: 'professionals_hero', audience: 'professional', destination: 'page_section' },
+                  }}
                   className="inline-flex min-h-13 items-center justify-between gap-6 rounded-full border border-white/22 px-6 text-sm font-black text-white transition hover:bg-white hover:text-[#171714] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                 >
                   Ver cómo funciona
                   <ArrowRight className="size-4" aria-hidden="true" />
-                </Link>
+                </TrackedLink>
               </div>
             </div>
           </div>
@@ -95,7 +104,7 @@ export default function ProfessionalsPage() {
       <section id="como-se-incorpora" className="px-5 py-24 sm:px-8 sm:py-32 lg:px-14">
         <div className="mx-auto max-w-[1320px]">
           <div className="grid gap-8 lg:grid-cols-[0.7fr_1.3fr] lg:items-end">
-            <p className="text-xs font-bold uppercase tracking-[0.24em] text-black/42">Un sistema que se reutiliza</p>
+            <p className="text-xs font-bold uppercase tracking-[0.24em] text-black/60">Un sistema que se reutiliza</p>
             <h2 className="marketing-display text-[clamp(3rem,5.25vw,5.6rem)] font-black leading-[0.9] tracking-[-0.01em]">
               Tu proceso mejora. Cada fiesta sigue siendo única.
             </h2>
@@ -110,10 +119,10 @@ export default function ProfessionalsPage() {
                     <span className="grid size-12 place-items-center rounded-2xl bg-current/10 ring-1 ring-current/15">
                       <Icon className="size-5" aria-hidden="true" />
                     </span>
-                    <span className="marketing-display text-2xl font-black opacity-35">0{index + 1}</span>
+                    <span className="marketing-display text-2xl font-black">0{index + 1}</span>
                   </div>
                   <h3 className="marketing-display mt-16 text-3xl font-black leading-[1.02] tracking-[-0.01em]">{capability.title}</h3>
-                  <p className="mt-5 max-w-md text-sm leading-6 opacity-65">{capability.detail}</p>
+                  <p className="mt-5 max-w-md text-sm leading-6">{capability.detail}</p>
                 </article>
               )
             })}
@@ -124,7 +133,7 @@ export default function ProfessionalsPage() {
       <section className="bg-[#ff8b70] px-5 py-24 sm:px-8 sm:py-32 lg:px-14">
         <div className="mx-auto grid max-w-[1320px] gap-12 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.24em] text-black/45">Una promesa para tus clientes</p>
+            <p className="text-xs font-bold uppercase tracking-[0.24em] text-[#171714]">Una promesa para tus clientes</p>
             <h2 className="marketing-display mt-5 text-[clamp(3.1rem,6vw,6.4rem)] font-black leading-[0.88] tracking-[-0.01em]">
               “Todos nuestros 15 incluyen Alista.”
             </h2>
@@ -169,11 +178,11 @@ export default function ProfessionalsPage() {
       <section id="contacto-profesional" className="px-5 py-24 sm:px-8 sm:py-32 lg:px-14">
         <div className="mx-auto grid max-w-[1180px] gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.24em] text-[#c65035]">Conversemos</p>
+            <p className="text-xs font-bold uppercase tracking-[0.24em] text-[#9c3926]">Conversemos</p>
             <h2 className="marketing-display mt-5 text-[clamp(3rem,4.5vw,4.9rem)] font-black leading-[0.92] tracking-[-0.01em]">
               Veamos cómo sumarlo a tu servicio.
             </h2>
-            <p className="mt-7 max-w-md text-base leading-7 text-black/55">
+            <p className="mt-7 max-w-md text-base leading-7 text-black/65">
               Contanos cuántos eventos organizás y cómo trabaja hoy tu equipo. La conversación empieza por tu operación, no por un plan genérico.
             </p>
             <p className="mt-8 flex items-center gap-3 text-sm font-bold text-[#213480]">

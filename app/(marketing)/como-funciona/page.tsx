@@ -69,8 +69,8 @@ export default function ComoFuncionaPage() {
               key={step.number}
               className="grid gap-5 border-b border-black/15 py-9 sm:grid-cols-[4rem_0.5fr_1fr] sm:items-start lg:grid-cols-[5rem_0.55fr_0.9fr_1.2fr]"
             >
-              <span className="marketing-display text-3xl font-black text-[#c65035]">{step.number}</span>
-              <p className="text-xs font-black uppercase tracking-[0.2em] text-black/45">{step.name}</p>
+              <span className="marketing-display text-3xl font-black text-[#9c3926]">{step.number}</span>
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-black/60">{step.name}</p>
               <h2 className="marketing-display text-3xl font-black leading-[0.96] tracking-[-0.005em] text-[#171714] sm:text-4xl">
                 {step.title}
               </h2>
@@ -86,7 +86,7 @@ export default function ComoFuncionaPage() {
       <section className="bg-[#d9ee73] px-5 py-20 sm:px-8 sm:py-28 lg:px-14">
         <div className="mx-auto grid max-w-[1180px] gap-12 lg:grid-cols-[1fr_0.9fr] lg:items-end">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-black/45">Dos formas de empezar</p>
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-black/60">Dos formas de empezar</p>
             <h2 className="marketing-display mt-5 max-w-3xl text-[clamp(2.7rem,4.5vw,4.5rem)] font-black leading-[0.92] tracking-[-0.005em]">
               La experiencia cambia. La base se mantiene.
             </h2>

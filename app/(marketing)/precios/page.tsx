@@ -1,6 +1,6 @@
-import Link from 'next/link'
 import { ArrowUpRight } from 'lucide-react'
 import { ClosingCta, PageHero } from '@/components/marketing/sections'
+import { TrackedLink } from '@/components/marketing/TrackedLink'
 import { createMarketingMetadata } from '@/lib/marketing-seo'
 
 export const metadata = createMarketingMetadata({
@@ -17,6 +17,8 @@ const PATHS = [
     body: 'Primero vemos cómo sería el recorrido de tu fiesta: invitación, confirmaciones, grupos, preparación y llegada. La demo no crea un evento ni inicia un pago.',
     detail: 'La propuesta se conversa después de entender la fecha, el lugar y el alcance.',
     href: '/demo',
+    audience: 'family',
+    destination: 'demo',
     cta: 'Pedir una demo para mis 15',
     tone: 'bg-[#d9ee73] text-[#171714]',
   },
@@ -26,10 +28,12 @@ const PATHS = [
     body: 'Para planners, salones y productoras que organizan varios eventos y necesitan una operación repetible, un equipo coordinado y una experiencia con identidad.',
     detail: 'Las condiciones se definen según el volumen y la forma de trabajo del equipo.',
     href: '/profesionales#contacto-profesional',
+    audience: 'professional',
+    destination: 'professionals',
     cta: 'Conversar sobre mi operación',
     tone: 'bg-[#213480] text-white',
   },
-]
+] as const
 
 const VARIABLES = [
   ['01', 'Tipo de operación', 'Una familia y un equipo que abre eventos todas las semanas necesitan recorridos distintos.'],
@@ -56,21 +60,29 @@ export default function PreciosPage() {
             {PATHS.map((path) => (
               <article key={path.title} className={`flex min-h-[420px] flex-col justify-between rounded-[2.25rem] p-7 sm:p-10 ${path.tone}`}>
                 <div>
-                  <p className="text-xs font-black uppercase tracking-[0.22em] opacity-55">{path.eyebrow}</p>
+                  <p className="text-xs font-black uppercase tracking-[0.22em]">{path.eyebrow}</p>
                   <h2 className="marketing-display mt-6 max-w-lg text-[clamp(2.5rem,4vw,4rem)] font-black leading-[0.92] tracking-[-0.005em]">
                     {path.title}
                   </h2>
-                  <p className="mt-7 max-w-xl text-base leading-7 opacity-65">{path.body}</p>
+                  <p className="mt-7 max-w-xl text-base leading-7">{path.body}</p>
                 </div>
                 <div className="mt-12 border-t border-current/15 pt-6">
-                  <p className="max-w-lg text-sm font-bold leading-6 opacity-70">{path.detail}</p>
-                  <Link
+                  <p className="max-w-lg text-sm font-bold leading-6">{path.detail}</p>
+                  <TrackedLink
                     href={path.href}
+                    analytics={{
+                      name: 'cta_clicked',
+                      properties: {
+                        placement: 'pricing',
+                        audience: path.audience,
+                        destination: path.destination,
+                      },
+                    }}
                     className="mt-6 inline-flex min-h-12 items-center gap-4 rounded-full border border-current/25 px-5 text-sm font-black transition hover:bg-white hover:text-[#171714] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current"
                   >
                     {path.cta}
                     <ArrowUpRight className="size-4" aria-hidden="true" />
-                  </Link>
+                  </TrackedLink>
                 </div>
               </article>
             ))}

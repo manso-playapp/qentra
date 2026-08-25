@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { ArrowRight, Check, QrCode, RotateCcw } from 'lucide-react'
+import { trackMarketingEvent } from '@/lib/marketing-analytics'
 
 type DemoStage = 'invitation' | 'rsvp' | 'prepared'
 type MemberId = 'maria' | 'tomas' | 'juana'
@@ -50,6 +51,21 @@ export function InvitationStoryDemo() {
     setStage('invitation')
   }
 
+  function startDemo() {
+    trackMarketingEvent('invitation_demo_started', {})
+    setStage('rsvp')
+  }
+
+  function completeDemo() {
+    if (confirmedCount < 1 || confirmedCount > 3) return
+
+    trackMarketingEvent('invitation_demo_completed', {
+      attendee_count: confirmedCount as 1 | 2 | 3,
+      restriction_selected: vegetarianMenuConfirmed,
+    })
+    setStage('prepared')
+  }
+
   return (
     <div className="mx-auto w-full max-w-[390px]">
       <div className="overflow-hidden rounded-[2.25rem] border border-white/15 bg-[#f4efe6] text-[#171714] shadow-[0_32px_90px_rgba(0,0,0,0.35)]">
@@ -62,7 +78,7 @@ export function InvitationStoryDemo() {
           {stage === 'invitation' ? (
             <div className="flex min-h-[490px] flex-col justify-between">
               <div>
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#d75437]">
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#9d3524]">
                   12 · 09 · 2026
                 </p>
                 <h3
@@ -82,7 +98,7 @@ export function InvitationStoryDemo() {
               </div>
               <button
                 type="button"
-                onClick={() => setStage('rsvp')}
+                onClick={startDemo}
                 className="flex min-h-12 w-full items-center justify-between rounded-full bg-[#171714] px-5 text-sm font-bold text-white transition hover:bg-[#d75437] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d75437] focus-visible:ring-offset-2"
               >
                 Abrir invitación
@@ -93,7 +109,7 @@ export function InvitationStoryDemo() {
 
           {stage === 'rsvp' ? (
             <div className="flex min-h-[490px] flex-col">
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#d75437]">
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#9d3524]">
                 Confirmación
               </p>
               <h3
@@ -166,7 +182,7 @@ export function InvitationStoryDemo() {
               <button
                 type="button"
                 disabled={confirmedCount === 0}
-                onClick={() => setStage('prepared')}
+                onClick={completeDemo}
                 className="mt-auto flex min-h-12 w-full items-center justify-between rounded-full bg-[#d75437] px-5 text-sm font-bold text-white transition hover:bg-[#171714] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d75437] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-black/15 disabled:text-black/35"
               >
                 {confirmedCount === 0
@@ -180,7 +196,7 @@ export function InvitationStoryDemo() {
           {stage === 'prepared' ? (
             <div className="flex min-h-[490px] flex-col">
               <div className="flex items-center justify-between">
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#d75437]">
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#9d3524]">
                   Del otro lado
                 </p>
                 <button

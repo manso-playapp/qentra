@@ -56,23 +56,23 @@ export default function ProductoPage() {
 
       <section className="bg-[#f0eee8] px-5 py-20 sm:px-8 sm:py-28 lg:px-14">
         <div className="mx-auto max-w-[1320px]">
-          <p className="text-xs font-black uppercase tracking-[0.22em] text-[#c65035]">Tres momentos, una misma historia</p>
+          <p className="text-xs font-black uppercase tracking-[0.22em] text-[#9c3926]">Tres momentos, una misma historia</p>
           <div className="mt-10 grid gap-5 lg:grid-cols-3">
             {MOMENTS.map((moment) => (
               <article key={moment.number} className={`flex min-h-[500px] flex-col justify-between rounded-[2.25rem] p-7 sm:p-9 ${moment.tone}`}>
                 <div>
                   <div className="flex items-center justify-between gap-5">
-                    <p className="text-xs font-black uppercase tracking-[0.2em] opacity-50">{moment.eyebrow}</p>
-                    <span className="marketing-display text-3xl font-black opacity-35">{moment.number}</span>
+                    <p className="text-xs font-black uppercase tracking-[0.2em]">{moment.eyebrow}</p>
+                    <span className="marketing-display text-3xl font-black">{moment.number}</span>
                   </div>
                   <h2 className="marketing-display mt-10 text-[clamp(2.3rem,3.25vw,3.35rem)] font-black leading-[0.94] tracking-[-0.005em]">
                     {moment.title}
                   </h2>
-                  <p className="mt-6 text-sm leading-6 opacity-65">{moment.body}</p>
+                  <p className="mt-6 text-sm leading-6">{moment.body}</p>
                 </div>
                 <ul className="mt-10 divide-y divide-current/15 border-y border-current/15">
                   {moment.items.map((item) => (
-                    <li key={item} className="py-3 text-xs font-black uppercase tracking-[0.12em] opacity-70">
+                    <li key={item} className="py-3 text-xs font-black uppercase tracking-[0.12em]">
                       {item}
                     </li>
                   ))}
@@ -92,10 +92,10 @@ export default function ProductoPage() {
         <div className="mt-14 divide-y divide-black/12 border-y border-black/12">
           {RELATIONSHIPS.map(([from, to, detail], index) => (
             <div key={from} className="grid gap-3 py-6 sm:grid-cols-[3rem_0.65fr_0.65fr_1.3fr] sm:items-center">
-              <span className="marketing-display text-2xl font-black text-[#c65035]">0{index + 1}</span>
+              <span className="marketing-display text-2xl font-black text-[#9c3926]">0{index + 1}</span>
               <p className="text-sm font-black">{from}</p>
               <p className="text-sm font-black text-[#213480]">{to}</p>
-              <p className="text-sm leading-6 text-black/55">{detail}</p>
+              <p className="text-sm leading-6 text-black/65">{detail}</p>
             </div>
           ))}
         </div>

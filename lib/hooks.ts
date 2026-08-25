@@ -22,6 +22,8 @@ import type {
   UpdateOperatorForm,
 } from '@/types'
 
+/* eslint-disable react-hooks/set-state-in-effect -- These hooks start external data loads from effects and expose their loading state. */
+
 type CreateGuestAccessOptions = {
   eventSlug: string
   eventDate: string
@@ -34,11 +36,7 @@ export function useDeliveryProfiles() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    fetchDeliveryProfiles()
-  }, [])
-
-  const fetchDeliveryProfiles = async () => {
+  const fetchDeliveryProfiles = useCallback(async () => {
     try {
       setLoading(true)
       const { data, error } = await supabase
@@ -54,7 +52,11 @@ export function useDeliveryProfiles() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    void fetchDeliveryProfiles()
+  }, [fetchDeliveryProfiles])
 
   const createDeliveryProfile = async (
     profileData: CreateDeliveryProfileForm
@@ -283,11 +285,7 @@ export function useEvents() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    fetchEvents()
-  }, [])
-
-  const fetchEvents = async () => {
+  const fetchEvents = useCallback(async () => {
     try {
       setLoading(true)
       const { data, error } = await supabase
@@ -302,7 +300,11 @@ export function useEvents() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    void fetchEvents()
+  }, [fetchEvents])
 
   const createEvent = async (eventData: Omit<Event, 'id' | 'created_at' | 'updated_at'>): Promise<ApiResponse<Event>> => {
     try {

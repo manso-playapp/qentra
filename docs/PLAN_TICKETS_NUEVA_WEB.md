@@ -8,8 +8,11 @@
 ## Estado de implementación — 24 de agosto de 2026
 
 - `WEB-001` a `WEB-032`: implementados y revisados iterativamente con el owner.
-- `WEB-033`: implementación técnica completa; falta la última recorrida visual mobile/desktop.
-- `WEB-040` a `WEB-043`: pendientes.
+- `WEB-033`: implementación y recorrida Chrome en cinco viewports completas; falta aprobación final del owner en dispositivo real.
+- `WEB-040`: Vercel Web Analytics desplegado sólo en rutas públicas y apagado por variable; activación y revisión legal pendientes.
+- `WEB-041`: optimización técnica y línea de base móvil local completadas; falta medición en dispositivo/red real e INP representativo.
+- `WEB-042`: auditoría automatizada sin infracciones; faltan dispositivo real, Safari/VoiceOver, orientación y contraste sobre frames reales.
+- `WEB-043`: auditoría técnica de lanzamiento lista; crítica visual y aprobaciones pendientes.
 - Handoff detallado: [`HANDOFF_NUEVA_WEB_2026-08-24.md`](./HANDOFF_NUEVA_WEB_2026-08-24.md).
 
 ---
@@ -387,6 +390,8 @@ Cada ticket visual se considera terminado solo después de revisar mobile y desk
 
 **Objetivo:** medir si la nueva narrativa atrae, explica y convierte.
 
+**Estado técnico — 24 de agosto de 2026:** contrato tipado e instrumentación local implementados para CTAs, formularios, demos y alcance de secciones. Vercel Web Analytics está montado exclusivamente en el layout de marketing: recibe pageviews y el contrato local `alista:marketing-analytics`, sin cubrir Admin, invitaciones ni rutas con tokens. La integración ya está en la producción `Ready`, pero no carga Insights hasta que `ALISTA_WEB_ANALYTICS_ENABLED=1` se configure para Production. KPIs, catálogo, guardrails y procedimiento de activación están documentados en [`WEB_ANALYTICS_PLAN.md`](./WEB_ANALYTICS_PLAN.md). Falta habilitar el producto en Vercel, comprobar los límites del plan para eventos personalizados y resolver la revisión legal/base de consentimiento aplicable.
+
 **Criterios de aceptación:**
 
 - CTR de ambos CTAs del hero;
@@ -401,6 +406,8 @@ Cada ticket visual se considera terminado solo después de revisar mobile y desk
 **Prioridad:** P0 · **Tamaño:** M · **Dependencias:** WEB-011, WEB-021, WEB-024, WEB-030
 
 **Objetivo:** mantener impacto visual sin convertirlo en peso.
+
+**Estado técnico — 24 de agosto de 2026:** video adaptativo, poster, carga diferida del caso Dharma y fuentes locales implementados. El payload audiovisual disponible bajó de 40,4 MB a 4,7 MB sumando ambas variantes y el poster. Presupuestos actuales: hasta 3,5 MB para video desktop, 1,1 MB para video mobile, 200 KB para poster y 100 KB combinados para las dos fuentes latinas. En build productivo local, Chromium 390 × 844 / DPR 2 / 4× CPU / 150 ms RTT / 1,6 Mbps, las cargas frías de la home registraron FCP entre 1,080 y 2,592 s, LCP entre 2,388 y 3,004 s (poster) y CLS 0; una muestra transfirió 503 KB. El caso Dharma difiere poster y video hasta acercarse al bloque, y el QR no se precarga en la home. Falta contrastar la línea de base contra dispositivo/red real y medir INP en una interacción representativa.
 
 **Criterios de aceptación:**
 
@@ -417,6 +424,8 @@ Cada ticket visual se considera terminado solo después de revisar mobile y desk
 
 **Objetivo:** asegurar que la dirección editorial no sacrifique uso real.
 
+**Estado técnico — 24 de agosto de 2026:** implementados enlace de salto, navegación móvil operable con teclado, foco reforzado, targets táctiles, contraste de textos críticos y cobertura global/dinámica de `prefers-reduced-motion`. Chrome + Axe no informaron infracciones en las once rutas públicas a 390 px; las once soportan texto emulado a 200 % y 400 % a 320 px sin overflow, y los controles de home superan 24 × 24 px en móvil y desktop. La auditoría y el guion manual están en [`WEB_ACCESSIBILITY_AUDIT.md`](./WEB_ACCESSIBILITY_AUDIT.md). Falta ejecutar la matriz en dispositivo real, Safari/VoiceOver, orientación y contraste sobre frames reales antes de declarar conformidad o cerrar el ticket.
+
 **Criterios de aceptación:**
 
 - teclado, foco, landmarks, labels y lector de pantalla;
@@ -431,6 +440,8 @@ Cada ticket visual se considera terminado solo después de revisar mobile y desk
 **Prioridad:** P0 · **Tamaño:** M · **Dependencias:** WEB-040, WEB-041, WEB-042
 
 **Objetivo:** cerrar la web mediante evaluación visual real con el owner.
+
+**Estado técnico — 24 de agosto de 2026:** auditoría de rutas, metadata, canonicals, sitemap, robots, anchors e iconos completada; resultados en [`WEB_LAUNCH_AUDIT.md`](./WEB_LAUNCH_AUDIT.md). Se corrigieron las raíces privadas de `robots.txt`, metadata genérica de demo/contacto, canonicals legales, sitemap y Apple touch icon. Falta la crítica visual real, la matriz manual de accesibilidad/performance y las aprobaciones legal/comercial; el ticket no se considera cerrado.
 
 **Criterios de aceptación:**
 

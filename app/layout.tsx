@@ -1,17 +1,18 @@
 import type { Metadata } from 'next'
-import { Nunito } from 'next/font/google'
 import localFont from 'next/font/local'
 import { getPublicAppUrl } from '@/lib/public-url'
 import './globals.css'
 
-const nunito = Nunito({
-  subsets: ['latin'],
+const nunito = localFont({
+  src: './fonts/Nunito-Variable-Latin.woff2',
   display: 'swap',
   variable: '--font-nunito',
+  weight: '200 1000',
+  style: 'normal',
 })
 
 const interTight = localFont({
-  src: './fonts/InterTight-Variable.ttf',
+  src: './fonts/InterTight-Variable-Latin.woff2',
   display: 'swap',
   variable: '--font-inter-tight',
   weight: '100 900',

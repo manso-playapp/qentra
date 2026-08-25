@@ -2,15 +2,10 @@ import { Check, Eye, Mail } from 'lucide-react'
 import { ContactForm } from '@/components/marketing/ContactForm'
 import { createMarketingMetadata } from '@/lib/marketing-seo'
 
-export const legacyMetadata = {
-  title: 'Solicitar demo',
-  description:
-    'Contanos qué fiesta estás organizando y te mostramos cómo vincular invitación, pago y acceso con Alista.',
-}
-
 export const metadata = createMarketingMetadata({
-  title: 'Solicita una demo de Alista',
-  description: 'Conoce Alista para organizar invitaciones, pagos, acceso QR y cupo en tu proximo evento.',
+  title: 'Solicitá una demo de Alista',
+  description:
+    'Conocé cómo Alista prepara invitaciones, confirmaciones, grupos y accesos para tus 15.',
   path: '/demo',
 })
 

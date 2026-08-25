@@ -16,14 +16,14 @@ function InviteScene() {
         <span className="grid size-10 place-items-center rounded-full bg-[#ff8b70] text-sm font-black text-black">D</span>
         <div>
           <p className="text-sm font-bold">Dharma</p>
-          <p className="text-xs text-white/40">para Martina · Colegio</p>
+          <p className="text-xs text-white/65">para Martina · Colegio</p>
         </div>
         <MessageCircle className="ml-auto size-4 text-[#d9ee73]" aria-hidden="true" />
       </div>
       <div className="ml-auto mt-7 max-w-[90%] rounded-[1.5rem_1.5rem_0.35rem_1.5rem] bg-[#d9ee73] p-4 text-[#171714]">
         <p className="text-sm font-semibold leading-6">Martu, te invito a mis 15 ✨</p>
         <div className="mt-3 rounded-2xl bg-[#f0eee8] p-4">
-          <p className="text-[10px] font-black uppercase tracking-[0.14em] text-black/40">Invitación personal</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.14em] text-black/65">Invitación personal</p>
           <p className="marketing-display mt-2 text-2xl font-black tracking-[-0.01em]">Dharma te invita.</p>
         </div>
       </div>
@@ -35,7 +35,7 @@ function ConfirmScene() {
   return (
     <div className="grid gap-4 sm:grid-cols-[1fr_150px] sm:items-stretch">
       <div className="rounded-[2.25rem] border border-black/10 bg-white/65 p-5 sm:p-7">
-        <p className="text-[10px] font-black uppercase tracking-[0.16em] text-black/40">Familia Pérez · Cena</p>
+        <p className="text-[10px] font-black uppercase tracking-[0.16em] text-black/65">Familia Pérez · Cena</p>
         <div className="mt-5 divide-y divide-black/10">
           {['María Pérez', 'Tomás Pérez', 'Juana Pérez'].map((name) => (
             <div key={name} className="flex items-center justify-between py-3.5 text-sm font-bold">
@@ -52,7 +52,7 @@ function ConfirmScene() {
         <Users className="size-5" aria-hidden="true" />
         <div>
           <p className="marketing-display text-6xl font-black tracking-[-0.02em]">3</p>
-          <p className="mt-1 text-xs font-bold uppercase tracking-[0.14em] text-white/65">confirmados</p>
+          <p className="mt-1 text-xs font-bold uppercase tracking-[0.14em] text-white">confirmados</p>
         </div>
       </div>
     </div>
@@ -69,13 +69,13 @@ function KnowScene() {
   return (
     <div className="overflow-hidden rounded-[0.75rem_2.5rem_2.5rem_2.5rem] border border-black/10 bg-[#e7ded0]">
       <div className="flex items-center justify-between gap-4 border-b border-black/10 px-5 py-4 sm:px-7">
-        <p className="text-[10px] font-black uppercase tracking-[0.16em] text-black/45">Escenario demo · quién viene</p>
-        <span className="text-xs font-bold text-black/45">163 personas</span>
+        <p className="text-[10px] font-black uppercase tracking-[0.16em] text-black/65">Escenario demo · quién viene</p>
+        <span className="text-xs font-bold text-black/65">163 personas</span>
       </div>
       <div className="grid sm:grid-cols-3">
         {accessGroups.map((group) => (
           <div key={group.label} className={`${group.color} flex min-h-44 flex-col justify-between p-5 sm:p-6`}>
-            <p className="max-w-32 text-xs font-black uppercase tracking-[0.14em] opacity-65">{group.label}</p>
+            <p className="max-w-32 text-xs font-black uppercase tracking-[0.14em]">{group.label}</p>
             <p className="marketing-display text-6xl font-black tracking-[-0.02em]">{group.value}</p>
           </div>
         ))}
@@ -123,7 +123,7 @@ function ChargeScene() {
   return (
     <div className="rounded-[2.5rem_0.75rem_2.5rem_2.5rem] bg-[#d9ee73] p-5 text-[#171714] sm:p-8">
       <div className="flex items-center justify-between gap-4">
-        <p className="text-[10px] font-black uppercase tracking-[0.16em] text-black/45">Escenario demo · pago revisado</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.16em] text-black/65">Escenario demo · pago revisado</p>
         <span className="rounded-full bg-[#171714] px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-white">Resuelto</span>
       </div>
       <ol className="mt-7 grid gap-3">
@@ -137,9 +137,9 @@ function ChargeScene() {
               </span>
               <div>
                 <p className="text-sm font-black">{step.label}</p>
-                <p className="mt-1 text-xs leading-5 text-black/50">{step.detail}</p>
+                <p className="mt-1 text-xs leading-5 text-black/65">{step.detail}</p>
               </div>
-              <span className="text-xs font-black text-black/35">0{index + 1}</span>
+              <span className="text-xs font-black text-black/65">0{index + 1}</span>
             </li>
           )
         })}
@@ -155,14 +155,14 @@ function ReceiveScene() {
         <Clock3 className="size-5" aria-hidden="true" />
         <div>
           <p className="marketing-display text-5xl font-black tracking-[-0.02em]">00:34</p>
-          <p className="mt-2 text-xs font-black uppercase tracking-[0.14em] text-white/60">Llegada · Familia Pérez</p>
+          <p className="mt-2 text-xs font-black uppercase tracking-[0.14em] text-white">Llegada · Familia Pérez</p>
         </div>
       </div>
       <div className="p-5 sm:p-7">
         <div className="flex items-center justify-between gap-4 border-b border-white/10 pb-4">
           <div>
             <p className="text-sm font-black">3 personas · Cena</p>
-            <p className="mt-1 text-xs text-white/45">Un grupo, un acceso</p>
+            <p className="mt-1 text-xs text-white/65">Un grupo, un acceso</p>
           </div>
           <span className="grid size-9 place-items-center rounded-full bg-[#d9ee73] text-black">
             <Check className="size-4" strokeWidth={3} aria-hidden="true" />
@@ -235,7 +235,7 @@ export function JourneyScenes() {
         return (
           <li key={stage.number} className="grid gap-8 border-t border-black/20 pt-7 lg:grid-cols-[0.72fr_1.28fr] lg:items-center lg:gap-16">
             <div className={stage.reverse ? 'lg:order-2' : undefined}>
-              <p className="text-xs font-black text-[#d75437]">{stage.number}</p>
+              <p className="text-xs font-black text-[#9d3524]">{stage.number}</p>
               <h3 className="marketing-display mt-5 text-5xl font-black tracking-[-0.01em] sm:text-6xl">{stage.title}</h3>
               <p className="mt-5 max-w-md text-sm leading-6 text-black/55">{stage.detail}</p>
             </div>

@@ -14,6 +14,7 @@ import {
   Utensils,
   WalletCards,
 } from 'lucide-react'
+import { trackMarketingEvent } from '@/lib/marketing-analytics'
 
 const attentionItems = [
   {
@@ -113,7 +114,18 @@ export function PreparationCenterDemo() {
   )
 
   function resolveAttentionItem(id: AttentionId) {
-    setResolvedAttentionIds((current) => (current.includes(id) ? current : [...current, id]))
+    if (resolvedAttentionIds.includes(id)) return
+
+    trackMarketingEvent('preparation_item_resolved', {
+      item: id,
+      resolved_count: (resolvedAttentionIds.length + 1) as 1 | 2 | 3 | 4,
+    })
+    setResolvedAttentionIds((current) => [...current, id])
+  }
+
+  function selectAttentionItem(id: AttentionId) {
+    setSelectedAttentionId(id)
+    trackMarketingEvent('preparation_item_viewed', { item: id })
   }
 
   function resetDemo() {
@@ -126,7 +138,7 @@ export function PreparationCenterDemo() {
     <div className="overflow-hidden rounded-[2.5rem] bg-[#f0eee8] text-[#171714] shadow-[0_35px_90px_rgba(0,0,0,0.2)]">
       <div className="grid gap-8 border-b border-black/10 p-6 sm:p-8 lg:grid-cols-[0.72fr_1.28fr] lg:items-end lg:p-10">
         <div>
-          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-black/45">
+          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-black/60">
             <span className="size-2 rounded-full bg-[#d75437]" aria-hidden="true" />
             Escenario demo · no son métricas de Dharma
           </div>
@@ -150,7 +162,7 @@ export function PreparationCenterDemo() {
               style={{ width: `${preparationScore}%` }}
             />
           </div>
-          <p className="mt-4 max-w-2xl text-sm leading-6 text-black/55">
+          <p className="mt-4 max-w-2xl text-sm leading-6 text-black/65">
             El porcentaje suma siete factores visibles. Revisá los pendientes para ver cómo cambia, sin
             puntajes ocultos ni gamificación.
           </p>
@@ -161,7 +173,7 @@ export function PreparationCenterDemo() {
         <section className="border-b border-black/10 p-6 sm:p-8 lg:border-b-0 lg:border-r lg:p-10" aria-labelledby="attention-title">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#d75437]">Inbox operativo</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#9d3524]">Inbox operativo</p>
               <h3 id="attention-title" className="marketing-display mt-2 text-4xl font-black tracking-[-0.015em]">
                 Necesita tu atención
               </h3>
@@ -188,7 +200,7 @@ export function PreparationCenterDemo() {
                 <button
                   key={item.id}
                   type="button"
-                  onClick={() => setSelectedAttentionId(item.id)}
+                  onClick={() => selectAttentionItem(item.id)}
                   aria-pressed={selected}
                   className={`grid w-full grid-cols-[auto_1fr_auto] items-center gap-3 rounded-2xl border p-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 ${
                     selected ? 'border-black bg-white' : 'border-black/10 bg-white/35 hover:border-black/25'
@@ -206,7 +218,7 @@ export function PreparationCenterDemo() {
                     )}
                   </span>
                   <span className="min-w-0">
-                    <span className="block text-[10px] font-black uppercase tracking-[0.16em] text-black/40">
+                    <span className="block text-[10px] font-black uppercase tracking-[0.16em] text-black/60">
                       {item.eyebrow}
                     </span>
                     <span className="mt-1 block text-sm font-bold leading-5">{item.title}</span>
@@ -218,7 +230,7 @@ export function PreparationCenterDemo() {
           </div>
 
           <div className="mt-4 rounded-3xl bg-[#171714] p-5 text-white" aria-live="polite">
-            <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.18em] text-white/45">
+            <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.18em] text-white/65">
               {selectedAttentionResolved ? (
                 <CheckCircle2 className="size-4 text-[#d9ee73]" aria-hidden="true" />
               ) : (
@@ -244,7 +256,7 @@ export function PreparationCenterDemo() {
         </section>
 
         <section className="p-6 sm:p-8 lg:p-10" aria-labelledby="factors-title">
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-black/40">Cálculo transparente</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-black/60">Cálculo transparente</p>
           <h3 id="factors-title" className="marketing-display mt-2 text-4xl font-black tracking-[-0.015em]">
             Los siete factores
           </h3>
@@ -256,11 +268,11 @@ export function PreparationCenterDemo() {
 
               return (
                 <div key={factor.id} className="grid grid-cols-[1fr_auto] items-center gap-4 py-3.5">
-                  <div>
-                    <dt className="text-sm font-bold">{factor.label}</dt>
-                    <dd className="mt-0.5 text-xs text-black/45">{factor.detail}</dd>
-                  </div>
-                  <div className="text-right">
+                  <dt>
+                    <span className="block text-sm font-bold">{factor.label}</span>
+                    <span className="mt-0.5 block text-xs text-black/60">{factor.detail}</span>
+                  </dt>
+                  <dd className="m-0 text-right">
                     <span className="marketing-display text-xl font-black">
                       {current}/{factor.max}
                     </span>
@@ -270,14 +282,14 @@ export function PreparationCenterDemo() {
                         style={{ width: `${(current / factor.max) * 100}%` }}
                       />
                     </div>
-                  </div>
+                  </dd>
                 </div>
               )
             })}
           </dl>
 
           <div className="mt-8">
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-black/40">Operación preparada</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-black/60">Operación preparada</p>
             <div className="mt-3 grid gap-2 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
               {operationalItems.map((item) => {
                 const Icon = item.icon
@@ -300,12 +312,12 @@ export function PreparationCenterDemo() {
                       <Check className="size-3.5 text-[#173b36]" strokeWidth={3} aria-hidden="true" />
                     </span>
                     <span className="mt-3 block text-xs font-black">{item.label}</span>
-                    <span className="mt-1 block text-[10px] font-bold text-black/42">{item.action}</span>
+                    <span className="mt-1 block text-[10px] font-bold text-black/60">{item.action}</span>
                   </button>
                 )
               })}
             </div>
-            <p className="mt-3 rounded-2xl border border-black/10 bg-white/55 p-4 text-xs leading-5 text-black/55" aria-live="polite">
+            <p className="mt-3 rounded-2xl border border-black/10 bg-white/55 p-4 text-xs leading-5 text-black/65" aria-live="polite">
               <span className="font-black text-black">{selectedOperational.label}:</span>{' '}
               {selectedOperational.detail}
             </p>

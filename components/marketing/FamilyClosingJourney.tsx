@@ -44,8 +44,8 @@ export function FamilyClosingJourney() {
       <div className="mx-auto max-w-[1320px]">
         <div className="grid gap-8 lg:grid-cols-[0.7fr_1.3fr] lg:items-end">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.24em] text-[#c65035]">Para tu familia</p>
-            <p className="mt-5 max-w-md text-base leading-7 text-black/55">
+            <p className="text-xs font-bold uppercase tracking-[0.24em] text-[#9c3926]">Para tu familia</p>
+            <p className="mt-5 max-w-md text-base leading-7 text-black/65">
               La tecnología trabaja por debajo. Ustedes sienten que todo tiene un orden.
             </p>
           </div>
@@ -64,11 +64,11 @@ export function FamilyClosingJourney() {
                   <span className="grid size-10 place-items-center rounded-2xl bg-current/10 ring-1 ring-current/15">
                     <Icon className="size-4.5" aria-hidden="true" />
                   </span>
-                  <span className="marketing-display text-xl font-black opacity-35">{moment.number}</span>
+                  <span className="marketing-display text-xl font-black">{moment.number}</span>
                 </div>
                 <div className="mt-auto">
                   <p className="marketing-display text-3xl font-black leading-none tracking-[-0.01em]">{moment.title}</p>
-                  <p className="mt-4 text-xs leading-5 opacity-62">{moment.detail}</p>
+                  <p className="mt-4 text-xs leading-5">{moment.detail}</p>
                 </div>
                 <Check className="mt-5 size-4 opacity-55" strokeWidth={3} aria-hidden="true" />
               </li>

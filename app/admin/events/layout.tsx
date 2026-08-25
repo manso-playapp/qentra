@@ -2,7 +2,7 @@
 // layout (los client components no pueden exportar `metadata`).
 export const metadata = {
   title: 'Eventos',
-}
+};
 
 export default function EventsListLayout({
   children,

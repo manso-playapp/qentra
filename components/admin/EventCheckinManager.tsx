@@ -429,12 +429,14 @@ export default function EventCheckinManager({
   }, [isTotemMode, event.id, fetchRecentCheckins])
 
   useEffect(() => {
-    setNow(new Date())
-    const clockTimer = window.setInterval(() => {
+    const updateClock = () => {
       setNow(new Date())
-    }, isTotemMode ? 1000 : 30000)
+    }
+    const initialClockTimer = window.setTimeout(updateClock, 0)
+    const clockTimer = window.setInterval(updateClock, isTotemMode ? 1000 : 30000)
 
     return () => {
+      window.clearTimeout(initialClockTimer)
       window.clearInterval(clockTimer)
     }
   }, [isTotemMode])

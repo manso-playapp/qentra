@@ -32,7 +32,7 @@ export function FaqSection() {
     <section className="bg-[#e7ded0] px-5 py-20 sm:px-8 sm:py-28 lg:px-14">
       <div className="mx-auto grid max-w-[1180px] gap-12 lg:grid-cols-[0.7fr_1.3fr]">
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.22em] text-[#c65035]">Preguntas frecuentes</p>
+          <p className="text-xs font-black uppercase tracking-[0.22em] text-[#9c3926]">Preguntas frecuentes</p>
           <h2 className="marketing-display mt-5 max-w-lg text-[clamp(2.6rem,4.25vw,4.25rem)] font-black leading-[0.92] tracking-[-0.005em] text-[#171714]">
             Antes de empezar, hablemos claro.
           </h2>
@@ -44,7 +44,7 @@ export function FaqSection() {
               <summary className="flex min-h-20 cursor-pointer list-none items-center justify-between gap-5 py-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#213480] focus-visible:ring-inset">
                 <span className="text-sm font-black leading-6 text-[#171714] sm:text-base">{faq.q}</span>
                 <span className="grid size-9 shrink-0 place-items-center rounded-full border border-black/20 transition group-open:bg-[#171714] group-open:text-white">
-                  <Plus className="size-4 transition-transform group-open:rotate-45" aria-hidden="true" />
+                  <Plus className="size-4 transition-transform group-open:rotate-45 motion-reduce:transition-none" aria-hidden="true" />
                 </span>
               </summary>
               <p className="max-w-2xl pb-6 pr-14 text-sm leading-6 text-black/58">{faq.a}</p>

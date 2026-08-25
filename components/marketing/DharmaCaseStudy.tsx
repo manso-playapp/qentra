@@ -1,8 +1,9 @@
 'use client'
 
 import Image from 'next/image'
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { Check, Pause, Play, ShieldCheck } from 'lucide-react'
+import { MarketingBackgroundVideo } from '@/components/marketing/MarketingBackgroundVideo'
 
 const moments = [
   {
@@ -52,7 +53,7 @@ function MomentProduct({ momentId }: { momentId: MomentId }) {
     return (
       <div className="flex min-h-72 flex-col justify-between rounded-[1.75rem] bg-[#f0eee8] p-5 text-[#171714] sm:min-h-80 sm:p-6">
         <div className="flex items-center justify-between border-b border-black/10 pb-4">
-          <span className="text-[10px] font-black uppercase tracking-[0.18em] text-black/42">Antes de la fiesta</span>
+          <span className="text-[10px] font-black uppercase tracking-[0.18em] text-black/60">Antes de la fiesta</span>
           <span className="size-2 rounded-full bg-[#173b36]" aria-hidden="true" />
         </div>
         <ul className="divide-y divide-black/10">
@@ -65,7 +66,7 @@ function MomentProduct({ momentId }: { momentId: MomentId }) {
             </li>
           ))}
         </ul>
-        <p className="text-xs leading-5 text-black/45">Vista conceptual del producto · sin cifras atribuidas al evento.</p>
+        <p className="text-xs leading-5 text-black/60">Vista conceptual del producto · sin cifras atribuidas al evento.</p>
       </div>
     )
   }
@@ -85,17 +86,9 @@ function MomentProduct({ momentId }: { momentId: MomentId }) {
 
 export function DharmaCaseStudy() {
   const [selectedMomentId, setSelectedMomentId] = useState<MomentId>('invitation')
-  const [videoPlaying, setVideoPlaying] = useState(true)
+  const [videoPlaying, setVideoPlaying] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
   const selectedMoment = moments.find((moment) => moment.id === selectedMomentId) ?? moments[0]
-
-  useEffect(() => {
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-
-    if (reducedMotion) {
-      videoRef.current?.pause()
-    }
-  }, [])
 
   async function toggleVideo() {
     const video = videoRef.current
@@ -110,12 +103,12 @@ export function DharmaCaseStudy() {
   }
 
   return (
-    <section id="dharma" className="bg-[#c65035] text-white">
+    <section id="dharma" data-marketing-section="dharma" className="bg-[#c65035] text-white">
       <div className="mx-auto max-w-[1500px] px-5 py-24 sm:px-8 sm:py-32 lg:px-14">
         <div className="grid gap-10 lg:grid-cols-[0.72fr_1.28fr] lg:items-end">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.24em] text-white/58">Caso real · Dharma</p>
-            <p className="mt-5 max-w-sm text-sm leading-6 text-white/62">
+            <p className="text-xs font-bold uppercase tracking-[0.24em] text-white">Caso real · Dharma</p>
+            <p className="mt-5 max-w-sm text-sm leading-6 text-white">
               Material real del evento y del producto. Sin testimonios de relleno ni cifras sin fuente.
             </p>
           </div>
@@ -126,24 +119,16 @@ export function DharmaCaseStudy() {
 
         <div className="mt-16 grid gap-4 lg:grid-cols-[1.35fr_0.65fr]">
           <div className="relative min-h-[520px] overflow-hidden rounded-[2.5rem] bg-[#10100f] sm:min-h-[650px]">
-            <video
+            <MarketingBackgroundVideo
               ref={videoRef}
               className="absolute inset-0 size-full object-cover"
-              autoPlay
-              muted
-              loop
-              playsInline
-              preload="metadata"
-              aria-label="Secuencia audiovisual real de los 15 de Dharma"
-              onPlay={() => setVideoPlaying(true)}
-              onPause={() => setVideoPlaying(false)}
-            >
-              <source src="/hero.mp4" type="video/mp4" />
-            </video>
+              label="Secuencia audiovisual real de los 15 de Dharma"
+              onPlaybackChange={setVideoPlaying}
+            />
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/20" />
             <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 p-5 sm:p-7">
               <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/55">Material audiovisual real</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white">Material audiovisual real</p>
                 <p className="marketing-display mt-2 text-3xl font-black tracking-[-0.01em]">La fiesta, en movimiento.</p>
               </div>
               <button
@@ -170,18 +155,18 @@ export function DharmaCaseStudy() {
             </div>
             <div className="px-2 pb-2 pt-5">
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#d9ee73]">Producto real · acceso</p>
-              <p className="mt-2 text-sm leading-6 text-white/58">Un QR presentado. Una validación ocurriendo en recepción.</p>
+              <p className="mt-2 text-sm leading-6 text-white">Un QR presentado. Una validación ocurriendo en recepción.</p>
             </div>
           </div>
         </div>
 
         <div className="mt-20 grid gap-8 lg:grid-cols-[0.75fr_1.25fr]">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.22em] text-white/55">La secuencia</p>
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-white">La secuencia</p>
             <h3 className="marketing-display mt-4 text-5xl font-black leading-[0.92] tracking-[-0.01em]">
               Preparar cambió la llegada.
             </h3>
-            <div className="mt-8 space-y-2" role="list" aria-label="Momentos del caso Dharma">
+            <div className="mt-8 space-y-2" role="group" aria-label="Momentos del caso Dharma">
               {moments.map((moment) => {
                 const selected = moment.id === selectedMomentId
 
@@ -192,14 +177,14 @@ export function DharmaCaseStudy() {
                     onClick={() => setSelectedMomentId(moment.id)}
                     aria-pressed={selected}
                     className={`grid w-full grid-cols-[auto_1fr] items-center gap-4 rounded-2xl border px-4 py-4 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white ${
-                      selected ? 'border-white bg-white text-[#171714]' : 'border-white/16 bg-white/[0.04] text-white hover:border-white/35'
+                      selected ? 'border-white bg-white text-[#171714]' : 'border-white/16 bg-black/10 text-white hover:border-white/35'
                     }`}
                   >
-                    <span className={`marketing-display text-2xl font-black ${selected ? 'text-[#c65035]' : 'text-white/35'}`}>
+                    <span className={`marketing-display text-2xl font-black ${selected ? 'text-[#9c3926]' : 'text-white'}`}>
                       {moment.number}
                     </span>
                     <span>
-                      <span className="block text-[10px] font-black uppercase tracking-[0.18em] opacity-45">{moment.label}</span>
+                      <span className="block text-[10px] font-black uppercase tracking-[0.18em]">{moment.label}</span>
                       <span className="mt-1 block text-sm font-bold">{moment.product}</span>
                     </span>
                   </button>
@@ -217,7 +202,7 @@ export function DharmaCaseStudy() {
                 <h4 className="marketing-display mt-5 text-4xl font-black leading-[0.98] tracking-[-0.01em]">
                   {selectedMoment.title}
                 </h4>
-                <p className="mt-5 text-sm leading-6 text-white/58">{selectedMoment.detail}</p>
+                <p className="mt-5 text-sm leading-6 text-white">{selectedMoment.detail}</p>
               </div>
               <p className="mt-10 flex items-center gap-2 text-xs font-bold text-[#d9ee73]">
                 <Check className="size-4" strokeWidth={3} aria-hidden="true" />
@@ -229,20 +214,20 @@ export function DharmaCaseStudy() {
         </div>
 
         <div className="mt-16 grid gap-4 sm:grid-cols-2">
-          <div className="rounded-[2rem] border border-white/18 bg-white/[0.06] p-6 sm:p-8">
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/45">Métricas verificadas</p>
+          <div className="rounded-[2rem] border border-white/18 bg-black/10 p-6 sm:p-8">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white">Métricas verificadas</p>
             <p className="marketing-display mt-5 text-4xl font-black tracking-[-0.01em]">Sin cifras publicadas.</p>
-            <p className="mt-4 max-w-lg text-sm leading-6 text-white/58">
+            <p className="mt-4 max-w-lg text-sm leading-6 text-white">
               Se incorporarán únicamente cuando exista una fuente, una fecha y una definición verificable para cada dato.
             </p>
           </div>
           <div className="rounded-[2rem] bg-[#f0eee8] p-6 text-[#171714] sm:p-8">
-            <p className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-black/45">
+            <p className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-black/60">
               <ShieldCheck className="size-4 text-[#173b36]" aria-hidden="true" />
               Privacidad y uso
             </p>
             <p className="marketing-display mt-5 text-4xl font-black leading-none tracking-[-0.015em]">Vista local documentada.</p>
-            <p className="mt-4 max-w-lg text-sm leading-6 text-black/55">
+            <p className="mt-4 max-w-lg text-sm leading-6 text-black/65">
               El material fue suministrado para esta vista. La publicación final queda sujeta a validar consentimiento, alcance y restricciones de imagen.
             </p>
           </div>

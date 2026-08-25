@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
+import { MarketingAnalytics } from '@/components/marketing/MarketingAnalytics'
+import { MarketingSectionTracker } from '@/components/marketing/MarketingSectionTracker'
 import { SiteHeader } from '@/components/marketing/SiteHeader'
 import { SiteFooter } from '@/components/marketing/SiteFooter'
 import { getPublicAppUrl } from '@/lib/public-url'
@@ -60,8 +62,16 @@ export default function MarketingLayout({ children }: { children: ReactNode }) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
+      <a
+        href="#contenido-principal"
+        className="fixed left-4 top-4 z-[60] -translate-y-24 rounded-full bg-white px-5 py-3 text-sm font-black text-[#171714] shadow-xl transition-transform focus:translate-y-0 focus:outline-none focus:ring-2 focus:ring-[#009cdd] focus:ring-offset-2 motion-reduce:transition-none"
+      >
+        Saltar al contenido principal
+      </a>
       <SiteHeader />
-      <main className="flex-1">{children}</main>
+      <MarketingSectionTracker />
+      <MarketingAnalytics enabled={process.env.ALISTA_WEB_ANALYTICS_ENABLED === '1'} />
+      <main id="contenido-principal" className="flex-1" tabIndex={-1}>{children}</main>
       <SiteFooter />
     </div>
   )

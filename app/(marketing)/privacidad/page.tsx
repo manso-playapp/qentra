@@ -1,8 +1,11 @@
-export const metadata = {
+import { createMarketingMetadata } from '@/lib/marketing-seo'
+
+export const metadata = createMarketingMetadata({
   title: 'Política de privacidad',
   description:
     'Cómo Alista trata los datos personales: con proporcionalidad, consentimiento y control.',
-}
+  path: '/privacidad',
+})
 
 const SECTIONS = [
   {
@@ -39,7 +42,7 @@ export default function PrivacidadPage() {
   return (
     <section className="bg-[#f0eee8] px-5 py-20 sm:px-8 sm:py-28 lg:px-14">
       <div className="mx-auto w-full max-w-[900px]">
-      <p className="text-xs font-black uppercase tracking-[0.22em] text-[#c65035]">Legal</p>
+      <p className="text-xs font-black uppercase tracking-[0.22em] text-[#9c3926]">Legal</p>
       <h1 className="marketing-display mt-6 text-[clamp(2.8rem,5vw,4.8rem)] font-black leading-[0.92] tracking-[-0.005em] text-[#171714]">
         Política de privacidad
       </h1>

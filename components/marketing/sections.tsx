@@ -23,7 +23,7 @@ export function PageHero({
     <section className="overflow-hidden border-b border-black/10 bg-[#f0eee8] px-5 py-20 sm:px-8 sm:py-28 lg:px-14">
       <div className="mx-auto grid w-full max-w-[1320px] gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.22em] text-[#c65035]">{eyebrow}</p>
+          <p className="text-xs font-black uppercase tracking-[0.22em] text-[#9c3926]">{eyebrow}</p>
           <h1 className="marketing-display mt-6 max-w-4xl text-[clamp(2.8rem,5vw,4.8rem)] font-black leading-[0.91] tracking-[-0.005em] text-[#171714]">
             {title}
             {highlight ? <span className="text-[#213480]"> {highlight}</span> : null}
@@ -79,7 +79,7 @@ export function Section({
           <div className="grid gap-7 lg:grid-cols-[0.75fr_1.25fr] lg:items-end">
             <div>
               {eyebrow && (
-                <p className="text-xs font-black uppercase tracking-[0.22em] text-[#c65035]">{eyebrow}</p>
+                <p className="text-xs font-black uppercase tracking-[0.22em] text-[#9c3926]">{eyebrow}</p>
               )}
               {title && (
                 <h2 className="marketing-display mt-5 max-w-3xl text-[clamp(2.5rem,4.25vw,4.25rem)] font-black leading-[0.92] tracking-[-0.005em] text-[#171714]">
@@ -116,7 +116,7 @@ export function ClosingCta({
           </h2>
           <p className="mt-6 max-w-xl text-base leading-7 text-white/62">{description}</p>
         </div>
-        <div className="flex shrink-0 flex-col gap-3 sm:flex-row">
+        <div className="flex max-w-full flex-col gap-3 sm:flex-row sm:flex-wrap lg:justify-end">
           <Link
             href={primary.href}
             className="inline-flex min-h-12 items-center justify-center gap-4 rounded-full bg-[#d9ee73] px-6 text-sm font-black text-[#171714] transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"

@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import { useState } from 'react'
+import { trackMarketingEvent } from '@/lib/marketing-analytics'
 
 const personas = [
   {
@@ -103,11 +104,29 @@ export function PersonaPreview() {
   const selectedPersona = personas.find((persona) => persona.id === selectedPersonaId) ?? personas[0]
   const selectedUniverse = universes.find((universe) => universe.id === selectedUniverseId) ?? universes[0]
 
+  function selectPersona(personaId: (typeof personas)[number]['id']) {
+    const analyticsPersona = {
+      martina: 'student',
+      familia: 'family',
+      tomas: 'paid_entry',
+    } as const
+
+    setSelectedPersonaId(personaId)
+    trackMarketingEvent('persona_preview_changed', {
+      persona: analyticsPersona[personaId],
+    })
+  }
+
+  function selectUniverse(universeId: UniverseId) {
+    setSelectedUniverseId(universeId)
+    trackMarketingEvent('visual_style_changed', { style: universeId })
+  }
+
   return (
     <div className="grid gap-7 lg:grid-cols-[0.72fr_1.28fr]">
       <div className="space-y-8">
         <fieldset>
-          <legend className="mb-4 text-xs font-bold uppercase tracking-[0.22em] text-black/45">Ver como…</legend>
+          <legend className="mb-4 text-xs font-bold uppercase tracking-[0.22em] text-black/65">Ver como…</legend>
           <div className="flex flex-col gap-2">
             {personas.map((persona) => {
               const active = selectedPersonaId === persona.id
@@ -116,7 +135,7 @@ export function PersonaPreview() {
                 <button
                   key={persona.id}
                   type="button"
-                  onClick={() => setSelectedPersonaId(persona.id)}
+                  onClick={() => selectPersona(persona.id)}
                   aria-pressed={active}
                   className={`min-h-14 rounded-full border px-5 text-left text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black ${
                     active
@@ -132,7 +151,7 @@ export function PersonaPreview() {
         </fieldset>
 
         <fieldset>
-          <legend className="mb-4 text-xs font-bold uppercase tracking-[0.22em] text-black/45">Universo visual</legend>
+          <legend className="mb-4 text-xs font-bold uppercase tracking-[0.22em] text-black/65">Universo visual</legend>
           <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-1">
             {universes.map((universe) => {
               const active = selectedUniverseId === universe.id
@@ -141,10 +160,10 @@ export function PersonaPreview() {
                 <button
                   key={universe.id}
                   type="button"
-                  onClick={() => setSelectedUniverseId(universe.id)}
+                  onClick={() => selectUniverse(universe.id)}
                   aria-pressed={active}
                   className={`flex min-h-12 items-center gap-3 rounded-2xl border px-4 text-left text-xs font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black ${
-                    active ? 'border-black bg-white text-black' : 'border-black/10 bg-transparent text-black/55 hover:border-black/30'
+                    active ? 'border-black bg-white text-black' : 'border-black/10 bg-transparent text-black/65 hover:border-black/30'
                   }`}
                 >
                   <span className={`size-3 rounded-full ${universe.swatch}`} aria-hidden="true" />

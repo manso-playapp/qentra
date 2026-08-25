@@ -16,7 +16,7 @@ type EventGuestsPageProps = {
 
 export default async function EventGuestsPage({ params }: EventGuestsPageProps) {
   const { id } = await params
-  const supabase = getSupabaseAdminClient() ?? await createServerSupabaseClient()
+  const supabase = getSupabaseAdminClient() ?? (await createServerSupabaseClient())
   const [eventResponse, guestTypesResponse, guestsResponse] = await Promise.all([
     supabase
       .from('events')

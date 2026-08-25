@@ -7,7 +7,8 @@
 
 | Asset | Evidencia | Datos técnicos conocidos | Uso en la vista local |
 |---|---|---|---|
-| `public/hero.mp4` | Material audiovisual real de los 15 de Dharma | MP4 · 40,4 MB · 38 segundos · orientación/resolución pendiente de registrar | Hero y secuencia editorial del caso, sin audio y con control de pausa |
+| `public/hero-desktop.mp4` y `public/hero-mobile.mp4` | Material audiovisual real de los 15 de Dharma | MP4 H.264 · 38,6 segundos · variantes 568×320/3,3 MB y 400×224/1,0 MB | Hero y secuencia editorial del caso, sin audio y con control de pausa |
+| `public/hero-poster.jpg` | Fotograma del mismo material audiovisual | JPG · 1280×720 · 184 KB | Fallback estático y estado de movimiento reducido |
 | `public/caso-dharma-acceso.png` | Captura de una validación real de acceso durante el evento | PNG · 488×794 · vertical | Imagen completa, sin recorte, en el caso editorial |
 | `public/portada.jpg` | Pieza de invitación digital de Dharma | JPG · 1080×1920 · vertical | Momento “Invitación” de la secuencia del caso |
 
@@ -41,6 +42,5 @@ No hay métricas de Dharma con fuente verificable en el repositorio. La web no p
 - documento de consentimiento y derechos de imagen;
 - revisión del QR visible en la captura;
 - inventario de tomas permitidas y restricciones sobre rostros o menores;
-- resolución y orientación técnica del video;
-- versión web comprimida y poster aprobado;
+- aprobación editorial del poster y de las variantes web comprimidas;
 - métricas verificadas con fuente y fecha.

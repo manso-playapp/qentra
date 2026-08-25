@@ -2,7 +2,7 @@
 export const metadata = {
   robots: { index: false, follow: false },
   title: 'Estado de la base de datos',
-}
+};
 
 export default function TestLayout({
   children,

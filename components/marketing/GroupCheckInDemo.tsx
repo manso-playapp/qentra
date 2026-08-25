@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { Check, ChevronRight, QrCode, RotateCcw, ScanLine, Users } from 'lucide-react'
+import { trackMarketingEvent } from '@/lib/marketing-analytics'
 
 type CheckInStage = 'scan' | 'group' | 'admitted'
 
@@ -23,14 +24,24 @@ export function GroupCheckInDemo() {
     setStage('scan')
   }
 
+  function startDemo() {
+    trackMarketingEvent('checkin_demo_started', {})
+    setStage('group')
+  }
+
+  function completeDemo() {
+    trackMarketingEvent('checkin_demo_completed', { group_size: 3 })
+    setStage('admitted')
+  }
+
   return (
     <div className="mx-auto w-full max-w-[470px]">
       <div className="overflow-hidden rounded-[2.5rem] bg-[#171714] text-white shadow-[0_30px_80px_rgba(23,23,20,0.18)]">
         <div className="flex items-center justify-between border-b border-white/12 px-5 py-4 sm:px-7">
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/45">
+          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/65">
             Alista · recepción demo
           </span>
-          <span className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.16em] text-white/55">
+          <span className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.16em] text-white/70">
             <span
               className={`size-2 rounded-full ${stage === 'admitted' ? 'bg-[#d9ee73]' : 'bg-[#ff8b70]'}`}
               aria-hidden="true"
@@ -63,7 +74,7 @@ export function GroupCheckInDemo() {
                 <span className="absolute right-7 top-7 size-8 border-r-2 border-t-2 border-[#d9ee73]" aria-hidden="true" />
                 <span className="absolute bottom-7 left-7 size-8 border-b-2 border-l-2 border-[#d9ee73]" aria-hidden="true" />
                 <span className="absolute bottom-7 right-7 size-8 border-b-2 border-r-2 border-[#d9ee73]" aria-hidden="true" />
-                <div className="text-center text-white/45">
+                <div className="text-center text-white/65">
                   <ScanLine className="mx-auto size-9" strokeWidth={1.5} aria-hidden="true" />
                   <p className="mt-3 text-xs font-bold">Acercá el acceso del grupo</p>
                 </div>
@@ -72,7 +83,7 @@ export function GroupCheckInDemo() {
 
               <button
                 type="button"
-                onClick={() => setStage('group')}
+                onClick={startDemo}
                 className="flex min-h-13 w-full items-center justify-between rounded-full bg-[#ff8b70] px-6 text-sm font-black text-[#171714] transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#171714]"
               >
                 Escanear acceso demo
@@ -90,13 +101,13 @@ export function GroupCheckInDemo() {
                   </span>
                   Entrada válida
                 </p>
-                <span className="rounded-full border border-white/12 px-3 py-1 text-[10px] font-bold text-white/45">
+                <span className="rounded-full border border-white/12 px-3 py-1 text-[10px] font-bold text-white/65">
                   Cena
                 </span>
               </div>
 
               <div className="mt-8">
-                <p className="text-xs text-white/45">Grupo encontrado</p>
+                <p className="text-xs text-white/65">Grupo encontrado</p>
                 <h3
                   ref={stageHeadingRef}
                   tabIndex={-1}
@@ -104,7 +115,7 @@ export function GroupCheckInDemo() {
                 >
                   Familia Pérez
                 </h3>
-                <p className="mt-3 flex items-center gap-2 text-sm font-bold text-white/55">
+                <p className="mt-3 flex items-center gap-2 text-sm font-bold text-white/70">
                   <Users className="size-4" aria-hidden="true" />
                   3 personas · un acceso
                 </p>
@@ -126,7 +137,7 @@ export function GroupCheckInDemo() {
 
               <button
                 type="button"
-                onClick={() => setStage('admitted')}
+                onClick={completeDemo}
                 className="mt-auto flex min-h-13 w-full items-center justify-between rounded-full bg-[#ff8b70] px-6 text-sm font-black text-[#171714] transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#171714]"
               >
                 Ingresan los 3
@@ -160,7 +171,7 @@ export function GroupCheckInDemo() {
                 >
                   Entraron los 3.
                 </h3>
-                <p className="mx-auto mt-5 max-w-xs text-sm leading-6 text-white/55">
+                <p className="mx-auto mt-5 max-w-xs text-sm leading-6 text-white/70">
                   María, Tomás y Juana quedaron registrados juntos, con una sola acción.
                 </p>
               </div>
@@ -177,7 +188,7 @@ export function GroupCheckInDemo() {
         </div>
       </div>
 
-      <p className="mt-5 text-center text-xs leading-5 text-black/45">
+      <p className="mt-5 text-center text-xs leading-5 text-black/60">
         Demo interactiva · no registra accesos reales.
       </p>
     </div>

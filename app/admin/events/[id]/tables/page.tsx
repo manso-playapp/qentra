@@ -16,7 +16,7 @@ type EventTablesPageProps = {
 
 export default async function EventTablesPage({ params }: EventTablesPageProps) {
   const { id } = await params
-  const supabase = getSupabaseAdminClient() ?? await createServerSupabaseClient()
+  const supabase = getSupabaseAdminClient() ?? (await createServerSupabaseClient())
   const [eventResponse, guestsResponse] = await Promise.all([
     supabase.from('events').select('id, name').eq('id', id).maybeSingle(),
     supabase

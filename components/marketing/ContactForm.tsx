@@ -5,10 +5,12 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { trackMarketingEvent, type MarketingAudience } from '@/lib/marketing-analytics'
 
 const CONTACT_EMAIL = 'hola@alista.com.ar'
 
 type ContactAudience = 'general' | 'family' | 'professional'
+type ContactSource = 'familia-demo' | 'profesionales-page' | 'contacto-page'
 
 const audienceCopy = {
   general: {
@@ -39,7 +41,7 @@ export function ContactForm({
 }: {
   subject: string
   cta: string
-  source?: string
+  source?: ContactSource
   audience?: ContactAudience
 }) {
   const [form, setForm] = useState({
@@ -51,6 +53,8 @@ export function ContactForm({
   })
   const [preparedMailto, setPreparedMailto] = useState<string | null>(null)
   const copy = audienceCopy[audience]
+  const analyticsSource = source ?? 'contacto-page'
+  const analyticsAudience: MarketingAudience = audience
 
   const handleChange = (
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -76,12 +80,16 @@ export function ContactForm({
       subject
     )}&body=${encodeURIComponent(body)}`
     setPreparedMailto(mailto)
+    trackMarketingEvent('contact_form_prepared', {
+      source: analyticsSource,
+      audience: analyticsAudience,
+    })
   }
 
   return (
     <form
       onSubmit={handleSubmit}
-      data-contact-source={source}
+      data-contact-source={analyticsSource}
       className="rounded-3xl border border-border/70 bg-card p-6 shadow-[0_18px_50px_rgba(22,33,90,0.08)] sm:p-8"
     >
       <div className="grid gap-5 sm:grid-cols-2">
@@ -155,7 +163,17 @@ export function ContactForm({
             Todavía no fue enviada. Abrí tu correo, revisá el mensaje y completá el envío.
           </p>
           <Button asChild size="lg" className="mt-4 w-full sm:w-auto">
-            <a href={preparedMailto}>Abrir correo para enviar</a>
+            <a
+              href={preparedMailto}
+              onClick={() => {
+                trackMarketingEvent('contact_email_opened', {
+                  source: analyticsSource,
+                  audience: analyticsAudience,
+                })
+              }}
+            >
+              Abrir correo para enviar
+            </a>
           </Button>
         </div>
       ) : (
