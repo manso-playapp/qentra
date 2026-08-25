@@ -25,7 +25,7 @@ La brecha principal no es visual: el producto actual modela principalmente **un 
 | Accesos | Tipos configurables con horario y precio | Falta convertirlos en plantillas Cena/Trasnoche/Trasnoche con entrada y separar reglas de pago, horario y cupo |
 | Invitación/RSVP | Link sin cuenta, sí/no, acompañantes y restricciones | Es individual y el formulario no se configura por segmento/modalidad; falta continuidad por grupo |
 | WhatsApp | Envío manual desde teléfono propio y automatización Twilio | Falta Centro de invitaciones, estados honestos y modo reducido para la quinceañera; el número Twilio productivo no es prioridad estratégica |
-| Pagos | Checkout, webhook, conciliación y QR luego de aprobación | Las rutas usan un token de entorno global; falta OAuth por receptor real del evento, cortesías y cierre/cupo de venta |
+| Pagos | Checkout, webhook, conciliación y QR luego de aprobación | OAuth por receptor real implementado en código; falta prueba externa real, cortesías y cierre/cupo de venta |
 | Puerta | QR, búsqueda, validaciones, override, historial y reversión | Falta check-in real por integrantes del grupo, alta excepcional completa y modo degradado con cola/sincronización |
 | Preparación | Primer porcentaje y lista de invitaciones/confirmaciones/pagos pendientes | Falta definición transparente, pendientes más ricos, cambios y acciones específicas |
 | Roles | Admin, puerta y supervisor globales | Falta alcance por evento y UX diferenciada para quinceañera, familia y profesional |
@@ -38,7 +38,7 @@ La brecha principal no es visual: el producto actual modela principalmente **un 
 1. `Docs/README_AGENT_CONTEXT.md` y los archivos de contexto raíz esperan documentos y rutas en minúscula que no existen en esta estructura.
 2. La web y el SEO actuales siguen hablando de eventos genéricos, egresados y software de acceso; contradicen la verticalización cerrada en cumpleaños de 15.
 3. `lib/mvp-status.ts` propone como siguiente paso un número productivo de Twilio. La decisión canónica prioriza el envío personal y prohíbe convertir un sender central en requisito.
-4. La migración de pagos creó `event_payment_accounts`, pero el flujo ejecutable sigue leyendo un access token global desde variables de entorno.
+4. El flujo de nuevos pagos de invitados ya usa `event_payment_accounts`; falta aplicar la migración de estado OAuth, configurar la aplicación de Mercado Pago y probar una acreditación real al receptor correcto.
 5. La web tiene una página de precios aunque el modelo comercial todavía no está cerrado.
 
 ---
@@ -346,6 +346,8 @@ La web puede avanzar en copy, sistema visual y assets en paralelo, pero no debe 
 ### ALI-025 — Mercado Pago OAuth por receptor del evento
 
 **Prioridad:** P0 para eventos pagos · **Tamaño:** L · **Dependencias:** ALI-005, ALI-011, ALI-013
+
+**Estado técnico — 25 de agosto de 2026:** implementado en código: conexión OAuth `authorization_code` con PKCE, estado de un uso, tokens cifrados, refresh, desconexión protegida ante pagos pendientes y resolución de cuenta por evento en checkout, conciliación y webhook. La regla de negocio cerrada es: los invitados pagan a la cuenta de la responsable del evento; Alista cobra su propio servicio de forma separada en su cuenta. Falta aplicar la migración, configurar credenciales/redirect URI y ejecutar ALI-005 con una cuenta externa real antes de habilitarlo en producción.
 
 **Objetivo:** acreditar el dinero directamente en la cuenta autorizada por el evento.
 

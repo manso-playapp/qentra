@@ -1,4 +1,5 @@
 import QRCode from 'qrcode'
+import { getEventPaymentAccessToken } from '@/lib/event-payment-account'
 import { buildGuestAccessQrPayload } from '@/lib/guest-access'
 import { buildGuestFullName } from '@/lib/guest-schema'
 import { getMercadoPagoConfig, mapMercadoPagoPaymentStatus } from '@/lib/mercadopago'
@@ -108,9 +109,8 @@ async function syncGuestAccessFromPayments(
 
 export async function POST(request: Request) {
   const adminClient = getSupabaseAdminClient()
-  const mercadoPago = getMercadoPagoConfig()
   const webhookSecret = process.env.MERCADOPAGO_WEBHOOK_SECRET?.trim()
-  if (!adminClient || !mercadoPago || !webhookSecret) {
+  if (!adminClient || !webhookSecret) {
     return Response.json({ error: 'Webhook de Mercado Pago no configurado.' }, { status: 503 })
   }
 
@@ -130,21 +130,70 @@ export async function POST(request: Request) {
     return Response.json({ error: 'Firma de webhook inválida.' }, { status: 401 })
   }
 
+  const webhookUrl = new URL(request.url)
+  const transactionId = webhookUrl.searchParams.get('transaction_id')?.trim()
+  let transaction: {
+    id: string
+    event_id: string
+    guest_id: string
+    amount_cents: number
+    currency_id: string
+    provider_preference_id: string | null
+    external_reference: string
+  } | null = null
+  let accessToken: string | null = null
+
+  if (transactionId) {
+    const { data, error } = await adminClient
+      .from('payment_transactions')
+      .select('id, event_id, guest_id, amount_cents, currency_id, provider_preference_id, external_reference')
+      .eq('id', transactionId)
+      .maybeSingle()
+    if (error) throw error
+    if (!data) return Response.json({ ok: true })
+
+    transaction = data
+    const recipientAccount = await getEventPaymentAccessToken(adminClient, transaction.event_id)
+    if (!recipientAccount.ok) {
+      // Mercado Pago retries a 5xx notification, which is safer than marking a
+      // payment as unverified while the responsible's token is being renewed.
+      return Response.json({ error: recipientAccount.error }, { status: 503 })
+    }
+    accessToken = recipientAccount.accessToken
+  } else {
+    // Preferences created before per-event accounts did not carry a transaction
+    // identifier in notification_url. Keep them reconcilable with the legacy
+    // Alista credential, but never use that fallback for new payments.
+    const mercadoPago = getMercadoPagoConfig()
+    if (!mercadoPago) {
+      return Response.json({ error: 'No se pudo identificar la cuenta receptora del pago.' }, { status: 503 })
+    }
+    accessToken = mercadoPago.accessToken
+  }
+
   const paymentResponse = await fetch(`https://api.mercadopago.com/v1/payments/${encodeURIComponent(dataId)}`, {
-    headers: { Authorization: `Bearer ${mercadoPago.accessToken}` },
+    headers: { Authorization: `Bearer ${accessToken}` },
+    cache: 'no-store',
   })
   const payment = (await paymentResponse.json().catch(() => null)) as MercadoPagoPayment | null
   if (!paymentResponse.ok || !payment?.external_reference || !payment.id) {
     return Response.json({ error: 'No se pudo verificar el pago informado.' }, { status: 502 })
   }
 
-  const { data: transaction, error: transactionError } = await adminClient
-    .from('payment_transactions')
-    .select('id, event_id, guest_id, amount_cents, currency_id, provider_preference_id')
-    .eq('external_reference', payment.external_reference)
-    .maybeSingle()
-  if (transactionError) throw transactionError
-  if (!transaction) return Response.json({ ok: true })
+  if (transaction && transaction.external_reference !== payment.external_reference) {
+    return Response.json({ error: 'El pago no corresponde a la transacción notificada.' }, { status: 409 })
+  }
+
+  if (!transaction) {
+    const { data, error } = await adminClient
+      .from('payment_transactions')
+      .select('id, event_id, guest_id, amount_cents, currency_id, provider_preference_id, external_reference')
+      .eq('external_reference', payment.external_reference)
+      .maybeSingle()
+    if (error) throw error
+    if (!data) return Response.json({ ok: true })
+    transaction = data
+  }
 
   const amountCents = Math.round((payment.transaction_amount ?? 0) * 100)
   if (amountCents !== transaction.amount_cents || payment.currency_id !== transaction.currency_id) {

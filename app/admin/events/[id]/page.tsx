@@ -12,11 +12,14 @@ import {
   Users2,
 } from 'lucide-react'
 import AdminLayout from '@/components/admin/AdminLayout'
+import EventPaymentAccountCard from '@/components/admin/EventPaymentAccountCard'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { getMercadoPagoOAuthConfig } from '@/lib/mercadopago'
+import { isPaymentCredentialEncryptionConfigured } from '@/lib/payment-credentials'
 import type { DeliveryProfile, Event, EventBranding, GuestType } from '@/types'
 
 export const metadata = {
@@ -78,6 +81,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
     deliveryProfileResponse,
     guestsCountResponse,
     checkinsCountResponse,
+    paymentAccountResponse,
   ] = await Promise.all([
     supabase.from('events').select('*').eq('id', id).maybeSingle(),
     supabase.from('event_branding').select('*').eq('event_id', id).maybeSingle(),
@@ -93,6 +97,11 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
       .select('*', { count: 'exact', head: true })
       .eq('event_id', id)
       .eq('result', 'approved'),
+    supabase
+      .from('event_payment_accounts')
+      .select('updated_at')
+      .eq('event_id', id)
+      .maybeSingle(),
   ])
 
   if (eventResponse.error) {
@@ -116,6 +125,8 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
   const selectedDeliveryProfile = deliveryProfiles.find((profile) => profile.id === event.delivery_profile_id) ?? null
   const guestCount = guestsCountResponse.count ?? 0
   const checkinCount = checkinsCountResponse.count ?? 0
+  const paymentAccount = paymentAccountResponse.data as { updated_at?: string | null } | null
+  const paymentAccountConfigured = Boolean(getMercadoPagoOAuthConfig() && isPaymentCredentialEncryptionConfigured())
   const availableSeats = Math.max(event.max_capacity - guestCount, 0)
   return (
     <AdminLayout>
@@ -294,6 +305,13 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
                 </div>
               </CardContent>
             </Card>
+
+            <EventPaymentAccountCard
+              eventId={event.id}
+              connected={Boolean(paymentAccount)}
+              configured={paymentAccountConfigured}
+              updatedAt={paymentAccount?.updated_at}
+            />
 
             {/* Puerta / check-in */}
             <Card className="bg-admin-navy text-white">

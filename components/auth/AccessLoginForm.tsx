@@ -41,9 +41,9 @@ export default function AccessLoginForm({ nextPath }: AccessLoginFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+    <form onSubmit={handleSubmit} className="mt-8 space-y-4">
       <div>
-        <label htmlFor="operator-email" className="block text-sm font-medium text-slate-200">
+        <label htmlFor="operator-email" className="block text-sm font-medium text-white/80">
           Email
         </label>
         <input
@@ -53,14 +53,14 @@ export default function AccessLoginForm({ nextPath }: AccessLoginFormProps) {
           required
           value={email}
           onChange={(eventInput) => setEmail(eventInput.target.value)}
-          className="mt-2 block w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-sm text-white outline-none ring-0 placeholder:text-slate-500 focus:border-cyan-400"
+          className="mt-2 block w-full rounded-xl border border-white/15 bg-white/8 px-4 py-3 text-sm text-white outline-none placeholder:text-white/35 focus:border-[#ff8b70] focus:ring-2 focus:ring-[#ff8b70]/25"
           placeholder="operador@alista.com"
         />
       </div>
 
       <div>
-        <label htmlFor="operator-password" className="block text-sm font-medium text-slate-200">
-          Password
+        <label htmlFor="operator-password" className="block text-sm font-medium text-white/80">
+          Contraseña
         </label>
         <input
           id="operator-password"
@@ -69,13 +69,13 @@ export default function AccessLoginForm({ nextPath }: AccessLoginFormProps) {
           required
           value={password}
           onChange={(eventInput) => setPassword(eventInput.target.value)}
-          className="mt-2 block w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-sm text-white outline-none ring-0 placeholder:text-slate-500 focus:border-cyan-400"
-          placeholder="Ingresa tu password"
+          className="mt-2 block w-full rounded-xl border border-white/15 bg-white/8 px-4 py-3 text-sm text-white outline-none placeholder:text-white/35 focus:border-[#ff8b70] focus:ring-2 focus:ring-[#ff8b70]/25"
+          placeholder="Ingresá tu contraseña"
         />
       </div>
 
       {error && (
-        <div className="rounded-2xl border border-red-400/30 bg-red-500/10 p-4 text-sm text-red-100">
+        <div className="rounded-xl border border-red-300/30 bg-red-500/10 p-4 text-sm text-red-100">
           {error}
         </div>
       )}
@@ -83,7 +83,7 @@ export default function AccessLoginForm({ nextPath }: AccessLoginFormProps) {
       <button
         type="submit"
         disabled={loading}
-        className="inline-flex w-full items-center justify-center rounded-2xl bg-cyan-400 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60"
+        className="inline-flex min-h-13 w-full items-center justify-center rounded-full bg-[#ff8b70] px-6 text-sm font-black text-[#171714] transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white disabled:cursor-not-allowed disabled:opacity-60"
       >
         {loading ? 'Ingresando...' : 'Continuar'}
       </button>

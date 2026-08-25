@@ -13,7 +13,7 @@ Estado actual del MVP:
 - vistas separadas de `admin`, `puerta` y `totem`, con destino visible al ingresar
 - autenticacion operativa con Supabase Auth
 - envio por email y WhatsApp segun configuracion del entorno
-- Checkout Pro de Mercado Pago operativo: pago, conciliacion y habilitacion automatica del QR
+- Checkout Pro por cuenta receptora del evento: pago, conciliación y habilitación automática del QR
 
 ## Stack
 
@@ -62,16 +62,35 @@ Entre las mas importantes:
 
 ### Mercado Pago
 
-Checkout Pro usa `MERCADOPAGO_ACCESS_TOKEN` en producción y fuerza
-`MERCADOPAGO_TEST_ACCESS_TOKEN` en los deploys Preview de Vercel, incluso si
-la credencial productiva fue cargada allí por error. Ambas son secretas y se
-usan exclusivamente desde rutas del servidor. Configurá también
-`MERCADOPAGO_WEBHOOK_SECRET` y el webhook HTTPS
-`/api/mercadopago/webhook` con el evento **Pagos**. Antes de habilitar cobros,
-aplicá la migración `supabase/migrations/20260723162321_add_mercadopago_payments.sql`.
-Si una notificación demora o falla, la invitación permite verificar el pago
-directamente contra Mercado Pago antes de habilitar el QR; importe y moneda se
-vuelven a validar en servidor.
+Los invitados pagan sus entradas o aportes en la cuenta Mercado Pago que la
+responsable vincula para **ese evento**. Alista no retiene ni recibe ese dinero.
+El pago del servicio de Alista es un flujo comercial separado y se cobra en la
+cuenta de Alista; su importe y periodicidad todavía deben definirse antes de
+crear ese checkout.
+
+Para habilitar cobros de invitados, aplicá las migraciones
+`20260723162321_add_mercadopago_payments.sql` y
+`20260825025825_add_event_payment_oauth_states.sql`, registrá exactamente
+`MERCADOPAGO_OAUTH_REDIRECT_URI` como URL de redirección HTTPS de la aplicación
+de Mercado Pago y configurá `MERCADOPAGO_CLIENT_ID`,
+`MERCADOPAGO_CLIENT_SECRET` y una clave Base64 aleatoria de 32 bytes en
+`ALISTA_PAYMENT_CREDENTIALS_ENCRYPTION_KEY`. Desde el detalle del evento, una
+persona administradora inicia la vinculación y la responsable autoriza su
+cuenta. Los tokens OAuth y verificadores PKCE se cifran antes de guardarse.
+
+Configurá también `MERCADOPAGO_WEBHOOK_SECRET` y el webhook HTTPS
+`/api/mercadopago/webhook` con el evento **Pagos**. La preferencia incluye la
+transacción esperada, por lo que webhook y conciliación consultan la cuenta del
+evento y validan importe y moneda antes de habilitar el QR.
+
+`MERCADOPAGO_ACCESS_TOKEN` y `MERCADOPAGO_TEST_ACCESS_TOKEN` permanecen sólo
+para los cobros propios de Alista que se incorporen a futuro y para conciliar
+intentos históricos creados antes de esta migración; no son fallback para pagos
+nuevos de invitados.
+
+Los deploys Preview bloquean la vinculación de cuentas y los cobros de invitados
+para no reutilizar una cuenta receptora real. La validación de dinero se realiza
+en producción controlada con una cuenta externa de prueba.
 
 ## Notas
 

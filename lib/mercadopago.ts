@@ -5,6 +5,12 @@ export type MercadoPagoConfig = {
   mode: MercadoPagoMode
 }
 
+export type MercadoPagoOAuthConfig = {
+  clientId: string
+  clientSecret: string
+  redirectUri: string
+}
+
 export type PaymentTransactionStatus =
   | 'created'
   | 'pending'
@@ -17,6 +23,20 @@ type MercadoPagoEnvironment = {
   productionAccessToken?: string
   testAccessToken?: string
   vercelEnvironment?: string
+}
+
+type MercadoPagoOAuthEnvironment = {
+  clientId?: string
+  clientSecret?: string
+  redirectUri?: string
+}
+
+export function resolveMercadoPagoMode(vercelEnvironment = process.env.VERCEL_ENV): MercadoPagoMode {
+  return vercelEnvironment === 'preview' ? 'test' : 'production'
+}
+
+export function isMercadoPagoPreviewEnvironment(vercelEnvironment = process.env.VERCEL_ENV) {
+  return vercelEnvironment === 'preview'
 }
 
 /**
@@ -47,6 +67,38 @@ export function resolveMercadoPagoConfig(
 
 export function getMercadoPagoConfig() {
   return resolveMercadoPagoConfig()
+}
+
+/**
+ * Credentials for the Mercado Pago application that lets an event responsible
+ * authorize Alista to create preferences in their own account. They are not
+ * the collector credentials used by Checkout Pro.
+ */
+export function resolveMercadoPagoOAuthConfig(
+  environment: MercadoPagoOAuthEnvironment = {
+    clientId: process.env.MERCADOPAGO_CLIENT_ID,
+    clientSecret: process.env.MERCADOPAGO_CLIENT_SECRET,
+    redirectUri: process.env.MERCADOPAGO_OAUTH_REDIRECT_URI,
+  }
+): MercadoPagoOAuthConfig | null {
+  const clientId = environment.clientId?.trim()
+  const clientSecret = environment.clientSecret?.trim()
+  const redirectUri = environment.redirectUri?.trim()
+
+  if (!clientId || !clientSecret || !redirectUri) return null
+
+  try {
+    const parsed = new URL(redirectUri)
+    if (parsed.protocol !== 'https:') return null
+  } catch {
+    return null
+  }
+
+  return { clientId, clientSecret, redirectUri }
+}
+
+export function getMercadoPagoOAuthConfig() {
+  return resolveMercadoPagoOAuthConfig()
 }
 
 export function getCheckoutUrl(

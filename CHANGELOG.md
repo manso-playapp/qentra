@@ -2,6 +2,16 @@
 
 Todas las entradas relevantes al entorno de produccion del cliente.
 
+## Unreleased
+
+### Added
+- Cuentas Mercado Pago por evento: OAuth con PKCE, estado de un solo uso y tokens cifrados en servidor.
+- En el detalle del evento, una persona administradora puede vincular o desvincular la cuenta receptora de la responsable.
+
+### Changed
+- Los nuevos Checkout Pro de invitados usan exclusivamente la cuenta vinculada al evento para crear preferencias, conciliarlas y procesar sus webhooks. Nunca recurren a la cuenta global de Alista.
+- El cobro del servicio de Alista queda explícitamente separado de los aportes o entradas que reciben las responsables de los eventos.
+
 ## [0.7.0] - 2026-07-23
 
 ### Added

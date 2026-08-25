@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
-import { getCheckoutUrl, mapMercadoPagoPaymentStatus, resolveMercadoPagoConfig } from './mercadopago'
+import {
+  getCheckoutUrl,
+  isMercadoPagoPreviewEnvironment,
+  mapMercadoPagoPaymentStatus,
+  resolveMercadoPagoConfig,
+  resolveMercadoPagoMode,
+  resolveMercadoPagoOAuthConfig,
+} from './mercadopago'
 
 describe('resolveMercadoPagoConfig', () => {
   it('uses the production credential when both environments are configured', () => {
@@ -43,6 +50,34 @@ describe('getCheckoutUrl', () => {
 
   it('uses the production URL in production mode', () => {
     expect(getCheckoutUrl(preference, 'production')).toBe(preference.init_point)
+  })
+})
+
+describe('Mercado Pago OAuth configuration', () => {
+  it('accepts a secure exact callback URL', () => {
+    expect(
+      resolveMercadoPagoOAuthConfig({
+        clientId: ' 123 ',
+        clientSecret: ' secret ',
+        redirectUri: 'https://alista.com.ar/api/mercadopago/oauth/callback',
+      })
+    ).toEqual({
+      clientId: '123',
+      clientSecret: 'secret',
+      redirectUri: 'https://alista.com.ar/api/mercadopago/oauth/callback',
+    })
+  })
+
+  it('fails closed for an insecure or incomplete callback configuration', () => {
+    expect(resolveMercadoPagoOAuthConfig({ clientId: '123', clientSecret: 'secret', redirectUri: 'http://localhost:3000/callback' })).toBeNull()
+    expect(resolveMercadoPagoOAuthConfig({ clientId: '123', redirectUri: 'https://alista.com.ar/callback' })).toBeNull()
+  })
+
+  it('uses the sandbox checkout endpoint in previews without relying on the global collector token', () => {
+    expect(resolveMercadoPagoMode('preview')).toBe('test')
+    expect(resolveMercadoPagoMode('production')).toBe('production')
+    expect(isMercadoPagoPreviewEnvironment('preview')).toBe(true)
+    expect(isMercadoPagoPreviewEnvironment('production')).toBe(false)
   })
 })
 

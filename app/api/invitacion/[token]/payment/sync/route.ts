@@ -1,7 +1,8 @@
 import QRCode from 'qrcode'
+import { getEventPaymentAccessToken } from '@/lib/event-payment-account'
 import { buildGuestAccessQrPayload } from '@/lib/guest-access'
 import { buildGuestFullName } from '@/lib/guest-schema'
-import { getMercadoPagoConfig, mapMercadoPagoPaymentStatus } from '@/lib/mercadopago'
+import { isMercadoPagoPreviewEnvironment, mapMercadoPagoPaymentStatus } from '@/lib/mercadopago'
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
 
 export const runtime = 'nodejs'
@@ -21,9 +22,11 @@ type PaymentSearchResponse = { results?: MercadoPagoPayment[] }
 
 export async function POST(_request: Request, context: RouteContext) {
   const adminClient = getSupabaseAdminClient()
-  const mercadoPago = getMercadoPagoConfig()
-  if (!adminClient || !mercadoPago) {
+  if (!adminClient) {
     return Response.json({ error: 'El cobro con Mercado Pago todavía no está configurado.' }, { status: 503 })
+  }
+  if (isMercadoPagoPreviewEnvironment()) {
+    return Response.json({ error: 'Los cobros de invitados están deshabilitados en deploys Preview.' }, { status: 503 })
   }
 
   const { token } = await context.params
@@ -54,8 +57,14 @@ export async function POST(_request: Request, context: RouteContext) {
     .order('created_at', { ascending: false })
     .limit(10)
   if (transactionsError) throw transactionsError
+  if (!transactions?.length) return Response.json({ status: 'pending' })
 
-  for (const transaction of transactions ?? []) {
+  const recipientAccount = await getEventPaymentAccessToken(adminClient, guest.event_id)
+  if (!recipientAccount.ok) {
+    return Response.json({ error: recipientAccount.error }, { status: 409 })
+  }
+
+  for (const transaction of transactions) {
     const searchUrl = new URL('https://api.mercadopago.com/v1/payments/search')
     searchUrl.searchParams.set('sort', 'date_created')
     searchUrl.searchParams.set('criteria', 'desc')
@@ -65,7 +74,7 @@ export async function POST(_request: Request, context: RouteContext) {
     searchUrl.searchParams.set('end_date', 'NOW')
 
     const paymentResponse = await fetch(searchUrl, {
-      headers: { Authorization: `Bearer ${mercadoPago.accessToken}` },
+      headers: { Authorization: `Bearer ${recipientAccount.accessToken}` },
       cache: 'no-store',
     })
     const searchResult = (await paymentResponse.json().catch(() => null)) as PaymentSearchResponse | null

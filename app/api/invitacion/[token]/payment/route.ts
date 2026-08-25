@@ -1,5 +1,6 @@
 import { getPaymentAppUrl } from '@/lib/public-url'
-import { getCheckoutUrl, getMercadoPagoConfig } from '@/lib/mercadopago'
+import { getEventPaymentAccessToken } from '@/lib/event-payment-account'
+import { getCheckoutUrl, isMercadoPagoPreviewEnvironment, resolveMercadoPagoMode } from '@/lib/mercadopago'
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
 
 export const runtime = 'nodejs'
@@ -8,11 +9,13 @@ type RouteContext = { params: Promise<{ token: string }> }
 
 export async function POST(_request: Request, context: RouteContext) {
   const adminClient = getSupabaseAdminClient()
-  const mercadoPago = getMercadoPagoConfig()
   const appUrl = getPaymentAppUrl()
 
-  if (!adminClient || !mercadoPago || !appUrl) {
+  if (!adminClient || !appUrl) {
     return Response.json({ error: 'El cobro con Mercado Pago todavía no está configurado.' }, { status: 503 })
+  }
+  if (isMercadoPagoPreviewEnvironment()) {
+    return Response.json({ error: 'Los cobros de invitados están deshabilitados en deploys Preview.' }, { status: 503 })
   }
 
   const { token } = await context.params
@@ -45,6 +48,11 @@ export async function POST(_request: Request, context: RouteContext) {
     return Response.json({ error: 'Este tipo de invitado no tiene un importe de pago válido.' }, { status: 409 })
   }
 
+  const recipientAccount = await getEventPaymentAccessToken(adminClient, guest.event_id)
+  if (!recipientAccount.ok) {
+    return Response.json({ error: recipientAccount.error }, { status: 409 })
+  }
+
   const externalReference = `alista_${crypto.randomUUID()}`
   const { data: transaction, error: transactionError } = await adminClient
     .from('payment_transactions')
@@ -64,9 +72,11 @@ export async function POST(_request: Request, context: RouteContext) {
   }
 
   const returnUrl = `${appUrl}/invitacion/${token}`
+  const notificationUrl = new URL('/api/mercadopago/webhook', appUrl)
+  notificationUrl.searchParams.set('transaction_id', transaction.id)
   const response = await fetch('https://api.mercadopago.com/checkout/preferences', {
     method: 'POST',
-    headers: { Authorization: `Bearer ${mercadoPago.accessToken}`, 'Content-Type': 'application/json' },
+    headers: { Authorization: `Bearer ${recipientAccount.accessToken}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       items: [{
         id: transaction.id,
@@ -77,13 +87,13 @@ export async function POST(_request: Request, context: RouteContext) {
       }],
       payer: { name: guest.first_name, surname: guest.last_name, email: guest.email || undefined },
       external_reference: externalReference,
-      notification_url: `${appUrl}/api/mercadopago/webhook`,
+      notification_url: notificationUrl.toString(),
       back_urls: { success: returnUrl, pending: returnUrl, failure: returnUrl },
       auto_return: 'approved',
     }),
   })
   const preference = (await response.json().catch(() => null)) as { id?: string; init_point?: string; sandbox_init_point?: string; message?: string } | null
-  const checkoutUrl = preference ? getCheckoutUrl(preference, mercadoPago.mode) : null
+  const checkoutUrl = preference ? getCheckoutUrl(preference, resolveMercadoPagoMode()) : null
   if (!response.ok || !preference?.id || !checkoutUrl) {
     await adminClient.from('payment_transactions').update({ status: 'rejected', status_detail: preference?.message || 'No se creó la preferencia.' }).eq('id', transaction.id)
     return Response.json({ error: preference?.message || 'No se pudo iniciar Mercado Pago.' }, { status: 502 })
