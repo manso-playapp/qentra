@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { connection } from 'next/server'
 import QRCode from 'qrcode'
@@ -18,28 +19,83 @@ import { normalizeGuestStatus } from '@/lib/guest-schema'
 import { isInvitationExpired } from '@/lib/invitation-expiry'
 import { isInvitationAccessReady, parseInvitationDetails } from '@/lib/invitation-response'
 import { getInvitationTemplate } from '@/lib/invitation-templates'
+import { buildAbsoluteAppUrl } from '@/lib/public-url'
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { SURFACE_BRANDING_COLUMNS, type SurfaceBranding } from '@/types'
 
-export const metadata = {
-  robots: { index: false, follow: false },
-  title: 'Invitación',
-  description: 'Estás invitado/a a una fiesta de 15.',
-  openGraph: {
-    title: 'Invitación',
-    description: 'Estás invitado/a a una fiesta de 15.',
-    images: [{ url: '/portada.jpg' }],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    images: ['/portada.jpg'],
-  },
-}
-
 type InvitationPageProps = {
   params: Promise<{ token: string }>
   searchParams?: Promise<{ guest?: string; confirmed?: string }>
+}
+
+const fallbackInvitationDescription = 'Estás invitado/a a una fiesta de 15.'
+
+function invitationShareImageUrl(imageUrl: string | null | undefined) {
+  const normalized = imageUrl?.trim()
+  if (!normalized) return buildAbsoluteAppUrl('/portada.jpg')
+  return /^https?:\/\//i.test(normalized) ? normalized : buildAbsoluteAppUrl(normalized)
+}
+
+export async function generateMetadata({ params }: InvitationPageProps): Promise<Metadata> {
+  const { token } = await params
+  const supabase = getSupabaseAdminClient() ?? (await createServerSupabaseClient())
+
+  const { data: invitationToken } = await supabase
+    .from('invitation_tokens')
+    .select('guest_id')
+    .eq('token', token)
+    .maybeSingle()
+
+  let eventName = 'Invitación'
+  let description = fallbackInvitationDescription
+  let shareImageUrl = invitationShareImageUrl(null)
+
+  if (invitationToken?.guest_id) {
+    const { data: guest } = await supabase
+      .from('guests')
+      .select('event_id')
+      .eq('id', invitationToken.guest_id)
+      .maybeSingle()
+
+    if (guest?.event_id) {
+      const [{ data: event }, { data: branding }] = await Promise.all([
+        supabase.from('events').select('name, description').eq('id', guest.event_id).maybeSingle(),
+        supabase
+          .from('event_branding')
+          .select('cover_image_url, logo_url')
+          .eq('event_id', guest.event_id)
+          .maybeSingle(),
+      ])
+
+      eventName = event?.name?.trim() || eventName
+      description = event?.description?.trim() || `Estás invitado/a a ${eventName}.`
+      shareImageUrl = invitationShareImageUrl(branding?.cover_image_url || branding?.logo_url)
+    }
+  }
+
+  const pageUrl = buildAbsoluteAppUrl(`/invitacion/${encodeURIComponent(token)}`)
+
+  return {
+    robots: { index: false, follow: false },
+    title: `${eventName} · Invitación`,
+    description,
+    openGraph: {
+      title: eventName,
+      description,
+      url: pageUrl,
+      type: 'website',
+      locale: 'es_AR',
+      siteName: 'Alista',
+      images: [{ url: shareImageUrl, alt: `Invitación ${eventName}` }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: eventName,
+      description,
+      images: [shareImageUrl],
+    },
+  }
 }
 
 export default async function InvitationPage({ params, searchParams }: InvitationPageProps) {
