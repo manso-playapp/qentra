@@ -1,8 +1,15 @@
 'use client'
 
 import { useState } from 'react'
-import { CalendarDays, Clock, MapPin, Music2, HelpCircle } from 'lucide-react'
+import { CalendarDays, Clock, MapPin, Music2, HelpCircle, Timer, Sparkles } from 'lucide-react'
 import ImageUpload from '@/components/admin/ImageUpload'
+import AudioUpload from '@/components/admin/AudioUpload'
+import InvitationView, { buildCalendarUrl, type InvitationConfigInfo, type InvitationEventInfo } from '@/components/invitation/InvitationView'
+import type { SurfaceBranding } from '@/types'
+import {
+  INVITATION_TEMPLATES,
+  type InvitationTemplateKey,
+} from '@/lib/invitation-templates'
 
 // Editor tipo "front editor" para la invitacion: panel de controles a la
 // izquierda, preview en vivo (mockup de celular) a la derecha. Los campos
@@ -10,10 +17,12 @@ import ImageUpload from '@/components/admin/ImageUpload'
 // configuracion (tipografia, dresscode, widgets, campos) va en un JSON de config.
 
 export type InvitationConfig = {
+  template: InvitationTemplateKey
   fontFamily: 'sans' | 'serif' | 'display'
   dresscode: string
   directionsUrl: string
-  widgets: { trivia: boolean }
+  audio_url: string
+  widgets: { trivia: boolean; countdown: boolean; particles: boolean }
   triviaQuestion: string
   fields: { rsvp: boolean; dni: boolean; menu: boolean; companions: boolean }
 }
@@ -33,13 +42,16 @@ type EventInfo = {
   start_time: string
   venue_name: string
   venue_address: string
+  contact_phone?: string
 }
 
 export const DEFAULT_INVITATION_CONFIG: InvitationConfig = {
+  template: 'travel',
   fontFamily: 'display',
   dresscode: '',
   directionsUrl: '',
-  widgets: { trivia: false },
+  audio_url: '',
+  widgets: { trivia: false, countdown: false, particles: false },
   triviaQuestion: '',
   fields: { rsvp: true, dni: true, menu: true, companions: true },
 }
@@ -87,6 +99,16 @@ export default function InvitationEditor({
   const primary = HEX.test(visual.primary_color) ? visual.primary_color : '#8b5e3c'
   const secondary = HEX.test(visual.secondary_color) ? visual.secondary_color : '#f1e8da'
   const fontStack = FONT_STACKS[config.fontFamily]
+  const isMidnight = config.template === 'midnight'
+  const previewEvent = event as InvitationEventInfo
+  const previewBranding = {
+    primary_color: primary,
+    secondary_color: secondary,
+    logo_url: visual.logo_url || null,
+    cover_image_url: visual.cover_image_url || null,
+  } as SurfaceBranding
+  const previewConfig = config as InvitationConfigInfo
+  const previewCalendarUrl = buildCalendarUrl(previewEvent)
 
   const setVisualField = (key: keyof InvitationVisual, value: string) =>
     setVisual((current) => ({ ...current, [key]: value }))
@@ -126,6 +148,19 @@ export default function InvitationEditor({
       {/* Panel de controles */}
       <div className="space-y-5">
         <Section title="Aspecto" desc="Colores, tipografía e imágenes de la invitación.">
+          <Field label="Template">
+            <select
+              value={config.template}
+              onChange={(event) => setConfig((current) => ({ ...current, template: event.target.value as InvitationTemplateKey }))}
+              className={inputClass}
+            >
+              {INVITATION_TEMPLATES.map((template) => (
+                <option key={template.key} value={template.key}>
+                  {template.label} — {template.description}
+                </option>
+              ))}
+            </select>
+          </Field>
           <div className="grid gap-4 sm:grid-cols-2">
             <ColorControl label="Color primario" value={visual.primary_color} fallback="#8b5e3c" onChange={(v) => setVisualField('primary_color', v)} />
             <ColorControl label="Color secundario" value={visual.secondary_color} fallback="#f1e8da" onChange={(v) => setVisualField('secondary_color', v)} />
@@ -155,6 +190,13 @@ export default function InvitationEditor({
             onChange={(url) => setVisualField('logo_url', url)}
             fields={{ bucket: 'event-assets', folder: eventId, label: 'logo' }}
           />
+          <AudioUpload
+            label="Música de la invitación"
+            hint="Subí MP3, M4A, WAV, OGG o WEBM (máximo 20 MB). El navegador puede requerir un toque para iniciar el audio."
+            value={config.audio_url}
+            onChange={(audio_url) => setConfig((current) => ({ ...current, audio_url }))}
+            fields={{ bucket: 'event-assets', folder: eventId, label: 'invitation-audio' }}
+          />
         </Section>
 
         <Section title="Información del evento" desc="Lo que ve el invitado sobre cuándo y dónde.">
@@ -170,6 +212,12 @@ export default function InvitationEditor({
           <ToggleRow icon={HelpCircle} label="Trivia" desc="“¿Quién sabe más de…?”" on={config.widgets.trivia} onToggle={() => toggleWidget('trivia')} />
           {config.widgets.trivia && (
             <Field label="Pregunta de la trivia"><input className={inputClass} value={config.triviaQuestion} onChange={(e) => setConfig((c) => ({ ...c, triviaQuestion: e.target.value }))} placeholder="¿En qué año se conocieron los novios?" /></Field>
+          )}
+          {isMidnight && (
+            <>
+              <ToggleRow icon={Timer} label="Cuenta regresiva" desc="Días, horas, minutos y segundos para el evento." on={config.widgets.countdown} onToggle={() => toggleWidget('countdown')} />
+              <ToggleRow icon={Sparkles} label="Partículas animadas" desc="Efecto de luces flotando sobre el fondo." on={config.widgets.particles} onToggle={() => toggleWidget('particles')} />
+            </>
           )}
         </Section>
 
@@ -196,12 +244,31 @@ export default function InvitationEditor({
       {/* Preview en vivo */}
       <div className="lg:sticky lg:top-6 lg:self-start">
         <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-gray-400">Vista previa en vivo</p>
-        <div className="mx-auto w-full max-w-[360px] overflow-hidden rounded-[36px] border-4 border-gray-900 bg-white shadow-2xl">
+        <div className="invitation-editor-thumbnail mx-auto h-[680px] w-full max-w-[360px] overflow-x-hidden overflow-y-auto overscroll-contain rounded-[36px] border-4 border-gray-900 bg-black shadow-2xl">
+          <div className="invitation-editor-canvas">
+            <InvitationView
+              event={previewEvent}
+              branding={previewBranding}
+              guestDisplayName="Invitado/a de ejemplo"
+              calendarUrl={previewCalendarUrl}
+              template={config.template}
+              config={previewConfig}
+              isPreview
+            >
+              <EditorPreviewContent config={config} isMidnight={isMidnight} primary={primary} />
+            </InvitationView>
+          </div>
+        </div>
+        <div className="hidden mx-auto w-full max-w-[360px] overflow-hidden rounded-[36px] border-4 border-gray-900 bg-white shadow-2xl">
           <div
             className="relative min-h-[560px] px-4 py-6"
             style={{
               fontFamily: fontStack,
-              ...(visual.cover_image_url
+              ...(isMidnight
+                ? {
+                    background: `radial-gradient(circle at 18% 8%, ${primary}99, transparent 32%), radial-gradient(circle at 84% 18%, ${secondary}88, transparent 36%), #110d1c`,
+                  }
+                : visual.cover_image_url
                 ? {
                     backgroundImage: `url(${visual.cover_image_url})`,
                     backgroundSize: 'cover',
@@ -214,6 +281,10 @@ export default function InvitationEditor({
             <div className="absolute inset-0 bg-black/15" />
 
             <div className="relative space-y-4">
+              <div className={`rounded-2xl px-4 py-3 text-xs font-semibold ${isMidnight ? 'border border-white/15 bg-white/8 text-white' : 'bg-white/18 text-white'}`}>
+                <span className="uppercase tracking-[0.16em] opacity-60">Template</span>
+                <p className="mt-1 text-sm font-bold">{isMidnight ? 'Noche · portada editorial' : 'Viaje · boarding pass'}</p>
+              </div>
               {/* Logo transparente, arriba, sobre el fondo. */}
               {visual.logo_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -275,6 +346,48 @@ export default function InvitationEditor({
 
 const inputClass =
   'mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20'
+
+function EditorPreviewContent({
+  config,
+  isMidnight,
+  primary,
+}: {
+  config: InvitationConfig
+  isMidnight: boolean
+  primary: string
+}) {
+  return (
+    <section className="invitation-surface-card relative overflow-hidden rounded-[28px] border border-slate-300 bg-[#eed8d2] p-6 pt-7 text-slate-950 shadow-2xl">
+      {isMidnight ? (
+        <h2 className="invitation-section-title">Tus Datos</h2>
+      ) : (
+        <>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Estado del acceso</p>
+          <h3 className="mt-4 text-xl font-semibold text-slate-950">Completá tu check-in</h3>
+        </>
+      )}
+      <div className="mt-5 space-y-3" aria-hidden="true">
+        {config.fields.rsvp && (
+          <div className="grid grid-cols-2 gap-2">
+            <span className="rounded-lg py-2 text-center text-xs font-semibold text-white" style={{ backgroundColor: primary }}>
+              Confirmar
+            </span>
+            <span className="rounded-lg border border-white/25 py-2 text-center text-xs font-semibold text-white/65">
+              No asistiré
+            </span>
+          </div>
+        )}
+        <MockInput label="Nombre y apellido" />
+        {config.fields.dni && <MockInput label="DNI" />}
+        {config.fields.companions && <MockInput label="Acompañantes" />}
+        {config.fields.menu && <MockInput label="Menú especial" />}
+        <div className="rounded-xl border border-dashed border-white/25 px-3 py-2 text-center text-[10px] uppercase tracking-[0.16em] text-white/50">
+          Vista previa · envío deshabilitado
+        </div>
+      </div>
+    </section>
+  )
+}
 
 function Section({ title, desc, children }: { title: string; desc: string; children: React.ReactNode }) {
   return (

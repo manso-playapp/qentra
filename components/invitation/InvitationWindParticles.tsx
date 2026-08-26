@@ -1,3 +1,5 @@
+import type { CSSProperties } from 'react'
+
 type Particle = {
   top: number
   left: number
@@ -68,6 +70,10 @@ const PARTICLES: Particle[] = [
   { top: 58, left: 50, size: 1, duration: 19, delay: -8, opacity: 0.53 },
   { top: 70, left: 94, size: 4, duration: 27, delay: -23, opacity: 0.29 },
   { top: 83, left: 58, size: 2, duration: 22, delay: -15, opacity: 0.46 },
+  // Unas pocas lentejuelas mayores para capturar destellos más amplios.
+  { top: 34, left: 47, size: 9, duration: 32, delay: -21, opacity: 0.2 },
+  { top: 68, left: 92, size: 8, duration: 37, delay: -28, opacity: 0.18 },
+  { top: 95, left: 11, size: 10, duration: 35, delay: -18, opacity: 0.16 },
 ]
 
 export default function InvitationWindParticles() {
@@ -77,15 +83,34 @@ export default function InvitationWindParticles() {
         <span
           key={index}
           className="invitation-wind-particle"
-          style={{
-            top: `${particle.top}%`,
-            left: `${particle.left}%`,
-            width: particle.size,
-            height: particle.size,
-            opacity: particle.opacity,
-            animationDuration: `${particle.duration}s, ${(particle.duration / 7).toFixed(1)}s`,
-            animationDelay: `${particle.delay}s, ${(particle.delay / 3).toFixed(1)}s`,
-          }}
+          style={(() => {
+            // Semilla estable por partícula: parece aleatorio, pero no cambia
+            // de dirección en cada render ni genera saltos en la animación.
+            const seed = Math.sin(index * 97.31 + particle.top * 13.17 + particle.left * 7.29) * 43758.5453
+            const random = seed - Math.floor(seed)
+            const angle = random * Math.PI * 2
+            const horizontalDistance = 76 + ((index * 17 + particle.top) % 42)
+            const verticalDistance = 38 + ((index * 23 + particle.left) % 34)
+            const endX = Math.cos(angle) * horizontalDistance
+            const endY = Math.sin(angle) * verticalDistance
+            const formatViewportValue = (value: number, unit: 'vw' | 'vh') => `${value.toFixed(2)}${unit}`
+
+            return {
+              top: `${particle.top}%`,
+              left: `${particle.left}%`,
+              width: `${particle.size}px`,
+              height: `${particle.size}px`,
+              opacity: `${particle.opacity}`,
+              animationDuration: `${particle.duration}s, ${(particle.duration / 7).toFixed(1)}s`,
+              animationDelay: `${particle.delay}s, ${(particle.delay / 3).toFixed(1)}s`,
+              '--wind-start-x': formatViewportValue(-endX, 'vw'),
+              '--wind-mid-x': '0vw',
+              '--wind-end-x': formatViewportValue(endX, 'vw'),
+              '--wind-start-y': formatViewportValue(-endY, 'vh'),
+              '--wind-mid-y': '0vh',
+              '--wind-end-y': formatViewportValue(endY, 'vh'),
+            } as CSSProperties
+          })()}
         />
       ))}
     </div>

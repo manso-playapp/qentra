@@ -107,7 +107,7 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
           type="button"
           onClick={() => setAttendanceResponse('confirmed')}
           aria-pressed={isConfirming}
-          className={`min-h-28 rounded-[22px] border-2 px-5 py-4 text-left transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#fcb39e] focus-visible:ring-offset-2 ${
+          className={`invitation-choice-card min-h-28 rounded-[22px] border-2 px-5 py-4 text-left transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#fcb39e] focus-visible:ring-offset-2 ${
             isConfirming
               ? 'border-[#2f5d55] bg-[#2f5d55] text-white shadow-[0_10px_24px_rgba(47,93,85,0.2)]'
               : 'border-[#fcb39e] bg-white/60 text-slate-800 hover:border-[#2f5d55] hover:bg-white'
@@ -115,7 +115,7 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
         >
           <span className="flex items-center gap-2.5">
             <span
-              className={`grid size-7 shrink-0 place-items-center rounded-full border ${
+              className={`invitation-choice-icon grid size-7 shrink-0 place-items-center rounded-full border ${
                 isConfirming ? 'border-white/45 bg-white/15 text-white' : 'border-[#fcb39e] bg-[#fcb39e]/25 text-[#2f5d55]'
               }`}
             >
@@ -123,7 +123,7 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
             </span>
             <span className="text-sm font-semibold">Confirmar asistencia</span>
           </span>
-          <span className={`mt-2 block text-sm leading-6 ${isConfirming ? 'text-white/80' : 'text-slate-600'}`}>
+          <span className={`invitation-choice-desc mt-2 block text-sm leading-6 ${isConfirming ? 'text-white/80' : 'text-slate-600'}`}>
             Completá tus datos y recibí el QR final de ingreso.
           </span>
         </button>
@@ -131,7 +131,7 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
           type="button"
           onClick={() => setAttendanceResponse('declined')}
           aria-pressed={!isConfirming}
-          className={`min-h-28 rounded-[22px] border-2 px-5 py-4 text-left transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#fcb39e] focus-visible:ring-offset-2 ${
+          className={`invitation-choice-card min-h-28 rounded-[22px] border-2 px-5 py-4 text-left transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#fcb39e] focus-visible:ring-offset-2 ${
             !isConfirming
               ? 'border-[#344563] bg-[#344563] text-white shadow-[0_10px_24px_rgba(52,69,99,0.2)]'
               : 'border-[#fcb39e] bg-white/60 text-slate-800 hover:border-[#344563] hover:bg-white'
@@ -139,7 +139,7 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
         >
           <span className="flex items-center gap-2.5">
             <span
-              className={`grid size-7 shrink-0 place-items-center rounded-full border ${
+              className={`invitation-choice-icon grid size-7 shrink-0 place-items-center rounded-full border ${
                 !isConfirming ? 'border-white/45 bg-white/15 text-white' : 'border-[#fcb39e] bg-[#fcb39e]/25 text-[#344563]'
               }`}
             >
@@ -147,7 +147,7 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
             </span>
             <span className="text-sm font-semibold">No asistiré</span>
           </span>
-          <span className={`mt-2 block text-sm leading-6 ${!isConfirming ? 'text-white/80' : 'text-slate-600'}`}>
+          <span className={`invitation-choice-desc mt-2 block text-sm leading-6 ${!isConfirming ? 'text-white/80' : 'text-slate-600'}`}>
             Avisá a la organización para liberar tu lugar.
           </span>
         </button>
@@ -203,7 +203,7 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
 
       {isConfirming && (
         <>
-          <div className="rounded-3xl border border-dashed border-slate-300 bg-white/50 p-4">
+          <div className="invitation-photo-upload rounded-3xl border border-dashed border-slate-300 bg-white/50 p-4">
             <ImageUpload
               label="Tu foto"
               hint="Se usa para validar tu identidad en el ingreso. Podés sacártela con la cámara."
@@ -294,7 +294,7 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
         </div>
       )}
 
-      <Button type="submit" size="lg" className="w-full bg-[#fcb39e] text-slate-950 hover:bg-[#f8c4b5]" disabled={loading}>
+      <Button type="submit" size="lg" className="invitation-submit-button w-full bg-[#fcb39e] text-slate-950 hover:bg-[#f8c4b5]" disabled={loading}>
         {loading
           ? 'Guardando respuesta...'
           : isConfirming

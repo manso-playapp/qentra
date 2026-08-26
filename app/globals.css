@@ -156,16 +156,20 @@ body {
 .invitation-wind-particle {
   --firefly-core: 255, 220, 154;
   --firefly-halo: 255, 184, 112;
+  --firefly-core-color: rgb(255, 220, 154);
+  --firefly-halo-color: rgb(255, 184, 112);
   position: absolute;
   border-radius: 999px;
   background: rgba(255, 247, 232, 0.95);
   box-shadow: 0 0 8px rgba(255, 221, 177, 0.45);
   animation-name: invitation-wind-drift, invitation-firefly-glow;
-  animation-timing-function: linear, ease-in-out;
+  animation-timing-function: linear, linear;
   animation-iteration-count: infinite;
 }
 
 .invitation-wind-particle:nth-child(3n) {
+  --firefly-core-color: rgb(255, 231, 190);
+  --firefly-halo-color: rgb(255, 190, 130);
   background: rgba(255, 231, 190, 0.92);
   box-shadow: 0 0 12px rgba(255, 190, 130, 0.38);
 }
@@ -173,6 +177,8 @@ body {
 .invitation-wind-particle:nth-child(7n) {
   --firefly-core: 252, 179, 158;
   --firefly-halo: 252, 116, 132;
+  --firefly-core-color: rgb(252, 179, 158);
+  --firefly-halo-color: rgb(252, 116, 132);
   background: rgba(252, 179, 158, 0.96);
   box-shadow: 0 0 12px rgba(252, 140, 151, 0.48);
 }
@@ -181,39 +187,470 @@ body {
   filter: blur(0.45px);
 }
 
+.invitation-template-midnight .invitation-wind-particle,
+.invitation-template-midnight .invitation-wind-particle:nth-child(3n),
+.invitation-template-midnight .invitation-wind-particle:nth-child(7n) {
+  --firefly-core-color: color-mix(in srgb, var(--invitation-accent) 78%, white);
+  --firefly-halo-color: var(--invitation-accent);
+  background: color-mix(in srgb, var(--invitation-accent) 78%, white);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--invitation-accent) 44%, transparent);
+}
+
+.invitation-template-midnight {
+  font-family: var(--font-playfair), Georgia, serif;
+  font-weight: 200;
+  text-align: center;
+}
+
+.invitation-template-midnight > .relative {
+  z-index: 1;
+}
+
+.invitation-logo-stage {
+  position: relative;
+  display: flex;
+  width: fit-content;
+  isolation: isolate;
+}
+
+.invitation-logo-glow {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      105deg,
+      transparent 20%,
+      color-mix(in srgb, var(--invitation-accent, #fcb39e) 16%, transparent) 38%,
+      color-mix(in srgb, white 84%, var(--invitation-accent, #fcb39e)) 49%,
+      color-mix(in srgb, var(--invitation-accent, #fcb39e) 72%, transparent) 55%,
+      transparent 72%
+    );
+  background-size: 250% 100%;
+  background-position: 180% 50%;
+  mask-image: var(--invitation-logo-mask);
+  mask-position: center;
+  mask-repeat: no-repeat;
+  mask-size: 100% 100%;
+  -webkit-mask-image: var(--invitation-logo-mask);
+  -webkit-mask-position: center;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-size: 100% 100%;
+  filter: blur(20px) saturate(1.55);
+  mix-blend-mode: screen;
+  opacity: 0.24;
+  animation: invitation-logo-glow-sweep 6.8s ease-in-out infinite;
+}
+
+.invitation-template-midnight .invitation-light-rays {
+  position: absolute;
+  z-index: 0;
+  inset: 0 0 auto;
+  height: min(90rem, 160vh);
+  overflow: hidden;
+  opacity: 1;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
+/* El editor muestra la misma vista dentro del mockup, sin volver a dibujar
+   una tarjeta alternativa. Estas reglas solo acotan el viewport del mockup. */
+.invitation-editor-thumbnail .invitation-template-midnight,
+.invitation-editor-thumbnail .invitation-template-travel {
+  min-height: 680px !important;
+  height: 680px;
+  overflow: visible !important;
+}
+
+.invitation-editor-thumbnail {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.42) transparent;
+}
+
+.invitation-editor-canvas {
+  width: 540px;
+  zoom: 0.666667;
+}
+
+.invitation-editor-canvas .invitation-template-midnight,
+.invitation-editor-canvas .invitation-template-travel {
+  min-height: 1020px !important;
+  height: 1020px;
+}
+
+.invitation-editor-canvas .invitation-light-rays {
+  height: 1020px;
+}
+
+.invitation-editor-thumbnail::-webkit-scrollbar {
+  width: 6px;
+}
+
+.invitation-editor-thumbnail::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.invitation-editor-thumbnail::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.42);
+}
+
+.invitation-editor-thumbnail .invitation-template-midnight > .relative {
+  width: 100%;
+}
+
+.invitation-editor-thumbnail .invitation-template-travel > .relative {
+  padding-top: 80px !important;
+}
+
+.invitation-editor-thumbnail > .invitation-light-rays {
+  height: 680px;
+}
+
+.invitation-editor-canvas .invitation-light-rays {
+  height: 1020px;
+}
+
+.invitation-template-midnight h1,
+.invitation-template-midnight h2,
+.invitation-template-midnight h3,
+.invitation-template-midnight h4,
+.invitation-template-midnight h5,
+.invitation-template-midnight h6,
+.invitation-template-midnight dd,
+.invitation-template-midnight p {
+  font-family: var(--font-playfair), Georgia, serif;
+  font-weight: 200;
+}
+
+.invitation-template-midnight .invitation-section-title {
+  color: #ffffff;
+  font-family: var(--font-playfair), Georgia, serif;
+  font-size: clamp(1.85rem, 5vw, 2.6rem);
+  font-weight: 200;
+  letter-spacing: -0.035em;
+  line-height: 0.98;
+  text-wrap: balance;
+}
+
+.invitation-template-midnight .invitation-section-kicker {
+  color: rgba(255, 255, 255, 0.55);
+  font-family: var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.invitation-template-midnight .invitation-section-body {
+  color: rgba(255, 255, 255, 0.68);
+  font-family: var(--font-playfair), Georgia, serif;
+  font-size: 1.05rem;
+  font-weight: 200;
+  line-height: 1.5;
+}
+
+/* El primer bloque queda más cerca del logo; el resto conserva el ritmo
+   vertical amplio de la invitación. */
+.invitation-template-midnight .invitation-personal {
+  margin-top: -2.5rem;
+}
+
+.invitation-template-midnight .uppercase,
+.invitation-template-midnight dt,
+.invitation-template-midnight label,
+.invitation-template-midnight legend,
+.invitation-template-midnight input,
+.invitation-template-midnight textarea,
+.invitation-template-midnight button,
+.invitation-template-midnight .invitation-label {
+  font-family: var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
+}
+
+.invitation-template-midnight h3,
+.invitation-template-midnight dd:not(.uppercase) {
+  font-weight: 200;
+}
+
+.invitation-template-midnight .invitation-content-flow {
+  display: flex;
+  flex-direction: column;
+  gap: 5rem;
+}
+
+.invitation-template-midnight .invitation-content-flow > .invitation-section + .invitation-section {
+  margin-top: 0 !important;
+}
+
+.invitation-template-midnight .invitation-animated-icon {
+  display: inline-flex;
+  color: var(--invitation-accent);
+  animation: invitation-icon-float 3.6s ease-in-out infinite;
+  transform-origin: center;
+}
+
+.invitation-template-midnight .invitation-animated-icon-two {
+  animation-delay: -1.2s;
+}
+
+.invitation-template-midnight .invitation-animated-icon-three {
+  animation-delay: -2.4s;
+}
+
+.invitation-template-midnight.invitation-reveal-ready [data-invitation-block] {
+  opacity: 0;
+  filter: blur(4px);
+  transform: translate3d(0, 28px, 0);
+  transition: opacity 700ms ease, filter 700ms ease, transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--invitation-reveal-delay, 0ms);
+}
+
+.invitation-template-midnight.invitation-reveal-ready [data-invitation-block].is-visible {
+  opacity: 1;
+  filter: none;
+  transform: none;
+}
+
+.invitation-template-midnight .invitation-surface-card {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: #ffffff;
+  box-shadow: none !important;
+  padding-inline: 0 !important;
+  text-align: center;
+}
+
+.invitation-template-midnight .invitation-surface-card::before {
+  display: none;
+}
+
+.invitation-template-midnight .invitation-surface-card > :first-child {
+  border-bottom: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+/* Sin tarjeta (borde/fondo) que las separe visualmente, las secciones
+   contiguas necesitan su propio respiro para no leerse como un solo bloque. */
+.invitation-template-midnight .invitation-surface-card + .invitation-surface-card {
+  margin-top: 3rem;
+}
+
+/* La fila "Estado del acceso + pill" viene con label a la izquierda y pill a
+   la derecha (logica de boarding pass, para Viaje). En Noche todo el resto
+   esta centrado, asi que esta fila tambien pasa a apilarse centrada. */
+.invitation-template-midnight .invitation-surface-card > div.flex {
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.invitation-template-midnight .invitation-surface-card input,
+.invitation-template-midnight .invitation-surface-card textarea {
+  text-align: center;
+}
+
+/* Algunas secciones (QR, confirmacion) traen su propio `!text-slate-*` de
+   Tailwind para pisar el estilo base de Viaje. Ese `!important` vive en
+   `@layer utilities`, y por reglas de cascade layers un `!important` sin capa
+   pierde contra uno en capa aunque tenga mas especificidad. Por eso estas dos
+   reglas van en la misma capa: ahi la especificidad decide y ganamos nosotros. */
+@layer utilities {
+  .invitation-template-midnight .invitation-surface-card h3,
+  .invitation-template-midnight .invitation-surface-card dd,
+  .invitation-template-midnight .invitation-surface-card label,
+  .invitation-template-midnight .invitation-surface-card legend {
+    color: #ffffff !important;
+  }
+
+  .invitation-template-midnight .invitation-surface-card p,
+  .invitation-template-midnight .invitation-surface-card dt {
+    color: rgba(255, 255, 255, 0.68) !important;
+  }
+}
+
+.invitation-template-midnight .invitation-surface-card input,
+.invitation-template-midnight .invitation-surface-card textarea {
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+}
+
+/* El formulario de RSVP es compartido con Viaje y trae su propia estética de
+   tarjetas de color solido; para Noche lo integramos al mismo lenguaje
+   translucido/con borde que el resto de la invitacion. */
+.invitation-template-midnight .invitation-choice-card {
+  border-color: rgba(255, 255, 255, 0.22) !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+  color: rgba(255, 255, 255, 0.75) !important;
+  box-shadow: none !important;
+}
+
+.invitation-template-midnight .invitation-choice-card[aria-pressed='true'] {
+  border-color: var(--invitation-accent) !important;
+  background: color-mix(in srgb, var(--invitation-accent) 16%, transparent) !important;
+  color: #ffffff !important;
+}
+
+.invitation-template-midnight .invitation-choice-icon {
+  border-color: rgba(255, 255, 255, 0.3) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: rgba(255, 255, 255, 0.75) !important;
+}
+
+.invitation-template-midnight .invitation-choice-card[aria-pressed='true'] .invitation-choice-icon {
+  border-color: var(--invitation-accent) !important;
+  background: color-mix(in srgb, var(--invitation-accent) 32%, transparent) !important;
+  color: #ffffff !important;
+}
+
+.invitation-template-midnight .invitation-choice-desc {
+  color: rgba(255, 255, 255, 0.58) !important;
+}
+
+.invitation-template-midnight .invitation-photo-upload {
+  border-color: rgba(255, 255, 255, 0.22) !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+}
+
+.invitation-template-midnight .invitation-photo-upload .bg-white\/70 {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+.invitation-template-midnight .invitation-submit-button {
+  background: var(--invitation-accent) !important;
+  color: #171714 !important;
+}
+
+.invitation-template-midnight .invitation-submit-button:hover {
+  background: color-mix(in srgb, var(--invitation-accent) 85%, white) !important;
+}
+
+.invitation-template-midnight .invitation-surface-card input::placeholder,
+.invitation-template-midnight .invitation-surface-card textarea::placeholder {
+  color: rgba(255, 255, 255, 0.42) !important;
+}
+
+@keyframes invitation-icon-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-4px) rotate(2deg);
+  }
+}
+
 @keyframes invitation-wind-drift {
   from {
-    transform: translate3d(-14vw, -2vh, 0) rotate(0deg);
+    transform: translate3d(var(--wind-start-x, -14vw), var(--wind-start-y, 13vh), 0) rotate(0deg);
   }
   45% {
-    transform: translate3d(48vw, 5vh, 0) rotate(120deg);
+    transform: translate3d(var(--wind-mid-x, 0vw), var(--wind-mid-y, 0vh), 0) rotate(120deg);
   }
   to {
-    transform: translate3d(118vw, 13vh, 0) rotate(280deg);
+    transform: translate3d(var(--wind-end-x, 118vw), var(--wind-end-y, -18vh), 0) rotate(280deg);
+  }
+}
+
+@keyframes invitation-logo-glow-sweep {
+  0%,
+  100% {
+    background-position: 180% 50%;
+    opacity: 0.2;
+  }
+  34% {
+    background-position: 92% 50%;
+    opacity: 0.42;
+  }
+  48% {
+    background-position: 50% 50%;
+    opacity: 1;
+  }
+  58% {
+    background-position: 30% 50%;
+    opacity: 0.46;
+  }
+  76% {
+    background-position: -12% 50%;
+    opacity: 0.18;
   }
 }
 
 @keyframes invitation-firefly-glow {
   0%,
   100% {
-    opacity: 0.22;
-    box-shadow: 0 0 4px rgba(var(--firefly-core), 0.2);
+    opacity: 0.1;
+    box-shadow: 0 0 4px color-mix(in srgb, var(--firefly-core-color) 20%, transparent);
   }
-  18% {
-    opacity: 0.82;
-    box-shadow: 0 0 13px rgba(var(--firefly-core), 0.72), 0 0 24px rgba(var(--firefly-halo), 0.2);
+  6% {
+    opacity: 0.12;
+  }
+  7% {
+    opacity: 0.88;
+    box-shadow: 0 0 15px color-mix(in srgb, var(--firefly-core-color) 78%, transparent), 0 0 28px color-mix(in srgb, var(--firefly-halo-color) 28%, transparent);
+  }
+  9% {
+    opacity: 0.96;
+    box-shadow: 0 0 17px color-mix(in srgb, var(--firefly-core-color) 86%, transparent), 0 0 30px color-mix(in srgb, var(--firefly-halo-color) 30%, transparent);
+  }
+  13% {
+    opacity: 0.22;
+    box-shadow: 0 0 4px color-mix(in srgb, var(--firefly-core-color) 18%, transparent);
+  }
+  27% {
+    opacity: 0.16;
+  }
+  29% {
+    opacity: 0.68;
+    box-shadow: 0 0 11px color-mix(in srgb, var(--firefly-core-color) 62%, transparent), 0 0 20px color-mix(in srgb, var(--firefly-halo-color) 18%, transparent);
   }
   31% {
-    opacity: 0.38;
-    box-shadow: 0 0 6px rgba(var(--firefly-core), 0.3);
+    opacity: 0.84;
   }
-  57% {
-    opacity: 0.96;
-    box-shadow: 0 0 16px rgba(var(--firefly-core), 0.8), 0 0 30px rgba(var(--firefly-halo), 0.24);
+  36% {
+    opacity: 0.18;
+    box-shadow: 0 0 3px color-mix(in srgb, var(--firefly-core-color) 14%, transparent);
   }
-  68% {
+  51% {
+    opacity: 0.12;
+  }
+  52% {
+    opacity: 0.92;
+    box-shadow: 0 0 14px color-mix(in srgb, var(--firefly-core-color) 74%, transparent), 0 0 27px color-mix(in srgb, var(--firefly-halo-color) 25%, transparent);
+  }
+  55% {
     opacity: 0.3;
-    box-shadow: 0 0 5px rgba(var(--firefly-core), 0.24);
+  }
+  61% {
+    opacity: 0.14;
+    box-shadow: 0 0 5px color-mix(in srgb, var(--firefly-core-color) 22%, transparent);
+  }
+  72% {
+    opacity: 0.16;
+  }
+  73% {
+    opacity: 0.76;
+    box-shadow: 0 0 11px color-mix(in srgb, var(--firefly-core-color) 62%, transparent), 0 0 20px color-mix(in srgb, var(--firefly-halo-color) 18%, transparent);
+  }
+  76% {
+    opacity: 0.88;
+  }
+  80% {
+    opacity: 0.2;
+    box-shadow: 0 0 3px color-mix(in srgb, var(--firefly-core-color) 16%, transparent);
+  }
+  90% {
+    opacity: 0.14;
+  }
+  91% {
+    opacity: 0.58;
+    box-shadow: 0 0 8px color-mix(in srgb, var(--firefly-core-color) 46%, transparent);
+  }
+  94% {
+    opacity: 0.24;
   }
 }
 
@@ -237,5 +674,13 @@ body {
 
   .invitation-wind-particle {
     animation: none;
+  }
+
+  .invitation-template-midnight.invitation-reveal-ready [data-invitation-block],
+  .invitation-template-midnight.invitation-reveal-ready [data-invitation-block].is-visible {
+    opacity: 1;
+    filter: none;
+    transform: none;
+    transition: none;
   }
 }

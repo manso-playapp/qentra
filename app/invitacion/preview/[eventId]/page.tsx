@@ -2,8 +2,10 @@ import { notFound } from 'next/navigation'
 import InvitationView, {
   buildAccessState,
   buildCalendarUrl,
+  type InvitationConfigInfo,
   type InvitationEventInfo,
 } from '@/components/invitation/InvitationView'
+import { getInvitationTemplate, normalizeInvitationTemplate } from '@/lib/invitation-templates'
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { SURFACE_BRANDING_COLUMNS, type SurfaceBranding } from '@/types'
@@ -14,10 +16,12 @@ export const metadata = {
 
 type PreviewPageProps = {
   params: Promise<{ eventId: string }>
+  searchParams?: Promise<{ template?: string }>
 }
 
-export default async function InvitationPreviewPage({ params }: PreviewPageProps) {
+export default async function InvitationPreviewPage({ params, searchParams }: PreviewPageProps) {
   const { eventId } = await params
+  const resolvedSearchParams = searchParams ? await searchParams : undefined
   const supabase = getSupabaseAdminClient() ?? (await createServerSupabaseClient())
 
   const [eventResponse, brandingResponse] = await Promise.all([
@@ -34,6 +38,10 @@ export default async function InvitationPreviewPage({ params }: PreviewPageProps
   }
 
   const branding = (brandingResponse.data ?? null) as SurfaceBranding | null
+  const invitationConfig = (branding?.config ?? {}) as InvitationConfigInfo
+  const invitationTemplate = resolvedSearchParams?.template
+    ? normalizeInvitationTemplate(resolvedSearchParams.template)
+    : getInvitationTemplate(invitationConfig)
   const eventInfo = eventResponse.data as InvitationEventInfo
 
   const calendarUrl = buildCalendarUrl(eventInfo)
@@ -54,13 +62,15 @@ export default async function InvitationPreviewPage({ params }: PreviewPageProps
       branding={branding}
       guestDisplayName="Invitado/a de ejemplo"
       calendarUrl={calendarUrl}
+      template={invitationTemplate}
+      config={invitationConfig}
       isPreview
     >
       {/* Formulario deshabilitado: muestra cómo se vería el paso previo sin
           enviar datos reales. */}
-      <section className="relative overflow-hidden rounded-[28px] border border-slate-300 bg-[#eed8d2] p-6 pt-7 text-slate-950 shadow-2xl before:absolute before:inset-x-0 before:top-0 before:h-1.5 before:bg-[#fcb39e]">
+      <section className="invitation-surface-card relative overflow-hidden rounded-[28px] border border-slate-300 bg-[#eed8d2] p-6 pt-7 text-slate-950 shadow-2xl before:absolute before:inset-x-0 before:top-0 before:h-1.5 before:bg-[#fcb39e]">
         <div className="flex items-center justify-between gap-3 border-b-2 border-dashed border-slate-300 pb-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Estado del vuelo</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Estado del acceso</p>
           <span className="rounded-full bg-slate-950 px-3 py-1 text-[11px] font-semibold text-white">{accessState.label}</span>
         </div>
         <h3 className="mt-4 text-xl font-semibold text-slate-950">{accessState.title}</h3>

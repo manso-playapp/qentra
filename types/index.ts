@@ -44,6 +44,8 @@ export interface EventBranding {
   assistance_message?: string | null
   invalid_message?: string | null
   return_to_idle_seconds?: number | null
+  /** Configuración de la invitación pública (template, campos y widgets). */
+  config?: Record<string, unknown> | null
   created_at: string
   updated_at: string
 }
@@ -61,11 +63,13 @@ export type SurfaceBranding = Pick<
   | 'background_image_url'
   | 'welcome_message'
   | 'approved_message'
+  | 'config'
 >
 
-/** Columnas exactas a pedir para poblar `SurfaceBranding`. */
-export const SURFACE_BRANDING_COLUMNS =
-  'primary_color, secondary_color, logo_url, cover_image_url, background_image_url, welcome_message, approved_message'
+/** Selección segura para poblar `SurfaceBranding` en superficies públicas. */
+// `*` mantiene la lectura compatible mientras se agregan opciones de branding
+// mediante migraciones. Ninguna de estas columnas contiene datos de invitados.
+export const SURFACE_BRANDING_COLUMNS = '*'
 
 /** Campos que el editor de branding puede escribir. */
 export type UpdateEventBrandingForm = Partial<

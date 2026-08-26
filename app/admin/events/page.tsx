@@ -6,6 +6,7 @@ import AdminLayout from '@/components/admin/AdminLayout'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { formatEventDate } from '@/lib/event-date'
 import { useEvents } from '@/lib/hooks'
 
 const EVENT_TYPE_LABELS: Record<string, string> = {
@@ -90,7 +91,7 @@ export default function EventsPage() {
                   <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
                     <span className="flex items-center gap-2">
                       <CalendarDays className="size-4 flex-none" />
-                      {new Date(`${event.event_date}T00:00:00`).toLocaleDateString('es-AR')} · {event.start_time}
+                      {formatEventDate(event.event_date)} · {event.start_time}
                     </span>
                     <span className="flex items-center gap-2">
                       <MapPin className="size-4 flex-none" />

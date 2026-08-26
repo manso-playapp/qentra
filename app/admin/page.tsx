@@ -1,10 +1,11 @@
 import Link from 'next/link'
-import { ArrowRight, CalendarRange, CheckCircle2, Clock, Mail, ScanLine, Users2, Wallet } from 'lucide-react'
+import { ArrowRight, CalendarRange, CheckCircle2, Clock, Mail, Plus, ScanLine, Users2, Wallet } from 'lucide-react'
 import AdminLayout from '@/components/admin/AdminLayout'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
+import { formatEventDate } from '@/lib/event-date'
 import type { Event } from '@/types'
 
 export const metadata = {
@@ -27,14 +28,6 @@ function pickFocusEvent(events: Event[]): Event | null {
   const upcoming = byDateAsc.find((event) => event.event_date >= today)
 
   return upcoming ?? byDateAsc[byDateAsc.length - 1]
-}
-
-function formatEventDate(isoDate: string) {
-  return new Date(`${isoDate}T00:00:00`).toLocaleDateString('es-AR', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  })
 }
 
 function daysUntilLabel(isoDate: string, today: string) {
@@ -169,6 +162,14 @@ export default async function AdminPage() {
   return (
     <AdminLayout>
       <div className="px-4 py-6 sm:px-0">
+        <div className="mb-6 flex justify-end">
+          <Button asChild>
+            <Link href="/admin/events/new">
+              <Plus className="size-4" />
+              Crear nuevo evento
+            </Link>
+          </Button>
+        </div>
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.6fr)_360px]">
           {/* Launchpad: el evento en foco, su estado de preparacion y el salto al taller. */}
           <Card className="overflow-hidden bg-admin-panel">
@@ -182,7 +183,7 @@ export default async function AdminPage() {
 
               <h2 className="admin-heading mt-5 text-5xl leading-none text-foreground">{focusEvent.name}</h2>
               <p className="mt-3 text-base capitalize text-muted-foreground">
-                {formatEventDate(focusEvent.event_date)} · {focusEvent.start_time} · {focusEvent.venue_name}
+                {formatEventDate(focusEvent.event_date, { weekday: 'long', day: 'numeric', month: 'long' })} · {focusEvent.start_time} · {focusEvent.venue_name}
               </p>
 
               <div className="mt-8 grid gap-4 sm:grid-cols-3">
@@ -287,7 +288,7 @@ export default async function AdminPage() {
                     <div className="min-w-0">
                       <p className="truncate text-lg font-semibold text-foreground">{event.name}</p>
                       <p className="mt-1 text-sm text-muted-foreground">
-                        {new Date(`${event.event_date}T00:00:00`).toLocaleDateString('es-AR')} ·{' '}
+                        {formatEventDate(event.event_date)} ·{' '}
                         {event.venue_name}
                       </p>
                     </div>

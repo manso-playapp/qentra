@@ -73,6 +73,14 @@ El siguiente bloque es la calidad de lanzamiento:
 - Admin, puerta e invitación usan el mismo criterio de vencimiento.
 - Los casos de borde están cubiertos por tests.
 
+### Templates de invitación
+
+- `Viaje` conserva exactamente la estética actual de boarding pass y es el valor por defecto, también para eventos anteriores.
+- `Noche` suma una alternativa editorial oscura, con la misma lógica de RSVP, QR, calendario y contacto.
+- La elección se guarda por evento en `event_branding.config.template` desde el editor de invitación.
+- Antes de usarla en un ambiente conectado hay que aplicar `supabase/migrations/20260826134930_add_invitation_template_config.sql`.
+- Para comparar sin guardar: desde Admin → Invitación usar **Comparar template Noche**, o abrir `/invitacion/preview/<eventId>?template=midnight`.
+
 ### Performance web
 
 - El video original de 40,4 MB fue sustituido por variantes desktop/mobile y poster que suman 4,7 MB, una reducción del 88,4 % en assets audiovisuales disponibles.

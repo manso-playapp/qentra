@@ -43,7 +43,7 @@ export default async function InvitationEditorPage({ params }: { params: Promise
 
   const { data: event } = await supabase
     .from('events')
-    .select('id, name, event_date, start_time, venue_name, venue_address')
+    .select('id, name, event_date, start_time, venue_name, venue_address, contact_phone')
     .eq('id', id)
     .maybeSingle()
 
@@ -94,16 +94,24 @@ export default async function InvitationEditorPage({ params }: { params: Promise
               Editá la landing que recibe cada invitado. Los cambios se ven en vivo a la derecha.
             </p>
           </div>
-          {invitationPreviewToken ? (
-            <Button asChild variant="outline">
-              <Link href={`/invitacion/${invitationPreviewToken}`} target="_blank" rel="noreferrer">
-                Ver invitación en vivo
-                <ExternalLink className="size-4" />
+          <div className="flex flex-wrap items-center gap-2">
+            {invitationPreviewToken ? (
+              <Button asChild variant="outline">
+                <Link href={`/invitacion/${invitationPreviewToken}`} target="_blank" rel="noreferrer">
+                  Ver invitación en vivo
+                  <ExternalLink className="size-4" />
+                </Link>
+              </Button>
+            ) : (
+              <p className="text-xs text-muted-foreground">Emití una invitación para habilitar la vista en vivo.</p>
+            )}
+            <Button asChild variant="ghost" size="sm">
+              <Link href={`/invitacion/preview/${id}?template=midnight`} target="_blank" rel="noreferrer">
+                Comparar template Noche
+                <ExternalLink className="size-3.5" />
               </Link>
             </Button>
-          ) : (
-            <p className="text-xs text-muted-foreground">Emití una invitación para habilitar la vista en vivo.</p>
-          )}
+          </div>
         </div>
 
         <InvitationEditor
@@ -114,6 +122,7 @@ export default async function InvitationEditorPage({ params }: { params: Promise
             start_time: (event.start_time as string) ?? '',
             venue_name: (event.venue_name as string) ?? '',
             venue_address: (event.venue_address as string) ?? '',
+            contact_phone: (event.contact_phone as string) ?? '',
           }}
           initialVisual={{
             primary_color: (brandingRow.primary_color as string) ?? '#8b5e3c',

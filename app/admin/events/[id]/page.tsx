@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
+import { formatEventDate } from '@/lib/event-date'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { getMercadoPagoOAuthConfig } from '@/lib/mercadopago'
 import { isPaymentCredentialEncryptionConfigured } from '@/lib/payment-credentials'
@@ -61,7 +62,7 @@ function formatChannelMode(mode: DeliveryProfile['channel_mode']) {
   return 'WhatsApp'
 }
 
-function formatDate(date: string) {
+function formatTimestampDate(date: string) {
   return new Intl.DateTimeFormat('es-AR', {
     dateStyle: 'full',
   }).format(new Date(date))
@@ -161,7 +162,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
 
         <div className="mb-8 mt-6 grid gap-4 md:grid-cols-4">
           {[
-            { label: 'Fecha', value: formatDate(event.event_date), detail: `Inicio a las ${event.start_time}` },
+            { label: 'Fecha', value: formatEventDate(event.event_date, { dateStyle: 'full' }), detail: `Inicio a las ${event.start_time}` },
             { label: 'Capacidad', value: `${event.max_capacity} personas`, detail: `${availableSeats} lugares disponibles` },
             { label: 'Invitados', value: String(guestCount), detail: `${guestTypes.length} tipos configurados` },
             { label: 'Check-ins', value: String(checkinCount), detail: 'Control de acceso registrado' },
@@ -370,7 +371,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
                 </div>
                 <div>
                   <dt className="text-sm text-muted-foreground">Creado</dt>
-                  <dd className="mt-1 font-medium text-foreground">{formatDate(event.created_at)}</dd>
+                  <dd className="mt-1 font-medium text-foreground">{formatTimestampDate(event.created_at)}</dd>
                 </div>
                 <div>
                   <dt className="text-sm text-muted-foreground">Telefono del evento</dt>

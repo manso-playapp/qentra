@@ -1,6 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-import { isMissingAuthSessionError } from '@/lib/supabase-auth-errors'
+import { isAuthRetryableFetchError, isMissingAuthSessionError } from '@/lib/supabase-auth-errors'
 
 function getSupabaseUrl() {
   return process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -36,11 +36,9 @@ export async function updateSupabaseSession(request: NextRequest) {
     },
   })
 
-  const {
-    error,
-  } = await supabase.auth.getUser()
+  const { error } = await supabase.auth.getClaims()
 
-  if (error && !isMissingAuthSessionError(error)) {
+  if (error && !isMissingAuthSessionError(error) && !isAuthRetryableFetchError(error)) {
     throw error
   }
 

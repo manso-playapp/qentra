@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { formatEventDate } from '@/lib/event-date'
 import { getErrorMessage } from '@/lib/errors'
 import { useDeliveryProfiles } from '@/lib/hooks'
 import type { Event } from '@/types'
@@ -214,6 +215,11 @@ export default function EditEventForm({ event }: EditEventFormProps) {
                   <div>
                     <Label htmlFor="event_date">Fecha del evento</Label>
                     <Input id="event_date" name="event_date" type="date" required value={formData.event_date} onChange={handleInputChange} className="mt-2" />
+                    {formData.event_date && (
+                      <p className="mt-2 text-sm text-muted-foreground">
+                        {formatEventDate(formData.event_date, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <Label htmlFor="start_time">Hora de inicio</Label>

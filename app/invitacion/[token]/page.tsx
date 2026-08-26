@@ -9,12 +9,15 @@ import InvitationResponseForm from '@/components/invitation/InvitationResponseFo
 import InvitationView, {
   buildAccessState,
   buildCalendarUrl,
+  getMidnightAccentColor,
+  type InvitationConfigInfo,
   type InvitationEventInfo,
 } from '@/components/invitation/InvitationView'
 import { buildGuestAccessQrPayload } from '@/lib/guest-access'
 import { normalizeGuestStatus } from '@/lib/guest-schema'
 import { isInvitationExpired } from '@/lib/invitation-expiry'
 import { isInvitationAccessReady, parseInvitationDetails } from '@/lib/invitation-response'
+import { getInvitationTemplate } from '@/lib/invitation-templates'
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { SURFACE_BRANDING_COLUMNS, type SurfaceBranding } from '@/types'
@@ -101,6 +104,8 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
   }
 
   const branding = (brandingResponse.data ?? null) as SurfaceBranding | null
+  const invitationConfig = (branding?.config ?? {}) as InvitationConfigInfo
+  const invitationTemplate = getInvitationTemplate(invitationConfig)
 
   const invitationDetails = parseInvitationDetails(guest?.notes)
   const paymentStatus = (guest?.payment_status ?? 'not_required') as 'not_required' | 'pending' | 'approved'
@@ -125,7 +130,8 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
   const invitationResponseForForm = invitationResponse === 'checked_in' ? 'confirmed' : invitationResponse
 
   const accessReady = isInvitationAccessReady(guest?.status, paymentStatus)
-  const primaryColor = '#fcb39e'
+  const isMidnight = invitationTemplate === 'midnight'
+  const primaryColor = isMidnight ? getMidnightAccentColor(branding) : '#fcb39e'
 
   const invitationUsed =
     Boolean(invitationToken.last_used_at) ||
@@ -177,26 +183,43 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
       guestDisplayName={guestDisplayName}
       schedule={invitationSchedule}
       calendarUrl={calendarUrl}
+      template={invitationTemplate}
+      config={invitationConfig}
     >
       {invitationExpired ? (
-        <section className="relative overflow-hidden rounded-[28px] border border-rose-300 bg-[#eed8d2] p-6 pt-7 text-slate-950 shadow-2xl before:absolute before:inset-x-0 before:top-0 before:h-1.5 before:bg-rose-500">
-          <div className="flex items-center justify-between gap-3 border-b-2 border-dashed border-slate-300 pb-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Estado del acceso</p>
-            <span className="rounded-full bg-rose-700 px-3 py-1 text-[11px] font-semibold text-white">
-              {accessState.label}
-            </span>
-          </div>
-          <h3 className="mt-4 text-xl font-semibold text-slate-950">{accessState.title}</h3>
-          <p className="mt-2 text-sm leading-6 text-slate-600">{accessState.detail}</p>
+        <section className="invitation-section invitation-surface-card relative overflow-hidden rounded-[28px] border border-rose-300 bg-[#eed8d2] p-6 pt-7 text-slate-950 shadow-2xl before:absolute before:inset-x-0 before:top-0 before:h-1.5 before:bg-rose-500" data-invitation-block>
+          {isMidnight ? (
+            <>
+              <h2 className="invitation-section-title">Acceso</h2>
+              <p className="invitation-section-body mt-3">{accessState.detail}</p>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center justify-between gap-3 border-b-2 border-dashed border-slate-300 pb-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Estado del acceso</p>
+                <span className="rounded-full bg-rose-700 px-3 py-1 text-[11px] font-semibold text-white">
+                  {accessState.label}
+                </span>
+              </div>
+              <h3 className="mt-4 text-xl font-semibold text-slate-950">{accessState.title}</h3>
+              <p className="mt-2 text-sm leading-6 text-slate-600">{accessState.detail}</p>
+            </>
+          )}
         </section>
       ) : canEditInvitation ? (
-        <section className="relative overflow-hidden rounded-[28px] border border-slate-300 bg-[#eed8d2] p-6 pt-7 text-slate-950 shadow-2xl before:absolute before:inset-x-0 before:top-0 before:h-1.5 before:bg-[#fcb39e]">
-          <div className="flex items-center justify-between gap-3 border-b-2 border-dashed border-slate-300 pb-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Estado del vuelo</p>
-            <span className="rounded-full bg-slate-950 px-3 py-1 text-[11px] font-semibold text-white">{accessState.label}</span>
-          </div>
-          <h3 className="mt-4 text-xl font-semibold text-slate-950">{accessState.title}</h3>
-          <p className="mt-2 text-sm leading-6 text-slate-600">{accessState.detail}</p>
+        <section className="invitation-section invitation-surface-card relative overflow-hidden rounded-[28px] border border-slate-300 bg-[#eed8d2] p-6 pt-7 text-slate-950 shadow-2xl before:absolute before:inset-x-0 before:top-0 before:h-1.5 before:bg-[#fcb39e]" data-invitation-block>
+          {isMidnight ? (
+            <h2 className="invitation-section-title">Tus Datos</h2>
+          ) : (
+            <>
+              <div className="flex items-center justify-between gap-3 border-b-2 border-dashed border-slate-300 pb-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Estado del acceso</p>
+                <span className="rounded-full bg-slate-950 px-3 py-1 text-[11px] font-semibold text-white">{accessState.label}</span>
+              </div>
+              <h3 className="mt-4 text-xl font-semibold text-slate-950">{accessState.title}</h3>
+              <p className="mt-2 text-sm leading-6 text-slate-600">{accessState.detail}</p>
+            </>
+          )}
           <div className="mt-5">
             <InvitationResponseForm
               token={token}
@@ -228,20 +251,22 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
       ) : (
         <>
           {showCheckinConfirmation && (
-            <section className="relative overflow-hidden rounded-[28px] border border-slate-300 bg-[#eed8d2] p-6 pt-7 text-slate-950 shadow-2xl before:absolute before:inset-x-0 before:top-0 before:h-1.5 before:bg-[#fcb39e]">
+            <section className="invitation-section invitation-surface-card relative overflow-hidden rounded-[28px] border border-slate-300 bg-[#eed8d2] p-6 pt-7 text-slate-950 shadow-2xl before:absolute before:inset-x-0 before:top-0 before:h-1.5 before:bg-[#fcb39e]" data-invitation-block>
               <p className="border-b-2 border-dashed border-slate-300 pb-4 text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
                 Check-in confirmado
               </p>
               <h3 className="mt-4 text-xl font-semibold text-slate-950">
-                El pr{'\u00f3'}ximo destino: mis 15. {'\u2764\uFE0F'}
+                {isMidnight ? <>Ya est{'\u00E1'}s adentro. Nos vemos esta noche. {'\u2764\uFE0F'}</> : <>El pr{'\u00f3'}ximo destino: mis 15. {'\u2764\uFE0F'}</>}
               </h3>
-              <p className="mt-2 text-sm leading-6 text-slate-600">Una noche inolvidable. Nos vemos a bordo.</p>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                {isMidnight ? 'Una noche inolvidable te espera.' : 'Una noche inolvidable. Nos vemos a bordo.'}
+              </p>
               <p className="mt-3 text-sm font-semibold text-slate-950">No olvides descargar tu QR.</p>
             </section>
           )}
 
           {!invitationUsed && (
-            <section className="relative overflow-hidden rounded-[28px] border border-slate-300 bg-[#eed8d2] p-6 pt-7 text-center text-slate-950 shadow-2xl before:absolute before:inset-x-0 before:top-0 before:h-1.5 before:bg-[#fcb39e] [&>p:first-child]:border-b-2 [&>p:first-child]:border-dashed [&>p:first-child]:border-slate-300 [&>p:first-child]:pb-4 [&_p]:!text-slate-600">
+            <section className="invitation-section invitation-surface-card relative overflow-hidden rounded-[28px] border border-slate-300 bg-[#eed8d2] p-6 pt-7 text-center text-slate-950 shadow-2xl before:absolute before:inset-x-0 before:top-0 before:h-1.5 before:bg-[#fcb39e] [&>p:first-child]:border-b-2 [&>p:first-child]:border-dashed [&>p:first-child]:border-slate-300 [&>p:first-child]:pb-4 [&_p]:!text-slate-600" data-invitation-block>
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/50">Tu acceso</p>
               {qrCodeUrl && (
                 <>
@@ -267,8 +292,12 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
           )}
 
           {/* Tu confirmación: solo lo que ya completaste, sin repetir el estado. */}
-          <section className="relative overflow-hidden rounded-[28px] border border-slate-300 bg-[#eed8d2] p-6 pt-7 text-slate-950 shadow-2xl before:absolute before:inset-x-0 before:top-0 before:h-1.5 before:bg-[#fcb39e] [&>p:first-child]:border-b-2 [&>p:first-child]:border-dashed [&>p:first-child]:border-slate-300 [&>p:first-child]:pb-4 [&_dt]:!text-slate-500 [&_dd]:!text-slate-800 [&_p]:!text-slate-600">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/50">Tu confirmación</p>
+          <section className="invitation-section invitation-surface-card relative overflow-hidden rounded-[28px] border border-slate-300 bg-[#eed8d2] p-6 pt-7 text-slate-950 shadow-2xl before:absolute before:inset-x-0 before:top-0 before:h-1.5 before:bg-[#fcb39e] [&>p:first-child]:border-b-2 [&>p:first-child]:border-dashed [&>p:first-child]:border-slate-300 [&>p:first-child]:pb-4 [&_dt]:!text-slate-500 [&_dd]:!text-slate-800 [&_p]:!text-slate-600" data-invitation-block>
+            {isMidnight ? (
+              <h2 className="invitation-section-title">Tus Datos</h2>
+            ) : (
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/50">Tu confirmación</p>
+            )}
             <dl className="mt-3 space-y-2 text-sm text-white/85">
               <div className="flex justify-between gap-4">
                 <dt className="text-white/60">DNI</dt>

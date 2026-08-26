@@ -19,6 +19,14 @@ const interTight = localFont({
   style: 'normal',
 })
 
+const playfairDisplay = localFont({
+  src: './fonts/PlayfairDisplay-Regular.ttf',
+  display: 'swap',
+  variable: '--font-playfair',
+  weight: '400',
+  style: 'normal',
+})
+
 export const metadata: Metadata = {
   applicationName: 'Alista',
   verification: process.env.GOOGLE_SITE_VERIFICATION
@@ -48,7 +56,7 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${nunito.variable} ${interTight.variable}`}
+      className={`${nunito.variable} ${interTight.variable} ${playfairDisplay.variable}`}
       data-scroll-behavior="smooth"
     >
       <body className="font-sans antialiased">{children}</body>

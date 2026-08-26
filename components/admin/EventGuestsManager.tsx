@@ -4,6 +4,7 @@ import Image from 'next/image'
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { formatGuestTypeAccessPolicy } from '@/lib/access-policy'
+import { formatEventDate } from '@/lib/event-date'
 import { mapGuestStatusToDb, type DbGuestStatus } from '@/lib/guest-schema'
 import { isInvitationExpired } from '@/lib/invitation-expiry'
 import {
@@ -1151,7 +1152,7 @@ export default function EventGuestsManager({
           </Link>
           <h1 className="mt-3 text-3xl font-bold text-gray-900">Invitados de {event.name}</h1>
           <p className="mt-2 text-gray-600">
-            {formatDate(event.event_date)} · {event.start_time} · slug <span className="font-mono text-sm">{event.slug}</span>
+            {formatEventDate(event.event_date)} · {event.start_time} · slug <span className="font-mono text-sm">{event.slug}</span>
           </p>
         </div>
 
@@ -2035,8 +2036,8 @@ export default function EventGuestsManager({
                   </div>
                 ) : (
                   <>
-                    <div className="overflow-hidden rounded-xl border border-gray-200">
-                      <div className="grid grid-cols-[32px_minmax(0,1fr)] items-center gap-3 border-b border-gray-200 bg-gray-50 px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+                    <div className="rounded-xl border border-gray-200">
+                      <div className="grid grid-cols-[32px_minmax(0,1fr)] items-center gap-3 rounded-t-xl border-b border-gray-200 bg-gray-50 px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500">
                         <input
                           type="checkbox"
                           checked={allPageGuestsSelected}
@@ -2047,7 +2048,7 @@ export default function EventGuestsManager({
                         <span>Invitado · tipo · estado</span>
                       </div>
                 {pagedGuests.map((guest) => (
-                  <div key={guest.id} className="border-b border-gray-200 bg-white px-3 py-2 last:border-b-0">
+                  <div key={guest.id} className="border-b border-gray-200 bg-white px-3 py-2 last:rounded-b-xl last:border-b-0">
                     {editingGuestId === guest.id && editGuestForm ? (
                       <div className="space-y-4">
                         <div className="flex flex-wrap items-center justify-between gap-3">
