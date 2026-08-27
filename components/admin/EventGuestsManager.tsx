@@ -210,6 +210,10 @@ function buildGuestImportTemplateCsv(): string {
 function buildInvitationPath(token: string, guestName?: string) {
   const params = new URLSearchParams()
 
+  // Fuerza a WhatsApp a volver a leer la metadata cuando cambia la miniatura.
+  // Sin este versionado conserva en caché la previsualización anterior.
+  params.set('v', '2')
+
   if (guestName?.trim()) {
     params.set('guest', guestName.trim())
   }
