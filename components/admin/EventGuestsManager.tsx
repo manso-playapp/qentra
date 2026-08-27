@@ -18,6 +18,7 @@ import { isInvitationAccessReady, parseInvitationDetails } from '@/lib/invitatio
 import { useGuestTypes, useGuests } from '@/lib/hooks'
 import { buildAbsoluteAppUrl } from '@/lib/public-url'
 import { toE164 } from '@/lib/phone'
+import { buildInvitationWhatsAppMessage } from '@/lib/invitation-message'
 import {
   normalizeGuestTypeName,
   parseGuestImportRows,
@@ -1030,7 +1031,11 @@ export default function EventGuestsManager({
 
     return {
       invitationUrl,
-      whatsappText: `Hola ${guest.first_name}!\nSe acerca mi fiesta de 15,\nRealiz\u00e1 tu check-in y preparate para despegar...\nTe mando el link para que te registres, te espero!\nAbrir Invitaci\u00f3n:\n${invitationUrl}\nFecha l\u00edmite para confirmar: ${confirmationDeadline}`,
+      whatsappText: buildInvitationWhatsAppMessage({
+        guestFirstName: guest.first_name,
+        invitationUrl,
+        confirmationDeadline,
+      }),
       emailSubject: `Tu acceso para ${event.name}`,
       emailBody: `Hola ${guestName},\n\nTe compartimos tu acceso para ${event.name}.\n\nAbrir Invitación:\n${invitationUrl}\n\nFecha límite para confirmar: ${confirmationDeadline}\nVigencia del acceso: ${formatDateTime(token.expires_at)}\n`,
     }

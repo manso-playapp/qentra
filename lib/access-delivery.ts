@@ -1,3 +1,5 @@
+import { buildInvitationWhatsAppMessage } from './invitation-message'
+
 type DeliveryChannel = 'email' | 'whatsapp'
 
 type WhatsAppConfig = {
@@ -43,15 +45,11 @@ function formatConfirmationDeadline(payload: AccessDeliveryPayload) {
 }
 
 function buildPlainTextMessage(payload: AccessDeliveryPayload) {
-  return [
-    `Hola ${payload.guestFirstName}!`,
-    'Se acerca mi fiesta de 15,',
-    'Realiz\u00e1 tu check-in y preparate para despegar...',
-    'Te mando el link para que te registres, te espero!',
-    'Abrir Invitaci\u00f3n:',
-    payload.invitationUrl,
-    `Fecha l\u00edmite para confirmar: ${formatConfirmationDeadline(payload)}`,
-  ].join('\n')
+  return buildInvitationWhatsAppMessage({
+    guestFirstName: payload.guestFirstName,
+    invitationUrl: payload.invitationUrl,
+    confirmationDeadline: formatConfirmationDeadline(payload),
+  })
 }
 
 function buildEmailHtml(payload: AccessDeliveryPayload) {
