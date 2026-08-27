@@ -1030,9 +1030,9 @@ export default function EventGuestsManager({
 
     return {
       invitationUrl,
-      whatsappText: `Hola ${guest.first_name}!\nSe acerca mi fiesta de 15,\nRealiz\u00e1 tu check-in y preparate para despegar...\nTe mando el link para que te registres, te espero!\n${invitationUrl}\nFecha l\u00edmite para confirmar: ${confirmationDeadline}`,
+      whatsappText: `Hola ${guest.first_name}!\nSe acerca mi fiesta de 15,\nRealiz\u00e1 tu check-in y preparate para despegar...\nTe mando el link para que te registres, te espero!\nAbrir invitaci\u00f3n:\n${invitationUrl}\nFecha l\u00edmite para confirmar: ${confirmationDeadline}`,
       emailSubject: `Tu acceso para ${event.name}`,
-      emailBody: `Hola ${guestName},\n\nTe compartimos tu acceso para ${event.name}.\n\nAbre este enlace desde tu celular y muestra el QR en puerta:\n${invitationUrl}\n\nFecha límite para confirmar: ${confirmationDeadline}\nVigencia del acceso: ${formatDateTime(token.expires_at)}\n`,
+      emailBody: `Hola ${guestName},\n\nTe compartimos tu acceso para ${event.name}.\n\nAbrir invitación:\n${invitationUrl}\n\nFecha límite para confirmar: ${confirmationDeadline}\nVigencia del acceso: ${formatDateTime(token.expires_at)}\n`,
     }
   }
 
