@@ -47,7 +47,7 @@ export const MVP_FEATURES: MvpFeature[] = [
     module: 'admin',
     status: 'done',
     detail:
-      'Alta completa con slug automatico, fecha, venue, capacidad, canal de envio y aplicacion opcional de plantilla operativa.',
+      'Alta completa con slug automatico, fecha, venue, capacidad y aplicacion opcional de plantilla operativa.',
     evidence: ['app/admin/events/new/page.tsx', 'app/api/event-templates/apply/route.ts'],
   },
   {
@@ -92,7 +92,7 @@ export const MVP_FEATURES: MvpFeature[] = [
     module: 'guest',
     status: 'done',
     detail:
-      'Token de un solo uso con expiracion, pagina publica de invitacion, y envio por email o WhatsApp con Resend y Twilio.',
+      'Token de un solo uso con expiracion, pagina publica de invitacion, envio por email con Resend y enlace preparado para compartir por WhatsApp personal.',
     evidence: ['app/api/guest-access/issue/route.ts', 'app/invitacion/[token]/page.tsx'],
   },
   {
@@ -185,8 +185,8 @@ export const MVP_FEATURES: MvpFeature[] = [
     title: 'Numero de WhatsApp emisor',
     module: 'guest',
     status: 'todo',
-    detail: 'El envio por WhatsApp funciona contra el sandbox de Twilio. El envio manual ("mandar desde mi WhatsApp") ya permite invitar desde el numero propio.',
-    gap: 'Diferido hasta definir el numero emisor: debe ser propio del evento (de la familia en un 15, de la organizacion en otros), no un unico numero de negocio. El emisor deberia ser configurable por evento; para 15s probablemente convenga el envio manual antes que un sender de Twilio.',
+    detail: 'El envio manual ("mandar desde mi WhatsApp") ya permite invitar desde el numero propio, sin conectar ni automatizar WhatsApp personal.',
+    gap: 'La automatizacion masiva por WhatsApp queda fuera de prioridad. Se conserva como posible evolucion futura, no como requisito del producto actual.',
   },
   {
     id: 'invitacion-editor',
@@ -237,8 +237,8 @@ export const BEYOND_MVP: { title: string; detail: string }[] = [
     detail: 'Ingreso forzado con PIN de operador y PIN de supervisor, con comparacion timing-safe y auditoria.',
   },
   {
-    title: 'Envio por email y WhatsApp',
-    detail: 'Integracion real con Resend y Twilio, con guardas de credenciales y salud de canales.',
+    title: 'Envio de emails y WhatsApp manual',
+    detail: 'Resend cubre el email como alternativa; WhatsApp se prepara para compartir desde el telefono propio del organizador.',
   },
   {
     title: 'Gestion de operadores',
@@ -278,8 +278,8 @@ export const NEXT_STEPS: { order: number; title: string; detail: string; feature
   },
   {
     order: 3,
-    title: 'Numero de WhatsApp productivo',
-    detail: 'El envio por WhatsApp corre contra el sandbox de Twilio. Dar de alta un numero propio aprobado para escribirle a cualquier invitado sin opt-in previo.',
+    title: 'Automatizacion de WhatsApp (diferida)',
+    detail: 'No es necesaria para el flujo actual: el organizador comparte desde su propio WhatsApp y el email cubre los casos sin WhatsApp.',
     featureId: 'twilio-numero',
   },
 ]

@@ -3,7 +3,7 @@ import { toE164 } from '@/lib/access-delivery'
 
 describe('toE164', () => {
   it('agrega +549 a un movil argentino sin codigo de pais', () => {
-    // El caso que fallaba: Twilio lo tomaba como +1 (EE.UU.).
+    // El telefono se normaliza para compartirlo con el formato esperado.
     expect(toE164('3425579221')).toBe('+5493425579221')
   })
 

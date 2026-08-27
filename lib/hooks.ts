@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react'
 import { getErrorMessage } from '@/lib/errors'
 import { supabase } from '@/lib/supabase'
 import type {
-  DeliveryProfile,
   DeliveryLog,
   DeliveryHealthStatus,
   Event,
@@ -15,7 +14,6 @@ import type {
   GuestAccessArtifacts,
   ApiResponse,
   CreateOperatorForm,
-  CreateDeliveryProfileForm,
   CreateGuestTypeForm,
   UpdateGuestForm,
   UpdateGuestTypeForm,
@@ -28,62 +26,6 @@ type CreateGuestAccessOptions = {
   eventSlug: string
   eventDate: string
   eventStartTime: string
-}
-
-// Hook para perfiles de delivery
-export function useDeliveryProfiles() {
-  const [deliveryProfiles, setDeliveryProfiles] = useState<DeliveryProfile[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  const fetchDeliveryProfiles = useCallback(async () => {
-    try {
-      setLoading(true)
-      const { data, error } = await supabase
-        .from('delivery_profiles')
-        .select('*')
-        .order('active', { ascending: false })
-        .order('name', { ascending: true })
-
-      if (error) throw error
-      setDeliveryProfiles((data ?? []) as DeliveryProfile[])
-    } catch (error) {
-      setError(getErrorMessage(error))
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    void fetchDeliveryProfiles()
-  }, [fetchDeliveryProfiles])
-
-  const createDeliveryProfile = async (
-    profileData: CreateDeliveryProfileForm
-  ): Promise<ApiResponse<DeliveryProfile>> => {
-    try {
-      const { data, error } = await supabase
-        .from('delivery_profiles')
-        .insert(profileData)
-        .select()
-        .single()
-
-      if (error) throw error
-
-      setDeliveryProfiles((current) => [...current, data as DeliveryProfile])
-      return { data: data as DeliveryProfile }
-    } catch (error) {
-      return { error: getErrorMessage(error) }
-    }
-  }
-
-  return {
-    deliveryProfiles,
-    loading,
-    error,
-    fetchDeliveryProfiles,
-    createDeliveryProfile,
-  }
 }
 
 export function useDeliveryLogs(limit = 20) {

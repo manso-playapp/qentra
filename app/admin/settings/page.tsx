@@ -5,13 +5,9 @@ import { useState } from 'react'
 import {
   Activity,
   Copy,
-  Mail,
   RefreshCw,
-  ShieldCheck,
-  Smartphone,
   UserPlus,
   Users2,
-  Workflow,
 } from 'lucide-react'
 import AdminLayout from '@/components/admin/AdminLayout'
 import { Badge } from '@/components/ui/badge'
@@ -19,34 +15,16 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select } from '@/components/ui/select'
-import { Textarea } from '@/components/ui/textarea'
 import {
   useDeliveryHealth,
-  useDeliveryProfiles,
   useOperatorProfiles,
 } from '@/lib/hooks'
 import type {
-  CreateDeliveryProfileForm,
   CreateOperatorForm,
-  DeliveryProfile,
   DeliveryHealthStatus,
   OperatorProfile,
   UpdateOperatorForm,
 } from '@/types'
-
-type DeliveryProfileFormState = {
-  name: string
-  channel_mode: DeliveryProfile['channel_mode']
-  provider_email: NonNullable<DeliveryProfile['provider_email']> | ''
-  provider_whatsapp: NonNullable<DeliveryProfile['provider_whatsapp']> | ''
-  from_email: string
-  from_phone: string
-  reply_to_phone: string
-  whatsapp_content_sid: string
-  active: boolean
-  notes: string
-}
 
 type OperatorFormState = {
   email: string
@@ -77,19 +55,6 @@ type OperatorAccessEmailPayload = {
   external_id?: string
 }
 
-const INITIAL_DELIVERY_FORM: DeliveryProfileFormState = {
-  name: '',
-  channel_mode: 'hybrid',
-  provider_email: 'resend',
-  provider_whatsapp: 'twilio',
-  from_email: '',
-  from_phone: '',
-  reply_to_phone: '',
-  whatsapp_content_sid: '',
-  active: true,
-  notes: '',
-}
-
 const INITIAL_OPERATOR_FORM: OperatorFormState = {
   email: '',
   password: '',
@@ -106,23 +71,6 @@ const OPERATOR_ROLE_OPTIONS: Array<{
   { value: 'door', label: 'Puerta' },
   { value: 'security_supervisor', label: 'Supervisor' },
 ]
-
-function trimOptionalValue(value: string) {
-  const trimmed = value.trim()
-  return trimmed ? trimmed : undefined
-}
-
-function formatChannelMode(mode: DeliveryProfile['channel_mode']) {
-  if (mode === 'hybrid') {
-    return 'Mixto'
-  }
-
-  if (mode === 'email') {
-    return 'Email'
-  }
-
-  return 'WhatsApp'
-}
 
 function HealthBadge({ ready }: { ready: boolean }) {
   return (
@@ -146,7 +94,7 @@ function HealthItem({
         <HealthBadge ready={status.ready} />
       </div>
       {status.ready ? (
-        <p className="mt-2 text-sm text-muted-foreground">Configuracion completa para operar este canal.</p>
+        <p className="mt-2 text-sm text-muted-foreground">Configuracion completa para operar este servicio.</p>
       ) : (
         <p className="mt-2 text-sm text-muted-foreground">
           Falta: {status.missing.join(', ')}
@@ -193,12 +141,6 @@ export default function SettingsPage() {
     fetchDeliveryHealth,
   } = useDeliveryHealth()
   const {
-    deliveryProfiles,
-    loading,
-    error,
-    createDeliveryProfile,
-  } = useDeliveryProfiles()
-  const {
     operatorProfiles,
     loading: loadingOperatorProfiles,
     error: operatorProfilesError,
@@ -207,14 +149,10 @@ export default function SettingsPage() {
     updateOperatorProfile,
   } = useOperatorProfiles()
 
-  const [deliveryForm, setDeliveryForm] = useState<DeliveryProfileFormState>(INITIAL_DELIVERY_FORM)
   const [operatorForm, setOperatorForm] = useState<OperatorFormState>(INITIAL_OPERATOR_FORM)
-  const [submittingDelivery, setSubmittingDelivery] = useState(false)
   const [submittingOperator, setSubmittingOperator] = useState(false)
   const [updatingOperatorId, setUpdatingOperatorId] = useState<string | null>(null)
-  const [deliveryError, setDeliveryError] = useState<string | null>(null)
   const [operatorError, setOperatorError] = useState<string | null>(null)
-  const [deliveryNotice, setDeliveryNotice] = useState<string | null>(null)
   const [operatorNotice, setOperatorNotice] = useState<string | null>(null)
   const [resettingPasswordId, setResettingPasswordId] = useState<string | null>(null)
   const [generatingAccessLinkId, setGeneratingAccessLinkId] = useState<string | null>(null)
@@ -222,21 +160,6 @@ export default function SettingsPage() {
   const [passwordResetPayload, setPasswordResetPayload] = useState<PasswordResetPayload | null>(null)
   const [operatorAccessLinkPayload, setOperatorAccessLinkPayload] = useState<OperatorAccessLinkPayload | null>(null)
   const [operatorAccessEmailPayload, setOperatorAccessEmailPayload] = useState<OperatorAccessEmailPayload | null>(null)
-
-  const handleDeliveryInputChange = (
-    eventInput: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = eventInput.target
-    const nextValue =
-      eventInput.target instanceof HTMLInputElement && eventInput.target.type === 'checkbox'
-        ? eventInput.target.checked
-        : value
-
-    setDeliveryForm((current) => ({
-      ...current,
-      [name]: nextValue,
-    }))
-  }
 
   const handleOperatorInputChange = (eventInput: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, checked, type } = eventInput.target
@@ -259,37 +182,6 @@ export default function SettingsPage() {
         [name]: type === 'checkbox' ? checked : value,
       }
     })
-  }
-
-  const handleDeliverySubmit = async (submitEvent: React.FormEvent<HTMLFormElement>) => {
-    submitEvent.preventDefault()
-    setSubmittingDelivery(true)
-    setDeliveryError(null)
-    setDeliveryNotice(null)
-
-    const payload: CreateDeliveryProfileForm = {
-      name: deliveryForm.name.trim(),
-      channel_mode: deliveryForm.channel_mode,
-      provider_email: deliveryForm.channel_mode === 'whatsapp' ? undefined : deliveryForm.provider_email || undefined,
-      provider_whatsapp: deliveryForm.channel_mode === 'email' ? undefined : deliveryForm.provider_whatsapp || undefined,
-      from_email: trimOptionalValue(deliveryForm.from_email),
-      from_phone: trimOptionalValue(deliveryForm.from_phone),
-      reply_to_phone: trimOptionalValue(deliveryForm.reply_to_phone),
-      whatsapp_content_sid: trimOptionalValue(deliveryForm.whatsapp_content_sid),
-      active: deliveryForm.active,
-      notes: trimOptionalValue(deliveryForm.notes),
-    }
-
-    const result = await createDeliveryProfile(payload)
-
-    if (result.error) {
-      setDeliveryError(result.error)
-    } else {
-      setDeliveryForm(INITIAL_DELIVERY_FORM)
-      setDeliveryNotice('Canal de envio creado correctamente.')
-    }
-
-    setSubmittingDelivery(false)
   }
 
   const handleOperatorSubmit = async (submitEvent: React.FormEvent<HTMLFormElement>) => {
@@ -449,14 +341,14 @@ export default function SettingsPage() {
               <div className="max-w-3xl">
                 <div className="flex flex-wrap gap-2">
                   <Badge variant="default">Configuracion</Badge>
-                  <Badge variant="outline">Canales de envio</Badge>
+                  <Badge variant="outline">Email de invitaciones</Badge>
                   <Badge variant="outline">Operadores</Badge>
                 </div>
                 <h1 className="admin-heading mt-5 text-5xl leading-none text-foreground">
-                  Canales, permisos y estado del sistema.
+                  Email, permisos y estado del sistema.
                 </h1>
                 <p className="mt-4 text-base leading-7 text-muted-foreground">
-                  Esta pantalla concentra lo global: canales de envío, usuarios operadores y links de acceso. La trazabilidad de envíos de cada evento vive dentro del evento.
+                  Esta pantalla concentra la configuracion global del email, los usuarios operadores y los links de acceso. La trazabilidad de envios de cada evento vive dentro del evento.
                 </p>
               </div>
 
@@ -480,7 +372,7 @@ export default function SettingsPage() {
                     Salud operativa
                   </CardTitle>
                   <CardDescription>
-                    Estado real de variables para envío por email, WhatsApp y alta operativa.
+                    Estado real de variables para envio por email y alta operativa.
                   </CardDescription>
                 </div>
                 <Button type="button" variant="outline" size="sm" onClick={() => fetchDeliveryHealth()}>
@@ -525,7 +417,6 @@ export default function SettingsPage() {
 
                   <HealthItem title="Acceso operadores por email" status={deliveryHealth.operatorAccessEmail} />
                   <HealthItem title="Invitaciones email" status={deliveryHealth.guestEmail} />
-                  <HealthItem title="Invitaciones WhatsApp" status={deliveryHealth.guestWhatsApp} />
                 </div>
               ) : null}
               </CardContent>
@@ -796,61 +687,6 @@ export default function SettingsPage() {
               </CardContent>
             </Card>
 
-            <Card className="bg-admin-panel">
-              <CardHeader className="flex-row items-start justify-between gap-4">
-                <div>
-                  <CardDescription>Canales reutilizables</CardDescription>
-                  <CardTitle className="flex items-center gap-2">
-                    <Workflow className="size-4 text-primary" />
-                    Canales de envio
-                  </CardTitle>
-                  <CardDescription>Canales disponibles para asignar en eventos.</CardDescription>
-                </div>
-                <Badge variant="outline">{deliveryProfiles.length} canales</Badge>
-              </CardHeader>
-              <CardContent>
-
-              {error && (
-                <StatusNotice tone="danger">Error al cargar perfiles: {error}</StatusNotice>
-              )}
-
-              {loading ? (
-                <LoadingBlock />
-              ) : deliveryProfiles.length === 0 ? (
-                <div className="rounded-[24px] border border-dashed border-border bg-secondary/60 p-5 text-sm text-muted-foreground">
-                  Todavia no hay canales de envio. Crea uno para habilitar el selector controlado en los eventos.
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {deliveryProfiles.map((profile) => (
-                    <div key={profile.id} className="rounded-[26px] border border-border/70 bg-white/80 p-4">
-                      <div className="flex flex-wrap items-start justify-between gap-3">
-                        <div>
-                          <h3 className="font-medium text-foreground">{profile.name}</h3>
-                          <p className="mt-1 text-sm text-muted-foreground">
-                            {profile.notes?.trim() || 'Sin notas operativas.'}
-                          </p>
-                        </div>
-                        <div className="flex flex-wrap gap-2 text-xs font-medium">
-                          <Badge variant="info">{formatChannelMode(profile.channel_mode)}</Badge>
-                          <Badge variant={profile.active ? 'success' : 'outline'}>
-                            {profile.active ? 'Activo' : 'Inactivo'}
-                          </Badge>
-                        </div>
-                      </div>
-
-                      <div className="mt-4 grid gap-3 text-sm text-muted-foreground sm:grid-cols-2">
-                        <p className="flex items-center gap-2"><Mail className="size-4" /> {profile.from_email || 'No definido'}</p>
-                        <p className="flex items-center gap-2"><Smartphone className="size-4" /> {profile.from_phone || 'No definido'}</p>
-                        <p>Telefono de respuesta: {profile.reply_to_phone || 'No definido'}</p>
-                        <p>Plantilla de WhatsApp: {profile.whatsapp_content_sid || 'No definido'}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-              </CardContent>
-            </Card>
           </section>
 
           <aside className="space-y-6">
@@ -952,177 +788,6 @@ export default function SettingsPage() {
               </CardContent>
             </Card>
 
-            <Card className="bg-admin-panel">
-              <CardHeader>
-                <CardDescription>Configuracion reusable</CardDescription>
-                <CardTitle className="flex items-center gap-2">
-                  <ShieldCheck className="size-4 text-primary" />
-                  Crear canal de envio
-                </CardTitle>
-                <CardDescription>
-                  Configuracion reutilizable para envio y recepcion por email y WhatsApp.
-                </CardDescription>
-              </CardHeader>
-
-              <CardContent>
-              <form onSubmit={handleDeliverySubmit} className="space-y-4">
-                <div>
-                  <Label htmlFor="delivery-profile-name">Nombre</Label>
-                  <Input
-                    id="delivery-profile-name"
-                    name="name"
-                    required
-                    value={deliveryForm.name}
-                    onChange={handleDeliveryInputChange}
-                    className="mt-2"
-                    placeholder="Canal principal Alista"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="channel-mode">Canal</Label>
-                  <Select
-                    id="channel-mode"
-                    name="channel_mode"
-                    value={deliveryForm.channel_mode}
-                    onChange={handleDeliveryInputChange}
-                    className="mt-2"
-                  >
-                    <option value="hybrid">Mixto</option>
-                    <option value="email">Email</option>
-                    <option value="whatsapp">WhatsApp</option>
-                  </Select>
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <Label htmlFor="provider-email">Proveedor de email</Label>
-                    <Select
-                      id="provider-email"
-                      name="provider_email"
-                      value={deliveryForm.provider_email}
-                      onChange={handleDeliveryInputChange}
-                      disabled={deliveryForm.channel_mode === 'whatsapp'}
-                      className="mt-2"
-                    >
-                      <option value="resend">Resend</option>
-                      <option value="manual">Manual</option>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="provider-whatsapp">Proveedor de WhatsApp</Label>
-                    <Select
-                      id="provider-whatsapp"
-                      name="provider_whatsapp"
-                      value={deliveryForm.provider_whatsapp}
-                      onChange={handleDeliveryInputChange}
-                      disabled={deliveryForm.channel_mode === 'email'}
-                      className="mt-2"
-                    >
-                      <option value="twilio">Twilio</option>
-                      <option value="manual">Manual</option>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <Label htmlFor="from-email">Email emisor</Label>
-                    <Input
-                      id="from-email"
-                      name="from_email"
-                      type="email"
-                      value={deliveryForm.from_email}
-                      onChange={handleDeliveryInputChange}
-                      className="mt-2"
-                      placeholder="invitaciones@dominio.com"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="from-phone">Telefono emisor</Label>
-                    <Input
-                      id="from-phone"
-                      name="from_phone"
-                      value={deliveryForm.from_phone}
-                      onChange={handleDeliveryInputChange}
-                      className="mt-2"
-                      placeholder="+54 9 ..."
-                    />
-                  </div>
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <Label htmlFor="reply-to-phone">Telefono de respuesta</Label>
-                    <Input
-                      id="reply-to-phone"
-                      name="reply_to_phone"
-                      value={deliveryForm.reply_to_phone}
-                      onChange={handleDeliveryInputChange}
-                      className="mt-2"
-                      placeholder="+54 9 ..."
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="whatsapp-content-sid">ID de plantilla de WhatsApp</Label>
-                    <Input
-                      id="whatsapp-content-sid"
-                      name="whatsapp_content_sid"
-                      value={deliveryForm.whatsapp_content_sid}
-                      onChange={handleDeliveryInputChange}
-                      className="mt-2"
-                      placeholder="HX..."
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="delivery-notes">Notas</Label>
-                  <Textarea
-                    id="delivery-notes"
-                    name="notes"
-                    rows={3}
-                    value={deliveryForm.notes}
-                    onChange={handleDeliveryInputChange}
-                    className="mt-2"
-                    placeholder="Uso interno del perfil, restricciones o alcance."
-                  />
-                </div>
-
-                <label className="flex items-start gap-3 rounded-[24px] border border-border p-4">
-                  <input
-                    type="checkbox"
-                    name="active"
-                    checked={deliveryForm.active}
-                    onChange={handleDeliveryInputChange}
-                    className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <div>
-                    <span className="block text-sm font-medium text-foreground">Activo</span>
-                    <span className="mt-1 block text-sm text-muted-foreground">
-                      Disponible para asignar en eventos.
-                    </span>
-                  </div>
-                </label>
-
-                {deliveryError && (
-                  <StatusNotice tone="danger">Error al crear canal: {deliveryError}</StatusNotice>
-                )}
-
-                {deliveryNotice && (
-                  <StatusNotice tone="success">{deliveryNotice}</StatusNotice>
-                )}
-
-                <Button
-                  type="submit"
-                  disabled={submittingDelivery}
-                  className="w-full"
-                >
-                  {submittingDelivery ? 'Guardando canal...' : 'Guardar canal de envio'}
-                </Button>
-              </form>
-              </CardContent>
-            </Card>
           </aside>
         </div>
       </div>

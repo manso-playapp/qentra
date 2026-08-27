@@ -19,7 +19,6 @@ type UpdateEventBody = {
   description?: string | null
   gift_info?: string | null
   contact_phone?: string | null
-  delivery_profile_id?: string | null
   status?: 'active' | 'inactive' | 'cancelled'
 }
 

@@ -21,7 +21,7 @@ import { formatEventDate } from '@/lib/event-date'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { getMercadoPagoOAuthConfig } from '@/lib/mercadopago'
 import { isPaymentCredentialEncryptionConfigured } from '@/lib/payment-credentials'
-import type { DeliveryProfile, Event, EventBranding, GuestType } from '@/types'
+import type { Event, EventBranding, GuestType } from '@/types'
 
 export const metadata = {
   title: 'Detalle',
@@ -50,18 +50,6 @@ const EVENT_STATUS_VARIANTS = {
   cancelled: 'danger',
 } as const
 
-function formatChannelMode(mode: DeliveryProfile['channel_mode']) {
-  if (mode === 'hybrid') {
-    return 'Mixto'
-  }
-
-  if (mode === 'email') {
-    return 'Email'
-  }
-
-  return 'WhatsApp'
-}
-
 function formatTimestampDate(date: string) {
   return new Intl.DateTimeFormat('es-AR', {
     dateStyle: 'full',
@@ -70,7 +58,7 @@ function formatTimestampDate(date: string) {
 
 export default async function EventDetailPage({ params }: EventDetailPageProps) {
   const { id } = await params
-  // Service role: RLS oculta guests/checkins/delivery_profiles al cliente con
+  // Service role: RLS oculta guests/checkins al cliente con
   // cookies (operator-auth no crea sesion de Supabase). La ruta ya esta
   // protegida por el layout. Fallback al cliente con sesion si falta la key.
   const supabase = getSupabaseAdminClient() ?? (await createServerSupabaseClient())
@@ -79,7 +67,6 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
     eventResponse,
     brandingResponse,
     guestTypesResponse,
-    deliveryProfileResponse,
     guestsCountResponse,
     checkinsCountResponse,
     paymentAccountResponse,
@@ -91,7 +78,6 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
       .select('id, name, description')
       .eq('event_id', id)
       .order('created_at', { ascending: true }),
-    supabase.from('delivery_profiles').select('*'),
     supabase.from('guests').select('*', { count: 'exact', head: true }).eq('event_id', id),
     supabase
       .from('checkins')
@@ -122,8 +108,6 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
   const event = eventResponse.data as Event
   const branding = brandingResponse.data as EventBranding | null
   const guestTypes = (guestTypesResponse.data ?? []) as GuestType[]
-  const deliveryProfiles = (deliveryProfileResponse.data ?? []) as DeliveryProfile[]
-  const selectedDeliveryProfile = deliveryProfiles.find((profile) => profile.id === event.delivery_profile_id) ?? null
   const guestCount = guestsCountResponse.count ?? 0
   const checkinCount = checkinsCountResponse.count ?? 0
   const paymentAccount = paymentAccountResponse.data as { updated_at?: string | null } | null
@@ -387,14 +371,6 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
                     {event.confirmation_deadline
                       ? formatEventDate(event.confirmation_deadline, { dateStyle: 'long' })
                       : 'No configurada'}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-sm text-muted-foreground">Canal asignado</dt>
-                  <dd className="mt-1 font-medium text-foreground">
-                    {selectedDeliveryProfile
-                      ? `${selectedDeliveryProfile.name} · ${formatChannelMode(selectedDeliveryProfile.channel_mode)}`
-                      : event.delivery_profile_id || 'Pendiente de definir'}
                   </dd>
                 </div>
               </dl>

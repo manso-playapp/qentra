@@ -13,7 +13,6 @@ import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { formatEventDate } from '@/lib/event-date'
 import { getErrorMessage } from '@/lib/errors'
-import { useDeliveryProfiles } from '@/lib/hooks'
 import type { Event } from '@/types'
 
 type EditEventFormProps = {
@@ -33,7 +32,6 @@ type EditEventFormProps = {
     | 'max_capacity'
     | 'gift_info'
     | 'contact_phone'
-    | 'delivery_profile_id'
     | 'status'
   >
 }
@@ -52,25 +50,11 @@ type EventFormState = {
   max_capacity: number
   gift_info: string
   contact_phone: string
-  delivery_profile_id: string
   status: Event['status']
-}
-
-function formatChannelMode(mode: 'email' | 'whatsapp' | 'hybrid') {
-  if (mode === 'hybrid') {
-    return 'Mixto'
-  }
-
-  if (mode === 'email') {
-    return 'Email'
-  }
-
-  return 'WhatsApp'
 }
 
 export default function EditEventForm({ event }: EditEventFormProps) {
   const router = useRouter()
-  const { deliveryProfiles, loading: loadingDeliveryProfiles } = useDeliveryProfiles()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
@@ -88,7 +72,6 @@ export default function EditEventForm({ event }: EditEventFormProps) {
     max_capacity: event.max_capacity,
     gift_info: event.gift_info || '',
     contact_phone: event.contact_phone || '',
-    delivery_profile_id: event.delivery_profile_id || '',
     status: event.status,
   })
 
@@ -133,7 +116,6 @@ export default function EditEventForm({ event }: EditEventFormProps) {
         max_capacity: formData.max_capacity,
         gift_info: formData.gift_info.trim() || null,
         contact_phone: formData.contact_phone.trim() || null,
-        delivery_profile_id: formData.delivery_profile_id || null,
         status: formData.status,
       }
 
@@ -168,13 +150,13 @@ export default function EditEventForm({ event }: EditEventFormProps) {
                 <div className="flex flex-wrap gap-2">
                   <Badge variant="default">Editar evento</Badge>
                   <Badge variant="outline">Ajuste operativo</Badge>
-                  <Badge variant="outline">Datos y canal</Badge>
+                  <Badge variant="outline">Datos operativos</Badge>
                 </div>
                 <h1 className="admin-heading mt-5 text-5xl leading-none text-foreground">
                   Información del Evento
                 </h1>
                 <p className="mt-4 text-base leading-7 text-muted-foreground">
-                  Corrige agenda, venue, contacto, canal asignado y estado sin salir del centro de operaciones.
+                  Corrige agenda, venue, contacto y estado sin salir del centro de operaciones.
                 </p>
               </div>
 
@@ -288,7 +270,7 @@ export default function EditEventForm({ event }: EditEventFormProps) {
             <Card className="bg-admin-navy text-white">
               <CardHeader>
                 <CardDescription className="text-sky-300/80">Datos operativos</CardDescription>
-                <CardTitle className="text-white">Contacto, canal y estado</CardTitle>
+                <CardTitle className="text-white">Contacto y estado</CardTitle>
               </CardHeader>
               <CardContent className="space-y-5">
                 <div>
@@ -302,26 +284,6 @@ export default function EditEventForm({ event }: EditEventFormProps) {
                     className="mt-2 border-white/10 bg-white/6 text-white placeholder:text-slate-400"
                     placeholder="+54 9 351 ..."
                   />
-                </div>
-
-                <div>
-                  <Label htmlFor="delivery_profile_id" className="text-white">Canal asignado</Label>
-                  <Select
-                    id="delivery_profile_id"
-                    name="delivery_profile_id"
-                    value={formData.delivery_profile_id}
-                    onChange={handleInputChange}
-                    disabled={loadingDeliveryProfiles}
-                    className="mt-2 border-white/10 bg-white/6 text-white"
-                  >
-                    <option className="bg-white text-slate-950" value="">Sin canal asignado</option>
-                    {deliveryProfiles.map((profile) => (
-                      <option className="bg-white text-slate-950" key={profile.id} value={profile.id}>
-                        {profile.name} · {formatChannelMode(profile.channel_mode)}
-                        {profile.active ? '' : ' · inactivo'}
-                      </option>
-                    ))}
-                  </Select>
                 </div>
 
                 <div>

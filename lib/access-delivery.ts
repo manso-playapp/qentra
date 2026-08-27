@@ -1,13 +1,6 @@
 import { buildInvitationWhatsAppMessage } from './invitation-message'
 
-type DeliveryChannel = 'email' | 'whatsapp'
-
-type WhatsAppConfig = {
-  fromPhone?: string
-  messagingServiceSid?: string
-  contentSid?: string
-  allowFreeform?: boolean
-}
+type DeliveryChannel = 'email'
 
 export type AccessDeliveryPayload = {
   channel: DeliveryChannel
@@ -18,11 +11,10 @@ export type AccessDeliveryPayload = {
   invitationUrl: string
   expiresAt: string
   confirmationDeadline?: string | null
-  whatsappConfig?: WhatsAppConfig
 }
 
 type DeliveryResult = {
-  provider: 'resend' | 'twilio'
+  provider: 'resend'
   externalId?: string
 }
 
@@ -94,14 +86,6 @@ function buildEmailHtml(payload: AccessDeliveryPayload) {
 // componentes cliente. Se re-exporta aca por compatibilidad con importadores
 // y tests existentes.
 export { toE164 } from './phone'
-import { toE164 } from './phone'
-
-function normalizeWhatsAppRecipient(phone: string) {
-  if (phone.startsWith('whatsapp:')) {
-    return phone
-  }
-  return `whatsapp:${toE164(phone)}`
-}
 
 async function sendWithResend(payload: AccessDeliveryPayload): Promise<DeliveryResult> {
   const apiKey = process.env.RESEND_API_KEY
@@ -143,70 +127,6 @@ async function sendWithResend(payload: AccessDeliveryPayload): Promise<DeliveryR
   }
 }
 
-async function sendWithTwilioWhatsApp(payload: AccessDeliveryPayload): Promise<DeliveryResult> {
-  const accountSid = process.env.TWILIO_ACCOUNT_SID
-  const authToken = process.env.TWILIO_AUTH_TOKEN
-  const from = payload.whatsappConfig?.fromPhone?.trim() || process.env.TWILIO_WHATSAPP_FROM
-  const messagingServiceSid =
-    payload.whatsappConfig?.messagingServiceSid?.trim() || process.env.TWILIO_MESSAGING_SERVICE_SID
-  const contentSid = payload.whatsappConfig?.contentSid?.trim() || process.env.TWILIO_WHATSAPP_CONTENT_SID
-  const allowFreeform =
-    payload.whatsappConfig?.allowFreeform ?? (process.env.TWILIO_WHATSAPP_ALLOW_FREEFORM === 'true')
-
-  if (!accountSid || !authToken || (!from && !messagingServiceSid)) {
-    throw new Error('Falta configurar credenciales base de Twilio para envio real de WhatsApp.')
-  }
-
-  if (!contentSid && !allowFreeform) {
-    throw new Error('Falta TWILIO_WHATSAPP_CONTENT_SID. Para invitaciones de WhatsApp se espera una plantilla aprobada.')
-  }
-
-  const formData = new URLSearchParams()
-  formData.set('To', normalizeWhatsAppRecipient(payload.recipient))
-
-  if (messagingServiceSid) {
-    formData.set('MessagingServiceSid', messagingServiceSid)
-  } else if (from) {
-    formData.set('From', normalizeWhatsAppRecipient(from))
-  }
-
-  if (contentSid) {
-    formData.set('ContentSid', contentSid)
-    formData.set('ContentVariables', JSON.stringify({
-      1: payload.guestFirstName,
-      2: payload.eventName,
-      3: payload.invitationUrl,
-      4: formatDateTime(payload.expiresAt),
-    }))
-  } else {
-    formData.set('Body', buildPlainTextMessage(payload))
-  }
-
-  const response = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString('base64')}`,
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: formData.toString(),
-  })
-
-  const body = await response.json()
-
-  if (!response.ok) {
-    throw new Error(body?.message || 'Twilio rechazo el envio de WhatsApp.')
-  }
-
-  return {
-    provider: 'twilio',
-    externalId: body?.sid,
-  }
-}
-
 export async function sendGuestAccess(payload: AccessDeliveryPayload): Promise<DeliveryResult> {
-  if (payload.channel === 'email') {
-    return sendWithResend(payload)
-  }
-
-  return sendWithTwilioWhatsApp(payload)
+  return sendWithResend(payload)
 }

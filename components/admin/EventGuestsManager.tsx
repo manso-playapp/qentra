@@ -38,7 +38,7 @@ import type {
 } from '@/types'
 
 type EventGuestsManagerProps = {
-  event: Pick<Event, 'id' | 'name' | 'slug' | 'max_capacity' | 'event_date' | 'confirmation_deadline' | 'start_time' | 'delivery_profile_id'>
+  event: Pick<Event, 'id' | 'name' | 'slug' | 'max_capacity' | 'event_date' | 'confirmation_deadline' | 'start_time'>
   initialGuestTypes?: GuestType[]
   initialGuests?: GuestWithType[]
 }
@@ -1090,7 +1090,6 @@ export default function EventGuestsManager({
           eventId: guest.event_id,
           guestId: guest.id,
           invitationTokenId: token.id,
-          deliveryProfileId: event.delivery_profile_id,
           channel,
           recipient,
           guestName,

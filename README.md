@@ -12,7 +12,7 @@ Estado actual del MVP:
 - check-in manual y por QR
 - vistas separadas de `admin`, `puerta` y `totem`, con destino visible al ingresar
 - autenticacion operativa con Supabase Auth
-- envio por email y WhatsApp segun configuracion del entorno
+- envio por email como alternativa y WhatsApp manual desde el telefono propio
 - Checkout Pro por cuenta receptora del evento: pago, conciliación y habilitación automática del QR
 
 ## Stack
@@ -57,8 +57,6 @@ Entre las mas importantes:
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `RESEND_API_KEY`
 - `ALISTA_EMAIL_FROM`
-- `TWILIO_ACCOUNT_SID`
-- `TWILIO_AUTH_TOKEN`
 
 ### Mercado Pago
 

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, CalendarRange, Phone, Send, Sparkles } from 'lucide-react'
+import { ArrowLeft, CalendarRange, Phone, Sparkles } from 'lucide-react'
 import AdminLayout from '@/components/admin/AdminLayout'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -15,25 +15,12 @@ import { Textarea } from '@/components/ui/textarea'
 import { EVENT_TEMPLATES, type EventTemplateKey, getEventTemplateByKey } from '@/lib/event-templates'
 import { formatEventDate } from '@/lib/event-date'
 import { getErrorMessage } from '@/lib/errors'
-import { useDeliveryProfiles, useEvents } from '@/lib/hooks'
+import { useEvents } from '@/lib/hooks'
 import type { CreateEventForm } from '@/types'
-
-function formatChannelMode(mode: 'email' | 'whatsapp' | 'hybrid') {
-  if (mode === 'hybrid') {
-    return 'Mixto'
-  }
-
-  if (mode === 'email') {
-    return 'Email'
-  }
-
-  return 'WhatsApp'
-}
 
 export default function NewEventPage() {
   const router = useRouter()
   const { createEvent } = useEvents()
-  const { deliveryProfiles, loading: loadingDeliveryProfiles } = useDeliveryProfiles()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [templateKey, setTemplateKey] = useState<EventTemplateKey | ''>('')
@@ -53,7 +40,6 @@ export default function NewEventPage() {
     max_capacity: 100,
     gift_info: '',
     contact_phone: '',
-    delivery_profile_id: '',
   })
 
   const handleTemplateChange = (value: string) => {
@@ -150,7 +136,7 @@ export default function NewEventPage() {
                     <Badge variant="outline">Branding acotado por evento</Badge>
                   </div>
                   <h1 className="admin-heading mt-5 text-5xl leading-none text-foreground">
-                    Crea un evento sin mezclar operacion, identidad y canales.
+                    Crea un evento sin mezclar operacion e identidad.
                   </h1>
                   <p className="mt-4 text-base leading-7 text-muted-foreground">
                     La estructura del producto queda fija. Lo que personalizaremos por evento despues seran acentos, fondos y branding puntual, no la arquitectura del sistema.
@@ -386,7 +372,7 @@ export default function NewEventPage() {
               <Card className="bg-admin-navy text-white">
                 <CardHeader>
                   <CardDescription className="text-sky-300/80">Datos operativos</CardDescription>
-                  <CardTitle className="text-white">Contacto y envio</CardTitle>
+                  <CardTitle className="text-white">Contacto y capacidad</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-5">
                   <div>
@@ -403,34 +389,6 @@ export default function NewEventPage() {
                     <p className="mt-2 text-sm text-slate-300">
                       Numero que ve el invitado. No define por si solo la infraestructura real de envio.
                     </p>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="delivery_profile_id" className="text-white">Canal de envio</Label>
-                    <Select
-                      id="delivery_profile_id"
-                      name="delivery_profile_id"
-                      value={formData.delivery_profile_id}
-                      onChange={handleInputChange}
-                      disabled={loadingDeliveryProfiles}
-                      className="mt-2 border-white/10 bg-white/6 text-white"
-                    >
-                      <option className="bg-white text-slate-950" value="">Sin perfil asignado</option>
-                      {deliveryProfiles.map((profile) => (
-                        <option className="bg-white text-slate-950" key={profile.id} value={profile.id}>
-                          {profile.name} · {formatChannelMode(profile.channel_mode)}
-                          {profile.active ? '' : ' · inactivo'}
-                        </option>
-                      ))}
-                    </Select>
-                    <div className="mt-3">
-                      <Button asChild variant="outline" size="sm" className="border-white/10 bg-white/5 text-white hover:bg-white/10 hover:text-white">
-                        <Link href="/admin/settings">
-                          <Send className="size-4" />
-                          Gestionar canales de envio
-                        </Link>
-                      </Button>
-                    </div>
                   </div>
 
                   <div>

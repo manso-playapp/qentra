@@ -36,7 +36,7 @@ const ADMIN_NAV_ITEMS = [
   {
     href: '/admin/settings',
     label: 'Configuracion',
-    description: 'Canales y usuarios',
+    description: 'Email y usuarios',
     icon: Settings2,
   },
   {
@@ -80,7 +80,7 @@ function getPageHeader(pathname: string): PageHeader {
     return {
       eyebrow: 'Agenda operativa',
       title: 'Nuevo evento',
-      description: 'Definí fecha, lugar, cupo y canal de envío. Después vas a poder cargar invitados y emitir accesos.',
+      description: 'Definí fecha, lugar y cupo. Después vas a poder cargar invitados y emitir accesos.',
       actions: [{ href: '/admin/events', label: 'Volver a eventos', variant: 'outline' }],
     }
   }
@@ -105,9 +105,9 @@ function getPageHeader(pathname: string): PageHeader {
 
   if (pathname.startsWith('/admin/settings')) {
     return {
-      eyebrow: 'Canales y permisos',
+      eyebrow: 'Email y permisos',
       title: 'Configuración',
-      description: 'Operadores, roles, proveedores de envío y salud de los canales.',
+      description: 'Operadores, roles y salud del email de invitaciones.',
       actions: [],
     }
   }

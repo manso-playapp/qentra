@@ -178,6 +178,8 @@ BEGIN
   END IF;
 END $$;
 
+-- Legacy delivery profiles: retained for historical delivery_logs compatibility.
+-- New events use the global email configuration and WhatsApp manual sharing.
 CREATE TABLE IF NOT EXISTS delivery_profiles (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name text NOT NULL,
@@ -256,6 +258,7 @@ ALTER TABLE guest_types ADD COLUMN IF NOT EXISTS access_end_day_offset integer D
 
 -- Event communication and delivery profile
 ALTER TABLE events ADD COLUMN IF NOT EXISTS contact_phone text;
+-- Legacy column: no longer assigned from the admin UI; kept nullable for existing rows.
 ALTER TABLE events ADD COLUMN IF NOT EXISTS delivery_profile_id text;
 ALTER TABLE events ADD COLUMN IF NOT EXISTS gift_info text;
 ALTER TABLE events ADD COLUMN IF NOT EXISTS confirmation_deadline date;

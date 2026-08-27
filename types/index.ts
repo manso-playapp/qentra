@@ -21,7 +21,6 @@ export interface Event {
   /** Información libre para regalos o aportes, visible en la invitación. */
   gift_info?: string | null
   contact_phone?: string
-  delivery_profile_id?: string
   created_by_user_id?: string
   created_at: string
   updated_at: string
@@ -96,22 +95,6 @@ export type UpdateEventBrandingForm = Partial<
   >
 >
 
-export interface DeliveryProfile {
-  id: string
-  name: string
-  channel_mode: 'email' | 'whatsapp' | 'hybrid'
-  provider_email?: 'resend' | 'manual'
-  provider_whatsapp?: 'twilio' | 'manual'
-  from_email?: string
-  from_phone?: string
-  reply_to_phone?: string
-  whatsapp_content_sid?: string
-  active: boolean
-  notes?: string
-  created_at: string
-  updated_at: string
-}
-
 export interface OperatorProfile {
   user_id: string
   email?: string | null
@@ -146,10 +129,6 @@ export interface DeliveryHealthStatus {
     missing: string[]
   }
   guestEmail: {
-    ready: boolean
-    missing: string[]
-  }
-  guestWhatsApp: {
     ready: boolean
     missing: string[]
   }
@@ -336,7 +315,6 @@ export interface CreateEventForm {
   description?: string
   gift_info?: string
   contact_phone?: string
-  delivery_profile_id?: string
 }
 
 export interface CreateGuestForm {
@@ -373,19 +351,6 @@ export interface UpdateGuestTypeForm {
   access_start_day_offset?: number
   access_end_day_offset?: number
   payment_amount_cents?: number
-}
-
-export interface CreateDeliveryProfileForm {
-  name: string
-  channel_mode: DeliveryProfile['channel_mode']
-  provider_email?: DeliveryProfile['provider_email']
-  provider_whatsapp?: DeliveryProfile['provider_whatsapp']
-  from_email?: string
-  from_phone?: string
-  reply_to_phone?: string
-  whatsapp_content_sid?: string
-  active: boolean
-  notes?: string
 }
 
 export interface CreateOperatorForm {

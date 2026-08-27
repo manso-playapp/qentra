@@ -1,5 +1,5 @@
 // Utilidades puras de telefono. Sin dependencias server-only (Buffer, fetch,
-// llamadas a Twilio/Resend) para poder importarlas tambien desde componentes
+// llamadas a proveedores de envio) para poder importarlas tambien desde componentes
 // cliente sin arrastrar el modulo de delivery al bundle del navegador.
 
 // Codigo de pais movil por defecto para numeros sin prefijo internacional.
@@ -12,8 +12,8 @@ const DEFAULT_MOBILE_COUNTRY_CODE =
 /**
  * Lleva un telefono a formato E.164 (+549...).
  *
- * Sin esto, un numero guardado como "3425579221" se enviaba tal cual y Twilio
- * lo interpretaba como +1 (EE.UU.), fallando la entrega. Los numeros que ya
+ * Sin esto, un numero guardado como "3425579221" se comparte con un formato
+ * ambiguo. Los numeros que ya
  * vienen en formato internacional (+...) se respetan.
  */
 export function toE164(raw: string): string {
