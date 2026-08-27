@@ -1033,6 +1033,7 @@ export default function EventGuestsManager({
       invitationUrl,
       whatsappText: buildInvitationWhatsAppMessage({
         guestFirstName: guest.first_name,
+        eventName: event.name,
         invitationUrl,
         confirmationDeadline,
       }),

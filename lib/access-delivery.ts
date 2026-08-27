@@ -47,6 +47,7 @@ function formatConfirmationDeadline(payload: AccessDeliveryPayload) {
 function buildPlainTextMessage(payload: AccessDeliveryPayload) {
   return buildInvitationWhatsAppMessage({
     guestFirstName: payload.guestFirstName,
+    eventName: payload.eventName,
     invitationUrl: payload.invitationUrl,
     confirmationDeadline: formatConfirmationDeadline(payload),
   })

@@ -1,5 +1,6 @@
 export type InvitationMessageParams = {
   guestFirstName: string
+  eventName: string
   invitationUrl: string
   confirmationDeadline: string
 }
@@ -11,13 +12,14 @@ export type InvitationMessageParams = {
  */
 export function buildInvitationWhatsAppMessage({
   guestFirstName,
+  eventName,
   invitationUrl,
   confirmationDeadline,
 }: InvitationMessageParams) {
   return [
     `Hola ${guestFirstName}!`,
-    'Se acerca mi fiesta de 15,',
-    'Realizá tu check-in y preparate para despegar...',
+    `Estás invitado/a al cumple de ${eventName}.`,
+    'Gestionado por Alista.com.ar',
     'Te mando el link para que te registres, te espero!',
     'Abrir Invitación:',
     invitationUrl,
