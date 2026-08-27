@@ -31,6 +31,10 @@ type InvitationPageProps = {
 
 const fallbackInvitationDescription = 'Estás invitado/a a una fiesta de 15.'
 
+function buildInvitationDescription(eventName: string) {
+  return `Est\u00e1s invitado/a al cumple de ${eventName}. Gestionado por Alista.com.ar`
+}
+
 function invitationShareImageUrl(imageUrl: string | null | undefined) {
   const normalized = imageUrl?.trim()
   if (!normalized) return buildAbsoluteAppUrl('/portada.jpg')
@@ -66,10 +70,12 @@ export async function generateMetadata({ params }: InvitationPageProps): Promise
         .maybeSingle()
 
       eventName = event?.name?.trim() || eventName
+      description = buildInvitationDescription(eventName)
       description = event?.description?.trim() || `Estás invitado/a a ${eventName}.`
     }
   }
 
+  description = buildInvitationDescription(eventName)
   const pageUrl = buildAbsoluteAppUrl(`/invitacion/${encodeURIComponent(token)}`)
 
   return {
