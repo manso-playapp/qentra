@@ -30,7 +30,7 @@ export const MODULES: Record<ModuleKey, { label: string; description: string }> 
   pagos: { label: 'Pagos', description: 'Cobros y monetizacion' },
 }
 
-/** Las 15 features que el playbook define como alcance del MVP. */
+/** Las 20 features que el playbook define como alcance del MVP. */
 export const MVP_FEATURES: MvpFeature[] = [
   {
     id: 'login',
@@ -182,7 +182,7 @@ export const MVP_FEATURES: MvpFeature[] = [
   },
   {
     id: 'twilio-numero',
-    title: 'Numero de WhatsApp emisor',
+    title: 'Automatizacion de WhatsApp',
     module: 'guest',
     status: 'todo',
     detail: 'El envio manual ("mandar desde mi WhatsApp") ya permite invitar desde el numero propio, sin conectar ni automatizar WhatsApp personal.',
@@ -242,7 +242,7 @@ export const BEYOND_MVP: { title: string; detail: string }[] = [
   },
   {
     title: 'Gestion de operadores',
-    detail: 'Alta, roles, activacion, reset de password y links de recuperacion desde Configuracion.',
+    detail: 'Alta, roles, activacion, reset de password, links de recuperacion y eliminacion segura desde Configuracion.',
   },
   {
     title: 'Plantillas de evento',
@@ -253,7 +253,7 @@ export const BEYOND_MVP: { title: string; detail: string }[] = [
     detail: 'Registro de envios y trazabilidad de delivery en la vista de configuracion.',
   },
   {
-    title: '113 tests automatizados',
+    title: '275 tests automatizados',
     detail: 'Cobertura de política de acceso, respuestas de invitación, configuración de Mercado Pago y firma de webhooks.',
   },
 ]
@@ -275,12 +275,6 @@ export const NEXT_STEPS: { order: number; title: string; detail: string; feature
     title: 'Editor del totem (dedicado)',
     detail: 'Su propio editor, distinto al de la invitacion: composicion visual y mensajes del totem con preview en vivo.',
     featureId: 'totem-editor',
-  },
-  {
-    order: 3,
-    title: 'Automatizacion de WhatsApp (diferida)',
-    detail: 'No es necesaria para el flujo actual: el organizador comparte desde su propio WhatsApp y el email cubre los casos sin WhatsApp.',
-    featureId: 'twilio-numero',
   },
 ]
 
