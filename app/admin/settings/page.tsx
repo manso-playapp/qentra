@@ -366,65 +366,6 @@ export default function SettingsPage() {
             <Card className="bg-admin-panel">
               <CardHeader className="flex-row items-start justify-between gap-4">
                 <div>
-                  <CardDescription>Infraestructura</CardDescription>
-                  <CardTitle className="flex items-center gap-2">
-                    <Activity className="size-4 text-primary" />
-                    Salud operativa
-                  </CardTitle>
-                  <CardDescription>
-                    Estado real de variables para envio por email y alta operativa.
-                  </CardDescription>
-                </div>
-                <Button type="button" variant="outline" size="sm" onClick={() => fetchDeliveryHealth()}>
-                  <RefreshCw className="size-4" />
-                  Actualizar
-                </Button>
-              </CardHeader>
-              <CardContent>
-
-              {deliveryHealthError && (
-                <StatusNotice tone="danger">Error al cargar estado operativo: {deliveryHealthError}</StatusNotice>
-              )}
-
-              {loadingDeliveryHealth ? (
-                <LoadingBlock />
-              ) : deliveryHealth ? (
-                <div className="space-y-3">
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <div className="rounded-[24px] border border-border/70 bg-white/75 p-4">
-                      <div className="flex items-center justify-between gap-3">
-                        <p className="font-medium text-foreground">Clave de servicio</p>
-                        <HealthBadge ready={deliveryHealth.serviceRoleConfigured} />
-                      </div>
-                      <p className="mt-2 text-sm text-muted-foreground">
-                        {deliveryHealth.serviceRoleConfigured
-                          ? 'Disponible para gestion de operadores y links de acceso.'
-                          : 'Falta SUPABASE_SERVICE_ROLE_KEY en el entorno.'}
-                      </p>
-                    </div>
-                    <div className="rounded-[24px] border border-border/70 bg-white/75 p-4">
-                      <div className="flex items-center justify-between gap-3">
-                        <p className="font-medium text-foreground">Redireccion de acceso</p>
-                        <HealthBadge ready={deliveryHealth.recoveryRedirectConfigured} />
-                      </div>
-                      <p className="mt-2 text-sm text-muted-foreground">
-                        {deliveryHealth.recoveryRedirectConfigured
-                          ? 'Se usa URL fija para recovery de operadores.'
-                          : 'Se resuelve automaticamente segun el origin actual.'}
-                      </p>
-                    </div>
-                  </div>
-
-                  <HealthItem title="Acceso operadores por email" status={deliveryHealth.operatorAccessEmail} />
-                  <HealthItem title="Invitaciones email" status={deliveryHealth.guestEmail} />
-                </div>
-              ) : null}
-              </CardContent>
-            </Card>
-
-            <Card className="bg-admin-panel">
-              <CardHeader className="flex-row items-start justify-between gap-4">
-                <div>
                   <CardDescription>Acceso operativo</CardDescription>
                   <CardTitle className="flex items-center gap-2">
                     <Users2 className="size-4 text-primary" />
@@ -785,6 +726,64 @@ export default function SettingsPage() {
                   {submittingOperator ? 'Creando operador...' : 'Crear operador'}
                 </Button>
               </form>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-admin-panel">
+              <CardHeader className="flex-row items-start justify-between gap-4">
+                <div>
+                  <CardDescription>Infraestructura</CardDescription>
+                  <CardTitle className="flex items-center gap-2">
+                    <Activity className="size-4 text-primary" />
+                    Salud operativa
+                  </CardTitle>
+                  <CardDescription>
+                    Estado real de variables para envio por email y alta operativa.
+                  </CardDescription>
+                </div>
+                <Button type="button" variant="outline" size="sm" onClick={() => fetchDeliveryHealth()}>
+                  <RefreshCw className="size-4" />
+                  Actualizar
+                </Button>
+              </CardHeader>
+              <CardContent>
+                {deliveryHealthError && (
+                  <StatusNotice tone="danger">Error al cargar estado operativo: {deliveryHealthError}</StatusNotice>
+                )}
+
+                {loadingDeliveryHealth ? (
+                  <LoadingBlock />
+                ) : deliveryHealth ? (
+                  <div className="space-y-3">
+                    <div className="grid gap-3">
+                      <div className="rounded-[24px] border border-border/70 bg-white/75 p-4">
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="font-medium text-foreground">Clave de servicio</p>
+                          <HealthBadge ready={deliveryHealth.serviceRoleConfigured} />
+                        </div>
+                        <p className="mt-2 text-sm text-muted-foreground">
+                          {deliveryHealth.serviceRoleConfigured
+                            ? 'Disponible para gestion de operadores y links de acceso.'
+                            : 'Falta SUPABASE_SERVICE_ROLE_KEY en el entorno.'}
+                        </p>
+                      </div>
+                      <div className="rounded-[24px] border border-border/70 bg-white/75 p-4">
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="font-medium text-foreground">Redireccion de acceso</p>
+                          <HealthBadge ready={deliveryHealth.recoveryRedirectConfigured} />
+                        </div>
+                        <p className="mt-2 text-sm text-muted-foreground">
+                          {deliveryHealth.recoveryRedirectConfigured
+                            ? 'Se usa URL fija para recovery de operadores.'
+                            : 'Se resuelve automaticamente segun el origin actual.'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <HealthItem title="Acceso operadores por email" status={deliveryHealth.operatorAccessEmail} />
+                    <HealthItem title="Invitaciones email" status={deliveryHealth.guestEmail} />
+                  </div>
+                ) : null}
               </CardContent>
             </Card>
 
