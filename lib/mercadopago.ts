@@ -20,6 +20,10 @@ export type PaymentTransactionStatus =
   | 'refunded'
 
 type MercadoPagoEnvironment = {
+  /** Credenciales de la cuenta propia de Alista (servicio). */
+  alistaProductionAccessToken?: string
+  alistaTestAccessToken?: string
+  /** Alias legacy, conservado para no romper conciliaciones históricas. */
   productionAccessToken?: string
   testAccessToken?: string
   vercelEnvironment?: string
@@ -40,19 +44,19 @@ export function isMercadoPagoPreviewEnvironment(vercelEnvironment = process.env.
 }
 
 /**
- * Preview deployments are hard-pinned to test credentials so they can never
- * create a real charge, even if a production secret was added to Preview by
- * mistake. Production keeps its explicit production-first behavior.
+ * Resolves only Alista's own collector credentials. Preview deployments are
+ * hard-pinned to test credentials so they can never create a real service
+ * charge, even if a production secret was added to Preview by mistake.
  */
 export function resolveMercadoPagoConfig(
   environment: MercadoPagoEnvironment = {
-    productionAccessToken: process.env.MERCADOPAGO_ACCESS_TOKEN,
-    testAccessToken: process.env.MERCADOPAGO_TEST_ACCESS_TOKEN,
+    alistaProductionAccessToken: process.env.MERCADOPAGO_ALISTA_ACCESS_TOKEN || process.env.MERCADOPAGO_ACCESS_TOKEN,
+    alistaTestAccessToken: process.env.MERCADOPAGO_ALISTA_TEST_ACCESS_TOKEN || process.env.MERCADOPAGO_TEST_ACCESS_TOKEN,
     vercelEnvironment: process.env.VERCEL_ENV,
   }
 ): MercadoPagoConfig | null {
-  const productionAccessToken = environment.productionAccessToken?.trim()
-  const testAccessToken = environment.testAccessToken?.trim()
+  const productionAccessToken = (environment.alistaProductionAccessToken ?? environment.productionAccessToken)?.trim()
+  const testAccessToken = (environment.alistaTestAccessToken ?? environment.testAccessToken)?.trim()
 
   if (environment.vercelEnvironment === 'preview' && testAccessToken) {
     return { accessToken: testAccessToken, mode: 'test' }
@@ -65,8 +69,14 @@ export function resolveMercadoPagoConfig(
   return null
 }
 
-export function getMercadoPagoConfig() {
+/** Cuenta propia de Alista: sólo para cobrar el servicio de la plataforma. */
+export function getAlistaMercadoPagoConfig() {
   return resolveMercadoPagoConfig()
+}
+
+/** @deprecated Usar getAlistaMercadoPagoConfig para evitar mezclar cuentas. */
+export function getMercadoPagoConfig() {
+  return getAlistaMercadoPagoConfig()
 }
 
 /**

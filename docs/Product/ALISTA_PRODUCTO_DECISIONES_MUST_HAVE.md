@@ -1216,7 +1216,7 @@ Esta regla debe guiar arquitectura y UI.
 
 Antes de actualizar definitivamente el brief de web y sistema, quedan por cerrar o validar:
 
-1. pricing final por evento / packs profesionales;
+1. validación del precio de lanzamiento por evento ($89.000, 50% sobre lista de $178.000) y definición de packs profesionales;
 2. alcance exacto de personalización en primera versión;
 3. onboarding de Mercado Pago con una cuenta externa real;
 4. experiencia completa del Centro de invitaciones en WhatsApp;

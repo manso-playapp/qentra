@@ -6,7 +6,7 @@ import { createMarketingMetadata } from '@/lib/marketing-seo'
 export const metadata = createMarketingMetadata({
   title: 'Cómo contratar Alista',
   description:
-    'Conocé cómo armamos una propuesta para tu fiesta de 15, salón, productora o equipo de planificación.',
+    'Alista para tus 15: precio de lanzamiento de $89.000 por evento, 50% de descuento sobre lista de $178.000.',
   path: '/precios',
 })
 
@@ -21,6 +21,11 @@ const PATHS = [
     destination: 'demo',
     cta: 'Pedir una demo para mis 15',
     tone: 'bg-[#d9ee73] text-[#171714]',
+    price: {
+      regular: '$178.000',
+      launch: '$89.000',
+      badge: '50% OFF lanzamiento',
+    },
   },
   {
     eyebrow: 'Para profesionales',
@@ -32,6 +37,7 @@ const PATHS = [
     destination: 'professionals',
     cta: 'Conversar sobre mi operación',
     tone: 'bg-[#213480] text-white',
+    price: null,
   },
 ] as const
 
@@ -49,7 +55,7 @@ export default function PreciosPage() {
         eyebrow="Cómo contratar Alista"
         title="Primero entendemos la fiesta."
         highlight="Después armamos la propuesta."
-        description="Alista está en una etapa de implementación acompañada. Por eso no publicamos importes ni paquetes genéricos que todavía no representan una oferta comercial cerrada."
+        description="Para familias: precio de lanzamiento de $89.000 por evento, con 50% de descuento sobre el precio de lista de $178.000. Pago único, sin comisión sobre los pagos de invitados."
         primaryCta={{ href: '/demo', label: 'Quiero verlo para mis 15' }}
         secondaryCta={{ href: '/profesionales', label: 'Trabajo con eventos' }}
       />
@@ -64,6 +70,16 @@ export default function PreciosPage() {
                   <h2 className="marketing-display mt-6 max-w-lg text-[clamp(2.5rem,4vw,4rem)] font-black leading-[0.92] tracking-[-0.005em]">
                     {path.title}
                   </h2>
+                  {path.price && (
+                    <div className="mt-7">
+                      <p className="text-xs font-black uppercase tracking-[0.18em]">{path.price.badge}</p>
+                      <div className="mt-2 flex items-baseline gap-3">
+                        <span className="text-sm font-bold line-through opacity-60">{path.price.regular}</span>
+                        <span className="text-4xl font-black tracking-[-0.04em]">{path.price.launch}</span>
+                      </div>
+                      <p className="mt-1 text-sm font-bold opacity-75">Pago único por evento</p>
+                    </div>
+                  )}
                   <p className="mt-7 max-w-xl text-base leading-7">{path.body}</p>
                 </div>
                 <div className="mt-12 border-t border-current/15 pt-6">

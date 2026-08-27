@@ -9,6 +9,7 @@ const navLinks = [
   { href: '/#preparacion', label: 'Preparación' },
   { href: '/#dharma', label: 'Dharma' },
   { href: '/profesionales', label: 'Profesionales' },
+  { href: '/precios', label: 'Precios' },
 ]
 
 export function SiteHeader() {

@@ -33,6 +33,25 @@ describe('resolveMercadoPagoConfig', () => {
     })
   })
 
+  it('resolves the dedicated Alista service credentials separately from legacy aliases', () => {
+    expect(
+      resolveMercadoPagoConfig({
+        alistaProductionAccessToken: ' alista-prod-token ',
+        alistaTestAccessToken: ' alista-test-token ',
+        productionAccessToken: 'legacy-prod-token',
+        testAccessToken: 'legacy-test-token',
+      })
+    ).toEqual({ accessToken: 'alista-prod-token', mode: 'production' })
+
+    expect(
+      resolveMercadoPagoConfig({
+        alistaProductionAccessToken: 'alista-prod-token',
+        alistaTestAccessToken: ' alista-test-token ',
+        vercelEnvironment: 'preview',
+      })
+    ).toEqual({ accessToken: 'alista-test-token', mode: 'test' })
+  })
+
   it('fails closed when no credential is configured', () => {
     expect(resolveMercadoPagoConfig({})).toBeNull()
   })

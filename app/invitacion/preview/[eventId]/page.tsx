@@ -8,6 +8,7 @@ import InvitationView, {
 import { getInvitationTemplate, normalizeInvitationTemplate } from '@/lib/invitation-templates'
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { getDraftInvitationConfig } from '@/lib/invitation-config-state'
 import { SURFACE_BRANDING_COLUMNS, type SurfaceBranding } from '@/types'
 
 export const metadata = {
@@ -38,7 +39,7 @@ export default async function InvitationPreviewPage({ params, searchParams }: Pr
   }
 
   const branding = (brandingResponse.data ?? null) as SurfaceBranding | null
-  const invitationConfig = (branding?.config ?? {}) as InvitationConfigInfo
+  const invitationConfig = getDraftInvitationConfig(branding?.config ?? {}) as InvitationConfigInfo
   const invitationTemplate = resolvedSearchParams?.template
     ? normalizeInvitationTemplate(resolvedSearchParams.template)
     : getInvitationTemplate(invitationConfig)

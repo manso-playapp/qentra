@@ -58,7 +58,7 @@ Conversión
 - grillas repetidas de capacidades/cards;
 - metadata y páginas que comunican una plataforma horizontal;
 - números de ejemplo que parezcan evidencia real;
-- página de precios hasta cerrar el modelo comercial.
+- página de precios: publicar el precio de lanzamiento familiar y mantener la propuesta profesional bajo consulta hasta cerrar los packs.
 
 ---
 
@@ -374,7 +374,7 @@ Cada ticket visual se considera terminado solo después de revisar mobile y desk
 
 **Criterios de aceptación:**
 
-- precios se publican solo si pago por evento y packs están cerrados;
+- precio familiar por evento y descuento de lanzamiento están definidos; los packs profesionales se publican cuando queden cerrados;
 - producto, cómo funciona, casos, demo, contacto, seguridad y FAQs se reescriben o redirigen;
 - egresados y eventos genéricos dejan de ser el mensaje de entrada;
 - ninguna página secundaria conserva el look anterior por accidente;
@@ -490,7 +490,7 @@ No conviene construir toda la home antes de WEB-013. Si hero + timeline no alcan
 - métricas reales del caso;
 - selección/licencia tipográfica;
 - destino de los CTA familia/profesional;
-- decisión sobre precios;
+- validación comercial del precio de lanzamiento y definición de packs profesionales;
 - definición de qué capacidades son reales, próximas o conceptuales;
 - acceso del owner al preview para los hitos WEB-013 y WEB-043.
 

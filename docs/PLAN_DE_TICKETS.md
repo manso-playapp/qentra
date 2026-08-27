@@ -39,7 +39,7 @@ La brecha principal no es visual: el producto actual modela principalmente **un 
 2. La web y el SEO actuales siguen hablando de eventos genéricos, egresados y software de acceso; contradicen la verticalización cerrada en cumpleaños de 15.
 3. `lib/mvp-status.ts` propone como siguiente paso un número productivo de Twilio. La decisión canónica prioriza el envío personal y prohíbe convertir un sender central en requisito.
 4. El flujo de nuevos pagos de invitados ya usa `event_payment_accounts`; falta aplicar la migración de estado OAuth, configurar la aplicación de Mercado Pago y probar una acreditación real al receptor correcto.
-5. La web tiene una página de precios aunque el modelo comercial todavía no está cerrado.
+5. El precio de lanzamiento familiar ya está definido ($89.000, 50% sobre una lista de $178.000); faltan validar packs profesionales y condiciones comerciales.
 
 ---
 
@@ -360,6 +360,31 @@ La web puede avanzar en copy, sistema visual y assets en paralelo, pero no debe 
 - la UI solo muestra nombre/cuenta conectada y estado útil;
 - no hay custodia, cuenta puente ni split/comisión implícita;
 - prueba end-to-end con pago, rechazo, expiración y webhook repetido.
+
+### ALI-025A — Cobro del servicio Alista en cuenta propia
+
+**Prioridad:** P1 · **Tamaño:** M · **Dependencias:** decisión de pricing del servicio de Alista y ALI-025
+
+**Estado técnico — 27 de agosto de 2026:** la configuración server-only de la
+cuenta propia quedó separada de las cuentas receptoras de eventos mediante
+`MERCADOPAGO_ALISTA_ACCESS_TOKEN` y `MERCADOPAGO_ALISTA_TEST_ACCESS_TOKEN`.
+El panel de salud informa si esa cuenta está configurada. El importe de los
+invitados ya se toma del tipo de invitado y no forma parte de este ticket.
+Todavía no existe un checkout ni un registro de suscripciones/facturas para
+cobrar el servicio de Alista.
+
+**Objetivo:** cobrar el servicio de Alista sin tocar el dinero de entradas o
+aportes de los invitados.
+
+**Criterios de aceptación:**
+
+- pricing, periodicidad, moneda, impuestos y política de reintentos definidos;
+- checkout del servicio usa únicamente la cuenta propia de Alista;
+- los pagos del servicio viven en un registro separado de
+  `payment_transactions` de invitados;
+- webhook, conciliación, cancelación y comprobante no pueden habilitar ni
+  revocar accesos de invitados;
+- el responsable del evento nunca ve ni configura las credenciales de Alista.
 
 ### ALI-026 — Cortesías, cupos y cierre de venta
 

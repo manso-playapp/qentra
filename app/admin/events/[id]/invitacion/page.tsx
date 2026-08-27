@@ -9,6 +9,8 @@ import InvitationEditor, {
   type InvitationConfig,
 } from '@/components/admin/InvitationEditor'
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
+import { DEFAULT_INVITATION_BLOCKS } from '@/lib/invitation-blocks'
+import { getInvitationConfigHistory, getInvitationConfigState, getDraftInvitationConfig } from '@/lib/invitation-config-state'
 
 export const metadata = { title: 'Personalizar invitación' }
 
@@ -26,6 +28,7 @@ function mergeConfig(raw: unknown): InvitationConfig {
     fonts: { ...DEFAULT_INVITATION_CONFIG.fonts, ...(cleanValue.fonts ?? {}) },
     widgets: { ...DEFAULT_INVITATION_CONFIG.widgets, ...(cleanValue.widgets ?? {}) },
     fields: { ...DEFAULT_INVITATION_CONFIG.fields, ...(cleanValue.fields ?? {}) },
+    blocks: { ...DEFAULT_INVITATION_BLOCKS, ...(cleanValue.blocks ?? {}) },
   }
 }
 
@@ -83,6 +86,7 @@ export default async function InvitationEditorPage({ params }: { params: Promise
     .maybeSingle()
 
   const brandingRow = (branding ?? {}) as Record<string, unknown>
+  const invitationConfigState = getInvitationConfigState(brandingRow.config)
 
   return (
     <AdminLayout>
@@ -139,7 +143,9 @@ export default async function InvitationEditorPage({ params }: { params: Promise
             logo_url: (brandingRow.logo_url as string) ?? '',
             cover_image_url: (brandingRow.cover_image_url as string) ?? '',
           }}
-          initialConfig={mergeConfig(brandingRow.config)}
+          initialConfig={mergeConfig(getDraftInvitationConfig(brandingRow.config))}
+          initialHasDraft={invitationConfigState.hasDraft}
+          initialHistory={getInvitationConfigHistory(brandingRow.config)}
         />
       </div>
     </AdminLayout>

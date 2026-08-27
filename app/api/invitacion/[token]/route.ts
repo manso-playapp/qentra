@@ -73,6 +73,22 @@ export async function POST(request: Request, context: RouteContext) {
       return Response.json({ error: 'No se encontro el invitado.' }, { status: 404 })
     }
 
+    // La configuracion de campos pertenece al evento. El cliente puede
+    // ocultarlos en la invitacion, pero la API tambien debe respetarlo para
+    // que no se puedan enviar valores deshabilitados manualmente.
+    const { data: branding } = await adminClient
+      .from('event_branding')
+      .select('config')
+      .eq('event_id', guest.event_id)
+      .maybeSingle()
+    const configFields = branding?.config && typeof branding.config === 'object' && !Array.isArray(branding.config)
+      ? (branding.config as { fields?: Record<string, unknown> }).fields
+      : undefined
+    const isRsvpEnabled = configFields?.rsvp !== false
+    const isDniEnabled = configFields?.dni !== false
+    const isMenuEnabled = configFields?.menu !== false
+    const isCompanionsEnabled = configFields?.companions !== false
+
     if (
       guest.status === 'checked_in' ||
       (invitationToken.used_count ?? 0) > 0 ||
@@ -89,33 +105,34 @@ export async function POST(request: Request, context: RouteContext) {
     const lastName = body.lastName?.trim() || ''
     const email = body.email?.trim() || null
     const phone = body.phone?.trim() || null
-    const dni = body.dni?.trim() || ''
-    const companionNameList = parseCompanionNames(body.companionNames)
+    const dni = isDniEnabled ? body.dni?.trim() || '' : ''
+    const companionNameList = isCompanionsEnabled ? parseCompanionNames(body.companionNames) : []
     const companionNames = companionNameList.join('\n')
     const plusOnesConfirmed = companionNameList.length
-    const dietaryRequirements = body.dietaryRequirements?.trim() || ''
+    const dietaryRequirements = isMenuEnabled ? body.dietaryRequirements?.trim() || '' : ''
     const song = body.song?.trim() || ''
     const greeting = body.greeting?.trim() || ''
     const observations = body.observations?.trim() || ''
     const paymentStatus = body.paymentStatus ?? guest.payment_status ?? 'not_required'
+    const effectiveAttendanceResponse = isRsvpEnabled ? attendanceResponse : 'confirmed'
 
     if (!firstName || !lastName) {
       return Response.json({ error: 'Completa nombre y apellido.' }, { status: 400 })
     }
 
-    if (attendanceResponse === 'confirmed' && !dni) {
+    if (effectiveAttendanceResponse === 'confirmed' && isDniEnabled && !dni) {
       return Response.json({ error: 'Completa el DNI para emitir el QR final.' }, { status: 400 })
     }
 
     const plusOnesAllowed = Math.max(0, guest.plus_ones_allowed ?? 0)
-    if (attendanceResponse === 'confirmed' && plusOnesConfirmed > plusOnesAllowed) {
+    if (effectiveAttendanceResponse === 'confirmed' && plusOnesConfirmed > plusOnesAllowed) {
       return Response.json(
         { error: `Esta invitacion permite hasta ${plusOnesAllowed} acompanante(s).` },
         { status: 400 }
       )
     }
 
-    if (attendanceResponse === 'confirmed' && plusOnesConfirmed === 0 && (body.plusOnesConfirmed ?? 0) > 0) {
+    if (effectiveAttendanceResponse === 'confirmed' && plusOnesConfirmed === 0 && (body.plusOnesConfirmed ?? 0) > 0 && isCompanionsEnabled) {
       return Response.json(
         { error: 'Indica los nombres de los acompanantes confirmados.' },
         { status: 400 }
@@ -140,7 +157,7 @@ export async function POST(request: Request, context: RouteContext) {
     })
 
     const nextGuestStatus =
-      attendanceResponse === 'declined'
+      effectiveAttendanceResponse === 'declined'
         ? 'rejected'
         : paymentStatus === 'pending'
         ? 'registered'
@@ -157,8 +174,8 @@ export async function POST(request: Request, context: RouteContext) {
         document_number: dni || null,
         notes: specialRequests || null,
         payment_status: paymentStatus,
-        plus_ones_confirmed: attendanceResponse === 'confirmed' ? plusOnesConfirmed : 0,
-        companion_names: attendanceResponse === 'confirmed' ? companionNameList : [],
+        plus_ones_confirmed: effectiveAttendanceResponse === 'confirmed' ? plusOnesConfirmed : 0,
+        companion_names: effectiveAttendanceResponse === 'confirmed' ? companionNameList : [],
         status: nextGuestStatus,
         updated_at: new Date().toISOString(),
       })
@@ -228,7 +245,7 @@ export async function POST(request: Request, context: RouteContext) {
 
     return Response.json({
       ok: true,
-      status: attendanceResponse === 'confirmed' ? 'confirmed' : 'declined',
+      status: effectiveAttendanceResponse === 'confirmed' ? 'confirmed' : 'declined',
     })
   } catch (error) {
     const message = error instanceof Error ? error.message : 'No se pudo guardar la invitacion.'

@@ -1,5 +1,7 @@
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
 import { ensureAuthorizedApiAccess } from '@/lib/operator-auth'
+import { normalizeInvitationBlocks } from '@/lib/invitation-blocks'
+import { buildInvitationConfigEnvelope, getInvitationConfigHistory, getInvitationConfigState, type InvitationConfigHistoryEntry } from '@/lib/invitation-config-state'
 
 export const runtime = 'nodejs'
 
@@ -13,6 +15,7 @@ type PutBody = {
     cover_image_url?: string
   }
   config?: unknown
+  mode?: 'draft' | 'publish'
 }
 
 function trimmedOrNull(value?: string | null) {
@@ -47,11 +50,14 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
     cover_image_url: trimmedOrNull(v.cover_image_url),
   }
 
-  const { data: existing } = await adminClient
+  const { data: existingWithConfig, error: existingConfigError } = await adminClient
     .from('event_branding')
-    .select('id')
+    .select('id, config')
     .eq('event_id', eventId)
     .maybeSingle()
+  const existing = existingConfigError
+    ? (await adminClient.from('event_branding').select('id').eq('event_id', eventId).maybeSingle()).data
+    : existingWithConfig
 
   // 1) Guardar el aspecto (columnas que seguro existen).
   const write = existing
@@ -65,15 +71,63 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
 
   // 2) Guardar la config rica en la columna jsonb. Si no existe, degradar.
   let configPersisted = true
+  let savedHistory: InvitationConfigHistoryEntry[] = []
   if (body?.config !== undefined) {
+    const rawConfig = body.config
+    const configPayload = rawConfig && typeof rawConfig === 'object' && !Array.isArray(rawConfig)
+      ? {
+          ...(rawConfig as Record<string, unknown>),
+          blocks: normalizeInvitationBlocks((rawConfig as Record<string, unknown>).blocks),
+        }
+      : { blocks: {} }
+    const currentConfig = existing && 'config' in existing ? existing.config : null
+    const currentState = getInvitationConfigState(currentConfig)
+    const previousConfig = currentState.draft && typeof currentState.draft === 'object' && !Array.isArray(currentState.draft)
+      ? currentState.draft as Record<string, unknown>
+      : null
+    const savedAt = new Date().toISOString()
+    const history = previousConfig
+      ? [
+          {
+            id: crypto.randomUUID(),
+            saved_at: savedAt,
+            mode: body.mode === 'publish' ? 'publish' as const : 'draft' as const,
+            config: previousConfig,
+          },
+          ...getInvitationConfigHistory(currentConfig),
+        ].slice(0, 10)
+      : getInvitationConfigHistory(currentConfig)
+    const nextEnvelope = buildInvitationConfigEnvelope({
+      current: currentConfig,
+      draft: configPayload,
+      publish: body.mode === 'publish',
+      history,
+    })
     const { error: configError } = await adminClient
       .from('event_branding')
-      .update({ config: body.config })
+      .update({
+        config: nextEnvelope,
+      })
       .eq('event_id', eventId)
     if (configError) {
       configPersisted = false
+    } else {
+      savedHistory = history
     }
   }
 
-  return Response.json({ ok: true, configPersisted })
+  const configState = getInvitationConfigState(
+    body?.config !== undefined
+      ? buildInvitationConfigEnvelope({ current: existing && 'config' in existing ? existing.config : null, draft: body.config, publish: body.mode === 'publish' })
+      : existing && 'config' in existing ? existing.config : null
+  )
+
+  return Response.json({
+    ok: true,
+    configPersisted,
+    mode: body?.mode === 'publish' ? 'publish' : 'draft',
+    published: body?.mode === 'publish',
+    hasDraft: configState.hasDraft,
+    history: savedHistory,
+  })
 }

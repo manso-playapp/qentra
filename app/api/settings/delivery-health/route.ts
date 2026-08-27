@@ -1,4 +1,5 @@
 import { ensureAuthorizedApiAccess } from '@/lib/operator-auth'
+import { getAlistaMercadoPagoConfig } from '@/lib/mercadopago'
 
 export const runtime = 'nodejs'
 
@@ -14,6 +15,7 @@ export async function GET() {
   }
 
   const serviceRoleConfigured = Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY?.trim())
+  const alistaMercadoPago = getAlistaMercadoPagoConfig()
   const recoveryRedirectConfigured = Boolean(
     process.env.ALISTA_OPERATOR_RECOVERY_REDIRECT_URL?.trim() ||
       process.env.QENTRA_OPERATOR_RECOVERY_REDIRECT_URL?.trim()
@@ -35,6 +37,11 @@ export async function GET() {
   return Response.json({
     data: {
       serviceRoleConfigured,
+      alistaMercadoPago: {
+        ready: Boolean(alistaMercadoPago),
+        mode: alistaMercadoPago?.mode ?? null,
+        missing: alistaMercadoPago ? [] : ['MERCADOPAGO_ALISTA_ACCESS_TOKEN'],
+      },
       recoveryRedirectConfigured,
       operatorAccessEmail: {
         ready: operatorAccessEmailMissing.length === 0,

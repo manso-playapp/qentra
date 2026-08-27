@@ -796,6 +796,17 @@ export default function SettingsPage() {
                     <div className="grid gap-3">
                       <div className="rounded-[24px] border border-border/70 bg-white/75 p-4">
                         <div className="flex items-center justify-between gap-3">
+                          <p className="font-medium text-foreground">Mercado Pago · servicio Alista</p>
+                          <HealthBadge ready={deliveryHealth.alistaMercadoPago.ready} />
+                        </div>
+                        <p className="mt-2 text-sm text-muted-foreground">
+                          {deliveryHealth.alistaMercadoPago.ready
+                            ? `Cuenta propia configurada (${deliveryHealth.alistaMercadoPago.mode === 'test' ? 'pruebas' : 'producción'}). Se usa solo para el servicio de Alista.`
+                            : `Falta ${deliveryHealth.alistaMercadoPago.missing.join(', ')} en el entorno.`}
+                        </p>
+                      </div>
+                      <div className="rounded-[24px] border border-border/70 bg-white/75 p-4">
+                        <div className="flex items-center justify-between gap-3">
                           <p className="font-medium text-foreground">Clave de servicio</p>
                           <HealthBadge ready={deliveryHealth.serviceRoleConfigured} />
                         </div>

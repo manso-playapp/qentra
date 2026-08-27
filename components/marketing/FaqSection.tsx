@@ -23,7 +23,7 @@ const FAQS = [
   },
   {
     q: '¿Cuánto cuesta?',
-    a: 'Todavía no publicamos paquetes genéricos. Primero entendemos la fiesta, el volumen y el alcance; después armamos una propuesta clara para esa operación.',
+    a: 'Para familias, el precio de lanzamiento es $89.000 por evento (50% de descuento sobre una lista de $178.000), con pago único y sin comisión sobre los pagos de invitados. Para planners, salones y productoras armamos packs según volumen.',
   },
 ]
 

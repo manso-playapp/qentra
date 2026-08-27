@@ -11,6 +11,12 @@ import { Textarea } from '@/components/ui/textarea'
 
 type InvitationResponseFormProps = {
   token: string
+  fields?: {
+    rsvp?: boolean
+    dni?: boolean
+    menu?: boolean
+    companions?: boolean
+  }
   initialData: {
     attendanceResponse: 'pending' | 'confirmed' | 'declined'
     firstName: string
@@ -29,10 +35,10 @@ type InvitationResponseFormProps = {
   }
 }
 
-export default function InvitationResponseForm({ token, initialData }: InvitationResponseFormProps) {
+export default function InvitationResponseForm({ token, initialData, fields }: InvitationResponseFormProps) {
   const router = useRouter()
   const [attendanceResponse, setAttendanceResponse] = useState<'confirmed' | 'declined'>(
-    initialData.attendanceResponse === 'declined' ? 'declined' : 'confirmed'
+    fields?.rsvp === false ? 'confirmed' : initialData.attendanceResponse === 'declined' ? 'declined' : 'confirmed'
   )
   const [firstName, setFirstName] = useState(initialData.firstName)
   const [lastName, setLastName] = useState(initialData.lastName)
@@ -52,8 +58,12 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const isRsvpEnabled = fields?.rsvp !== false
+  const isDniEnabled = fields?.dni !== false
+  const isMenuEnabled = fields?.menu !== false
+  const isCompanionsEnabled = fields?.companions !== false
   const isConfirming = attendanceResponse === 'confirmed'
-  const companionLimit = initialData.plusOnesAllowed
+  const companionLimit = isCompanionsEnabled ? initialData.plusOnesAllowed : 0
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
@@ -72,10 +82,10 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
           lastName,
           email,
           phone,
-          dni,
-          plusOnesConfirmed: isConfirming ? companionNames.filter((name) => name.trim()).length : 0,
-          companionNames: isConfirming ? companionNames.filter((name) => name.trim()).join('\n') : '',
-          dietaryRequirements: isConfirming ? dietaryRequirements : '',
+          dni: isDniEnabled ? dni : '',
+          plusOnesConfirmed: isConfirming && isCompanionsEnabled ? companionNames.filter((name) => name.trim()).length : 0,
+          companionNames: isConfirming && isCompanionsEnabled ? companionNames.filter((name) => name.trim()).join('\n') : '',
+          dietaryRequirements: isConfirming && isMenuEnabled ? dietaryRequirements : '',
           song: isConfirming ? initialData.song : '',
           greeting: isConfirming ? initialData.greeting : '',
           observations,
@@ -107,7 +117,7 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
       onSubmit={handleSubmit}
       className="space-y-5 text-slate-950 [&_input]:border-slate-300 [&_input]:bg-white/70 [&_input]:text-slate-950 [&_input]:placeholder:text-slate-400 [&_label]:text-slate-700 [&_textarea]:border-slate-300 [&_textarea]:bg-white/70 [&_textarea]:text-slate-950 [&_textarea]:placeholder:text-slate-400"
     >
-      <div className="grid gap-3 sm:grid-cols-2">
+      {isRsvpEnabled ? <div className="grid gap-3 sm:grid-cols-2">
         <button
           type="button"
           onClick={() => setAttendanceResponse('confirmed')}
@@ -156,7 +166,7 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
             Avisá a la organización para liberar tu lugar.
           </span>
         </button>
-      </div>
+      </div> : null}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
@@ -221,7 +231,7 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
           </div>
 
           <div className={`grid gap-4 ${companionLimit > 0 ? 'sm:grid-cols-2' : ''}`}>
-            <div>
+            {isDniEnabled ? <div>
               <Label htmlFor="invitation-dni">DNI</Label>
               <Input
                 id="invitation-dni"
@@ -230,8 +240,7 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
                 className="mt-2"
                 placeholder="Documento"
               />
-            </div>
-
+            </div> : null}
           </div>
 
           {companionLimit > 0 && (
@@ -256,7 +265,7 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
             </div>
           )}
 
-          <div>
+          {isMenuEnabled ? <div>
             <Label htmlFor="invitation-menu">Menu o necesidad alimentaria</Label>
             <Input
               id="invitation-menu"
@@ -265,7 +274,7 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
               className="mt-2"
               placeholder="Ej: celiaco, vegetariano, sin restriccion"
             />
-          </div>
+          </div> : null}
 
 
         </>

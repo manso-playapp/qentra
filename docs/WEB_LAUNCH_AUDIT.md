@@ -29,7 +29,7 @@
 - Validar consentimiento para publicar el material real del caso Dharma.
 - Obtener revisión legal profesional de privacidad, términos, menores, pagos y analítica.
 - Habilitar Vercel Web Analytics después de resolver consentimiento/base legal, configurar `ALISTA_WEB_ANALYTICS_ENABLED=1` en Production, volver a desplegar y confirmar que el plan admite el catálogo de eventos personalizados.
-- Confirmar oferta comercial, precios y alcance real de pagos antes de cambiar los textos cautelosos actuales.
+- Verificar la publicación del precio de lanzamiento ($89.000, 50% sobre lista de $178.000) y el alcance real de pagos antes de cerrar la auditoría comercial.
 
 ## Criterio de salida
 

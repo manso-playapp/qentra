@@ -30,7 +30,7 @@ El siguiente bloque es la calidad de lanzamiento:
 - El caso Dharma usa material real y no publica métricas sin fuente.
 - La captura de “Alista ya está pasando” se muestra completa con `object-contain`, sin recortar sus bordes.
 - En Profesionales, las fechas de eventos separan día y mes dentro de una caja fija de 56 × 56 px para evitar desplazamientos.
-- No se publican precios, packs ni planes comerciales no confirmados. `/precios` explica el modelo de propuesta acompañada y deriva según audiencia.
+- `/precios` publica el precio de lanzamiento familiar ($89.000, 50% sobre una lista de $178.000) y mantiene los packs profesionales bajo consulta hasta cerrarlos.
 - Los legales siguen marcados como versiones base: requieren revisión profesional antes de publicación definitiva.
 
 ## 3. Trabajo implementado

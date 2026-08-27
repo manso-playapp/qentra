@@ -1,11 +1,18 @@
 'use client'
 
 import { useState } from 'react'
-import { CalendarDays, Clock, MapPin, Music2, Timer, Sparkles } from 'lucide-react'
+import { Music2, Timer, Sparkles } from 'lucide-react'
 import ImageUpload from '@/components/admin/ImageUpload'
 import AudioUpload from '@/components/admin/AudioUpload'
 import InvitationView, { buildCalendarUrl, type InvitationConfigInfo, type InvitationEventInfo } from '@/components/invitation/InvitationView'
 import type { SurfaceBranding } from '@/types'
+import {
+  DEFAULT_INVITATION_BLOCKS,
+  getInvitationBlock,
+  INVITATION_BLOCK_KEYS,
+  type InvitationBlockKey,
+  type InvitationBlocks,
+} from '@/lib/invitation-blocks'
 import {
   INVITATION_TEMPLATES,
   type InvitationTemplateKey,
@@ -16,6 +23,7 @@ import {
   INVITATION_FONT_LABELS,
   type InvitationFontKey,
 } from '@/lib/invitation-fonts'
+import type { InvitationConfigHistoryEntry } from '@/lib/invitation-config-state'
 
 // Editor tipo "front editor" para la invitacion: panel de controles a la
 // izquierda, preview en vivo (mockup de celular) a la derecha. Los campos
@@ -40,7 +48,10 @@ export type InvitationConfig = {
   }
   widgets: { countdown: boolean; particles: boolean }
   fields: { rsvp: boolean; dni: boolean; menu: boolean; companions: boolean }
+  blocks: InvitationBlocks
 }
+
+type InvitationPreviewMode = 'pending' | 'confirmed' | 'ready' | 'checked_in'
 
 // La invitacion usa cover_image_url como su imagen de fondo (columna propia).
 // background_image_url queda para el totem, para que no se pisen.
@@ -77,12 +88,7 @@ export const DEFAULT_INVITATION_CONFIG: InvitationConfig = {
   fonts: DEFAULT_INVITATION_FONTS,
   widgets: { countdown: false, particles: false },
   fields: { rsvp: true, dni: true, menu: true, companions: true },
-}
-
-const LEGACY_FONT_STACKS: Record<InvitationConfig['fontFamily'], string> = {
-  sans: 'ui-sans-serif, system-ui, sans-serif',
-  serif: 'Georgia, "Times New Roman", serif',
-  display: 'var(--font-display), ui-sans-serif, system-ui, sans-serif',
+  blocks: DEFAULT_INVITATION_BLOCKS,
 }
 
 export const LEGACY_FONT_LABELS: Record<InvitationConfig['fontFamily'], string> = {
@@ -93,29 +99,26 @@ export const LEGACY_FONT_LABELS: Record<InvitationConfig['fontFamily'], string> 
 
 const HEX = /^#[0-9a-fA-F]{6}$/
 
-function formatDate(iso: string) {
-  if (!iso) return 'Fecha a definir'
-  return new Date(`${iso}T00:00:00`).toLocaleDateString('es-AR', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  })
-}
-
 export default function InvitationEditor({
   eventId,
   event,
   initialVisual,
   initialConfig,
+  initialHasDraft = false,
+  initialHistory = [],
 }: {
   eventId: string
   event: EventInfo
   initialVisual: InvitationVisual
   initialConfig: InvitationConfig
+  initialHasDraft?: boolean
+  initialHistory?: InvitationConfigHistoryEntry[]
 }) {
   const [visual, setVisual] = useState<InvitationVisual>(initialVisual)
   const [config, setConfig] = useState<InvitationConfig>(initialConfig)
   const [saving, setSaving] = useState(false)
+  const [previewMode, setPreviewMode] = useState<InvitationPreviewMode>('pending')
+  const [history, setHistory] = useState<InvitationConfigHistoryEntry[]>(initialHistory)
   const [notice, setNotice] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -128,7 +131,6 @@ export default function InvitationEditor({
     data: '#ffffff',
     accent: secondary,
   }
-  const fontStack = LEGACY_FONT_STACKS[config.fontFamily]
   const isMidnight = config.template === 'midnight'
   const previewEvent = event as InvitationEventInfo
   const previewBranding = {
@@ -146,8 +148,27 @@ export default function InvitationEditor({
     setConfig((current) => ({ ...current, widgets: { ...current.widgets, [key]: !current.widgets[key] } }))
   const toggleField = (key: keyof InvitationConfig['fields']) =>
     setConfig((current) => ({ ...current, fields: { ...current.fields, [key]: !current.fields[key] } }))
+  const toggleBlock = (key: InvitationBlockKey) =>
+    setConfig((current) => ({
+      ...current,
+      blocks: {
+        ...current.blocks,
+        [key]: {
+          ...getInvitationBlock(current.blocks, key),
+          visible: !getInvitationBlock(current.blocks, key).visible,
+        },
+      },
+    }))
+  const updateBlock = (key: InvitationBlockKey, field: 'title' | 'body', value: string) =>
+    setConfig((current) => ({
+      ...current,
+      blocks: {
+        ...current.blocks,
+        [key]: { ...getInvitationBlock(current.blocks, key), [field]: value },
+      },
+    }))
 
-  const handleSave = async () => {
+  const handleSave = async (mode: 'draft' | 'publish') => {
     setSaving(true)
     setError(null)
     setNotice(null)
@@ -155,10 +176,10 @@ export default function InvitationEditor({
       const response = await fetch(`/api/events/${eventId}/invitation`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ visual, config }),
+        body: JSON.stringify({ visual, config, mode }),
       })
       const payload = (await response.json().catch(() => null)) as
-        | { error?: string; configPersisted?: boolean }
+        | { error?: string; configPersisted?: boolean; history?: InvitationConfigHistoryEntry[] }
         | null
       if (!response.ok) throw new Error(payload?.error || 'No se pudo guardar.')
       setNotice(
@@ -166,11 +187,30 @@ export default function InvitationEditor({
           ? 'Aspecto guardado. Los widgets se guardan al correr la migración de config (columna event_branding.config).'
           : 'Invitación guardada.'
       )
+      if (payload?.configPersisted !== false) {
+        setNotice(mode === 'publish' ? 'Invitación publicada.' : 'Borrador guardado.')
+        if (payload?.history) setHistory(payload.history)
+      }
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : 'No se pudo guardar.')
     } finally {
       setSaving(false)
     }
+  }
+
+  const restoreVersion = (entry: InvitationConfigHistoryEntry) => {
+    const value = entry.config as Partial<InvitationConfig> & Record<string, unknown>
+    setConfig({
+      ...DEFAULT_INVITATION_CONFIG,
+      ...value,
+      colors: { ...DEFAULT_INVITATION_CONFIG.colors, ...(value.colors as Partial<InvitationConfig['colors']> ?? {}) },
+      fonts: { ...DEFAULT_INVITATION_FONTS, ...(value.fonts as Partial<InvitationConfig['fonts']> ?? {}) },
+      widgets: { ...DEFAULT_INVITATION_CONFIG.widgets, ...(value.widgets as Partial<InvitationConfig['widgets']> ?? {}) },
+      fields: { ...DEFAULT_INVITATION_CONFIG.fields, ...(value.fields as Partial<InvitationConfig['fields']> ?? {}) },
+      blocks: { ...DEFAULT_INVITATION_BLOCKS, ...(value.blocks as Partial<InvitationBlocks> ?? {}) },
+    })
+    setNotice('Versión restaurada como borrador. Guardala o publicala para aplicarla.')
+    setError(null)
   }
 
   return (
@@ -262,11 +302,51 @@ export default function InvitationEditor({
 
         <Section title="Widgets opcionales" desc="Activá solo los que quieras. La invitación no obliga a completarlos.">
           {isMidnight && (
-            <>
-              <ToggleRow icon={Timer} label="Cuenta regresiva" desc="Días, horas, minutos y segundos para el evento." on={config.widgets.countdown} onToggle={() => toggleWidget('countdown')} />
-              <ToggleRow icon={Sparkles} label="Partículas animadas" desc="Efecto de luces flotando sobre el fondo." on={config.widgets.particles} onToggle={() => toggleWidget('particles')} />
-            </>
+            <ToggleRow icon={Timer} label="Cuenta regresiva" desc="Días, horas y minutos para el evento." on={config.widgets.countdown} onToggle={() => toggleWidget('countdown')} />
           )}
+          <ToggleRow icon={Sparkles} label="Partículas animadas" desc="Efecto de luces flotando sobre el fondo." on={config.widgets.particles} onToggle={() => toggleWidget('particles')} />
+        </Section>
+
+        <Section title="Bloques y contenido" desc="Elegí qué aparece y ajustá sólo los textos permitidos por la template.">
+          <Field label="Título de invitación especial">
+            <input
+              value={getInvitationBlock(config.blocks, 'personal').title}
+              onChange={(event) => updateBlock('personal', 'title', event.target.value)}
+              className={inputClass}
+              maxLength={120}
+            />
+          </Field>
+          <Field label="Texto de invitación especial">
+            <textarea
+              value={getInvitationBlock(config.blocks, 'personal').body}
+              onChange={(event) => updateBlock('personal', 'body', event.target.value)}
+              className={`${inputClass} min-h-20`}
+              maxLength={500}
+              rows={3}
+            />
+          </Field>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {INVITATION_BLOCK_KEYS.map((key) => {
+              const labels: Record<InvitationBlockKey, string> = {
+                personal: 'Invitación especial',
+                eventDetails: 'Fecha, hora y lugar',
+                countdown: 'Cuenta regresiva',
+                dresscode: 'Dress code',
+                gift: 'Regalo',
+                actions: 'Botones de interacción',
+                audio: 'Música',
+                guestData: 'Tus datos',
+              }
+              return (
+                <ToggleRow
+                  key={key}
+                  label={labels[key]}
+                  on={getInvitationBlock(config.blocks, key).visible}
+                  onToggle={() => toggleBlock(key)}
+                />
+              )
+            })}
+          </div>
         </Section>
 
         <Section title="Datos que pedimos" desc="Los campos funcionales del formulario de confirmación.">
@@ -279,19 +359,71 @@ export default function InvitationEditor({
         {error && <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
         {notice && <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">{notice}</div>}
 
-        <button
-          type="button"
-          onClick={handleSave}
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={() => void handleSave('publish')}
+            disabled={saving}
+            className="inline-flex w-full items-center justify-center rounded-md bg-gray-900 px-4 py-3 text-sm font-medium text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+          >
+            {saving ? 'Publicando...' : 'Publicar invitación'}
+          </button>
+          <button
+            type="button"
+            onClick={() => void handleSave('draft')}
           disabled={saving}
           className="inline-flex w-full items-center justify-center rounded-md bg-gray-900 px-4 py-3 text-sm font-medium text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
         >
           {saving ? 'Guardando...' : 'Guardar invitación'}
         </button>
+          <span className="text-xs text-gray-500">
+            {initialHasDraft ? 'Hay un borrador guardado.' : 'La versión pública no cambia hasta publicar.'}
+          </span>
+        </div>
+
+        {history.length > 0 ? (
+          <Section title="Versiones guardadas" desc="Restaurá una versión como borrador. No se publica hasta que lo confirmes.">
+            <div className="space-y-2">
+              {history.map((entry) => (
+                <div key={entry.id} className="flex items-center justify-between gap-3 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-gray-800">
+                      {entry.mode === 'publish' ? 'Publicada' : 'Borrador'}
+                    </p>
+                    <p className="truncate text-xs text-gray-500">
+                      {new Date(entry.saved_at).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' })}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => restoreVersion(entry)}
+                    className="shrink-0 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100"
+                  >
+                    Restaurar
+                  </button>
+                </div>
+              ))}
+            </div>
+          </Section>
+        ) : null}
       </div>
 
       {/* Preview en vivo */}
       <div className="lg:sticky lg:top-6 lg:self-start">
         <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-gray-400">Vista previa en vivo</p>
+        <label className="mb-3 block text-xs font-medium text-gray-500">
+          Ver como
+          <select
+            value={previewMode}
+            onChange={(event) => setPreviewMode(event.target.value as InvitationPreviewMode)}
+            className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+          >
+            <option value="pending">Invitación pendiente</option>
+            <option value="confirmed">Asistencia confirmada</option>
+            <option value="ready">Acceso habilitado</option>
+            <option value="checked_in">Ingreso registrado</option>
+          </select>
+        </label>
         <div className="invitation-editor-thumbnail mx-auto h-[680px] w-full max-w-[360px] overflow-x-hidden overflow-y-auto overscroll-contain rounded-[36px] border-4 border-gray-900 bg-black shadow-2xl">
           <div className="invitation-editor-canvas">
             <InvitationView
@@ -303,82 +435,8 @@ export default function InvitationEditor({
               config={previewConfig}
               isPreview
             >
-              <EditorPreviewContent config={config} isMidnight={isMidnight} primary={primary} />
+              <EditorPreviewContent config={config} isMidnight={isMidnight} primary={primary} previewMode={previewMode} />
             </InvitationView>
-          </div>
-        </div>
-        <div className="hidden mx-auto w-full max-w-[360px] overflow-hidden rounded-[36px] border-4 border-gray-900 bg-white shadow-2xl">
-          <div
-            className="relative min-h-[560px] px-4 py-6"
-            style={{
-              fontFamily: fontStack,
-              ...(isMidnight
-                ? {
-                    background: `radial-gradient(circle at 18% 8%, ${primary}99, transparent 32%), radial-gradient(circle at 84% 18%, ${secondary}88, transparent 36%), #110d1c`,
-                  }
-                : visual.cover_image_url
-                ? {
-                    backgroundImage: `url(${visual.cover_image_url})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                  }
-                : { background: `linear-gradient(160deg, ${primary}, ${secondary})` }),
-            }}
-          >
-            {/* Scrim: legibilidad del logo y separacion de las tarjetas. */}
-            <div className="absolute inset-0 bg-black/15" />
-
-            <div className="relative space-y-4">
-              <div className={`rounded-2xl px-4 py-3 text-xs font-semibold ${isMidnight ? 'border border-white/15 bg-white/8 text-white' : 'bg-white/18 text-white'}`}>
-                <span className="uppercase tracking-[0.16em] opacity-60">Template</span>
-                <p className="mt-1 text-sm font-bold">{isMidnight ? 'Noche · portada editorial' : 'Viaje · boarding pass'}</p>
-              </div>
-              {/* Logo transparente, arriba, sobre el fondo. */}
-              {visual.logo_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={visual.logo_url} alt="Logo" className="mx-auto h-16 max-w-[70%] object-contain drop-shadow-md" />
-              ) : (
-                <div className="mx-auto flex h-14 w-28 items-center justify-center rounded-lg border border-dashed border-white/70 text-[10px] font-medium text-white/85">
-                  Logo (PNG)
-                </div>
-              )}
-
-              {/* Tarjeta: info del evento */}
-              <div className="rounded-2xl bg-white/92 p-4 text-center shadow-lg backdrop-blur-sm">
-                <h2 className="text-xl font-semibold" style={{ color: primary }}>
-                  {event.name || 'Nombre del evento'}
-                </h2>
-                <div className="mt-3 space-y-1.5 text-sm text-gray-700">
-                  <p className="flex items-center justify-center gap-1.5"><CalendarDays className="size-4" style={{ color: primary }} /> {formatDate(event.event_date)}</p>
-                  <p className="flex items-center justify-center gap-1.5"><Clock className="size-4" style={{ color: primary }} /> {event.start_time || 'Hora a definir'}</p>
-                  <p className="flex items-center justify-center gap-1.5"><MapPin className="size-4" style={{ color: primary }} /> {event.venue_name || 'Lugar a definir'}</p>
-                </div>
-                {event.dresscode && (
-                  <p className="mx-auto mt-3 w-fit rounded-full px-3 py-1 text-xs font-medium" style={{ backgroundColor: primary, color: secondary }}>
-                    Dresscode: {event.dresscode}
-                  </p>
-                )}
-                {event.directions_url && (
-                  <p className="mt-2 text-xs font-semibold underline" style={{ color: primary }}>Cómo llegar →</p>
-                )}
-              </div>
-
-              {/* Widgets: cada uno su tarjeta. */}
-              {/* Tarjeta: formulario funcional */}
-              <div className="rounded-2xl bg-white/92 p-4 shadow-lg backdrop-blur-sm">
-                {config.fields.rsvp && (
-                  <div className="grid grid-cols-2 gap-2">
-                    <span className="rounded-lg py-2 text-center text-xs font-semibold text-white" style={{ backgroundColor: primary }}>Confirmar</span>
-                    <span className="rounded-lg border py-2 text-center text-xs font-semibold text-gray-600">No asistiré</span>
-                  </div>
-                )}
-                <div className="mt-3 space-y-2">
-                  {config.fields.dni && <MockInput label="DNI" />}
-                  {config.fields.companions && <MockInput label="Acompañantes" />}
-                  {config.fields.menu && <MockInput label="Menú especial" />}
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -393,13 +451,27 @@ function EditorPreviewContent({
   config,
   isMidnight,
   primary,
+  previewMode,
 }: {
   config: InvitationConfig
   isMidnight: boolean
   primary: string
+  previewMode: InvitationPreviewMode
 }) {
+  const statusCopy: Record<InvitationPreviewMode, { label: string; detail: string }> = {
+    pending: { label: 'Acreditación pendiente', detail: 'Completá tus datos para confirmar asistencia.' },
+    confirmed: { label: 'Asistencia confirmada', detail: 'Tu respuesta fue registrada correctamente.' },
+    ready: { label: 'Acceso confirmado', detail: 'Tu QR final está listo para ingresar.' },
+    checked_in: { label: 'Ingreso registrado', detail: 'Tu ingreso ya fue registrado en puerta.' },
+  }
+  const status = statusCopy[previewMode]
+
   return (
     <section className="invitation-surface-card relative overflow-hidden rounded-[28px] border border-slate-300 bg-[#eed8d2] p-6 pt-7 text-slate-950 shadow-2xl">
+      <div className="mb-5 rounded-2xl px-4 py-3 text-left text-white" style={{ backgroundColor: primary }}>
+        <p className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-75">{status.label}</p>
+        <p className="mt-1 text-sm font-medium">{status.detail}</p>
+      </div>
       {isMidnight ? (
         <h2 className="invitation-section-title">Tus Datos</h2>
       ) : (

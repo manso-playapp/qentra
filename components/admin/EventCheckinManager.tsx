@@ -4,7 +4,6 @@ import jsQR from 'jsqr'
 import { UserRound } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { formatGuestTypeAccessPolicy } from '@/lib/access-policy'
 import { parseInvitationDetails } from '@/lib/invitation-response'
 import { Badge } from '@/components/ui/badge'
@@ -111,7 +110,6 @@ type SearchableGuestRow = Omit<SearchableGuest, 'guest_types'> & {
 const LIVE_REFRESH_INTERVAL_MS = 30000
 const TOTEM_REFRESH_INTERVAL_MS = 15000
 const REALTIME_REFRESH_DEBOUNCE_MS = 300
-const TOTEM_SPOTLIGHT_DURATION_MS = 6000
 
 
 const STATUS_TONE_STYLES = {
@@ -234,6 +232,7 @@ export default function EventCheckinManager({
   const isDoorMode = mode === 'door'
   const isTotemMode = mode === 'totem'
   const isImmersiveMode = isDoorMode || isTotemMode
+  const totemSpotlightDurationMs = Math.min(Math.max(branding?.return_to_idle_seconds ?? 6, 2), 30) * 1000
   const [accessInput, setAccessInput] = useState('')
   const [guestSearchQuery, setGuestSearchQuery] = useState('')
   const [recentCheckins, setRecentCheckins] = useState<CheckinWithGuest[]>([])
@@ -487,8 +486,8 @@ export default function EventCheckinManager({
     spotlightTimeoutRef.current = window.setTimeout(() => {
       setTotemSpotlight(null)
       spotlightTimeoutRef.current = null
-    }, TOTEM_SPOTLIGHT_DURATION_MS)
-  }, [isTotemMode, recentCheckins])
+    }, totemSpotlightDurationMs)
+  }, [isTotemMode, recentCheckins, totemSpotlightDurationMs])
 
   useEffect(() => {
     return () => {
@@ -932,17 +931,20 @@ export default function EventCheckinManager({
   if (isTotemMode) {
     const totemAccent = branding?.primary_color || '#b55330'
     const approvedMessage = branding?.approved_message || 'Bienvenida habilitada'
+    const welcomeMessage = branding?.welcome_message || `Bienvenidos a ${event.name}`
+    const totemBackground = branding?.background_image_url || '/portada.jpg'
+    const totemLogo = branding?.logo_url || '/alista-logo-white.svg'
     return (
       <div className="fixed inset-0 overflow-hidden bg-slate-950">
         <main
           className="absolute left-1/2 top-1/2 h-[100vw] w-[100vh] -translate-x-1/2 -translate-y-1/2 -rotate-90 overflow-hidden text-white"
           style={{
             background: totemSpotlight
-              ? 'linear-gradient(rgba(4, 9, 18, 0.42), rgba(4, 9, 18, 0.64)), url(/portada.jpg) center/cover no-repeat'
-              : 'url(/portada.jpg) center/cover no-repeat',
+              ? `linear-gradient(rgba(4, 9, 18, 0.42), rgba(4, 9, 18, 0.64)), url(${totemBackground}) center/cover no-repeat`
+              : `url(${totemBackground}) center/cover no-repeat`,
           }}
         >
-          <div className="mx-auto grid min-h-full max-w-270 grid-rows-[auto_1fr_auto] gap-8 px-6 py-6 sm:px-10">
+          <div className="mx-auto grid min-h-full max-w-270 grid-rows-[auto_auto_1fr_auto] gap-8 px-6 py-6 sm:px-10">
             <header className="grid grid-cols-2 items-start gap-6">
               <div>
                 <p className="text-sm uppercase tracking-[0.34em] text-white/65">Fecha del evento</p>
@@ -953,6 +955,14 @@ export default function EventCheckinManager({
                 <p className="mt-3 text-4xl font-semibold leading-none tabular-nums text-white">{now ? formatClock(now) : '--:--'}</p>
               </div>
             </header>
+            <div className="flex min-h-16 items-center justify-center">
+              {totemLogo ? (
+                // El logo del totem sigue la misma posición que la invitación Night:
+                // debajo de los datos principales del evento.
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={totemLogo} alt="Alista" className="mx-auto h-auto w-[760px] max-w-full object-contain drop-shadow-lg" />
+              ) : null}
+            </div>
 
             <section className="flex min-h-0 items-center justify-center">
               {totemSpotlight && (
@@ -986,7 +996,14 @@ export default function EventCheckinManager({
                     <p className="mt-2 text-3xl font-semibold text-white">{totemSpotlight.tableAssignment}</p>
                   </div>
                 )}
-              </div>
+                </div>
+              )}
+              {!totemSpotlight && (
+                <div className="w-full max-w-230 rounded-[42px] border border-white/10 bg-black/24 px-10 py-14 text-center shadow-[0_35px_120px_rgba(0,0,0,0.28)] backdrop-blur-sm">
+                  <p className="text-xl uppercase tracking-[0.34em] text-white/70">Bienvenidos</p>
+                  <h1 className="admin-heading mt-7 text-6xl leading-none text-white sm:text-8xl">{welcomeMessage}</h1>
+                  <p className="mt-8 text-2xl text-white/75">Acercá tu QR para validar tu ingreso</p>
+                </div>
               )}
             </section>
 
@@ -997,14 +1014,7 @@ export default function EventCheckinManager({
                   Ingreso registrado correctamente
                 </div>
               )}
-              <Image
-                src="/alista-logo-white.svg"
-                alt="Alista"
-                width={200}
-                height={41}
-                className="h-8 w-auto opacity-95"
-                priority
-              />
+              <p className="text-[10px] uppercase tracking-[0.22em] text-white/60">Alista · control de acceso</p>
             </footer>
           </div>
         </main>

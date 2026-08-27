@@ -60,11 +60,16 @@ Entre las mas importantes:
 
 ### Mercado Pago
 
-Los invitados pagan sus entradas o aportes en la cuenta Mercado Pago que la
-responsable vincula para **ese evento**. Alista no retiene ni recibe ese dinero.
+Los invitados pagan el importe definido en su **tipo de invitado** en la cuenta
+Mercado Pago que la responsable vincula para **ese evento**. Alista no retiene
+ni recibe ese dinero.
 El pago del servicio de Alista es un flujo comercial separado y se cobra en la
 cuenta de Alista; su importe y periodicidad todavía deben definirse antes de
 crear ese checkout.
+
+La cuenta propia se configura con `MERCADOPAGO_ALISTA_ACCESS_TOKEN` (Production)
+y `MERCADOPAGO_ALISTA_TEST_ACCESS_TOKEN` (Preview). Estas variables son
+server-only y no se guardan en el evento ni se muestran al responsable.
 
 Para habilitar cobros de invitados, aplicá las migraciones
 `20260723162321_add_mercadopago_payments.sql` y
@@ -81,10 +86,14 @@ Configurá también `MERCADOPAGO_WEBHOOK_SECRET` y el webhook HTTPS
 transacción esperada, por lo que webhook y conciliación consultan la cuenta del
 evento y validan importe y moneda antes de habilitar el QR.
 
-`MERCADOPAGO_ACCESS_TOKEN` y `MERCADOPAGO_TEST_ACCESS_TOKEN` permanecen sólo
-para los cobros propios de Alista que se incorporen a futuro y para conciliar
-intentos históricos creados antes de esta migración; no son fallback para pagos
-nuevos de invitados.
+`MERCADOPAGO_ALISTA_ACCESS_TOKEN` y `MERCADOPAGO_ALISTA_TEST_ACCESS_TOKEN`
+son las credenciales server-only de la cuenta propia de Alista: se reservan
+para el cobro del servicio y para conciliar intentos históricos creados antes
+de esta migración. Los nombres anteriores
+(`MERCADOPAGO_ACCESS_TOKEN` y `MERCADOPAGO_TEST_ACCESS_TOKEN`) se aceptan como
+alias legacy. Ninguna de estas credenciales es fallback para pagos nuevos de
+invitados: esos pagos usan exclusivamente el token OAuth cifrado de la cuenta
+receptora del evento.
 
 Los deploys Preview bloquean la vinculación de cuentas y los cobros de invitados
 para no reutilizar una cuenta receptora real. La validación de dinero se realiza

@@ -70,6 +70,7 @@ export type SurfaceBranding = Pick<
   | 'background_image_url'
   | 'welcome_message'
   | 'approved_message'
+  | 'return_to_idle_seconds'
   | 'config'
 >
 
@@ -123,6 +124,11 @@ export interface DeliveryLog {
 
 export interface DeliveryHealthStatus {
   serviceRoleConfigured: boolean
+  alistaMercadoPago: {
+    ready: boolean
+    mode: 'production' | 'test' | null
+    missing: string[]
+  }
   recoveryRedirectConfigured: boolean
   operatorAccessEmail: {
     ready: boolean

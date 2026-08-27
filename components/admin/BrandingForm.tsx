@@ -11,12 +11,15 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { getErrorMessage } from '@/lib/errors'
+import { formatEventDate } from '@/lib/event-date'
 import type { EventBranding } from '@/types'
 
 type BrandingFormProps = {
   eventId: string
   eventSlug: string
   eventName: string
+  eventDate: string
+  startTime: string
   branding: EventBranding | null
 }
 
@@ -50,9 +53,10 @@ function initialState(branding: EventBranding | null): BrandingState {
   }
 }
 
-export default function BrandingForm({ eventId, eventSlug, eventName, branding }: BrandingFormProps) {
+export default function BrandingForm({ eventId, eventSlug, eventName, eventDate, startTime, branding }: BrandingFormProps) {
   const router = useRouter()
   const [form, setForm] = useState<BrandingState>(() => initialState(branding))
+  const [previewState, setPreviewState] = useState<'idle' | 'approved'>('idle')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
@@ -76,7 +80,9 @@ export default function BrandingForm({ eventId, eventSlug, eventName, branding }
       const response = await fetch('/api/event-branding', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ event_id: eventId, ...form }),
+        // El editor del totem no administra la portada de la invitacion.
+        // La reenviamos para no borrarla al guardar este formulario.
+        body: JSON.stringify({ event_id: eventId, ...form, cover_image_url: branding?.cover_image_url ?? form.cover_image_url }),
       })
 
       const payload = (await response.json().catch(() => null)) as { error?: string } | null
@@ -108,18 +114,26 @@ export default function BrandingForm({ eventId, eventSlug, eventName, branding }
                 <div>
                   <Label htmlFor="primary_color">Color primario</Label>
                   <div className="mt-2 flex items-center gap-3">
-                    <input
-                      type="color"
-                      value={HEX_COLOR.test(form.primary_color) ? form.primary_color : '#8b5e3c'}
-                      onChange={(event) => update('primary_color', event.target.value)}
-                      className="h-11 w-14 cursor-pointer rounded-lg border border-border bg-transparent"
-                      aria-label="Selector de color primario"
-                    />
+                    <span className="relative size-11 shrink-0 overflow-hidden rounded-xl border border-border bg-background shadow-sm">
+                      <span
+                        className="absolute inset-1 rounded-lg"
+                        style={{ backgroundColor: HEX_COLOR.test(form.primary_color) ? form.primary_color : '#8b5e3c' }}
+                        aria-hidden="true"
+                      />
+                      <input
+                        id="primary_color_picker"
+                        type="color"
+                        value={HEX_COLOR.test(form.primary_color) ? form.primary_color : '#8b5e3c'}
+                        onChange={(event) => update('primary_color', event.target.value)}
+                        className="absolute inset-0 size-full cursor-pointer opacity-0"
+                        aria-label="Selector de color primario"
+                      />
+                    </span>
                     <Input
                       id="primary_color"
                       value={form.primary_color}
                       onChange={(event) => update('primary_color', event.target.value)}
-                      className="font-mono"
+                      className="min-w-0 flex-1 font-mono"
                     />
                   </div>
                 </div>
@@ -127,18 +141,26 @@ export default function BrandingForm({ eventId, eventSlug, eventName, branding }
                 <div>
                   <Label htmlFor="secondary_color">Color secundario</Label>
                   <div className="mt-2 flex items-center gap-3">
-                    <input
-                      type="color"
-                      value={HEX_COLOR.test(form.secondary_color) ? form.secondary_color : '#f1e8da'}
-                      onChange={(event) => update('secondary_color', event.target.value)}
-                      className="h-11 w-14 cursor-pointer rounded-lg border border-border bg-transparent"
-                      aria-label="Selector de color secundario"
-                    />
+                    <span className="relative size-11 shrink-0 overflow-hidden rounded-xl border border-border bg-background shadow-sm">
+                      <span
+                        className="absolute inset-1 rounded-lg"
+                        style={{ backgroundColor: HEX_COLOR.test(form.secondary_color) ? form.secondary_color : '#f1e8da' }}
+                        aria-hidden="true"
+                      />
+                      <input
+                        id="secondary_color_picker"
+                        type="color"
+                        value={HEX_COLOR.test(form.secondary_color) ? form.secondary_color : '#f1e8da'}
+                        onChange={(event) => update('secondary_color', event.target.value)}
+                        className="absolute inset-0 size-full cursor-pointer opacity-0"
+                        aria-label="Selector de color secundario"
+                      />
+                    </span>
                     <Input
                       id="secondary_color"
                       value={form.secondary_color}
                       onChange={(event) => update('secondary_color', event.target.value)}
-                      className="font-mono"
+                      className="min-w-0 flex-1 font-mono"
                     />
                   </div>
                 </div>
@@ -232,23 +254,76 @@ export default function BrandingForm({ eventId, eventSlug, eventName, branding }
         <div className="space-y-6 xl:sticky xl:top-6 xl:self-start">
           <Card className="overflow-hidden bg-admin-panel">
             <CardHeader>
-              <CardDescription>Vista previa</CardDescription>
-              <CardTitle className="admin-heading text-2xl">Cómo se ve</CardTitle>
+              <CardDescription>Vista previa del tótem</CardDescription>
+              <CardTitle className="admin-heading text-2xl">Escena y estados</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-2 rounded-2xl bg-muted/60 p-1">
+                <button
+                  type="button"
+                  onClick={() => setPreviewState('idle')}
+                  className={`rounded-xl px-3 py-2 text-sm font-medium transition ${previewState === 'idle' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground'}`}
+                >
+                  Pantalla en espera
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewState('approved')}
+                  className={`rounded-xl px-3 py-2 text-sm font-medium transition ${previewState === 'approved' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground'}`}
+                >
+                  Acceso aprobado
+                </button>
+              </div>
+              <div className="totem-editor-thumbnail mx-auto h-[680px] w-full max-w-[360px] overflow-x-hidden overflow-y-auto overscroll-contain rounded-[36px] border-4 border-gray-900 bg-black shadow-2xl">
+                <div className="totem-editor-canvas">
               <div
-                className="flex min-h-[150px] flex-col justify-end rounded-[24px] border border-black/5 p-5 text-white"
+                className="relative flex min-h-[1020px] w-[540px] flex-col justify-between overflow-hidden border border-black/5 p-9 text-white"
                 style={{
-                  background: form.cover_image_url
-                    ? `linear-gradient(135deg, rgba(15,23,42,0.62), rgba(15,23,42,0.78)), url(${form.cover_image_url}) center/cover no-repeat`
-                    : `linear-gradient(135deg, ${HEX_COLOR.test(form.primary_color) ? form.primary_color : '#8b5e3c'} 0%, #1f2937 100%)`,
+                  background: form.background_image_url
+                    ? `linear-gradient(180deg, rgba(2,6,23,0.32), rgba(2,6,23,0.78)), url(${form.background_image_url}) center/cover no-repeat`
+                    : `linear-gradient(145deg, ${HEX_COLOR.test(form.primary_color) ? form.primary_color : '#8b5e3c'} 0%, #1f2937 100%)`,
                 }}
               >
-                <p className="text-[10px] uppercase tracking-[0.3em] text-white/70">Invitación</p>
-                <p className="mt-1 text-xl font-semibold">{eventName}</p>
-                <p className="mt-1 text-sm text-white/80">
-                  {form.welcome_message || 'Mensaje de bienvenida del evento'}
-                </p>
+                <header className="grid grid-cols-2 items-start gap-6">
+                  <div>
+                    <p className="text-[10px] uppercase tracking-[0.3em] text-white/65">Fecha del evento</p>
+                    <p className="mt-2 text-2xl font-semibold capitalize text-white">{formatEventDate(eventDate)}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] uppercase tracking-[0.3em] text-white/65">Hora actual</p>
+                    <p className="mt-2 text-2xl font-semibold leading-none tabular-nums text-white">{startTime || '--:--'}</p>
+                  </div>
+                </header>
+                {form.logo_url ? (
+                  // Misma escala y posición que el logo de la invitación Night.
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={form.logo_url} alt="Logo del evento" className="mx-auto h-auto w-[760px] max-w-full object-contain drop-shadow-lg" />
+                ) : null}
+                {previewState === 'approved' ? (
+                  <div className="my-auto text-center">
+                    <p className="text-[10px] uppercase tracking-[0.28em] text-emerald-200">{form.approved_message || 'Acceso aprobado'}</p>
+                    <div
+                      className="mx-auto mt-5 flex size-28 items-center justify-center rounded-3xl border border-white/20 text-4xl font-semibold shadow-lg"
+                      style={{ backgroundColor: `${HEX_COLOR.test(form.primary_color) ? form.primary_color : '#8b5e3c'}88` }}
+                    >
+                      JM
+                    </div>
+                    <p className="mt-4 text-2xl font-semibold">Javier Manso</p>
+                    <p className="mt-1 text-xs text-white/75">Ingreso validado · 21:34</p>
+                  </div>
+                ) : (
+                  <div className="my-auto text-center">
+                    <p className="text-[10px] uppercase tracking-[0.28em] text-white/70">Bienvenidos</p>
+                    <p className="admin-heading mt-3 text-3xl leading-tight">{form.welcome_message || `Bienvenidos a ${eventName}`}</p>
+                    <p className="mt-4 text-sm text-white/75">Acercá tu QR para validar tu ingreso</p>
+                  </div>
+                )}
+                <div className="flex flex-col items-center gap-2 text-center">
+                  <p className="text-sm font-medium text-white/80">{eventName}</p>
+                  <p className="text-[10px] uppercase tracking-[0.22em] text-white/60">Alista · control de acceso</p>
+                </div>
+              </div>
+                </div>
               </div>
 
               <div className="flex items-center gap-3">

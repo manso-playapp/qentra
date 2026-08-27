@@ -21,6 +21,7 @@ import { isInvitationAccessReady, parseInvitationDetails } from '@/lib/invitatio
 import { getInvitationTemplate } from '@/lib/invitation-templates'
 import { buildAbsoluteAppUrl } from '@/lib/public-url'
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
+import { getPublishedInvitationConfig } from '@/lib/invitation-config-state'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { SURFACE_BRANDING_COLUMNS, type SurfaceBranding } from '@/types'
 
@@ -163,7 +164,7 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
   }
 
   const branding = (brandingResponse.data ?? null) as SurfaceBranding | null
-  const invitationConfig = (branding?.config ?? {}) as InvitationConfigInfo
+  const invitationConfig = getPublishedInvitationConfig(branding?.config ?? {}) as InvitationConfigInfo
   const invitationTemplate = getInvitationTemplate(invitationConfig)
 
   const invitationDetails = parseInvitationDetails(guest?.notes)
@@ -285,6 +286,7 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
           <div className="mt-5">
             <InvitationResponseForm
               token={token}
+              fields={invitationConfig.fields}
               initialData={{
                 attendanceResponse: invitationResponseForForm,
                 firstName: guest?.first_name || '',

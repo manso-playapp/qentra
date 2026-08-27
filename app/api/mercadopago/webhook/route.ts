@@ -2,7 +2,7 @@ import QRCode from 'qrcode'
 import { getEventPaymentAccessToken } from '@/lib/event-payment-account'
 import { buildGuestAccessQrPayload } from '@/lib/guest-access'
 import { buildGuestFullName } from '@/lib/guest-schema'
-import { getMercadoPagoConfig, mapMercadoPagoPaymentStatus } from '@/lib/mercadopago'
+import { getAlistaMercadoPagoConfig, mapMercadoPagoPaymentStatus } from '@/lib/mercadopago'
 import { validMercadoPagoWebhookSignature } from '@/lib/mercadopago-webhook'
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
 
@@ -162,9 +162,9 @@ export async function POST(request: Request) {
     accessToken = recipientAccount.accessToken
   } else {
     // Preferences created before per-event accounts did not carry a transaction
-    // identifier in notification_url. Keep them reconcilable with the legacy
-    // Alista credential, but never use that fallback for new payments.
-    const mercadoPago = getMercadoPagoConfig()
+    // identifier in notification_url. Keep them reconcilable with the dedicated
+    // Alista service credential, but never use that fallback for new payments.
+    const mercadoPago = getAlistaMercadoPagoConfig()
     if (!mercadoPago) {
       return Response.json({ error: 'No se pudo identificar la cuenta receptora del pago.' }, { status: 503 })
     }

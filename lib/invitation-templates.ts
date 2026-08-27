@@ -1,3 +1,5 @@
+import type { InvitationBlocks } from './invitation-blocks'
+
 export const INVITATION_TEMPLATE_KEYS = ['travel', 'midnight'] as const
 
 export type InvitationTemplateKey = (typeof INVITATION_TEMPLATE_KEYS)[number]
@@ -27,6 +29,7 @@ export type InvitationBrandingConfig = {
   audio_url?: string
   widgets?: { countdown?: boolean; particles?: boolean }
   fields?: { rsvp?: boolean; dni?: boolean; menu?: boolean; companions?: boolean }
+  blocks?: InvitationBlocks
 }
 
 export function normalizeInvitationTemplate(value: unknown): InvitationTemplateKey {

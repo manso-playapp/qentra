@@ -808,7 +808,7 @@ No construir todavía pricing basado en:
 - usuarios;
 - planes SaaS complejos.
 
-La página de precios se definirá cuando se cierre el pricing final.
+La página de precios publica el precio de lanzamiento familiar de $89.000 (50% sobre una lista de $178.000); los packs profesionales quedan pendientes de definición.
 
 ---
 

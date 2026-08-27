@@ -194,17 +194,18 @@ export const MVP_FEATURES: MvpFeature[] = [
     module: 'admin',
     status: 'partial',
     detail:
-      'Editor dedicado con preview de aspecto, imágenes e información. La invitación pública usa una composición de boarding pass controlada, con dress code, regalo, ubicación y formulario de confirmación.',
-    gap: 'Falta que los controles persistidos del editor afecten de forma completa la composición pública.',
+      'Editor dedicado con preview de aspecto, imágenes e información. La preview y la invitación pública comparten la misma vista, con borrador/publicación separados y composición controlada por template.',
+    gap: 'Falta QA final contra invitaciones públicas reales y definir si el historial debe evolucionar a versiones etiquetadas por el organizador.',
     evidence: ['components/admin/InvitationEditor.tsx', 'app/api/events/[id]/invitation/route.ts'],
   },
   {
     id: 'totem-editor',
-    title: 'Backend del disenador de totem',
+    title: 'Editor del totem',
     module: 'totem',
-    status: 'todo',
-    detail: 'El totem usa el branding y los mensajes cargados en el evento.',
-    gap: 'Falta el backend para disenar y guardar la composicion visual del totem a medida.',
+    status: 'partial',
+    detail: 'Editor dedicado para logo, fondo, colores y mensajes del totem, con preview de pantalla en espera y acceso aprobado. Los cambios se guardan por evento y se consumen en la pantalla publica.',
+    gap: 'Queda definir presets de composicion, soporte opcional para video idle y una vista responsive que replique exactamente el dispositivo final.',
+    evidence: ['components/admin/BrandingForm.tsx', 'app/api/event-branding/route.ts', 'components/admin/EventCheckinManager.tsx'],
   },
   {
     id: 'mercadopago',
@@ -266,15 +267,15 @@ export const TECH_DEBT: { title: string; detail: string; severity: 'alta' | 'med
 export const NEXT_STEPS: { order: number; title: string; detail: string; featureId: string }[] = [
   {
     order: 1,
-    title: 'Terminar el editor de invitacion',
-    detail: 'Spotify real (buscar y sumar temas a la playlist) y que los toggles de campos afecten el formulario publico y su validacion.',
-    featureId: 'invitacion-editor',
+    title: 'Check-in grupal e individual',
+    detail: 'Permitir ingresar un grupo con un solo QR, desmarcar ausentes y registrar llegadas individuales sin perder la identidad del titular.',
+    featureId: 'registro-checkin',
   },
   {
     order: 2,
-    title: 'Editor del totem (dedicado)',
-    detail: 'Su propio editor, distinto al de la invitacion: composicion visual y mensajes del totem con preview en vivo.',
-    featureId: 'totem-editor',
+    title: 'Recepción con conectividad degradada',
+    detail: 'Cache local, cola durable y sincronización posterior para que una caída breve de red no detenga la puerta.',
+    featureId: 'registro-checkin',
   },
 ]
 

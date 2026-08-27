@@ -203,6 +203,26 @@ body {
   background-color: var(--invitation-background, #000000);
 }
 
+/* Travel conserva su composición boarding-pass, pero sus datos visuales
+   también salen de los tokens del editor. Así deja de ser una pieza atada a
+   una invitación puntual y puede reutilizarse como template heredada. */
+.invitation-template-travel dt,
+.invitation-template-travel .invitation-travel-subtitle {
+  color: var(--invitation-subtitle, #64748b);
+  font-family: var(--invitation-subtitle-font, var(--font-nunito)), ui-sans-serif, system-ui, sans-serif;
+}
+
+.invitation-template-travel dd,
+.invitation-template-travel .invitation-travel-data {
+  color: var(--invitation-data, #0f172a);
+  font-family: var(--invitation-data-font, var(--font-nunito)), ui-sans-serif, system-ui, sans-serif;
+}
+
+.invitation-template-travel .invitation-travel-title {
+  color: var(--invitation-title, var(--invitation-accent));
+  font-family: var(--invitation-title-font, var(--font-playfair)), Georgia, serif;
+}
+
 .invitation-template-midnight > .relative {
   z-index: 1;
 }
@@ -264,12 +284,14 @@ body {
   overflow: visible !important;
 }
 
-.invitation-editor-thumbnail {
+.invitation-editor-thumbnail,
+.totem-editor-thumbnail {
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.42) transparent;
 }
 
-.invitation-editor-canvas {
+.invitation-editor-canvas,
+.totem-editor-canvas {
   width: 540px;
   zoom: 0.666667;
 }
@@ -284,15 +306,18 @@ body {
   height: 1020px;
 }
 
-.invitation-editor-thumbnail::-webkit-scrollbar {
+.invitation-editor-thumbnail::-webkit-scrollbar,
+.totem-editor-thumbnail::-webkit-scrollbar {
   width: 6px;
 }
 
-.invitation-editor-thumbnail::-webkit-scrollbar-track {
+.invitation-editor-thumbnail::-webkit-scrollbar-track,
+.totem-editor-thumbnail::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.invitation-editor-thumbnail::-webkit-scrollbar-thumb {
+.invitation-editor-thumbnail::-webkit-scrollbar-thumb,
+.totem-editor-thumbnail::-webkit-scrollbar-thumb {
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.42);
 }
@@ -400,6 +425,12 @@ body {
    vertical amplio de la invitación. */
 .invitation-template-midnight .invitation-personal {
   margin-top: -2.5rem;
+}
+
+/* Compatibilidad con el copy anterior mientras los eventos existentes
+   migran al bloque editable de la template. */
+.invitation-template-midnight .invitation-personal > p:last-of-type:not(.invitation-personal-copy) {
+  display: none;
 }
 
 .invitation-template-midnight .uppercase,
