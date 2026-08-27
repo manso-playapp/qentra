@@ -37,7 +37,7 @@ export type InvitationConfigInfo = {
     accent?: string
   }
   fonts?: Partial<InvitationFontConfig>
-  widgets?: { trivia?: boolean; countdown?: boolean; particles?: boolean }
+  widgets?: { countdown?: boolean; particles?: boolean }
 }
 
 const HEX_COLOR = /^#[0-9a-fA-F]{6}$/

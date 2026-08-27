@@ -194,8 +194,8 @@ export const MVP_FEATURES: MvpFeature[] = [
     module: 'admin',
     status: 'partial',
     detail:
-      'Editor dedicado con preview de aspecto, imágenes, información y trivia. La invitación pública usa una composición de boarding pass controlada, con dress code, regalo, ubicación y formulario de confirmación.',
-    gap: 'Falta que los controles persistidos del editor afecten de forma completa la composición pública y sumar una trivia funcional si vuelve a ser necesaria.',
+      'Editor dedicado con preview de aspecto, imágenes e información. La invitación pública usa una composición de boarding pass controlada, con dress code, regalo, ubicación y formulario de confirmación.',
+    gap: 'Falta que los controles persistidos del editor afecten de forma completa la composición pública.',
     evidence: ['components/admin/InvitationEditor.tsx', 'app/api/events/[id]/invitation/route.ts'],
   },
   {
@@ -267,7 +267,7 @@ export const NEXT_STEPS: { order: number; title: string; detail: string; feature
   {
     order: 1,
     title: 'Terminar el editor de invitacion',
-    detail: 'Spotify real (buscar y sumar temas a la playlist), guardar respuestas de trivia y que los toggles de campos afecten el formulario publico y su validacion.',
+    detail: 'Spotify real (buscar y sumar temas a la playlist) y que los toggles de campos afecten el formulario publico y su validacion.',
     featureId: 'invitacion-editor',
   },
   {

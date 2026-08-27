@@ -27,8 +27,7 @@ export type InvitationBrandingConfig = {
   dresscode?: string
   directionsUrl?: string
   audio_url?: string
-  widgets?: { trivia?: boolean; countdown?: boolean; particles?: boolean }
-  triviaQuestion?: string
+  widgets?: { countdown?: boolean; particles?: boolean }
   fields?: { rsvp?: boolean; dni?: boolean; menu?: boolean; companions?: boolean }
 }
 

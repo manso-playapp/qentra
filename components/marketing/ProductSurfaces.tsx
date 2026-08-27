@@ -25,7 +25,6 @@ function InvitationMock() {
         <p className="mt-2 font-display text-sm font-semibold text-foreground">Sofía cumple 15</p>
         <div className="mt-3 flex flex-wrap gap-1.5">
           <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
-            Trivia
           </span>
           <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
             Tu canción
@@ -95,7 +94,7 @@ const SURFACES = [
     icon: Sparkles,
     eyebrow: 'La invitación',
     title: 'Una experiencia, no un formulario.',
-    body: 'El invitado abre una invitación personal desde WhatsApp: confirma, juega la trivia, deja su saludo y elige su canción. Se siente esperado antes de llegar.',
+    body: 'El invitado abre una invitación personal desde WhatsApp: confirma, deja su saludo y elige su canción. Se siente esperado antes de llegar.',
     mock: <InvitationMock />,
   },
   {

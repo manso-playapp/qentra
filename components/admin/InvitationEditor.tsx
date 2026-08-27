@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { CalendarDays, Clock, MapPin, Music2, HelpCircle, Timer, Sparkles } from 'lucide-react'
+import { CalendarDays, Clock, MapPin, Music2, Timer, Sparkles } from 'lucide-react'
 import ImageUpload from '@/components/admin/ImageUpload'
 import AudioUpload from '@/components/admin/AudioUpload'
 import InvitationView, { buildCalendarUrl, type InvitationConfigInfo, type InvitationEventInfo } from '@/components/invitation/InvitationView'
@@ -40,8 +40,7 @@ export type InvitationConfig = {
     subtitles: InvitationFontKey
     data: InvitationFontKey
   }
-  widgets: { trivia: boolean; countdown: boolean; particles: boolean }
-  triviaQuestion: string
+  widgets: { countdown: boolean; particles: boolean }
   fields: { rsvp: boolean; dni: boolean; menu: boolean; companions: boolean }
 }
 
@@ -78,8 +77,7 @@ export const DEFAULT_INVITATION_CONFIG: InvitationConfig = {
     accent: '',
   },
   fonts: DEFAULT_INVITATION_FONTS,
-  widgets: { trivia: false, countdown: false, particles: false },
-  triviaQuestion: '',
+  widgets: { countdown: false, particles: false },
   fields: { rsvp: true, dni: true, menu: true, companions: true },
 }
 
@@ -274,10 +272,6 @@ export default function InvitationEditor({
         </Section>
 
         <Section title="Widgets opcionales" desc="Activá solo los que quieras. La invitación no obliga a completarlos.">
-          <ToggleRow icon={HelpCircle} label="Trivia" desc="“¿Quién sabe más de…?”" on={config.widgets.trivia} onToggle={() => toggleWidget('trivia')} />
-          {config.widgets.trivia && (
-            <Field label="Pregunta de la trivia"><input className={inputClass} value={config.triviaQuestion} onChange={(e) => setConfig((c) => ({ ...c, triviaQuestion: e.target.value }))} placeholder="¿En qué año se conocieron los novios?" /></Field>
-          )}
           {isMidnight && (
             <>
               <ToggleRow icon={Timer} label="Cuenta regresiva" desc="Días, horas, minutos y segundos para el evento." on={config.widgets.countdown} onToggle={() => toggleWidget('countdown')} />
@@ -381,12 +375,6 @@ export default function InvitationEditor({
               </div>
 
               {/* Widgets: cada uno su tarjeta. */}
-              {config.widgets.trivia && (
-                <PreviewWidget primary={primary} icon={HelpCircle} title="Trivia">
-                  <p className="text-xs text-gray-600">{config.triviaQuestion || '¿Quién sabe más de…?'}</p>
-                </PreviewWidget>
-              )}
-
               {/* Tarjeta: formulario funcional */}
               <div className="rounded-2xl bg-white/92 p-4 shadow-lg backdrop-blur-sm">
                 {config.fields.rsvp && (
@@ -526,17 +514,6 @@ function ToggleRow({ icon: Icon, label, desc, on, onToggle }: { icon?: typeof Mu
         <span className={`size-4 rounded-full bg-white transition ${on ? 'translate-x-4' : ''}`} />
       </span>
     </button>
-  )
-}
-
-function PreviewWidget({ primary, icon: Icon, title, children }: { primary: string; icon: typeof Music2; title: string; children: React.ReactNode }) {
-  return (
-    <div className="rounded-2xl bg-white/92 p-3 shadow-lg backdrop-blur-sm">
-      <p className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: primary }}>
-        <Icon className="size-3.5" /> {title}
-      </p>
-      <div className="mt-2">{children}</div>
-    </div>
   )
 }
 
