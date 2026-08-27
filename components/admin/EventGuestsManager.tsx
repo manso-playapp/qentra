@@ -1023,7 +1023,7 @@ export default function EventGuestsManager({
 
     return {
       invitationUrl,
-      whatsappText: `Hola ${guest.first_name}!\n\nSe acerca mi fiesta de 15,\n\n\uD83C\uDFAB Tu pr\u00f3xima aventura comienza ac\u00e1!!!!!!\n\nRealiz\u00e1 tu check-in y preparate para despegar...\nTe mando el link para que te registres, te espero!\n\n${invitationUrl}\n\nFecha limite para confirmar: Domingo 2 de Agosto`,
+      whatsappText: `Invitaci\u00f3n Especial\n\nEst\u00e1s invitado al cumplea\u00f1os de 15 de "${event.name}"\n\n${invitationUrl}`,
       emailSubject: `Tu acceso para ${event.name}`,
       emailBody: `Hola ${guestName},\n\nTe compartimos tu acceso para ${event.name}.\n\nAbre este enlace desde tu celular y muestra el QR en puerta:\n${invitationUrl}\n\nVigencia: ${formatDateTime(token.expires_at)}\n`,
     }

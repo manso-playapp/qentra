@@ -32,14 +32,9 @@ function formatDateTime(date: string) {
 
 function buildPlainTextMessage(payload: AccessDeliveryPayload) {
   return [
-    `Hola ${payload.guestFirstName}!`,
+    'Invitaci\u00f3n Especial',
     '',
-    'Se acerca mi fiesta de 15,',
-    '',
-    '\uD83C\uDFAB Tu pr\u00f3xima aventura comienza ac\u00e1!!!!!!',
-    '',
-    'Realiz\u00e1 tu check-in y preparate para despegar...',
-    'Te mando el link para que te registres, te espero!',
+    `Est\u00e1s invitado al cumplea\u00f1os de 15 de "${payload.eventName}"`,
     '',
     payload.invitationUrl,
   ].join('\n')
