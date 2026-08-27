@@ -6,6 +6,7 @@ import {
   Activity,
   Copy,
   RefreshCw,
+  Trash2,
   UserPlus,
   Users2,
 } from 'lucide-react'
@@ -147,11 +148,13 @@ export default function SettingsPage() {
     fetchOperatorProfiles,
     createOperatorProfile,
     updateOperatorProfile,
+    deleteOperatorProfile,
   } = useOperatorProfiles()
 
   const [operatorForm, setOperatorForm] = useState<OperatorFormState>(INITIAL_OPERATOR_FORM)
   const [submittingOperator, setSubmittingOperator] = useState(false)
   const [updatingOperatorId, setUpdatingOperatorId] = useState<string | null>(null)
+  const [deletingOperatorId, setDeletingOperatorId] = useState<string | null>(null)
   const [operatorError, setOperatorError] = useState<string | null>(null)
   const [operatorNotice, setOperatorNotice] = useState<string | null>(null)
   const [resettingPasswordId, setResettingPasswordId] = useState<string | null>(null)
@@ -229,6 +232,29 @@ export default function SettingsPage() {
     }
 
     setUpdatingOperatorId(null)
+  }
+
+  const handleOperatorDelete = async (operatorProfile: OperatorProfile) => {
+    const operatorName = operatorProfile.email || operatorProfile.full_name || operatorProfile.user_id
+    const confirmed = window.confirm(
+      `Vas a eliminar el operador ${operatorName}. Tambien se eliminara su acceso al sistema. Esta accion no se puede deshacer. Continuar?`
+    )
+
+    if (!confirmed) return
+
+    setDeletingOperatorId(operatorProfile.user_id)
+    setOperatorError(null)
+    setOperatorNotice(null)
+
+    const result = await deleteOperatorProfile(operatorProfile.user_id)
+
+    if (result.error) {
+      setOperatorError(result.error)
+    } else {
+      setOperatorNotice(`Operador ${operatorName} eliminado.`)
+    }
+
+    setDeletingOperatorId(null)
   }
 
   const handlePasswordReset = async (operatorProfile: OperatorProfile) => {
@@ -605,7 +631,7 @@ export default function SettingsPage() {
                           type="button"
                           variant="outline"
                           size="sm"
-                          disabled={resettingPasswordId === operatorProfile.user_id}
+                          disabled={resettingPasswordId === operatorProfile.user_id || deletingOperatorId === operatorProfile.user_id}
                           onClick={() => {
                             void handlePasswordReset(operatorProfile)
                           }}
@@ -613,6 +639,18 @@ export default function SettingsPage() {
                           {resettingPasswordId === operatorProfile.user_id
                             ? 'Generando clave...'
                             : 'Clave temporal'}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          disabled={deletingOperatorId === operatorProfile.user_id}
+                          onClick={() => {
+                            void handleOperatorDelete(operatorProfile)
+                          }}
+                        >
+                          <Trash2 className="size-4" />
+                          {deletingOperatorId === operatorProfile.user_id ? 'Eliminando...' : 'Eliminar'}
                         </Button>
                       </div>
 

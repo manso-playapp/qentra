@@ -211,6 +211,29 @@ export function useOperatorProfiles() {
     }
   }
 
+  const deleteOperatorProfile = async (
+    userId: string
+  ): Promise<ApiResponse<{ userId: string }>> => {
+    try {
+      const response = await fetch(`/api/operators/${userId}`, {
+        method: 'DELETE',
+      })
+
+      const payload = (await response.json().catch(() => null)) as
+        | { userId?: string; error?: string }
+        | null
+
+      if (!response.ok) {
+        throw new Error(payload?.error || 'No se pudo eliminar el operador.')
+      }
+
+      setOperatorProfiles((current) => current.filter((profile) => profile.user_id !== userId))
+      return { data: { userId: payload?.userId || userId } }
+    } catch (error) {
+      return { error: getErrorMessage(error) }
+    }
+  }
+
   return {
     operatorProfiles,
     loading,
@@ -218,6 +241,7 @@ export function useOperatorProfiles() {
     fetchOperatorProfiles,
     createOperatorProfile,
     updateOperatorProfile,
+    deleteOperatorProfile,
   }
 }
 
