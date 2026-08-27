@@ -51,7 +51,6 @@ export default function NewEventPage() {
     dresscode: '',
     directions_url: '',
     max_capacity: 100,
-    description: '',
     gift_info: '',
     contact_phone: '',
     delivery_profile_id: '',
@@ -337,20 +336,7 @@ export default function NewEventPage() {
                     />
                   </div>
 
-                  <div>
-                    <Label htmlFor="description">Descripción</Label>
-                    <Textarea
-                      name="description"
-                      id="description"
-                      rows={4}
-                      value={formData.description}
-                      onChange={handleInputChange}
-                      className="mt-2"
-                      placeholder="Descripción opcional del evento..."
-                    />
-                  </div>
-
-                  <div className="grid gap-6 md:grid-cols-2">
+                  <div className="grid gap-6">
                     <div>
                       <Label htmlFor="dresscode">Dresscode</Label>
                       <Input

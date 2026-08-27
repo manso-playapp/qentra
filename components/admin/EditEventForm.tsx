@@ -31,7 +31,6 @@ type EditEventFormProps = {
     | 'dresscode'
     | 'directions_url'
     | 'max_capacity'
-    | 'description'
     | 'gift_info'
     | 'contact_phone'
     | 'delivery_profile_id'
@@ -51,7 +50,6 @@ type EventFormState = {
   dresscode: string
   directions_url: string
   max_capacity: number
-  description: string
   gift_info: string
   contact_phone: string
   delivery_profile_id: string
@@ -88,7 +86,6 @@ export default function EditEventForm({ event }: EditEventFormProps) {
     dresscode: event.dresscode || '',
     directions_url: event.directions_url || '',
     max_capacity: event.max_capacity,
-    description: event.description || '',
     gift_info: event.gift_info || '',
     contact_phone: event.contact_phone || '',
     delivery_profile_id: event.delivery_profile_id || '',
@@ -134,7 +131,6 @@ export default function EditEventForm({ event }: EditEventFormProps) {
         dresscode: formData.dresscode.trim() || null,
         directions_url: formData.directions_url.trim() || null,
         max_capacity: formData.max_capacity,
-        description: formData.description.trim() || null,
         gift_info: formData.gift_info.trim() || null,
         contact_phone: formData.contact_phone.trim() || null,
         delivery_profile_id: formData.delivery_profile_id || null,
@@ -258,7 +254,7 @@ export default function EditEventForm({ event }: EditEventFormProps) {
                   <Input id="venue_address" name="venue_address" required value={formData.venue_address} onChange={handleInputChange} className="mt-2" />
                 </div>
 
-                <div className="grid gap-6 md:grid-cols-2">
+                <div className="grid gap-6">
                   <div>
                     <Label htmlFor="dresscode">Dresscode</Label>
                     <Input id="dresscode" name="dresscode" value={formData.dresscode} onChange={handleInputChange} className="mt-2" placeholder="Ej: Elegante sport" />
@@ -267,11 +263,6 @@ export default function EditEventForm({ event }: EditEventFormProps) {
                     <Label htmlFor="directions_url">Cómo llegar (link de mapa)</Label>
                     <Input id="directions_url" name="directions_url" type="url" value={formData.directions_url} onChange={handleInputChange} className="mt-2" placeholder="https://maps.google.com/..." />
                   </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="description">Descripcion</Label>
-                  <Textarea id="description" name="description" rows={4} value={formData.description} onChange={handleInputChange} className="mt-2" />
                 </div>
 
                 <div>
