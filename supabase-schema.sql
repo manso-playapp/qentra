@@ -91,6 +91,9 @@ create table if not exists guests (
   payment_status text not null default 'not_required'
     check (payment_status in ('not_required', 'pending', 'approved')),
   table_assignment text,                                -- destino/mesa asignado al invitado
+  plus_ones_allowed integer not null default 0 check (plus_ones_allowed >= 0),
+  plus_ones_confirmed integer not null default 0 check (plus_ones_confirmed >= 0),
+  companion_names text[] not null default '{}',          -- nombres, sin QR individual
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );

@@ -217,6 +217,7 @@ export interface Guest {
   table_assignment?: string | null
   plus_ones_allowed: number
   plus_ones_confirmed: number
+  companion_names?: string[]
   special_requests?: string
   created_at: string
   updated_at: string

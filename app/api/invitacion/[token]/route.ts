@@ -2,7 +2,7 @@ import QRCode from 'qrcode'
 import { buildGuestAccessQrPayload } from '@/lib/guest-access'
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
 import { buildGuestFullName } from '@/lib/guest-schema'
-import { parseInvitationDetails, serializeInvitationDetails } from '@/lib/invitation-response'
+import { parseCompanionNames, parseInvitationDetails, serializeInvitationDetails } from '@/lib/invitation-response'
 
 export const runtime = 'nodejs'
 
@@ -61,7 +61,7 @@ export async function POST(request: Request, context: RouteContext) {
 
     const { data: guest, error: guestError } = await adminClient
       .from('guests')
-      .select('id, event_id, status, notes, payment_status, table_assignment')
+      .select('id, event_id, status, notes, payment_status, table_assignment, plus_ones_allowed, plus_ones_confirmed, companion_names')
       .eq('id', invitationToken.guest_id)
       .maybeSingle()
 
@@ -90,8 +90,9 @@ export async function POST(request: Request, context: RouteContext) {
     const email = body.email?.trim() || null
     const phone = body.phone?.trim() || null
     const dni = body.dni?.trim() || ''
-    const plusOnesConfirmed = Math.max(0, body.plusOnesConfirmed ?? 0)
-    const companionNames = body.companionNames?.trim() || ''
+    const companionNameList = parseCompanionNames(body.companionNames)
+    const companionNames = companionNameList.join('\n')
+    const plusOnesConfirmed = companionNameList.length
     const dietaryRequirements = body.dietaryRequirements?.trim() || ''
     const song = body.song?.trim() || ''
     const greeting = body.greeting?.trim() || ''
@@ -106,7 +107,15 @@ export async function POST(request: Request, context: RouteContext) {
       return Response.json({ error: 'Completa el DNI para emitir el QR final.' }, { status: 400 })
     }
 
-    if (attendanceResponse === 'confirmed' && plusOnesConfirmed > 0 && !companionNames) {
+    const plusOnesAllowed = Math.max(0, guest.plus_ones_allowed ?? 0)
+    if (attendanceResponse === 'confirmed' && plusOnesConfirmed > plusOnesAllowed) {
+      return Response.json(
+        { error: `Esta invitacion permite hasta ${plusOnesAllowed} acompanante(s).` },
+        { status: 400 }
+      )
+    }
+
+    if (attendanceResponse === 'confirmed' && plusOnesConfirmed === 0 && (body.plusOnesConfirmed ?? 0) > 0) {
       return Response.json(
         { error: 'Indica los nombres de los acompanantes confirmados.' },
         { status: 400 }
@@ -148,6 +157,8 @@ export async function POST(request: Request, context: RouteContext) {
         document_number: dni || null,
         notes: specialRequests || null,
         payment_status: paymentStatus,
+        plus_ones_confirmed: attendanceResponse === 'confirmed' ? plusOnesConfirmed : 0,
+        companion_names: attendanceResponse === 'confirmed' ? companionNameList : [],
         status: nextGuestStatus,
         updated_at: new Date().toISOString(),
       })

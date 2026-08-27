@@ -137,6 +137,7 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
     .from('guests')
     .select(`
       id, event_id, guest_type_id, first_name, last_name, email, phone, status, notes, payment_status, photo_url,
+      plus_ones_allowed, plus_ones_confirmed, companion_names,
       guest_types (name, payment_amount_cents, access_start_time, access_start_day_offset)
     `)
     .eq('id', invitationToken.guest_id)
@@ -166,6 +167,9 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
   const invitationTemplate = getInvitationTemplate(invitationConfig)
 
   const invitationDetails = parseInvitationDetails(guest?.notes)
+  const companionNames = Array.isArray(guest?.companion_names) && guest.companion_names.length > 0
+    ? guest.companion_names.join('\n')
+    : invitationDetails.companionNames
   const paymentStatus = (guest?.payment_status ?? 'not_required') as 'not_required' | 'pending' | 'approved'
   const guestType = Array.isArray(guest?.guest_types) ? guest.guest_types[0] : guest?.guest_types
   const paymentAmountCents = guestType?.payment_amount_cents ?? 0
@@ -288,9 +292,9 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
                 email: guest?.email || '',
                 phone: guest?.phone || '',
                 dni: invitationDetails.dni,
-                plusOnesAllowed: 0,
-                plusOnesConfirmed: 0,
-                companionNames: invitationDetails.companionNames,
+                plusOnesAllowed: Math.max(0, guest?.plus_ones_allowed ?? 0),
+                plusOnesConfirmed: Math.max(0, guest?.plus_ones_confirmed ?? 0),
+                companionNames,
                 dietaryRequirements: invitationDetails.dietaryRequirements,
                 song: invitationDetails.song,
                 greeting: invitationDetails.greeting,

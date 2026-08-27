@@ -46,7 +46,7 @@ type CheckinStatus =
     }
 
 type CheckinWithGuest = Checkin & {
-  guests?: (Pick<Guest, 'first_name' | 'last_name' | 'status' | 'photo_url' | 'table_assignment'> & {
+  guests?: (Pick<Guest, 'first_name' | 'last_name' | 'status' | 'photo_url' | 'table_assignment' | 'plus_ones_confirmed' | 'companion_names'> & {
     notes?: string | null
   }) | null
 }
@@ -88,6 +88,8 @@ type SearchableGuest = Pick<
   | 'email'
   | 'phone'
   | 'status'
+  | 'plus_ones_confirmed'
+  | 'companion_names'
 > & {
   guest_types?: Pick<
     GuestType,
@@ -595,10 +597,8 @@ export default function EventCheckinManager({
     const confirmedGuests = guestDirectory.filter((guest) => guest.status === 'confirmed')
     const pendingGuests = guestDirectory.filter((guest) => guest.status === 'pending')
     const cancelledGuests = guestDirectory.length - activeGuests.length
-    // Los acompañantes no viven como columnas en guests (se registran en notes
-    // desde la invitacion), asi que aca cada invitado cuenta como una persona.
-    const expectedPeople = activeGuests.length
-    const insidePeople = checkedInGuests.length
+    const expectedPeople = activeGuests.reduce((total, guest) => total + 1 + guest.plus_ones_confirmed, 0)
+    const insidePeople = checkedInGuests.reduce((total, guest) => total + 1 + guest.plus_ones_confirmed, 0)
 
     return {
       activeGuests: activeGuests.length,

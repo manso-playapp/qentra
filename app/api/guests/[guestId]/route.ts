@@ -38,7 +38,7 @@ export async function PATCH(request: Request, context: GuestRouteContext) {
   try {
     const { guestId } = await context.params
     const body = (await request.json()) as UpdateGuestForm
-    const payload: Record<string, string | null> = {}
+    const payload: Record<string, string | number | string[] | null> = {}
 
     // Revertir un ingreso es mas que volver el status a "habilitado": el
     // check-in aprobado consume el token y deja el QR oculto en la invitacion.
@@ -46,7 +46,7 @@ export async function PATCH(request: Request, context: GuestRouteContext) {
     // contar como ingreso y el token que se uso vuelve a quedar disponible.
     const { data: currentGuest, error: currentGuestError } = await adminClient
       .from('guests')
-      .select('status, event_id')
+      .select('status, event_id, plus_ones_allowed, plus_ones_confirmed, companion_names')
       .eq('id', guestId)
       .maybeSingle()
 
@@ -96,6 +96,22 @@ export async function PATCH(request: Request, context: GuestRouteContext) {
     if (body.special_requests !== undefined) payload.notes = body.special_requests?.trim() || null
     if (body.table_assignment !== undefined)
       payload.table_assignment = body.table_assignment?.trim() || null
+    if (body.plus_ones_allowed !== undefined) {
+      const allowed = Math.max(0, Math.floor(body.plus_ones_allowed))
+      const confirmed = Math.max(0, Math.floor(body.plus_ones_confirmed ?? currentGuest.plus_ones_confirmed ?? 0))
+      if (confirmed > allowed) {
+        return Response.json({ error: 'Los acompanantes confirmados no pueden superar el cupo.' }, { status: 400 })
+      }
+      payload.plus_ones_allowed = allowed
+      payload.plus_ones_confirmed = confirmed
+    } else if (body.plus_ones_confirmed !== undefined) {
+      const confirmed = Math.max(0, Math.floor(body.plus_ones_confirmed))
+      const allowed = Math.max(0, Math.floor(currentGuest.plus_ones_allowed ?? 0))
+      if (confirmed > allowed) {
+        return Response.json({ error: 'Los acompanantes confirmados no pueden superar el cupo.' }, { status: 400 })
+      }
+      payload.plus_ones_confirmed = confirmed
+    }
     if (body.status !== undefined) payload.status = mapGuestStatusToDb(body.status)
     if (
       body.payment_status !== undefined &&
@@ -140,9 +156,9 @@ export async function PATCH(request: Request, context: GuestRouteContext) {
 
         const fallbackNotes = upsertTableAssignmentInNotes(
           payload.notes !== undefined ? payload.notes : existing?.notes,
-          payload.table_assignment
+          payload.table_assignment as string | null
         )
-        const fallbackPayload: Record<string, string | null> = { ...payload }
+        const fallbackPayload: Record<string, string | number | string[] | null> = { ...payload }
         delete fallbackPayload.table_assignment
         fallbackPayload.notes = fallbackNotes
 

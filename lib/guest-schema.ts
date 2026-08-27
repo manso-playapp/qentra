@@ -1,5 +1,5 @@
 import type { Guest, GuestWithType } from '@/types'
-import { parseInvitationDetails } from '@/lib/invitation-response'
+import { parseCompanionNames, parseInvitationDetails } from '@/lib/invitation-response'
 
 export type DbGuestStatus =
   | 'preinvited'
@@ -27,6 +27,9 @@ type DbGuestRow = {
   payment_status?: string | null
   notes?: string | null
   table_assignment?: string | null
+  plus_ones_allowed?: number | null
+  plus_ones_confirmed?: number | null
+  companion_names?: string[] | null
   created_at: string
   updated_at: string
   guest_types?: GuestTypeSubset | GuestTypeSubset[]
@@ -68,6 +71,14 @@ export function buildGuestFullName(firstName: string, lastName: string) {
 }
 
 export function normalizeGuestRecord(row: DbGuestRow): GuestWithType {
+  const legacyCompanionNames = parseCompanionNames(parseInvitationDetails(row.notes).companionNames)
+  const companionNames = (row.companion_names ?? []).map((name) => name.trim()).filter(Boolean)
+  const resolvedCompanionNames = companionNames.length > 0 ? companionNames : legacyCompanionNames
+  const plusOnesAllowed = Math.max(0, row.plus_ones_allowed ?? resolvedCompanionNames.length)
+  const plusOnesConfirmed = Math.min(
+    plusOnesAllowed,
+    Math.max(0, row.plus_ones_confirmed ?? resolvedCompanionNames.length)
+  )
   return {
     id: row.id,
     event_id: row.event_id,
@@ -93,8 +104,9 @@ export function normalizeGuestRecord(row: DbGuestRow): GuestWithType {
       row.table_assignment?.trim() ||
       parseInvitationDetails(row.notes).tableAssignment ||
       null,
-    plus_ones_allowed: 0,
-    plus_ones_confirmed: 0,
+    plus_ones_allowed: plusOnesAllowed,
+    plus_ones_confirmed: plusOnesConfirmed,
+    companion_names: resolvedCompanionNames,
     special_requests: row.notes ?? undefined,
     created_at: row.created_at,
     updated_at: row.updated_at,

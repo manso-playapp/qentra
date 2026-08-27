@@ -142,6 +142,14 @@ export function parseInvitationDetails(value?: string | null): ParsedInvitationD
   return parsed
 }
 
+/** Convierte el texto legacy de acompanantes en nombres individuales. */
+export function parseCompanionNames(value?: string | null): string[] {
+  return (value || '')
+    .split(/[\n,]+/)
+    .map((name) => name.trim())
+    .filter(Boolean)
+}
+
 // Inserta o reemplaza la linea "Destino: ..." dentro de notes.
 // Se usa como fallback de almacenamiento cuando la columna nativa
 // table_assignment no existe aun en el esquema de la base de datos.

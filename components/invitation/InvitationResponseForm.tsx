@@ -39,8 +39,13 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
   const [email, setEmail] = useState(initialData.email)
   const [phone, setPhone] = useState(initialData.phone)
   const [dni, setDni] = useState(initialData.dni)
-  const [plusOnesConfirmed, setPlusOnesConfirmed] = useState(String(initialData.plusOnesConfirmed))
-  const [companionNames, setCompanionNames] = useState(initialData.companionNames)
+  const [companionNames, setCompanionNames] = useState<string[]>(() => {
+    const names = initialData.companionNames
+      .split(/[\n,]+/)
+      .map((name) => name.trim())
+      .filter(Boolean)
+    return Array.from({ length: initialData.plusOnesAllowed }, (_, index) => names[index] || '')
+  })
   const [dietaryRequirements, setDietaryRequirements] = useState(initialData.dietaryRequirements)
   const [observations, setObservations] = useState(initialData.observations)
   const [photoUrl, setPhotoUrl] = useState(initialData.photoUrl)
@@ -68,8 +73,8 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
           email,
           phone,
           dni,
-          plusOnesConfirmed: isConfirming ? Number.parseInt(plusOnesConfirmed || '0', 10) || 0 : 0,
-          companionNames: isConfirming ? companionNames : '',
+          plusOnesConfirmed: isConfirming ? companionNames.filter((name) => name.trim()).length : 0,
+          companionNames: isConfirming ? companionNames.filter((name) => name.trim()).join('\n') : '',
           dietaryRequirements: isConfirming ? dietaryRequirements : '',
           song: isConfirming ? initialData.song : '',
           greeting: isConfirming ? initialData.greeting : '',
@@ -227,37 +232,27 @@ export default function InvitationResponseForm({ token, initialData }: Invitatio
               />
             </div>
 
-            {companionLimit > 0 && (
-              <div>
-                <Label htmlFor="invitation-plus-ones">Acompanantes confirmados</Label>
-                <Input
-                  id="invitation-plus-ones"
-                  type="number"
-                  min="0"
-                  max={String(companionLimit)}
-                  value={plusOnesConfirmed}
-                  onChange={(event) => setPlusOnesConfirmed(event.target.value)}
-                  className="mt-2"
-                  placeholder="0"
-                />
-                <p className="mt-2 text-xs text-slate-500">
-                  Cupo disponible: {companionLimit}
-                </p>
-              </div>
-            )}
           </div>
 
           {companionLimit > 0 && (
             <div>
-              <Label htmlFor="invitation-companion-names">Nombres de acompanantes</Label>
-              <Textarea
-                id="invitation-companion-names"
-                rows={3}
-                value={companionNames}
-                onChange={(event) => setCompanionNames(event.target.value)}
-                className="mt-2"
-                placeholder="Un nombre por linea o separados por coma"
-              />
+              <Label>Nombres de acompanantes</Label>
+              <p className="mt-1 text-xs text-slate-500">Opcional. No genera un QR individual.</p>
+              <div className="mt-2 grid gap-3 sm:grid-cols-2">
+                {companionNames.map((name, index) => (
+                  <Input
+                    key={`companion-${index}`}
+                    id={`invitation-companion-${index + 1}`}
+                    value={name}
+                    onChange={(event) => {
+                      const next = [...companionNames]
+                      next[index] = event.target.value
+                      setCompanionNames(next)
+                    }}
+                    placeholder={`Acompanante ${index + 1}`}
+                  />
+                ))}
+              </div>
             </div>
           )}
 

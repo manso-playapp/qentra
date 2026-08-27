@@ -1,7 +1,7 @@
 import { evaluateGuestAccess } from '@/lib/access-policy'
 import { ensureAuthorizedApiAccess } from '@/lib/operator-auth'
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
-import { parseInvitationDetails } from '@/lib/invitation-response'
+import { parseCompanionNames, parseInvitationDetails } from '@/lib/invitation-response'
 import type { CheckinMethod } from '@/types'
 
 export const runtime = 'nodejs'
@@ -144,6 +144,8 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       status,
       table_assignment,
       notes,
+      plus_ones_confirmed,
+      companion_names,
       guest_types (
         name,
         access_policy_label,
@@ -193,20 +195,32 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
 
   // Ocupacion del evento: personas ya admitidas (check-ins aprobados). Se usa
   // para validar el aforo total antes de habilitar un ingreso nuevo.
-  const { count: approvedCount } = await adminClient
+  const { data: approvedCheckins, error: approvedCountError } = await adminClient
     .from('checkins')
-    .select('id', { count: 'exact', head: true })
+    .select('id, guests(plus_ones_confirmed, companion_names, notes)')
     .eq('event_id', eventId)
     .eq('result', 'approved')
+
+  if (approvedCountError) return Response.json({ error: approvedCountError.message }, { status: 500 })
+  const approvedCount = (approvedCheckins ?? []).reduce((total, checkin) => {
+    const linkedGuest = Array.isArray(checkin.guests) ? checkin.guests[0] : checkin.guests
+    const names = Array.isArray(linkedGuest?.companion_names) && linkedGuest.companion_names.length > 0
+      ? linkedGuest.companion_names
+      : parseCompanionNames(parseInvitationDetails(linkedGuest?.notes).companionNames)
+    return total + 1 + Math.max(0, linkedGuest?.plus_ones_confirmed ?? names.length)
+  }, 0)
 
   // Destino (mesa) para mostrar en el totem: columna propia con fallback legacy.
   const invitationDetails = parseInvitationDetails(guest.notes)
   const documentNumber = guest.document_number?.trim() || invitationDetails.dni.trim() || null
   const tableAssignment = guest.table_assignment?.trim() || invitationDetails.tableAssignment || ''
-  const companionCount = invitationDetails.companionNames
-    .split(/[\n,]/)
-    .map((name) => name.trim())
-    .filter(Boolean).length
+  const companionNames = Array.isArray(guest.companion_names) && guest.companion_names.length > 0
+    ? guest.companion_names.map((name) => name.trim()).filter(Boolean)
+    : parseCompanionNames(invitationDetails.companionNames)
+  const companionCount = Math.min(
+    companionNames.length,
+    Math.max(0, guest.plus_ones_confirmed ?? companionNames.length)
+  )
 
   const decision = evaluateGuestAccess({
     event: eventData,
@@ -216,7 +230,10 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     invitationToken: invitationToken ? { expires_at: invitationToken.expires_at } : undefined,
     lastCheckinTime: lastCheckin?.checked_in_at ?? null,
     eventCapacity: eventData.max_capacity,
-    eventOccupancy: approvedCount ?? 0,
+    // La politica compara con >= porque historicamente el titular era una
+    // persona. Ajustamos el valor para que el grupo completo pueda llenar el
+    // ultimo lugar, pero nunca superar el aforo.
+    eventOccupancy: (approvedCount ?? 0) + Math.max(companionCount - 1, 0),
   })
 
   const overrideApproved =
@@ -237,6 +254,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
           document_number: documentNumber,
           photo_url: guest.photo_url,
           plus_ones_confirmed: companionCount,
+          companion_names: companionNames.slice(0, companionCount),
         },
       },
     })
@@ -255,6 +273,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
           document_number: documentNumber,
           photo_url: guest.photo_url,
           plus_ones_confirmed: companionCount,
+          companion_names: companionNames.slice(0, companionCount),
         },
       },
     })
@@ -296,6 +315,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
         document_number: documentNumber,
         photo_url: guest.photo_url,
         plus_ones_confirmed: companionCount,
+        companion_names: companionNames.slice(0, companionCount),
       },
       tableAssignment: tableAssignment || null,
     },

@@ -19,6 +19,7 @@ type GuestAtDoor = {
   document_number?: string | null
   photo_url?: string | null
   plus_ones_confirmed?: number | null
+  companion_names?: string[]
 }
 
 type DoorResult = {
@@ -237,6 +238,7 @@ export default function DoorScanner({ event }: DoorScannerProps) {
   const isReady = result?.outcome === 'ready'
   const isRegistered = result?.outcome === 'registered'
   const companionCount = result?.guest?.plus_ones_confirmed ?? 0
+  const companionNames = result?.guest?.companion_names ?? []
 
   return (
     <main className="fixed inset-0 h-[100dvh] touch-none overflow-hidden overscroll-none bg-slate-950 px-4 py-5 text-white sm:px-6">
@@ -325,9 +327,14 @@ export default function DoorScanner({ event }: DoorScannerProps) {
                     <h2 className="text-3xl font-bold leading-tight">{guestName(result.guest)}</h2>
                     <p className="mt-2 font-mono text-base font-semibold">DNI {result.guest.document_number || 'NO INFORMADO'}</p>
                     {companionCount > 0 && (
-                      <p className="mt-1 text-sm font-semibold uppercase tracking-[0.08em]">
-                        Acompañantes: {companionCount}
-                      </p>
+                      <div className="mt-2 text-sm">
+                        <p className="font-semibold uppercase tracking-[0.08em]">Acompañantes declarados</p>
+                        {companionNames.length > 0 && (
+                          <ul className="mt-1 space-y-0.5 text-white/80">
+                            {companionNames.slice(0, companionCount).map((name) => <li key={name}>{name}</li>)}
+                          </ul>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>

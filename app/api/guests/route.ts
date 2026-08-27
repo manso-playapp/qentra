@@ -16,6 +16,7 @@ type CreateGuestRequestBody = {
   phone?: string
   special_requests?: string
   table_assignment?: string
+  plus_ones_allowed?: number
 }
 
 export const runtime = 'nodejs'
@@ -63,6 +64,9 @@ export async function GET(request: Request) {
       payment_status,
       notes,
       table_assignment,
+      plus_ones_allowed,
+      plus_ones_confirmed,
+      companion_names,
       created_at,
       updated_at,
       guest_types (
@@ -127,7 +131,8 @@ export async function POST(request: Request) {
     return Response.json({ error: 'El tipo de invitado no corresponde al evento.' }, { status: 400 })
   }
 
-  const payload: Record<string, string | boolean | null> = {
+  const plusOnesAllowed = Math.max(0, Math.floor(body.plus_ones_allowed ?? 0))
+  const payload: Record<string, string | boolean | number | string[] | null> = {
     event_id: eventId,
     guest_type_id: guestTypeId,
     first_name: firstName,
@@ -137,6 +142,9 @@ export async function POST(request: Request) {
     phone: normalizePhone(body.phone?.trim()),
     notes: body.special_requests?.trim() || null,
     table_assignment: body.table_assignment?.trim() || null,
+    plus_ones_allowed: plusOnesAllowed,
+    plus_ones_confirmed: 0,
+    companion_names: [],
     created_manually: true,
     status: 'preinvited',
     payment_status: (guestType.payment_amount_cents ?? 0) > 0 ? 'pending' : 'not_required',

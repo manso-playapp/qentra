@@ -1,5 +1,6 @@
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
 import { ensureAuthorizedApiAccess } from '@/lib/operator-auth'
+import { parseCompanionNames, parseInvitationDetails } from '@/lib/invitation-response'
 
 export const runtime = 'nodejs'
 
@@ -50,7 +51,9 @@ export async function GET(_request: Request, context: RouteContext) {
         status,
         photo_url,
         table_assignment,
-        notes
+        notes,
+        plus_ones_confirmed,
+        companion_names
       )
     `
       )
@@ -59,10 +62,10 @@ export async function GET(_request: Request, context: RouteContext) {
       .eq('result', 'approved')
       .order('checked_in_at', { ascending: false })
       .limit(10),
-    // Total de ingresos aprobados: alimenta el contador de aforo en la puerta.
+    // Total de personas aprobadas (titulares + acompañantes).
     adminClient
       .from('checkins')
-      .select('id', { count: 'exact', head: true })
+      .select('id, guests(plus_ones_confirmed, companion_names, notes)')
       .eq('event_id', eventId)
       .eq('result', 'approved'),
   ])
@@ -71,5 +74,17 @@ export async function GET(_request: Request, context: RouteContext) {
     return Response.json({ error: feedResult.error.message }, { status: 500 })
   }
 
-  return Response.json({ data: feedResult.data ?? [], approvedCount: countResult.count ?? 0 })
+  if (countResult.error) {
+    return Response.json({ error: countResult.error.message }, { status: 500 })
+  }
+
+  const approvedCount = (countResult.data ?? []).reduce((total, checkin) => {
+    const guest = Array.isArray(checkin.guests) ? checkin.guests[0] : checkin.guests
+    const names = Array.isArray(guest?.companion_names) && guest.companion_names.length > 0
+      ? guest.companion_names
+      : parseCompanionNames(parseInvitationDetails(guest?.notes).companionNames)
+    return total + 1 + Math.max(0, guest?.plus_ones_confirmed ?? names.length)
+  }, 0)
+
+  return Response.json({ data: feedResult.data ?? [], approvedCount })
 }
