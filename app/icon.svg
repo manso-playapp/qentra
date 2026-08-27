@@ -1,5 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="16" fill="#171714"/>
-  <path d="M15 47 29.4 15h6.1L50 47h-9.2l-2.7-7H26.5l-2.6 7H15Zm14.1-14h6.4l-3.2-9.1L29.1 33Z" fill="#ff8b70"/>
-  <circle cx="50" cy="14" r="6" fill="#d9ee73"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 449 387">
+  <defs>
+    <linearGradient id="alista-mark-gradient" x1="75" y1="193" x2="374" y2="193" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#009cdd" />
+      <stop offset="0.5" stop-color="#4171b1" />
+      <stop offset="1" stop-color="#213480" />
+    </linearGradient>
+  </defs>
+  <path
+    d="M75 311.5 223.5 75 374 311.5"
+    fill="none"
+    stroke="url(#alista-mark-gradient)"
+    stroke-width="142"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
 </svg>
