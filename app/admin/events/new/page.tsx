@@ -415,9 +415,9 @@ export default function NewEventPage() {
                       disabled={loadingDeliveryProfiles}
                       className="mt-2 border-white/10 bg-white/6 text-white"
                     >
-                      <option value="">Sin perfil asignado</option>
+                      <option className="bg-white text-slate-950" value="">Sin perfil asignado</option>
                       {deliveryProfiles.map((profile) => (
-                        <option key={profile.id} value={profile.id}>
+                        <option className="bg-white text-slate-950" key={profile.id} value={profile.id}>
                           {profile.name} · {formatChannelMode(profile.channel_mode)}
                           {profile.active ? '' : ' · inactivo'}
                         </option>

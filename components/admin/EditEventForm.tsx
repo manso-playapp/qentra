@@ -314,9 +314,9 @@ export default function EditEventForm({ event }: EditEventFormProps) {
                     disabled={loadingDeliveryProfiles}
                     className="mt-2 border-white/10 bg-white/6 text-white"
                   >
-                    <option value="">Sin canal asignado</option>
+                    <option className="bg-white text-slate-950" value="">Sin canal asignado</option>
                     {deliveryProfiles.map((profile) => (
-                      <option key={profile.id} value={profile.id}>
+                      <option className="bg-white text-slate-950" key={profile.id} value={profile.id}>
                         {profile.name} · {formatChannelMode(profile.channel_mode)}
                         {profile.active ? '' : ' · inactivo'}
                       </option>
@@ -333,9 +333,9 @@ export default function EditEventForm({ event }: EditEventFormProps) {
                     onChange={handleInputChange}
                     className="mt-2 border-white/10 bg-white/6 text-white"
                   >
-                    <option value="active">Activo</option>
-                    <option value="inactive">Inactivo</option>
-                    <option value="cancelled">Cancelado</option>
+                    <option className="bg-white text-slate-950" value="active">Activo</option>
+                    <option className="bg-white text-slate-950" value="inactive">Inactivo</option>
+                    <option className="bg-white text-slate-950" value="cancelled">Cancelado</option>
                   </Select>
                 </div>
 
