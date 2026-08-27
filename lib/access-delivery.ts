@@ -48,7 +48,7 @@ function buildPlainTextMessage(payload: AccessDeliveryPayload) {
     'Se acerca mi fiesta de 15,',
     'Realiz\u00e1 tu check-in y preparate para despegar...',
     'Te mando el link para que te registres, te espero!',
-    'Abrir invitaci\u00f3n:',
+    'Abrir Invitaci\u00f3n:',
     payload.invitationUrl,
     `Fecha l\u00edmite para confirmar: ${formatConfirmationDeadline(payload)}`,
   ].join('\n')
@@ -76,7 +76,7 @@ function buildEmailHtml(payload: AccessDeliveryPayload) {
           </p>
           <p style="margin:24px 0;">
             <a href="${payload.invitationUrl}" style="display:inline-block; padding:14px 20px; border-radius:16px; background:#0f172a; color:#ffffff; text-decoration:none; font-weight:600;">
-              Abrir invitación
+              Abrir Invitación
             </a>
           </p>
           <p style="margin:0; font-size:14px; line-height:1.7; color:#475569;">
