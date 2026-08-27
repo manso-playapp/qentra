@@ -29,6 +29,7 @@ type EditEventFormProps = {
     | 'venue_address'
     | 'max_capacity'
     | 'description'
+    | 'gift_info'
     | 'contact_phone'
     | 'delivery_profile_id'
     | 'status'
@@ -45,6 +46,7 @@ type EventFormState = {
   venue_address: string
   max_capacity: number
   description: string
+  gift_info: string
   contact_phone: string
   delivery_profile_id: string
   status: Event['status']
@@ -78,6 +80,7 @@ export default function EditEventForm({ event }: EditEventFormProps) {
     venue_address: event.venue_address,
     max_capacity: event.max_capacity,
     description: event.description || '',
+    gift_info: event.gift_info || '',
     contact_phone: event.contact_phone || '',
     delivery_profile_id: event.delivery_profile_id || '',
     status: event.status,
@@ -120,6 +123,7 @@ export default function EditEventForm({ event }: EditEventFormProps) {
         venue_address: formData.venue_address.trim(),
         max_capacity: formData.max_capacity,
         description: formData.description.trim() || null,
+        gift_info: formData.gift_info.trim() || null,
         contact_phone: formData.contact_phone.trim() || null,
         delivery_profile_id: formData.delivery_profile_id || null,
         status: formData.status,
@@ -240,6 +244,22 @@ export default function EditEventForm({ event }: EditEventFormProps) {
                 <div>
                   <Label htmlFor="description">Descripcion</Label>
                   <Textarea id="description" name="description" rows={4} value={formData.description} onChange={handleInputChange} className="mt-2" />
+                </div>
+
+                <div>
+                  <Label htmlFor="gift_info">Regalo</Label>
+                  <Textarea
+                    id="gift_info"
+                    name="gift_info"
+                    rows={4}
+                    value={formData.gift_info}
+                    onChange={handleInputChange}
+                    className="mt-2"
+                    placeholder="Alias, CBU o instrucciones para regalos..."
+                  />
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    Se mostrará como un bloque propio en la invitación y admite varias líneas.
+                  </p>
                 </div>
               </div>
             </CardContent>

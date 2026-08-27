@@ -378,6 +378,10 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
                   <dd className="mt-1 font-medium text-foreground">{event.contact_phone || 'No configurado'}</dd>
                 </div>
                 <div>
+                  <dt className="text-sm text-muted-foreground">Regalo</dt>
+                  <dd className="mt-1 whitespace-pre-line font-medium text-foreground">{event.gift_info || 'No configurado'}</dd>
+                </div>
+                <div>
                   <dt className="text-sm text-muted-foreground">Canal asignado</dt>
                   <dd className="mt-1 font-medium text-foreground">
                     {selectedDeliveryProfile

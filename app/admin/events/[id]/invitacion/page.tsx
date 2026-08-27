@@ -18,6 +18,8 @@ function mergeConfig(raw: unknown): InvitationConfig {
   return {
     ...DEFAULT_INVITATION_CONFIG,
     ...value,
+    colors: { ...DEFAULT_INVITATION_CONFIG.colors, ...(value.colors ?? {}) },
+    fonts: { ...DEFAULT_INVITATION_CONFIG.fonts, ...(value.fonts ?? {}) },
     widgets: { ...DEFAULT_INVITATION_CONFIG.widgets, ...(value.widgets ?? {}) },
     fields: { ...DEFAULT_INVITATION_CONFIG.fields, ...(value.fields ?? {}) },
   }
@@ -43,7 +45,7 @@ export default async function InvitationEditorPage({ params }: { params: Promise
 
   const { data: event } = await supabase
     .from('events')
-    .select('id, name, event_date, start_time, venue_name, venue_address, contact_phone')
+    .select('id, name, event_date, start_time, venue_name, venue_address, gift_info, contact_phone')
     .eq('id', id)
     .maybeSingle()
 
@@ -122,6 +124,7 @@ export default async function InvitationEditorPage({ params }: { params: Promise
             start_time: (event.start_time as string) ?? '',
             venue_name: (event.venue_name as string) ?? '',
             venue_address: (event.venue_address as string) ?? '',
+            gift_info: (event.gift_info as string) ?? '',
             contact_phone: (event.contact_phone as string) ?? '',
           }}
           initialVisual={{

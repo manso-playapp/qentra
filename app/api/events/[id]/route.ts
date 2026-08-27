@@ -14,6 +14,7 @@ type UpdateEventBody = {
   venue_address?: string
   max_capacity?: number
   description?: string | null
+  gift_info?: string | null
   contact_phone?: string | null
   delivery_profile_id?: string | null
   status?: 'active' | 'inactive' | 'cancelled'
@@ -72,7 +73,14 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   if (currentEventError) return Response.json({ error: currentEventError.message }, { status: 500 })
   if (!currentEvent) return Response.json({ error: 'Evento inexistente.' }, { status: 404 })
 
-  const { error: updateError } = await adminClient.from('events').update(body).eq('id', eventId)
+  const updatePayload = {
+    ...body,
+    ...(body.description !== undefined ? { description: body.description?.trim() || null } : {}),
+    ...(body.gift_info !== undefined ? { gift_info: body.gift_info?.trim() || null } : {}),
+    ...(body.contact_phone !== undefined ? { contact_phone: body.contact_phone?.trim() || null } : {}),
+  }
+
+  const { error: updateError } = await adminClient.from('events').update(updatePayload).eq('id', eventId)
   if (updateError) return Response.json({ error: updateError.message }, { status: 500 })
 
   const scheduleChanged =

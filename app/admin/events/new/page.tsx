@@ -49,6 +49,7 @@ export default function NewEventPage() {
     venue_address: '',
     max_capacity: 100,
     description: '',
+    gift_info: '',
     contact_phone: '',
     delivery_profile_id: '',
   })
@@ -330,6 +331,22 @@ export default function NewEventPage() {
                       className="mt-2"
                       placeholder="Descripción opcional del evento..."
                     />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="gift_info">Regalo</Label>
+                    <Textarea
+                      name="gift_info"
+                      id="gift_info"
+                      rows={4}
+                      value={formData.gift_info}
+                      onChange={handleInputChange}
+                      className="mt-2"
+                      placeholder="Alias, CBU o instrucciones para regalos..."
+                    />
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      Se mostrará como un bloque propio en la invitación y admite varias líneas.
+                    </p>
                   </div>
                 </div>
               </CardContent>

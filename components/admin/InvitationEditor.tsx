@@ -10,6 +10,12 @@ import {
   INVITATION_TEMPLATES,
   type InvitationTemplateKey,
 } from '@/lib/invitation-templates'
+import {
+  DEFAULT_INVITATION_FONTS,
+  INVITATION_FONT_KEYS,
+  INVITATION_FONT_LABELS,
+  type InvitationFontKey,
+} from '@/lib/invitation-fonts'
 
 // Editor tipo "front editor" para la invitacion: panel de controles a la
 // izquierda, preview en vivo (mockup de celular) a la derecha. Los campos
@@ -22,6 +28,18 @@ export type InvitationConfig = {
   dresscode: string
   directionsUrl: string
   audio_url: string
+  colors: {
+    background: string
+    title: string
+    subtitle: string
+    data: string
+    accent: string
+  }
+  fonts: {
+    titles: InvitationFontKey
+    subtitles: InvitationFontKey
+    data: InvitationFontKey
+  }
   widgets: { trivia: boolean; countdown: boolean; particles: boolean }
   triviaQuestion: string
   fields: { rsvp: boolean; dni: boolean; menu: boolean; companions: boolean }
@@ -42,6 +60,7 @@ type EventInfo = {
   start_time: string
   venue_name: string
   venue_address: string
+  gift_info?: string
   contact_phone?: string
 }
 
@@ -51,18 +70,26 @@ export const DEFAULT_INVITATION_CONFIG: InvitationConfig = {
   dresscode: '',
   directionsUrl: '',
   audio_url: '',
+  colors: {
+    background: '',
+    title: '',
+    subtitle: '#ffffff',
+    data: '#ffffff',
+    accent: '',
+  },
+  fonts: DEFAULT_INVITATION_FONTS,
   widgets: { trivia: false, countdown: false, particles: false },
   triviaQuestion: '',
   fields: { rsvp: true, dni: true, menu: true, companions: true },
 }
 
-const FONT_STACKS: Record<InvitationConfig['fontFamily'], string> = {
+const LEGACY_FONT_STACKS: Record<InvitationConfig['fontFamily'], string> = {
   sans: 'ui-sans-serif, system-ui, sans-serif',
   serif: 'Georgia, "Times New Roman", serif',
   display: 'var(--font-display), ui-sans-serif, system-ui, sans-serif',
 }
 
-const FONT_LABELS: Record<InvitationConfig['fontFamily'], string> = {
+export const LEGACY_FONT_LABELS: Record<InvitationConfig['fontFamily'], string> = {
   sans: 'Moderna (sans)',
   serif: 'Clásica (serif)',
   display: 'Display (marca)',
@@ -98,7 +125,14 @@ export default function InvitationEditor({
 
   const primary = HEX.test(visual.primary_color) ? visual.primary_color : '#8b5e3c'
   const secondary = HEX.test(visual.secondary_color) ? visual.secondary_color : '#f1e8da'
-  const fontStack = FONT_STACKS[config.fontFamily]
+  const paletteFallbacks = {
+    background: '#000000',
+    title: secondary,
+    subtitle: '#ffffff',
+    data: '#ffffff',
+    accent: secondary,
+  }
+  const fontStack = LEGACY_FONT_STACKS[config.fontFamily]
   const isMidnight = config.template === 'midnight'
   const previewEvent = event as InvitationEventInfo
   const previewBranding = {
@@ -161,20 +195,51 @@ export default function InvitationEditor({
               ))}
             </select>
           </Field>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <ColorControl label="Color primario" value={visual.primary_color} fallback="#8b5e3c" onChange={(v) => setVisualField('primary_color', v)} />
-            <ColorControl label="Color secundario" value={visual.secondary_color} fallback="#f1e8da" onChange={(v) => setVisualField('secondary_color', v)} />
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">Paleta de la invitación</p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {(Object.keys(paletteFallbacks) as Array<keyof typeof paletteFallbacks>).map((key) => (
+                <ColorControl
+                  key={key}
+                  label={
+                    key === 'background'
+                      ? 'Color de fondo'
+                      : key === 'title'
+                      ? 'Color de títulos'
+                      : key === 'subtitle'
+                      ? 'Color de subtítulos'
+                      : key === 'data'
+                      ? 'Color de datos'
+                      : 'Color de acento'
+                  }
+                  value={config.colors[key] || paletteFallbacks[key]}
+                  fallback={paletteFallbacks[key]}
+                  onChange={(value) => setConfig((current) => ({ ...current, colors: { ...current.colors, [key]: value } }))}
+                />
+              ))}
+            </div>
           </div>
           <Field label="Tipografía">
-            <select
-              value={config.fontFamily}
-              onChange={(e) => setConfig((c) => ({ ...c, fontFamily: e.target.value as InvitationConfig['fontFamily'] }))}
-              className={inputClass}
-            >
-              {(Object.keys(FONT_LABELS) as InvitationConfig['fontFamily'][]).map((key) => (
-                <option key={key} value={key}>{FONT_LABELS[key]}</option>
-              ))}
-            </select>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <FontControl
+                label="TipografÃ­a de tÃ­tulos"
+                role="titles"
+                value={config.fonts.titles}
+                onChange={(value) => setConfig((current) => ({ ...current, fonts: { ...current.fonts, titles: value } }))}
+              />
+              <FontControl
+                label="TipografÃ­a de subtÃ­tulos"
+                role="subtitles"
+                value={config.fonts.subtitles}
+                onChange={(value) => setConfig((current) => ({ ...current, fonts: { ...current.fonts, subtitles: value } }))}
+              />
+              <FontControl
+                label="TipografÃ­a de datos"
+                role="data"
+                value={config.fonts.data}
+                onChange={(value) => setConfig((current) => ({ ...current, fonts: { ...current.fonts, data: value } }))}
+              />
+            </div>
           </Field>
           <ImageUpload
             label="Imagen de fondo"
@@ -399,12 +464,42 @@ function Section({ title, desc, children }: { title: string; desc: string; child
   )
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({ label, children }: { label: React.ReactNode; children: React.ReactNode }) {
+  const isTypographyGroup = typeof label === 'string' && label.startsWith('Tipograf')
+
+  if (isTypographyGroup) {
+    return (
+      <div>
+        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">Tipograf&iacute;as</p>
+        {children}
+      </div>
+    )
+  }
+
   return (
     <label className="block text-sm font-medium text-gray-700">
       {label}
       {children}
     </label>
+  )
+}
+
+function FontControl(props: { label?: string; role: keyof typeof DEFAULT_INVITATION_FONTS; value: InvitationFontKey; onChange: (value: InvitationFontKey) => void }) {
+  const { role, value, onChange } = props
+  const label = role === 'titles' ? <>Tipograf&iacute;a de t&iacute;tulos</> : role === 'subtitles' ? <>Tipograf&iacute;a de subt&iacute;tulos</> : <>Tipograf&iacute;a de datos</>
+
+  return (
+    <Field label={label}>
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value as InvitationFontKey)}
+        className={inputClass}
+      >
+        {INVITATION_FONT_KEYS.map((key) => (
+          <option key={key} value={key}>{INVITATION_FONT_LABELS[key]}</option>
+        ))}
+      </select>
+    </Field>
   )
 }
 

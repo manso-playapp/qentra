@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import type { CSSProperties, ReactNode } from 'react'
-import { CalendarDays, Clock3, MapPin, PlaneTakeoff, Sparkles, Ticket } from 'lucide-react'
+import { CalendarDays, Clock3, MapPin, PlaneTakeoff, Ticket } from 'lucide-react'
 import type { SurfaceBranding } from '@/types'
 import InvitationCountdown from '@/components/invitation/InvitationCountdown'
 import InvitationLightRays from '@/components/invitation/InvitationLightRays'
@@ -8,6 +8,7 @@ import InvitationMusicPlayer from '@/components/invitation/InvitationMusicPlayer
 import InvitationScrollReveal from '@/components/invitation/InvitationScrollReveal'
 import InvitationWindParticles from '@/components/invitation/InvitationWindParticles'
 import type { InvitationTemplateKey } from '@/lib/invitation-templates'
+import { getInvitationFonts, INVITATION_FONT_STACKS, type InvitationFontConfig } from '@/lib/invitation-fonts'
 
 export type { InvitationTemplateKey } from '@/lib/invitation-templates'
 
@@ -19,6 +20,7 @@ export type InvitationEventInfo = {
   venue_name?: string
   venue_address?: string
   description?: string
+  gift_info?: string | null
   contact_phone?: string
 }
 
@@ -27,6 +29,14 @@ export type InvitationConfigInfo = {
   dresscode?: string
   directionsUrl?: string
   audio_url?: string
+  colors?: {
+    background?: string
+    title?: string
+    subtitle?: string
+    data?: string
+    accent?: string
+  }
+  fonts?: Partial<InvitationFontConfig>
   widgets?: { trivia?: boolean; countdown?: boolean; particles?: boolean }
 }
 
@@ -78,6 +88,20 @@ export function formatTime(time: string) {
 // fallback para invitaciones sin color configurado.
 export function getMidnightAccentColor(branding?: Pick<SurfaceBranding, 'secondary_color'> | null) {
   return branding?.secondary_color && HEX_COLOR.test(branding.secondary_color) ? branding.secondary_color : '#f3a6b8'
+}
+
+export function getInvitationColors(branding: Pick<SurfaceBranding, 'secondary_color'> | null, config?: InvitationConfigInfo) {
+  const legacyAccent = getMidnightAccentColor(branding)
+  const configured = config?.colors ?? {}
+  const resolve = (value: string | undefined, fallback: string) => (value && HEX_COLOR.test(value) ? value : fallback)
+
+  return {
+    background: resolve(configured.background, '#000000'),
+    title: resolve(configured.title, legacyAccent),
+    subtitle: resolve(configured.subtitle, '#ffffff'),
+    data: resolve(configured.data, '#ffffff'),
+    accent: resolve(configured.accent, legacyAccent),
+  }
 }
 
 export function buildMapsUrl(address?: string) {
@@ -416,14 +440,14 @@ function TravelInvitationView({
               <span className="block">{FIESTA_DRESSCODE.ellas}</span>
               <span className="block">{FIESTA_DRESSCODE.ellos}</span>
             </p>
-            <div className="mt-5 border-t-2 border-dashed border-slate-300 pt-5">
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Regalo</p>
-              <p className="mt-1 text-sm font-semibold uppercase tracking-[0.03em]">Alias de CBU</p>
-              <div className="mt-2 space-y-1 font-mono text-base font-bold uppercase tracking-[0.08em]">
-                <p>U$S: CUMPLE.15.DHARMA</p>
-                <p>PESOS: DHARMAXV</p>
+            {event.gift_info?.trim() ? (
+              <div className="mt-5 border-t-2 border-dashed border-slate-300 pt-5">
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Regalo</p>
+                <p className="mt-2 whitespace-pre-line text-sm font-semibold uppercase leading-6 tracking-[0.03em]">
+                  {event.gift_info.trim()}
+                </p>
               </div>
-            </div>
+            ) : null}
             {config?.audio_url ? (
               <div className="mt-5 border-t-2 border-dashed border-slate-300 pt-5">
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Canción de abordaje</p>
@@ -474,14 +498,23 @@ function MidnightInvitationView({
   const startTime = getInvitationStartTime(event, schedule)
   const directionsUrl = config?.directionsUrl || buildMapsUrl(event.venue_address)
   const contactHref = buildPhoneHref(event.contact_phone)
-  const accentColor = getMidnightAccentColor(branding)
+  const colors = getInvitationColors(branding, config)
+  const fonts = getInvitationFonts(config)
 
   return (
     <main
       className="invitation-template-midnight relative min-h-screen min-h-[100dvh] overflow-hidden bg-black px-4 pb-10 text-white sm:px-6"
       data-invitation-template="midnight"
       style={{
-        ['--invitation-accent' as string]: accentColor,
+        ['--invitation-background' as string]: colors.background,
+        ['--invitation-title' as string]: colors.title,
+        ['--invitation-subtitle' as string]: colors.subtitle,
+        ['--invitation-data' as string]: colors.data,
+        ['--invitation-accent' as string]: colors.accent,
+        ['--invitation-title-font' as string]: INVITATION_FONT_STACKS[fonts.titles],
+        ['--invitation-subtitle-font' as string]: INVITATION_FONT_STACKS[fonts.subtitles],
+        ['--invitation-data-font' as string]: INVITATION_FONT_STACKS[fonts.data],
+        backgroundColor: colors.background,
         ...(branding?.cover_image_url
           ? {
               backgroundImage: `url(${branding.cover_image_url})`,
@@ -494,7 +527,7 @@ function MidnightInvitationView({
     >
       {config?.widgets?.particles && <InvitationWindParticles />}
       <InvitationScrollReveal />
-      <InvitationLightRays raysColor={accentColor} />
+      <InvitationLightRays raysColor={colors.accent} />
 
       {isPreview && (
         <div className="absolute inset-x-0 top-0 z-20 bg-(--invitation-accent) px-4 py-2 text-center text-[11px] font-bold uppercase tracking-[0.2em] text-[#171714]">
@@ -517,32 +550,32 @@ function MidnightInvitationView({
             <h2 className="invitation-section-title">Fecha, hora y lugar</h2>
             <dl className="mt-8 flex flex-col items-center gap-10">
               <div>
-                <dt className="flex flex-col items-center justify-center text-[10px] font-bold uppercase tracking-[0.18em] text-white/42">
+                <dt className="invitation-subtitle flex flex-col items-center justify-center text-[10px] font-bold uppercase tracking-[0.18em]">
                   <span className="invitation-animated-icon invitation-animated-icon-one" aria-hidden="true"><CalendarDays className="size-8" /></span>
                   <span className="mt-3">Fecha</span>
                 </dt>
-                <dd className="mt-2 text-2xl text-white sm:text-3xl">
+                <dd className="invitation-data mt-2 text-2xl text-white sm:text-3xl">
                   {event.event_date ? formatEditorialDate(event.event_date) : 'A confirmar'}
                 </dd>
               </div>
               <div>
-                <dt className="flex flex-col items-center justify-center text-[10px] font-bold uppercase tracking-[0.18em] text-white/42">
+                <dt className="invitation-subtitle flex flex-col items-center justify-center text-[10px] font-bold uppercase tracking-[0.18em]">
                   <span className="invitation-animated-icon invitation-animated-icon-two" aria-hidden="true"><Clock3 className="size-8" /></span>
                   <span className="mt-3">Hora</span>
                 </dt>
-                <dd className="mt-2 text-2xl text-white sm:text-3xl">
+                <dd className="invitation-data mt-2 text-2xl text-white sm:text-3xl">
                   {startTime ? `${startTime} hs` : 'A confirmar'}
                 </dd>
               </div>
               <div>
-                <dt className="flex flex-col items-center justify-center text-[10px] font-bold uppercase tracking-[0.18em] text-white/42">
+                <dt className="invitation-subtitle flex flex-col items-center justify-center text-[10px] font-bold uppercase tracking-[0.18em]">
                   <span className="invitation-animated-icon invitation-animated-icon-three" aria-hidden="true"><MapPin className="size-8" /></span>
                   <span className="mt-3">Lugar</span>
                 </dt>
-                <dd className="mt-2 text-2xl text-white sm:text-3xl">
+                <dd className="invitation-data mt-2 text-2xl text-white sm:text-3xl">
                   {event.venue_name || event.venue_address || 'Lugar a confirmar'}
                 </dd>
-                {event.venue_address && event.venue_name ? <p className="mt-2 text-xs text-white/48">{event.venue_address}</p> : null}
+                {event.venue_address && event.venue_name ? <p className="invitation-subtitle mt-2 text-xs text-white/48">{event.venue_address}</p> : null}
               </div>
             </dl>
           </section>
@@ -557,7 +590,16 @@ function MidnightInvitationView({
           {config?.dresscode ? (
             <section className="invitation-block invitation-section mt-10 border-t border-white/18 pt-10 text-center" data-invitation-block>
               <h2 className="invitation-section-title text-white">Dress Code</h2>
-              <p className="invitation-section-body mt-3 text-(--invitation-accent)">{config.dresscode}</p>
+              <p className="invitation-section-body invitation-data mt-3 text-(--invitation-accent)">{config.dresscode}</p>
+            </section>
+          ) : null}
+
+          {event.gift_info?.trim() ? (
+            <section className="invitation-block invitation-section mt-10 border-t border-white/18 pt-10 text-center" data-invitation-block>
+              <h2 className="invitation-section-title text-white">Regalo</h2>
+              <p className="invitation-section-body invitation-data mt-3 whitespace-pre-line text-(--invitation-accent)">
+                {event.gift_info.trim()}
+              </p>
             </section>
           ) : null}
 
@@ -591,14 +633,13 @@ function MidnightInvitationView({
         </header>
 
         <section className="invitation-personal invitation-section order-2 border-t border-(--invitation-accent)/45 pt-8 text-white" data-invitation-block>
-          <p className="flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-(--invitation-accent)">
-            <Sparkles className="size-4" aria-hidden="true" /> Invitación especial
+          <h2 className="invitation-section-title">
+            Invitación especial para
+          </h2>
+          <p className="invitation-data mt-4 text-3xl font-extralight leading-tight text-white sm:text-4xl">
+            {guestDisplayName || 'Invitado/a'}
           </p>
-          <p className="mt-4 text-3xl font-extralight leading-tight sm:text-4xl">
-            {guestDisplayName || 'Invitado/a'},<br />
-            esta noche también es para vos.
-          </p>
-          <p className="mt-3 text-sm leading-6 text-white/65">Confirmá tu asistencia para que todo esté listo cuando llegues.</p>
+          <p className="invitation-data mt-3 text-sm leading-6 text-white/65">Confirmá tu asistencia para que todo esté listo cuando llegues.</p>
         </section>
 
         <div className="invitation-content-flow order-4">{children}</div>

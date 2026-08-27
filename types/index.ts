@@ -12,6 +12,8 @@ export interface Event {
   max_capacity: number
   status: 'active' | 'inactive' | 'cancelled'
   description?: string
+  /** Información libre para regalos o aportes, visible en la invitación. */
+  gift_info?: string | null
   contact_phone?: string
   delivery_profile_id?: string
   created_by_user_id?: string
@@ -322,6 +324,7 @@ export interface CreateEventForm {
   venue_address: string
   max_capacity: number
   description?: string
+  gift_info?: string
   contact_phone?: string
   delivery_profile_id?: string
 }

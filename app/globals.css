@@ -200,6 +200,7 @@ body {
   font-family: var(--font-playfair), Georgia, serif;
   font-weight: 200;
   text-align: center;
+  background-color: var(--invitation-background, #000000);
 }
 
 .invitation-template-midnight > .relative {
@@ -259,7 +260,7 @@ body {
 .invitation-editor-thumbnail .invitation-template-midnight,
 .invitation-editor-thumbnail .invitation-template-travel {
   min-height: 680px !important;
-  height: 680px;
+  height: auto !important;
   overflow: visible !important;
 }
 
@@ -276,7 +277,7 @@ body {
 .invitation-editor-canvas .invitation-template-midnight,
 .invitation-editor-canvas .invitation-template-travel {
   min-height: 1020px !important;
-  height: 1020px;
+  height: auto !important;
 }
 
 .invitation-editor-canvas .invitation-light-rays {
@@ -317,17 +318,21 @@ body {
 .invitation-template-midnight h3,
 .invitation-template-midnight h4,
 .invitation-template-midnight h5,
-.invitation-template-midnight h6,
+.invitation-template-midnight h6 {
+  font-family: var(--invitation-title-font, var(--font-playfair)), Georgia, serif;
+  font-weight: 200;
+}
+
 .invitation-template-midnight dd,
 .invitation-template-midnight p {
-  font-family: var(--font-playfair), Georgia, serif;
+  font-family: var(--invitation-data-font, var(--font-playfair)), Georgia, serif;
   font-weight: 200;
 }
 
 .invitation-template-midnight .invitation-section-title {
-  color: #ffffff;
-  font-family: var(--font-playfair), Georgia, serif;
-  font-size: clamp(1.85rem, 5vw, 2.6rem);
+  color: var(--invitation-title, var(--invitation-accent));
+  font-family: var(--invitation-title-font, var(--font-playfair)), Georgia, serif;
+  font-size: clamp(1.5375rem, calc(5vw - 5px), 2.2875rem);
   font-weight: 200;
   letter-spacing: -0.035em;
   line-height: 0.98;
@@ -335,21 +340,60 @@ body {
 }
 
 .invitation-template-midnight .invitation-section-kicker {
-  color: rgba(255, 255, 255, 0.55);
-  font-family: var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
+  color: var(--invitation-subtitle, #ffffff);
+  font-family: var(--invitation-subtitle-font, var(--font-nunito)), ui-sans-serif, system-ui, sans-serif;
   font-size: 0.66rem;
   font-weight: 700;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.18em;
   line-height: 1.2;
   text-transform: uppercase;
 }
 
 .invitation-template-midnight .invitation-section-body {
-  color: rgba(255, 255, 255, 0.68);
-  font-family: var(--font-playfair), Georgia, serif;
+  color: var(--invitation-subtitle, #ffffff);
+  font-family: var(--invitation-subtitle-font, var(--font-playfair)), Georgia, serif;
   font-size: 1.05rem;
   font-weight: 200;
   line-height: 1.5;
+}
+
+.invitation-template-midnight .invitation-countdown-value {
+  color: var(--invitation-data, #ffffff);
+  font-family: var(--invitation-data-font, var(--font-playfair)), Georgia, serif;
+}
+
+.invitation-template-midnight .invitation-countdown-unit + .invitation-countdown-unit::before {
+  position: absolute;
+  top: 0.4rem;
+  bottom: 0.25rem;
+  left: 0;
+  width: 1px;
+  background: var(--invitation-subtitle, #ffffff);
+  content: '';
+  opacity: 0.24;
+}
+
+.invitation-template-midnight .invitation-data {
+  color: var(--invitation-data, #ffffff);
+  font-family: var(--invitation-data-font, var(--font-playfair)), Georgia, serif;
+}
+
+.invitation-template-midnight .invitation-subtitle {
+  color: var(--invitation-subtitle, #ffffff);
+  font-family: var(--invitation-subtitle-font, var(--font-nunito)), ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.invitation-template-midnight .invitation-surface-card dt.invitation-subtitle {
+  color: var(--invitation-subtitle, #ffffff) !important;
+}
+
+.invitation-template-midnight .invitation-surface-card dd.invitation-data {
+  color: var(--invitation-data, #ffffff) !important;
 }
 
 /* El primer bloque queda más cerca del logo; el resto conserva el ritmo

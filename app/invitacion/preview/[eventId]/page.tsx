@@ -27,7 +27,7 @@ export default async function InvitationPreviewPage({ params, searchParams }: Pr
   const [eventResponse, brandingResponse] = await Promise.all([
     supabase
       .from('events')
-      .select('id, name, slug, event_date, start_time, venue_name, venue_address, status, description, contact_phone')
+      .select('id, name, slug, event_date, start_time, venue_name, venue_address, status, description, gift_info, contact_phone')
       .eq('id', eventId)
       .maybeSingle(),
     supabase.from('event_branding').select(SURFACE_BRANDING_COLUMNS).eq('event_id', eventId).maybeSingle(),

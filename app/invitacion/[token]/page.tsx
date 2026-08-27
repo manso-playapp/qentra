@@ -10,7 +10,7 @@ import InvitationResponseForm from '@/components/invitation/InvitationResponseFo
 import InvitationView, {
   buildAccessState,
   buildCalendarUrl,
-  getMidnightAccentColor,
+  getInvitationColors,
   type InvitationConfigInfo,
   type InvitationEventInfo,
 } from '@/components/invitation/InvitationView'
@@ -144,7 +144,7 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
     ? await Promise.all([
         supabase
           .from('events')
-          .select('id, name, slug, event_date, start_time, venue_name, venue_address, status, description, contact_phone')
+          .select('id, name, slug, event_date, start_time, venue_name, venue_address, status, description, gift_info, contact_phone')
           .eq('id', guest.event_id)
           .maybeSingle(),
         supabase
@@ -187,7 +187,7 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
 
   const accessReady = isInvitationAccessReady(guest?.status, paymentStatus)
   const isMidnight = invitationTemplate === 'midnight'
-  const primaryColor = isMidnight ? getMidnightAccentColor(branding) : '#fcb39e'
+  const primaryColor = isMidnight ? getInvitationColors(branding, invitationConfig).accent : '#fcb39e'
 
   const invitationUsed =
     Boolean(invitationToken.last_used_at) ||
@@ -356,16 +356,16 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
             )}
             <dl className="mt-3 space-y-2 text-sm text-white/85">
               <div className="flex justify-between gap-4">
-                <dt className="text-white/60">DNI</dt>
-                <dd className="font-medium text-right">{invitationDetails.dni || 'No informado'}</dd>
+                <dt className="invitation-subtitle text-white/60">DNI</dt>
+                <dd className="invitation-data font-medium text-right">{invitationDetails.dni || 'No informado'}</dd>
               </div>
               <div className="flex justify-between gap-4">
-                <dt className="text-white/60">Menú</dt>
-                <dd className="font-medium text-right">{invitationDetails.dietaryRequirements || 'Sin aclaraciones'}</dd>
+                <dt className="invitation-subtitle text-white/60">Menú</dt>
+                <dd className="invitation-data font-medium text-right">{invitationDetails.dietaryRequirements || 'Sin aclaraciones'}</dd>
               </div>
             </dl>
             <div className="mt-4 rounded-[18px] border border-dashed border-white/25 bg-white/5 p-3">
-              <p className="text-[10px] uppercase tracking-[0.24em] text-white/50">Token de respaldo</p>
+              <p className="invitation-subtitle text-[10px] uppercase tracking-[0.24em] text-white/50">Token de respaldo</p>
               <p className="mt-1 break-all font-mono text-xs text-white/75">{invitationToken.token}</p>
             </div>
           </section>

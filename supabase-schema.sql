@@ -25,6 +25,7 @@ create table if not exists events (
   max_capacity integer,
   status text not null default 'draft',            -- [inferido] default
   description text,
+  gift_info text,
   created_by_user_id uuid,
   contact_phone text,
   delivery_profile_id text,
@@ -250,6 +251,7 @@ ALTER TABLE guest_types ADD COLUMN IF NOT EXISTS access_end_day_offset integer D
 -- Event communication and delivery profile
 ALTER TABLE events ADD COLUMN IF NOT EXISTS contact_phone text;
 ALTER TABLE events ADD COLUMN IF NOT EXISTS delivery_profile_id text;
+ALTER TABLE events ADD COLUMN IF NOT EXISTS gift_info text;
 
 -- Events policies (public read for active events, admin write)
 CREATE POLICY "Public can view active events" ON events
