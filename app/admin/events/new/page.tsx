@@ -44,6 +44,7 @@ export default function NewEventPage() {
     slug: '',
     event_type: 'quince',
     event_date: '',
+    confirmation_deadline: '',
     start_time: '',
     venue_name: '',
     venue_address: '',
@@ -289,6 +290,20 @@ export default function NewEventPage() {
                         onChange={handleInputChange}
                         className="mt-2"
                       />
+                    </div>
+                    <div>
+                      <Label htmlFor="confirmation_deadline">Fecha límite para confirmar</Label>
+                      <Input
+                        type="date"
+                        name="confirmation_deadline"
+                        id="confirmation_deadline"
+                        value={formData.confirmation_deadline}
+                        onChange={handleInputChange}
+                        className="mt-2"
+                      />
+                      <p className="mt-2 text-sm text-muted-foreground">
+                        Se incluirá en el mensaje de WhatsApp para cada invitado.
+                      </p>
                     </div>
                   </div>
 

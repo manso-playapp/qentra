@@ -37,7 +37,7 @@ import type {
 } from '@/types'
 
 type EventGuestsManagerProps = {
-  event: Pick<Event, 'id' | 'name' | 'slug' | 'max_capacity' | 'event_date' | 'start_time' | 'delivery_profile_id'>
+  event: Pick<Event, 'id' | 'name' | 'slug' | 'max_capacity' | 'event_date' | 'confirmation_deadline' | 'start_time' | 'delivery_profile_id'>
   initialGuestTypes?: GuestType[]
   initialGuests?: GuestWithType[]
 }
@@ -1020,12 +1020,15 @@ export default function EventGuestsManager({
   const buildShareMessage = (guest: GuestWithType, token: InvitationToken) => {
     const guestName = `${guest.first_name} ${guest.last_name}`.trim()
     const invitationUrl = buildAbsoluteInvitationUrl(token.token, guestName)
+    const confirmationDeadline = event.confirmation_deadline
+      ? formatEventDate(event.confirmation_deadline, { dateStyle: 'long' })
+      : formatDateTime(token.expires_at)
 
     return {
       invitationUrl,
-      whatsappText: `Invitaci\u00f3n Especial\n\nEst\u00e1s invitado al cumplea\u00f1os de 15 de "${event.name}"\n\n${invitationUrl}`,
+      whatsappText: `Hola ${guest.first_name}!\nSe acerca mi fiesta de 15,\nRealiz\u00e1 tu check-in y preparate para despegar...\nTe mando el link para que te registres, te espero!\n${invitationUrl}\nFecha l\u00edmite para confirmar: ${confirmationDeadline}`,
       emailSubject: `Tu acceso para ${event.name}`,
-      emailBody: `Hola ${guestName},\n\nTe compartimos tu acceso para ${event.name}.\n\nAbre este enlace desde tu celular y muestra el QR en puerta:\n${invitationUrl}\n\nVigencia: ${formatDateTime(token.expires_at)}\n`,
+      emailBody: `Hola ${guestName},\n\nTe compartimos tu acceso para ${event.name}.\n\nAbre este enlace desde tu celular y muestra el QR en puerta:\n${invitationUrl}\n\nFecha límite para confirmar: ${confirmationDeadline}\nVigencia del acceso: ${formatDateTime(token.expires_at)}\n`,
     }
   }
 
@@ -1085,6 +1088,7 @@ export default function EventGuestsManager({
           eventName: event.name,
           invitationUrl,
           expiresAt: token.expires_at,
+          confirmationDeadline: event.confirmation_deadline,
         }),
       })
 

@@ -24,6 +24,7 @@ type EditEventFormProps = {
     | 'slug'
     | 'event_type'
     | 'event_date'
+    | 'confirmation_deadline'
     | 'start_time'
     | 'venue_name'
     | 'venue_address'
@@ -41,6 +42,7 @@ type EventFormState = {
   slug: string
   event_type: Event['event_type']
   event_date: string
+  confirmation_deadline: string
   start_time: string
   venue_name: string
   venue_address: string
@@ -75,6 +77,7 @@ export default function EditEventForm({ event }: EditEventFormProps) {
     slug: event.slug,
     event_type: event.event_type,
     event_date: event.event_date,
+    confirmation_deadline: event.confirmation_deadline || '',
     start_time: event.start_time,
     venue_name: event.venue_name,
     venue_address: event.venue_address,
@@ -118,6 +121,7 @@ export default function EditEventForm({ event }: EditEventFormProps) {
         slug: formData.slug.trim(),
         event_type: formData.event_type,
         event_date: formData.event_date,
+        confirmation_deadline: formData.confirmation_deadline || null,
         start_time: formData.start_time,
         venue_name: formData.venue_name.trim(),
         venue_address: formData.venue_address.trim(),
@@ -228,6 +232,11 @@ export default function EditEventForm({ event }: EditEventFormProps) {
                   <div>
                     <Label htmlFor="start_time">Hora de inicio</Label>
                     <Input id="start_time" name="start_time" type="time" required value={formData.start_time} onChange={handleInputChange} className="mt-2" />
+                  </div>
+                  <div>
+                    <Label htmlFor="confirmation_deadline">Fecha límite para confirmar</Label>
+                    <Input id="confirmation_deadline" name="confirmation_deadline" type="date" value={formData.confirmation_deadline} onChange={handleInputChange} className="mt-2" />
+                    <p className="mt-2 text-sm text-muted-foreground">Se incluirá en el mensaje de WhatsApp para cada invitado.</p>
                   </div>
                 </div>
 

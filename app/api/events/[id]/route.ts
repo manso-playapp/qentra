@@ -9,6 +9,7 @@ type UpdateEventBody = {
   slug?: string
   event_type?: 'quince' | 'wedding' | 'corporate' | 'private'
   event_date?: string
+  confirmation_deadline?: string | null
   start_time?: string
   venue_name?: string
   venue_address?: string
@@ -49,6 +50,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     !body.slug?.trim() ||
     !body.event_type ||
     !isValidDate(body.event_date) ||
+    (body.confirmation_deadline !== undefined && body.confirmation_deadline !== null && body.confirmation_deadline !== '' && !isValidDate(body.confirmation_deadline)) ||
     !isValidTime(body.start_time) ||
     !body.venue_name?.trim() ||
     !body.venue_address?.trim() ||
@@ -77,6 +79,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     ...body,
     ...(body.description !== undefined ? { description: body.description?.trim() || null } : {}),
     ...(body.gift_info !== undefined ? { gift_info: body.gift_info?.trim() || null } : {}),
+    ...(body.confirmation_deadline !== undefined ? { confirmation_deadline: body.confirmation_deadline?.trim() || null } : {}),
     ...(body.contact_phone !== undefined ? { contact_phone: body.contact_phone?.trim() || null } : {}),
   }
 

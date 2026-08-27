@@ -20,7 +20,7 @@ export default async function EventGuestsPage({ params }: EventGuestsPageProps) 
   const [eventResponse, guestTypesResponse, guestsResponse] = await Promise.all([
     supabase
       .from('events')
-      .select('id, name, slug, max_capacity, event_date, start_time, delivery_profile_id')
+      .select('id, name, slug, max_capacity, event_date, confirmation_deadline, start_time, delivery_profile_id')
       .eq('id', id)
       .maybeSingle(),
     supabase.from('guest_types').select('*').eq('event_id', id).order('created_at', { ascending: true }),
@@ -62,7 +62,7 @@ export default async function EventGuestsPage({ params }: EventGuestsPageProps) 
   return (
     <AdminLayout>
       <EventGuestsManager
-        event={eventResponse.data as Pick<Event, 'id' | 'name' | 'slug' | 'max_capacity' | 'event_date' | 'start_time' | 'delivery_profile_id'>}
+        event={eventResponse.data as Pick<Event, 'id' | 'name' | 'slug' | 'max_capacity' | 'event_date' | 'confirmation_deadline' | 'start_time' | 'delivery_profile_id'>}
         initialGuestTypes={initialGuestTypes}
         initialGuests={initialGuests}
       />

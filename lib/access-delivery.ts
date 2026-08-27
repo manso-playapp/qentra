@@ -15,6 +15,7 @@ export type AccessDeliveryPayload = {
   eventName: string
   invitationUrl: string
   expiresAt: string
+  confirmationDeadline?: string | null
   whatsappConfig?: WhatsAppConfig
 }
 
@@ -30,18 +31,31 @@ function formatDateTime(date: string) {
   }).format(new Date(date))
 }
 
+function formatConfirmationDeadline(payload: AccessDeliveryPayload) {
+  if (payload.confirmationDeadline) {
+    const parsed = new Date(`${payload.confirmationDeadline}T00:00:00`)
+    if (!Number.isNaN(parsed.getTime())) {
+      return new Intl.DateTimeFormat('es-AR', { dateStyle: 'long' }).format(parsed)
+    }
+  }
+
+  return formatDateTime(payload.expiresAt)
+}
+
 function buildPlainTextMessage(payload: AccessDeliveryPayload) {
   return [
-    'Invitaci\u00f3n Especial',
-    '',
-    `Est\u00e1s invitado al cumplea\u00f1os de 15 de "${payload.eventName}"`,
-    '',
+    `Hola ${payload.guestFirstName}!`,
+    'Se acerca mi fiesta de 15,',
+    'Realiz\u00e1 tu check-in y preparate para despegar...',
+    'Te mando el link para que te registres, te espero!',
     payload.invitationUrl,
+    `Fecha l\u00edmite para confirmar: ${formatConfirmationDeadline(payload)}`,
   ].join('\n')
 }
 
 function buildEmailHtml(payload: AccessDeliveryPayload) {
   const expiry = formatDateTime(payload.expiresAt)
+  const confirmationDeadline = formatConfirmationDeadline(payload)
 
   return `
     <div style="font-family: Georgia, serif; background:#f8fafc; padding:32px; color:#0f172a;">
@@ -66,6 +80,9 @@ function buildEmailHtml(payload: AccessDeliveryPayload) {
           </p>
           <p style="margin:0; font-size:14px; line-height:1.7; color:#475569;">
             Vigencia: ${expiry}
+          </p>
+          <p style="margin:16px 0 0; font-size:14px; line-height:1.7; color:#475569;">
+            Fecha límite para confirmar: ${confirmationDeadline}
           </p>
           <p style="margin:16px 0 0; font-size:14px; line-height:1.7; color:#475569;">
             Si no puedes abrir el enlace, copia y pega esta URL en tu navegador:<br />

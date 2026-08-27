@@ -49,7 +49,7 @@ export async function generateMetadata({ params }: InvitationPageProps): Promise
 
   let eventName = 'Invitación'
   let description = fallbackInvitationDescription
-  const shareImageUrl = invitationShareImageUrl('/alista-mark.svg')
+  const shareImageUrl = invitationShareImageUrl('/invitacion/share-image')
 
   if (invitationToken?.guest_id) {
     const { data: guest } = await supabase

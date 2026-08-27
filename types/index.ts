@@ -6,6 +6,8 @@ export interface Event {
   slug: string
   event_type: 'quince' | 'wedding' | 'corporate' | 'private'
   event_date: string
+  /** Fecha limite opcional para confirmar asistencia. */
+  confirmation_deadline?: string | null
   start_time: string
   venue_name: string
   venue_address: string
@@ -319,6 +321,7 @@ export interface CreateEventForm {
   slug: string
   event_type: Event['event_type']
   event_date: string
+  confirmation_deadline?: string
   start_time: string
   venue_name: string
   venue_address: string

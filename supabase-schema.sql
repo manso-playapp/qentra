@@ -19,6 +19,7 @@ create table if not exists events (
   slug text not null unique,                       -- [inferido] unique
   event_type text not null,
   event_date date not null,
+  confirmation_deadline date,
   start_time time,
   venue_name text,
   venue_address text,
@@ -252,6 +253,7 @@ ALTER TABLE guest_types ADD COLUMN IF NOT EXISTS access_end_day_offset integer D
 ALTER TABLE events ADD COLUMN IF NOT EXISTS contact_phone text;
 ALTER TABLE events ADD COLUMN IF NOT EXISTS delivery_profile_id text;
 ALTER TABLE events ADD COLUMN IF NOT EXISTS gift_info text;
+ALTER TABLE events ADD COLUMN IF NOT EXISTS confirmation_deadline date;
 
 -- Events policies (public read for active events, admin write)
 CREATE POLICY "Public can view active events" ON events

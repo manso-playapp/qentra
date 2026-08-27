@@ -17,6 +17,7 @@ type DeliveryRequestBody = {
   eventName?: string
   invitationUrl?: string
   expiresAt?: string
+  confirmationDeadline?: string | null
 }
 
 export async function POST(request: Request) {
@@ -101,6 +102,7 @@ export async function POST(request: Request) {
       eventName: body.eventName,
       invitationUrl: body.invitationUrl,
       expiresAt: body.expiresAt,
+      confirmationDeadline: body.confirmationDeadline,
       whatsappConfig,
     })
 

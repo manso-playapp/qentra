@@ -1,0 +1,37 @@
+import { ImageResponse } from 'next/og'
+
+export const runtime = 'nodejs'
+
+const markSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 449 387">
+  <defs>
+    <linearGradient id="alista-mark-gradient" x1="75" y1="193" x2="374" y2="193" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#009cdd" />
+      <stop offset="0.5" stop-color="#4171b1" />
+      <stop offset="1" stop-color="#213480" />
+    </linearGradient>
+  </defs>
+  <path d="M75 311.5 223.5 75 374 311.5" fill="none" stroke="url(#alista-mark-gradient)" stroke-width="142" stroke-linecap="round" stroke-linejoin="round" />
+</svg>`
+
+const markDataUri = `data:image/svg+xml;base64,${btoa(markSvg)}`
+
+export function GET() {
+  return new ImageResponse(
+    (
+      <div
+        style={{
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: '#171714',
+        }}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={markDataUri} width="360" height="310" alt="Alista" />
+      </div>
+    ),
+    { width: 1200, height: 630 },
+  )
+}

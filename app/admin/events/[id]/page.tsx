@@ -382,6 +382,14 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
                   <dd className="mt-1 whitespace-pre-line font-medium text-foreground">{event.gift_info || 'No configurado'}</dd>
                 </div>
                 <div>
+                  <dt className="text-sm text-muted-foreground">Fecha límite para confirmar</dt>
+                  <dd className="mt-1 font-medium text-foreground">
+                    {event.confirmation_deadline
+                      ? formatEventDate(event.confirmation_deadline, { dateStyle: 'long' })
+                      : 'No configurada'}
+                  </dd>
+                </div>
+                <div>
                   <dt className="text-sm text-muted-foreground">Canal asignado</dt>
                   <dd className="mt-1 font-medium text-foreground">
                     {selectedDeliveryProfile

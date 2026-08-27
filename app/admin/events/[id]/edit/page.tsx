@@ -18,7 +18,7 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
 
   const { data, error } = await supabase
     .from('events')
-    .select('id, name, slug, event_type, event_date, start_time, venue_name, venue_address, max_capacity, description, gift_info, contact_phone, delivery_profile_id, status')
+    .select('id, name, slug, event_type, event_date, confirmation_deadline, start_time, venue_name, venue_address, max_capacity, description, gift_info, contact_phone, delivery_profile_id, status')
     .eq('id', id)
     .maybeSingle()
 
@@ -46,6 +46,7 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
           | 'slug'
           | 'event_type'
           | 'event_date'
+          | 'confirmation_deadline'
           | 'start_time'
           | 'venue_name'
           | 'venue_address'
