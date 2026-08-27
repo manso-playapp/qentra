@@ -15,13 +15,17 @@ export const metadata = { title: 'Personalizar invitación' }
 function mergeConfig(raw: unknown): InvitationConfig {
   if (!raw || typeof raw !== 'object') return DEFAULT_INVITATION_CONFIG
   const value = raw as Partial<InvitationConfig>
+  const cleanValue = { ...value } as Partial<InvitationConfig> & Record<string, unknown>
+  // No volver a reintroducir campos que ahora pertenecen a events al guardar.
+  delete cleanValue.dresscode
+  delete cleanValue.directionsUrl
   return {
     ...DEFAULT_INVITATION_CONFIG,
-    ...value,
-    colors: { ...DEFAULT_INVITATION_CONFIG.colors, ...(value.colors ?? {}) },
-    fonts: { ...DEFAULT_INVITATION_CONFIG.fonts, ...(value.fonts ?? {}) },
-    widgets: { ...DEFAULT_INVITATION_CONFIG.widgets, ...(value.widgets ?? {}) },
-    fields: { ...DEFAULT_INVITATION_CONFIG.fields, ...(value.fields ?? {}) },
+    ...cleanValue,
+    colors: { ...DEFAULT_INVITATION_CONFIG.colors, ...(cleanValue.colors ?? {}) },
+    fonts: { ...DEFAULT_INVITATION_CONFIG.fonts, ...(cleanValue.fonts ?? {}) },
+    widgets: { ...DEFAULT_INVITATION_CONFIG.widgets, ...(cleanValue.widgets ?? {}) },
+    fields: { ...DEFAULT_INVITATION_CONFIG.fields, ...(cleanValue.fields ?? {}) },
   }
 }
 
@@ -45,7 +49,7 @@ export default async function InvitationEditorPage({ params }: { params: Promise
 
   const { data: event } = await supabase
     .from('events')
-    .select('id, name, event_date, start_time, venue_name, venue_address, gift_info, contact_phone')
+    .select('id, name, event_date, start_time, venue_name, venue_address, dresscode, directions_url, gift_info, contact_phone')
     .eq('id', id)
     .maybeSingle()
 
@@ -124,6 +128,8 @@ export default async function InvitationEditorPage({ params }: { params: Promise
             start_time: (event.start_time as string) ?? '',
             venue_name: (event.venue_name as string) ?? '',
             venue_address: (event.venue_address as string) ?? '',
+            dresscode: (event.dresscode as string) ?? '',
+            directions_url: (event.directions_url as string) ?? '',
             gift_info: (event.gift_info as string) ?? '',
             contact_phone: (event.contact_phone as string) ?? '',
           }}

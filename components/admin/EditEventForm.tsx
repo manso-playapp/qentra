@@ -28,6 +28,8 @@ type EditEventFormProps = {
     | 'start_time'
     | 'venue_name'
     | 'venue_address'
+    | 'dresscode'
+    | 'directions_url'
     | 'max_capacity'
     | 'description'
     | 'gift_info'
@@ -46,6 +48,8 @@ type EventFormState = {
   start_time: string
   venue_name: string
   venue_address: string
+  dresscode: string
+  directions_url: string
   max_capacity: number
   description: string
   gift_info: string
@@ -81,6 +85,8 @@ export default function EditEventForm({ event }: EditEventFormProps) {
     start_time: event.start_time,
     venue_name: event.venue_name,
     venue_address: event.venue_address,
+    dresscode: event.dresscode || '',
+    directions_url: event.directions_url || '',
     max_capacity: event.max_capacity,
     description: event.description || '',
     gift_info: event.gift_info || '',
@@ -125,6 +131,8 @@ export default function EditEventForm({ event }: EditEventFormProps) {
         start_time: formData.start_time,
         venue_name: formData.venue_name.trim(),
         venue_address: formData.venue_address.trim(),
+        dresscode: formData.dresscode.trim() || null,
+        directions_url: formData.directions_url.trim() || null,
         max_capacity: formData.max_capacity,
         description: formData.description.trim() || null,
         gift_info: formData.gift_info.trim() || null,
@@ -167,7 +175,7 @@ export default function EditEventForm({ event }: EditEventFormProps) {
                   <Badge variant="outline">Datos y canal</Badge>
                 </div>
                 <h1 className="admin-heading mt-5 text-5xl leading-none text-foreground">
-                  Actualiza la informacion de {event.name}
+                  Información del Evento
                 </h1>
                 <p className="mt-4 text-base leading-7 text-muted-foreground">
                   Corrige agenda, venue, contacto, canal asignado y estado sin salir del centro de operaciones.
@@ -248,6 +256,17 @@ export default function EditEventForm({ event }: EditEventFormProps) {
                 <div>
                   <Label htmlFor="venue_address">Direccion del venue</Label>
                   <Input id="venue_address" name="venue_address" required value={formData.venue_address} onChange={handleInputChange} className="mt-2" />
+                </div>
+
+                <div className="grid gap-6 md:grid-cols-2">
+                  <div>
+                    <Label htmlFor="dresscode">Dresscode</Label>
+                    <Input id="dresscode" name="dresscode" value={formData.dresscode} onChange={handleInputChange} className="mt-2" placeholder="Ej: Elegante sport" />
+                  </div>
+                  <div>
+                    <Label htmlFor="directions_url">Cómo llegar (link de mapa)</Label>
+                    <Input id="directions_url" name="directions_url" type="url" value={formData.directions_url} onChange={handleInputChange} className="mt-2" placeholder="https://maps.google.com/..." />
+                  </div>
                 </div>
 
                 <div>

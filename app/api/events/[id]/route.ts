@@ -13,6 +13,8 @@ type UpdateEventBody = {
   start_time?: string
   venue_name?: string
   venue_address?: string
+  dresscode?: string | null
+  directions_url?: string | null
   max_capacity?: number
   description?: string | null
   gift_info?: string | null
@@ -79,6 +81,8 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     ...body,
     ...(body.description !== undefined ? { description: body.description?.trim() || null } : {}),
     ...(body.gift_info !== undefined ? { gift_info: body.gift_info?.trim() || null } : {}),
+    ...(body.dresscode !== undefined ? { dresscode: body.dresscode?.trim() || null } : {}),
+    ...(body.directions_url !== undefined ? { directions_url: body.directions_url?.trim() || null } : {}),
     ...(body.confirmation_deadline !== undefined ? { confirmation_deadline: body.confirmation_deadline?.trim() || null } : {}),
     ...(body.contact_phone !== undefined ? { contact_phone: body.contact_phone?.trim() || null } : {}),
   }

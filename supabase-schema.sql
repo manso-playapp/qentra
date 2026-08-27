@@ -23,6 +23,8 @@ create table if not exists events (
   start_time time,
   venue_name text,
   venue_address text,
+  dresscode text,
+  directions_url text,
   max_capacity integer,
   status text not null default 'draft',            -- [inferido] default
   description text,
@@ -65,7 +67,7 @@ create table if not exists event_branding (
   assistance_message text,
   invalid_message text,
   return_to_idle_seconds integer not null default 8,   -- [inferido] default
-  config jsonb,                                        -- config rica de la invitacion (widgets, dresscode, campos)
+  config jsonb,                                        -- config rica de la invitacion (widgets y campos)
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -257,6 +259,8 @@ ALTER TABLE events ADD COLUMN IF NOT EXISTS contact_phone text;
 ALTER TABLE events ADD COLUMN IF NOT EXISTS delivery_profile_id text;
 ALTER TABLE events ADD COLUMN IF NOT EXISTS gift_info text;
 ALTER TABLE events ADD COLUMN IF NOT EXISTS confirmation_deadline date;
+ALTER TABLE events ADD COLUMN IF NOT EXISTS dresscode text;
+ALTER TABLE events ADD COLUMN IF NOT EXISTS directions_url text;
 
 -- Events policies (public read for active events, admin write)
 CREATE POLICY "Public can view active events" ON events

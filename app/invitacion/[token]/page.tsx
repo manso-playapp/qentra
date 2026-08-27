@@ -147,7 +147,7 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
     ? await Promise.all([
         supabase
           .from('events')
-          .select('id, name, slug, event_date, start_time, venue_name, venue_address, status, description, gift_info, contact_phone')
+          .select('id, name, slug, event_date, start_time, venue_name, venue_address, dresscode, directions_url, status, description, gift_info, contact_phone')
           .eq('id', guest.event_id)
           .maybeSingle(),
         supabase

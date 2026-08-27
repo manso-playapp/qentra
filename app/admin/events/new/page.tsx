@@ -48,6 +48,8 @@ export default function NewEventPage() {
     start_time: '',
     venue_name: '',
     venue_address: '',
+    dresscode: '',
+    directions_url: '',
     max_capacity: 100,
     description: '',
     gift_info: '',
@@ -346,6 +348,33 @@ export default function NewEventPage() {
                       className="mt-2"
                       placeholder="Descripción opcional del evento..."
                     />
+                  </div>
+
+                  <div className="grid gap-6 md:grid-cols-2">
+                    <div>
+                      <Label htmlFor="dresscode">Dresscode</Label>
+                      <Input
+                        type="text"
+                        name="dresscode"
+                        id="dresscode"
+                        value={formData.dresscode}
+                        onChange={handleInputChange}
+                        className="mt-2"
+                        placeholder="Elegante sport"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="directions_url">Cómo llegar (link de mapa)</Label>
+                      <Input
+                        type="url"
+                        name="directions_url"
+                        id="directions_url"
+                        value={formData.directions_url}
+                        onChange={handleInputChange}
+                        className="mt-2"
+                        placeholder="https://maps.google.com/..."
+                      />
+                    </div>
                   </div>
 
                   <div>

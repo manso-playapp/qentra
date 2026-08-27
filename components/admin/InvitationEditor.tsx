@@ -20,13 +20,11 @@ import {
 // Editor tipo "front editor" para la invitacion: panel de controles a la
 // izquierda, preview en vivo (mockup de celular) a la derecha. Los campos
 // visuales (colores, imagenes) persisten en event_branding; el resto de la
-// configuracion (tipografia, dresscode, widgets, campos) va en un JSON de config.
+// configuracion visual (tipografia, widgets y campos) va en un JSON de config.
 
 export type InvitationConfig = {
   template: InvitationTemplateKey
   fontFamily: 'sans' | 'serif' | 'display'
-  dresscode: string
-  directionsUrl: string
   audio_url: string
   colors: {
     background: string
@@ -59,6 +57,8 @@ type EventInfo = {
   start_time: string
   venue_name: string
   venue_address: string
+  dresscode?: string
+  directions_url?: string
   gift_info?: string
   contact_phone?: string
 }
@@ -66,8 +66,6 @@ type EventInfo = {
 export const DEFAULT_INVITATION_CONFIG: InvitationConfig = {
   template: 'travel',
   fontFamily: 'display',
-  dresscode: '',
-  directionsUrl: '',
   audio_url: '',
   colors: {
     background: '',
@@ -262,15 +260,6 @@ export default function InvitationEditor({
           />
         </Section>
 
-        <Section title="Información del evento" desc="Lo que ve el invitado sobre cuándo y dónde.">
-          <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm text-gray-600">
-            📅 {formatDate(event.event_date)} · 🕒 {event.start_time || 'Hora a definir'} · 📍 {event.venue_name || 'Lugar a definir'}
-            <p className="mt-1 text-xs text-gray-400">Se edita en “Editar datos del evento”.</p>
-          </div>
-          <Field label="Dresscode"><input className={inputClass} value={config.dresscode} onChange={(e) => setConfig((c) => ({ ...c, dresscode: e.target.value }))} placeholder="Ej: Elegante sport" /></Field>
-          <Field label="Cómo llegar (link de mapa)"><input className={inputClass} value={config.directionsUrl} onChange={(e) => setConfig((c) => ({ ...c, directionsUrl: e.target.value }))} placeholder="https://maps.google.com/..." /></Field>
-        </Section>
-
         <Section title="Widgets opcionales" desc="Activá solo los que quieras. La invitación no obliga a completarlos.">
           {isMidnight && (
             <>
@@ -364,12 +353,12 @@ export default function InvitationEditor({
                   <p className="flex items-center justify-center gap-1.5"><Clock className="size-4" style={{ color: primary }} /> {event.start_time || 'Hora a definir'}</p>
                   <p className="flex items-center justify-center gap-1.5"><MapPin className="size-4" style={{ color: primary }} /> {event.venue_name || 'Lugar a definir'}</p>
                 </div>
-                {config.dresscode && (
+                {event.dresscode && (
                   <p className="mx-auto mt-3 w-fit rounded-full px-3 py-1 text-xs font-medium" style={{ backgroundColor: primary, color: secondary }}>
-                    Dresscode: {config.dresscode}
+                    Dresscode: {event.dresscode}
                   </p>
                 )}
-                {config.directionsUrl && (
+                {event.directions_url && (
                   <p className="mt-2 text-xs font-semibold underline" style={{ color: primary }}>Cómo llegar →</p>
                 )}
               </div>

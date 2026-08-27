@@ -21,7 +21,7 @@ function trimmedOrNull(value?: string | null) {
 }
 
 // Guarda la personalizacion de la invitacion: los campos visuales viven en
-// columnas de event_branding; la config rica (widgets, dresscode, campos, etc.)
+// columnas de event_branding; la config rica (widgets, campos, etc.)
 // va en event_branding.config (jsonb). Si esa columna todavia no existe, se
 // guarda igual el aspecto y se avisa que la config necesita la migracion.
 export async function PUT(request: Request, context: { params: Promise<{ id: string }> }) {

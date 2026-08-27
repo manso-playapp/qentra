@@ -19,6 +19,8 @@ export type InvitationEventInfo = {
   start_time?: string
   venue_name?: string
   venue_address?: string
+  dresscode?: string | null
+  directions_url?: string | null
   description?: string
   gift_info?: string | null
   contact_phone?: string
@@ -26,8 +28,6 @@ export type InvitationEventInfo = {
 
 export type InvitationConfigInfo = {
   template?: InvitationTemplateKey
-  dresscode?: string
-  directionsUrl?: string
   audio_url?: string
   colors?: {
     background?: string
@@ -496,7 +496,8 @@ function MidnightInvitationView({
   children,
 }: InvitationViewProps) {
   const startTime = getInvitationStartTime(event, schedule)
-  const directionsUrl = config?.directionsUrl || buildMapsUrl(event.venue_address)
+  const directionsUrl = event.directions_url || buildMapsUrl(event.venue_address)
+  const dresscode = event.dresscode?.trim() || ''
   const contactHref = buildPhoneHref(event.contact_phone)
   const colors = getInvitationColors(branding, config)
   const fonts = getInvitationFonts(config)
@@ -587,10 +588,10 @@ function MidnightInvitationView({
             </section>
           )}
 
-          {config?.dresscode ? (
+          {dresscode ? (
             <section className="invitation-block invitation-section mt-10 border-t border-white/18 pt-10 text-center" data-invitation-block>
               <h2 className="invitation-section-title text-white">Dress Code</h2>
-              <p className="invitation-section-body invitation-data mt-3 text-(--invitation-accent)">{config.dresscode}</p>
+              <p className="invitation-section-body invitation-data mt-3 text-(--invitation-accent)">{dresscode}</p>
             </section>
           ) : null}
 

@@ -24,8 +24,6 @@ export const INVITATION_TEMPLATES: InvitationTemplateDefinition[] = [
 export type InvitationBrandingConfig = {
   template?: InvitationTemplateKey
   fontFamily?: 'sans' | 'serif' | 'display'
-  dresscode?: string
-  directionsUrl?: string
   audio_url?: string
   widgets?: { countdown?: boolean; particles?: boolean }
   fields?: { rsvp?: boolean; dni?: boolean; menu?: boolean; companions?: boolean }

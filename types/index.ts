@@ -11,6 +11,10 @@ export interface Event {
   start_time: string
   venue_name: string
   venue_address: string
+  /** Código de vestimenta visible en la invitación. */
+  dresscode?: string | null
+  /** Enlace directo al mapa del evento. */
+  directions_url?: string | null
   max_capacity: number
   status: 'active' | 'inactive' | 'cancelled'
   description?: string
@@ -326,6 +330,8 @@ export interface CreateEventForm {
   start_time: string
   venue_name: string
   venue_address: string
+  dresscode?: string
+  directions_url?: string
   max_capacity: number
   description?: string
   gift_info?: string
