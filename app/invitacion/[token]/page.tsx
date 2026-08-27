@@ -49,7 +49,7 @@ export async function generateMetadata({ params }: InvitationPageProps): Promise
 
   let eventName = 'Invitación'
   let description = fallbackInvitationDescription
-  let shareImageUrl = invitationShareImageUrl(null)
+  const shareImageUrl = invitationShareImageUrl('/alista-mark.svg')
 
   if (invitationToken?.guest_id) {
     const { data: guest } = await supabase
@@ -59,18 +59,14 @@ export async function generateMetadata({ params }: InvitationPageProps): Promise
       .maybeSingle()
 
     if (guest?.event_id) {
-      const [{ data: event }, { data: branding }] = await Promise.all([
-        supabase.from('events').select('name, description').eq('id', guest.event_id).maybeSingle(),
-        supabase
-          .from('event_branding')
-          .select('cover_image_url, logo_url')
-          .eq('event_id', guest.event_id)
-          .maybeSingle(),
-      ])
+      const { data: event } = await supabase
+        .from('events')
+        .select('name, description')
+        .eq('id', guest.event_id)
+        .maybeSingle()
 
       eventName = event?.name?.trim() || eventName
       description = event?.description?.trim() || `Estás invitado/a a ${eventName}.`
-      shareImageUrl = invitationShareImageUrl(branding?.cover_image_url || branding?.logo_url)
     }
   }
 
