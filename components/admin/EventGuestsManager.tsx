@@ -212,7 +212,7 @@ function buildInvitationPath(token: string, guestName?: string) {
 
   // Fuerza a WhatsApp a volver a leer la metadata cuando cambia la miniatura.
   // Sin este versionado conserva en caché la previsualización anterior.
-  params.set('v', '2')
+  params.set('v', '3')
 
   if (guestName?.trim()) {
     params.set('guest', guestName.trim())
