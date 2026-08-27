@@ -1024,7 +1024,7 @@ export default function EventGuestsManager({
 
   const buildShareMessage = (guest: GuestWithType, token: InvitationToken) => {
     const guestName = `${guest.first_name} ${guest.last_name}`.trim()
-    const invitationUrl = buildAbsoluteInvitationUrl(token.token, guestName)
+    const invitationUrl = buildAbsoluteInvitationUrl(token.token)
     const confirmationDeadline = event.confirmation_deadline
       ? formatEventDate(event.confirmation_deadline, { dateStyle: 'long' })
       : formatDateTime(token.expires_at)
@@ -1080,7 +1080,7 @@ export default function EventGuestsManager({
     setGuestRowActionNotice(null)
 
     try {
-      const invitationUrl = buildAbsoluteInvitationUrl(token.token, guestName)
+      const invitationUrl = buildAbsoluteInvitationUrl(token.token)
       const response = await fetch('/api/guest-access/send', {
         method: 'POST',
         headers: {

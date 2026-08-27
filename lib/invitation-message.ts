@@ -19,7 +19,6 @@ export function buildInvitationWhatsAppMessage({
   return [
     `Hola ${guestFirstName}!`,
     `Estás invitado/a al cumple de ${eventName}.`,
-    'Gestionado por Alista.com.ar',
     'Te mando el link para que te registres, te espero!',
     'Abrir Invitación:',
     invitationUrl,
