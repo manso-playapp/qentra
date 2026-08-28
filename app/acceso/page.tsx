@@ -3,7 +3,11 @@ import Image from 'next/image'
 import { redirect } from 'next/navigation'
 import AccessLoginForm from '@/components/auth/AccessLoginForm'
 import { sanitizeNextPath } from '@/lib/operator-auth'
-import { isAuthRetryableFetchError, isMissingAuthSessionError } from '@/lib/supabase-auth-errors'
+import {
+  isAuthRetryableFetchError,
+  isInvalidRefreshTokenError,
+  isMissingAuthSessionError,
+} from '@/lib/supabase-auth-errors'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 
 export const metadata = {
@@ -42,13 +46,22 @@ export default async function AccessPage({ searchParams }: AccessPageProps) {
       error,
     } = await supabase.auth.getUser()
 
-    if (error && !isMissingAuthSessionError(error) && !isAuthRetryableFetchError(error)) {
+    if (
+      error &&
+      !isMissingAuthSessionError(error) &&
+      !isAuthRetryableFetchError(error) &&
+      !isInvalidRefreshTokenError(error)
+    ) {
       throw error
     }
 
     user = authUser
   } catch (error) {
-    if (!isMissingAuthSessionError(error) && !isAuthRetryableFetchError(error)) {
+    if (
+      !isMissingAuthSessionError(error) &&
+      !isAuthRetryableFetchError(error) &&
+      !isInvalidRefreshTokenError(error)
+    ) {
       throw error
     }
   }

@@ -1,7 +1,11 @@
 import { timingSafeEqual } from 'node:crypto'
 import type { User } from '@supabase/supabase-js'
 import { redirect } from 'next/navigation'
-import { isAuthRetryableFetchError, isMissingAuthSessionError } from '@/lib/supabase-auth-errors'
+import {
+  isAuthRetryableFetchError,
+  isInvalidRefreshTokenError,
+  isMissingAuthSessionError,
+} from '@/lib/supabase-auth-errors'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 
 export type AppRole = 'admin' | 'door' | 'security_supervisor'
@@ -86,7 +90,11 @@ async function getCurrentAuthState() {
     } = await supabase.auth.getUser()
 
     if (userError) {
-      if (isMissingAuthSessionError(userError) || isAuthRetryableFetchError(userError)) {
+      if (
+        isMissingAuthSessionError(userError) ||
+        isAuthRetryableFetchError(userError) ||
+        isInvalidRefreshTokenError(userError)
+      ) {
         return {
           user: null,
           operatorProfile: null,
@@ -98,7 +106,11 @@ async function getCurrentAuthState() {
 
     user = authUser
   } catch (error) {
-    if (isMissingAuthSessionError(error) || isAuthRetryableFetchError(error)) {
+    if (
+      isMissingAuthSessionError(error) ||
+      isAuthRetryableFetchError(error) ||
+      isInvalidRefreshTokenError(error)
+    ) {
       return {
         user: null,
         operatorProfile: null,
