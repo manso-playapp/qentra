@@ -1,5 +1,5 @@
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
-import { ensureAuthorizedApiAccess } from '@/lib/operator-auth'
+import { ensureAuthorizedEventApiAccess } from '@/lib/operator-auth'
 
 type CreateGuestTypeRequestBody = {
   event_id?: string
@@ -16,11 +16,11 @@ type CreateGuestTypeRequestBody = {
 export const runtime = 'nodejs'
 
 export async function GET(request: Request) {
-  const { response: authErrorResponse } = await ensureAuthorizedApiAccess(['admin'])
-
-  if (authErrorResponse) {
-    return authErrorResponse
-  }
+  const url = new URL(request.url)
+  const eventId = url.searchParams.get('eventId')?.trim()
+  if (!eventId) return Response.json({ error: 'Falta eventId.' }, { status: 400 })
+  const { response: authErrorResponse } = await ensureAuthorizedEventApiAccess(eventId)
+  if (authErrorResponse) return authErrorResponse
 
   const adminClient = getSupabaseAdminClient()
 
@@ -29,13 +29,6 @@ export async function GET(request: Request) {
       { error: 'SUPABASE_SERVICE_ROLE_KEY no esta configurada en el entorno.' },
       { status: 503 }
     )
-  }
-
-  const url = new URL(request.url)
-  const eventId = url.searchParams.get('eventId')?.trim()
-
-  if (!eventId) {
-    return Response.json({ error: 'Falta eventId.' }, { status: 400 })
   }
 
   const { data, error } = await adminClient
@@ -52,11 +45,11 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const { response: authErrorResponse } = await ensureAuthorizedApiAccess(['admin'])
-
-  if (authErrorResponse) {
-    return authErrorResponse
-  }
+  const body = (await request.json()) as CreateGuestTypeRequestBody
+  const eventId = body.event_id?.trim()
+  if (!eventId) return Response.json({ error: 'Falta eventId.' }, { status: 400 })
+  const { response: authErrorResponse } = await ensureAuthorizedEventApiAccess(eventId)
+  if (authErrorResponse) return authErrorResponse
 
   const adminClient = getSupabaseAdminClient()
 
@@ -67,8 +60,6 @@ export async function POST(request: Request) {
     )
   }
 
-  const body = (await request.json()) as CreateGuestTypeRequestBody
-  const eventId = body.event_id?.trim()
   const name = body.name?.trim()
 
   if (!eventId || !name) {

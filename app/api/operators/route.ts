@@ -6,6 +6,7 @@ type CreateOperatorRequestBody = {
   password?: string
   fullName?: string
   roles?: string[]
+  eventIds?: string[]
   active?: boolean
 }
 
@@ -14,9 +15,15 @@ function normalizeRoles(value: unknown) {
     return []
   }
 
-  return value.filter((role): role is 'admin' | 'door' | 'security_supervisor' =>
-    role === 'admin' || role === 'door' || role === 'security_supervisor'
+  return value.filter((role): role is 'admin' | 'event_admin' | 'door' | 'security_supervisor' =>
+    role === 'admin' || role === 'event_admin' || role === 'door' || role === 'security_supervisor'
   )
+}
+
+function normalizeEventIds(value: unknown) {
+  return Array.isArray(value)
+    ? Array.from(new Set(value.filter((id): id is string => typeof id === 'string' && id.length > 0)))
+    : []
 }
 
 export const runtime = 'nodejs'
@@ -37,10 +44,11 @@ export async function GET() {
     )
   }
 
-  const [{ data: usersData, error: usersError }, { data: profilesData, error: profilesError }] =
+  const [{ data: usersData, error: usersError }, { data: profilesData, error: profilesError }, assignmentsResponse] =
     await Promise.all([
       adminClient.auth.admin.listUsers({ page: 1, perPage: 200 }),
       adminClient.from('operator_profiles').select('*').order('created_at', { ascending: false }),
+      adminClient.from('event_admin_assignments').select('user_id, event_id'),
     ])
 
   if (usersError) {
@@ -49,6 +57,9 @@ export async function GET() {
 
   if (profilesError) {
     return Response.json({ error: profilesError.message }, { status: 500 })
+  }
+  if (assignmentsResponse.error) {
+    return Response.json({ error: assignmentsResponse.error.message }, { status: 500 })
   }
 
   const usersById = new Map((usersData.users ?? []).map((user) => [user.id, user]))
@@ -60,6 +71,9 @@ export async function GET() {
       email: user?.email ?? null,
       full_name: profile.full_name,
       roles: profile.roles,
+      event_ids: (assignmentsResponse.data ?? [])
+        .filter((assignment) => assignment.user_id === profile.user_id)
+        .map((assignment) => assignment.event_id),
       active: profile.active,
       last_sign_in_at: user?.last_sign_in_at ?? null,
       created_at: profile.created_at,
@@ -71,7 +85,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const { response: authErrorResponse } = await ensureAuthorizedApiAccess(['admin'])
+  const { response: authErrorResponse, auth } = await ensureAuthorizedApiAccess(['admin'])
 
   if (authErrorResponse) {
     return authErrorResponse
@@ -91,11 +105,19 @@ export async function POST(request: Request) {
   const password = body.password?.trim()
   const fullName = body.fullName?.trim()
   const roles = normalizeRoles(body.roles)
+  const eventIds = normalizeEventIds(body.eventIds)
   const active = body.active !== false
 
   if (!email || !password || !fullName || roles.length === 0) {
     return Response.json(
       { error: 'Email, password, nombre y al menos un rol son obligatorios.' },
+      { status: 400 }
+    )
+  }
+
+  if (roles.includes('event_admin') && eventIds.length !== 1) {
+    return Response.json(
+      { error: 'El administrador de evento debe tener un unico evento asignado.' },
       { status: 400 }
     )
   }
@@ -135,12 +157,27 @@ export async function POST(request: Request) {
     return Response.json({ error: profileError.message }, { status: 500 })
   }
 
+  if (eventIds.length > 0) {
+    const { error: assignmentError } = await adminClient
+      .from('event_admin_assignments')
+      .insert(eventIds.map((eventId) => ({
+        user_id: createdUser.id,
+        event_id: eventId,
+        created_by_user_id: auth?.user.id,
+      })))
+
+    if (assignmentError) {
+      return Response.json({ error: assignmentError.message }, { status: 500 })
+    }
+  }
+
   return Response.json({
     data: {
       user_id: createdUser.id,
       email: createdUser.email ?? email,
       full_name: fullName,
       roles,
+      event_ids: eventIds,
       active,
       last_sign_in_at: createdUser.last_sign_in_at ?? null,
       created_at: new Date().toISOString(),

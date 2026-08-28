@@ -1,6 +1,6 @@
 type RoleAccessDeniedNoticeProps = {
   areaLabel: string
-  reason: 'missing_profile' | 'inactive_profile' | 'missing_role'
+  reason: 'missing_profile' | 'inactive_profile' | 'missing_role' | 'missing_event_access'
 }
 
 function getReasonCopy(reason: RoleAccessDeniedNoticeProps['reason']) {
@@ -11,6 +11,8 @@ function getReasonCopy(reason: RoleAccessDeniedNoticeProps['reason']) {
       return 'Tu perfil operativo existe, pero figura inactivo.'
     case 'missing_role':
       return 'Tu sesion es valida, pero no tiene el rol necesario para abrir esta superficie.'
+    case 'missing_event_access':
+      return 'Tu perfil es administrador de otro evento y no tiene acceso al evento solicitado.'
     default:
       return 'No tienes acceso a esta superficie.'
   }

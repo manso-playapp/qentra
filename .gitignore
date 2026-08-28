@@ -36,8 +36,8 @@ yarn-error.log*
 !.env.example
 
 # local-only agent context
-AGENTS.md
-CLAUDE.md
+# AGENTS.md y CLAUDE.md se versionan a proposito: son las instrucciones de
+# proyecto para Codex y Claude Code, y la unica memoria durable es el repo.
 qentra_vscode_codex_playbook.md
 /web/
 

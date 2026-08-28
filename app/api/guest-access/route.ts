@@ -1,15 +1,15 @@
 import QRCode from 'qrcode'
-import { ensureAuthorizedApiAccess } from '@/lib/operator-auth'
+import { ensureAuthorizedEventApiAccess } from '@/lib/operator-auth'
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
 
 export const runtime = 'nodejs'
 
 export async function GET(request: Request) {
-  const { response: authErrorResponse } = await ensureAuthorizedApiAccess(['admin'])
-
-  if (authErrorResponse) {
-    return authErrorResponse
-  }
+  const url = new URL(request.url)
+  const eventId = url.searchParams.get('eventId')
+  if (!eventId) return Response.json({ error: 'Falta eventId.' }, { status: 400 })
+  const { response: authErrorResponse } = await ensureAuthorizedEventApiAccess(eventId)
+  if (authErrorResponse) return authErrorResponse
 
   const adminClient = getSupabaseAdminClient()
 
@@ -21,13 +21,6 @@ export async function GET(request: Request) {
   }
 
   try {
-    const url = new URL(request.url)
-    const eventId = url.searchParams.get('eventId')
-
-    if (!eventId) {
-      return Response.json({ error: 'Falta eventId.' }, { status: 400 })
-    }
-
     const { data: guests, error: guestsError } = await adminClient
       .from('guests')
       .select('id')

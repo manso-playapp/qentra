@@ -1,5 +1,5 @@
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
-import { ensureAuthorizedApiAccess } from '@/lib/operator-auth'
+import { ensureAuthorizedEventApiAccess } from '@/lib/operator-auth'
 import { normalizeInvitationBlocks } from '@/lib/invitation-blocks'
 import { buildInvitationConfigEnvelope, getInvitationConfigHistory, getInvitationConfigState, type InvitationConfigHistoryEntry } from '@/lib/invitation-config-state'
 
@@ -28,7 +28,8 @@ function trimmedOrNull(value?: string | null) {
 // va en event_branding.config (jsonb). Si esa columna todavia no existe, se
 // guarda igual el aspecto y se avisa que la config necesita la migracion.
 export async function PUT(request: Request, context: { params: Promise<{ id: string }> }) {
-  const { response: authErrorResponse } = await ensureAuthorizedApiAccess(['admin'])
+  const { id: eventId } = await context.params
+  const { response: authErrorResponse } = await ensureAuthorizedEventApiAccess(eventId)
   if (authErrorResponse) return authErrorResponse
 
   const adminClient = getSupabaseAdminClient()
@@ -39,7 +40,6 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
     )
   }
 
-  const { id: eventId } = await context.params
   const body = (await request.json().catch(() => null)) as PutBody | null
   const v = body?.visual ?? {}
 

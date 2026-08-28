@@ -7,16 +7,39 @@ import {
   isMissingAuthSessionError,
 } from '@/lib/supabase-auth-errors'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
+import {
+  canManageEvent,
+  hasGlobalOperationalAccess,
+  isBlockedOperator,
+  normalizeRoles,
+  type AccountAccess,
+  type AppRole,
+} from '@/lib/event-access'
 
-export type AppRole = 'admin' | 'door' | 'security_supervisor'
+export type { AppRole } from '@/lib/event-access'
 
 export type OperatorProfile = {
   user_id: string
   full_name?: string | null
   roles: AppRole[]
+  /** Eventos a los que fue invitado (tabla `event_admin_assignments`). */
+  event_ids: string[]
   active: boolean
   created_at: string
   updated_at: string
+}
+
+/**
+ * Identidad de quien llama. `operatorProfile` en `null` es un **cliente**: una
+ * persona autenticada que no pertenece al equipo de Alista y cuya autorización
+ * viene de ser dueña de sus eventos, no de un rol.
+ */
+export type Account = {
+  user: User
+  operatorProfile: OperatorProfile | null
+  /** Propios (`events.owner_user_id`) más asignados. */
+  manageableEventIds: string[]
+  access: AccountAccess
 }
 
 type AuthorizedPageAccessResult =
@@ -27,7 +50,18 @@ type AuthorizedPageAccessResult =
     }
   | {
       ok: false
-      reason: 'missing_profile' | 'inactive_profile' | 'missing_role'
+      reason: 'missing_profile' | 'inactive_profile' | 'missing_role' | 'missing_event_access'
+    }
+
+type AuthorizedEventPageAccessResult =
+  | {
+      ok: true
+      user: User
+      account: Account
+    }
+  | {
+      ok: false
+      reason: 'missing_profile' | 'inactive_profile' | 'missing_role' | 'missing_event_access'
     }
 
 function getSecurityOverridePin() {
@@ -57,16 +91,6 @@ function safeCompareStrings(left: string, right: string) {
   return timingSafeEqual(leftBuffer, rightBuffer)
 }
 
-function normalizeRoles(value: unknown): AppRole[] {
-  if (!Array.isArray(value)) {
-    return []
-  }
-
-  return value.filter((role): role is AppRole =>
-    role === 'admin' || role === 'door' || role === 'security_supervisor'
-  )
-}
-
 export function sanitizeNextPath(value: string | null | undefined, fallback = '/admin') {
   if (!value || !value.startsWith('/') || value.startsWith('//')) {
     return fallback
@@ -77,6 +101,37 @@ export function sanitizeNextPath(value: string | null | undefined, fallback = '/
 
 function hasRequiredRole(profile: OperatorProfile, allowedRoles: readonly AppRole[]) {
   return profile.roles.some((role) => allowedRoles.includes(role))
+}
+
+/**
+ * Durante un despliegue la aplicacion puede arrancar unos segundos antes que la
+ * migracion. PostgREST responde PGRST205 cuando la tabla no esta en su cache de
+ * esquema, y 42P01 cuando la consulta llega a Postgres.
+ */
+function isMissingTableError(code: string | undefined) {
+  return code === 'PGRST205' || code === '42P01'
+}
+
+function toAccountAccess(
+  operatorProfile: OperatorProfile | null,
+  manageableEventIds: readonly string[]
+): AccountAccess {
+  return {
+    operator: operatorProfile
+      ? { roles: operatorProfile.roles, active: operatorProfile.active }
+      : null,
+    manageableEventIds,
+  }
+}
+
+/** Estado sin sesion: ni cliente ni operador. */
+function anonymousAuthState() {
+  return {
+    user: null,
+    operatorProfile: null,
+    manageableEventIds: [] as string[],
+    access: toAccountAccess(null, []),
+  }
 }
 
 async function getCurrentAuthState() {
@@ -95,10 +150,7 @@ async function getCurrentAuthState() {
         isAuthRetryableFetchError(userError) ||
         isInvalidRefreshTokenError(userError)
       ) {
-        return {
-          user: null,
-          operatorProfile: null,
-        }
+        return anonymousAuthState()
       }
 
       throw userError
@@ -111,45 +163,61 @@ async function getCurrentAuthState() {
       isAuthRetryableFetchError(error) ||
       isInvalidRefreshTokenError(error)
     ) {
-      return {
-        user: null,
-        operatorProfile: null,
-      }
+      return anonymousAuthState()
     }
 
     throw error
   }
 
   if (!user) {
-    return {
-      user: null,
-      operatorProfile: null,
-    }
+    return anonymousAuthState()
   }
 
-  const { data: profileData, error: profileError } = await supabase
-    .from('operator_profiles')
-    .select('*')
-    .eq('user_id', user.id)
-    .maybeSingle()
+  const [
+    { data: profileData, error: profileError },
+    { data: assignmentsData, error: assignmentsError },
+    { data: ownedData, error: ownedError },
+  ] = await Promise.all([
+    supabase.from('operator_profiles').select('*').eq('user_id', user.id).maybeSingle(),
+    supabase.from('event_admin_assignments').select('event_id').eq('user_id', user.id),
+    supabase.from('events').select('id').eq('owner_user_id', user.id),
+  ])
 
   if (profileError) {
     throw profileError
   }
 
-  if (!profileData) {
-    return {
-      user,
-      operatorProfile: null,
-    }
+  // Solo toleramos la tabla inexistente; cualquier otro error de autorizacion
+  // debe seguir siendo visible.
+  if (assignmentsError && !isMissingTableError(assignmentsError.code)) {
+    throw assignmentsError
   }
+
+  // Misma tolerancia para la columna `owner_user_id`: 42703 es la respuesta de
+  // Postgres a una columna inexistente.
+  if (ownedError && ownedError.code !== '42703' && !isMissingTableError(ownedError.code)) {
+    throw ownedError
+  }
+
+  const assignedEventIds = (assignmentsData ?? []).map((assignment) => assignment.event_id as string)
+  const ownedEventIds = (ownedData ?? []).map((event) => event.id as string)
+  const manageableEventIds = Array.from(new Set([...ownedEventIds, ...assignedEventIds]))
+
+  // Sin fila en `operator_profiles` la persona no es del equipo de Alista: es un
+  // cliente. Su autorización viene de ser dueña de sus eventos, no de un rol.
+  const operatorProfile: OperatorProfile | null = profileData
+    ? ({
+        ...(profileData as Omit<OperatorProfile, 'roles'> & { roles: unknown }),
+        roles: normalizeRoles((profileData as { roles: unknown }).roles),
+        event_ids: assignedEventIds,
+      } satisfies OperatorProfile)
+    : null
 
   return {
     user,
-    operatorProfile: {
-      ...(profileData as Omit<OperatorProfile, 'roles'> & { roles: unknown }),
-      roles: normalizeRoles((profileData as { roles: unknown }).roles),
-    } satisfies OperatorProfile,
+    operatorProfile,
+    manageableEventIds,
+    access: toAccountAccess(operatorProfile, manageableEventIds),
   }
 }
 
@@ -251,5 +319,144 @@ export async function ensureAuthorizedApiAccess(allowedRoles: readonly AppRole[]
       user: authState.user,
       operatorProfile: authState.operatorProfile,
     },
+  }
+}
+
+export function isGlobalAdmin(profile: OperatorProfile) {
+  return profile.roles.includes('admin')
+}
+
+/**
+ * Acceso al panel para cualquier persona autenticada, tenga o no perfil de
+ * operador. Es la puerta del panel para una clienta: lo que ve adentro lo
+ * decide su acceso a cada evento, no un rol.
+ */
+export async function requireAuthenticatedPageAccess(
+  nextPath: string
+): Promise<
+  | { ok: true; user: User; account: Account }
+  | { ok: false; reason: 'inactive_profile' }
+> {
+  const authState = await getCurrentAuthState()
+
+  if (!authState.user) {
+    redirect(`/acceso?next=${encodeURIComponent(nextPath)}`)
+  }
+
+  if (isBlockedOperator(authState.access)) {
+    return { ok: false, reason: 'inactive_profile' }
+  }
+
+  return { ok: true, user: authState.user, account: toAccount({ ...authState, user: authState.user }) }
+}
+
+/**
+ * Cualquier persona autenticada, tenga o no perfil de operador.
+ *
+ * Es la puerta del self-serve: sirve para listar los eventos propios y para
+ * crear uno nuevo. No autoriza nada sobre un evento en particular — para eso
+ * esta `ensureAuthorizedEventApiAccess`.
+ */
+export async function ensureAuthenticatedApiAccess() {
+  const authState = await getCurrentAuthState()
+
+  if (!authState.user) {
+    return {
+      response: Response.json({ error: 'Unauthorized.' }, { status: 401 }),
+      auth: null,
+    }
+  }
+
+  if (isBlockedOperator(authState.access)) {
+    return {
+      response: Response.json({ error: 'Operator profile inactive.' }, { status: 403 }),
+      auth: null,
+    }
+  }
+
+  return {
+    response: null,
+    auth: toAccount({ ...authState, user: authState.user }),
+  }
+}
+
+function toAccount(authState: Awaited<ReturnType<typeof getCurrentAuthState>> & { user: User }): Account {
+  return {
+    user: authState.user,
+    operatorProfile: authState.operatorProfile,
+    manageableEventIds: authState.manageableEventIds,
+    access: authState.access,
+  }
+}
+
+/**
+ * Acceso a la pagina de un evento.
+ *
+ * A diferencia de `requireAuthorizedPageAccess`, **no exige rol de operador**:
+ * autoriza por acceso al evento. Una clienta duena de su fiesta entra sin tener
+ * fila en `operator_profiles`, que es el punto de todo el self-serve.
+ */
+export async function requireAuthorizedEventPageAccess(
+  nextPath: string,
+  eventId: string
+): Promise<AuthorizedEventPageAccessResult> {
+  const authState = await getCurrentAuthState()
+
+  if (!authState.user) {
+    redirect(`/acceso?next=${encodeURIComponent(nextPath)}`)
+  }
+
+  if (isBlockedOperator(authState.access)) {
+    return { ok: false, reason: 'inactive_profile' }
+  }
+
+  if (!canManageEvent(authState.access, eventId)) {
+    return { ok: false, reason: 'missing_event_access' }
+  }
+
+  return { ok: true, user: authState.user, account: toAccount({ ...authState, user: authState.user }) }
+}
+
+/**
+ * Acceso por API a un evento. Autoriza por acceso al evento, no por rol.
+ *
+ * `allowedRoles` sigue existiendo para los roles operativos globales: `door` y
+ * `security_supervisor` valen sobre cualquier evento cuando la ruta los permite.
+ * Es lo que mantiene funcionando la puerta y el totem, y se conserva tal cual.
+ */
+export async function ensureAuthorizedEventApiAccess(
+  eventId: string,
+  allowedRoles: readonly AppRole[] = ['admin']
+) {
+  const authState = await getCurrentAuthState()
+
+  if (!authState.user) {
+    return {
+      response: Response.json({ error: 'Unauthorized.' }, { status: 401 }),
+      auth: null,
+    }
+  }
+
+  if (isBlockedOperator(authState.access)) {
+    return {
+      response: Response.json({ error: 'Operator profile inactive.' }, { status: 403 }),
+      auth: null,
+    }
+  }
+
+  const allowed =
+    hasGlobalOperationalAccess(authState.access, allowedRoles) ||
+    canManageEvent(authState.access, eventId)
+
+  if (!allowed) {
+    return {
+      response: Response.json({ error: 'No tenes acceso a este evento.' }, { status: 403 }),
+      auth: null,
+    }
+  }
+
+  return {
+    response: null,
+    auth: toAccount({ ...authState, user: authState.user }),
   }
 }

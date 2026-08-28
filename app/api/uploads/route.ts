@@ -1,5 +1,5 @@
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
-import { ensureAuthorizedApiAccess } from '@/lib/operator-auth'
+import { ensureAuthorizedEventApiAccess } from '@/lib/operator-auth'
 
 export const runtime = 'nodejs'
 
@@ -38,17 +38,6 @@ function sanitizeSegment(value: string) {
 }
 
 export async function POST(request: Request) {
-  const { response: authErrorResponse } = await ensureAuthorizedApiAccess(['admin'])
-  if (authErrorResponse) return authErrorResponse
-
-  const adminClient = getSupabaseAdminClient()
-  if (!adminClient) {
-    return Response.json(
-      { error: 'SUPABASE_SERVICE_ROLE_KEY no esta configurada en el entorno.' },
-      { status: 503 }
-    )
-  }
-
   let formData: FormData
   try {
     formData = await request.formData()
@@ -74,6 +63,16 @@ export async function POST(request: Request) {
   }
   if (isAudio && bucket !== 'event-assets') {
     return Response.json({ error: 'Los audios solo se pueden guardar como recursos del evento.' }, { status: 400 })
+  }
+  const { response: authErrorResponse } = await ensureAuthorizedEventApiAccess(folder)
+  if (authErrorResponse) return authErrorResponse
+
+  const adminClient = getSupabaseAdminClient()
+  if (!adminClient) {
+    return Response.json(
+      { error: 'SUPABASE_SERVICE_ROLE_KEY no esta configurada en el entorno.' },
+      { status: 503 }
+    )
   }
   const maxBytes = isAudio ? MAX_AUDIO_BYTES : MAX_IMAGE_BYTES
   if (file.size > maxBytes) {

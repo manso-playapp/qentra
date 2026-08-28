@@ -10,6 +10,8 @@ import { getSupabaseAdminClient } from '@/lib/supabase-admin'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { getDraftInvitationConfig } from '@/lib/invitation-config-state'
 import { SURFACE_BRANDING_COLUMNS, type SurfaceBranding } from '@/types'
+import RoleAccessDeniedNotice from '@/components/auth/RoleAccessDeniedNotice'
+import { requireAuthorizedEventPageAccess } from '@/lib/operator-auth'
 
 export const metadata = {
   title: 'Vista previa · Invitación',
@@ -22,6 +24,8 @@ type PreviewPageProps = {
 
 export default async function InvitationPreviewPage({ params, searchParams }: PreviewPageProps) {
   const { eventId } = await params
+  const access = await requireAuthorizedEventPageAccess(`/invitacion/preview/${eventId}`, eventId)
+  if (!access.ok) return <RoleAccessDeniedNotice areaLabel="la vista previa de este evento" reason={access.reason} />
   const resolvedSearchParams = searchParams ? await searchParams : undefined
   const supabase = getSupabaseAdminClient() ?? (await createServerSupabaseClient())
 

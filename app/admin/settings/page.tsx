@@ -16,8 +16,10 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Select } from '@/components/ui/select'
 import {
   useDeliveryHealth,
+  useEvents,
   useOperatorProfiles,
 } from '@/lib/hooks'
 import type {
@@ -32,6 +34,7 @@ type OperatorFormState = {
   password: string
   full_name: string
   roles: OperatorProfile['roles']
+  event_ids: string[]
   active: boolean
 }
 
@@ -61,6 +64,7 @@ const INITIAL_OPERATOR_FORM: OperatorFormState = {
   password: '',
   full_name: '',
   roles: ['door'],
+  event_ids: [],
   active: true,
 }
 
@@ -69,6 +73,7 @@ const OPERATOR_ROLE_OPTIONS: Array<{
   label: string
 }> = [
   { value: 'admin', label: 'Admin' },
+  { value: 'event_admin', label: 'Admin de evento' },
   { value: 'door', label: 'Puerta' },
   { value: 'security_supervisor', label: 'Supervisor' },
 ]
@@ -135,6 +140,7 @@ function LoadingBlock() {
 }
 
 export default function SettingsPage() {
+  const { events } = useEvents()
   const {
     deliveryHealth,
     loading: loadingDeliveryHealth,
@@ -177,6 +183,7 @@ export default function SettingsPage() {
         return {
           ...current,
           roles,
+          event_ids: role === 'event_admin' && !checked ? [] : current.event_ids,
         }
       }
 
@@ -198,6 +205,7 @@ export default function SettingsPage() {
       password: operatorForm.password,
       full_name: operatorForm.full_name.trim(),
       roles: operatorForm.roles,
+      event_ids: operatorForm.event_ids,
       active: operatorForm.active,
     }
 
@@ -554,10 +562,18 @@ export default function SettingsPage() {
                                   const nextRoles = eventInput.target.checked
                                     ? Array.from(new Set([...operatorProfile.roles, roleOption.value]))
                                     : operatorProfile.roles.filter((role) => role !== roleOption.value)
+                                  const nextEventIds = roleOption.value === 'event_admin'
+                                    ? (eventInput.target.checked
+                                      ? (operatorProfile.event_ids.length > 0
+                                        ? operatorProfile.event_ids
+                                        : events[0] ? [events[0].id] : [])
+                                      : [])
+                                    : operatorProfile.event_ids
 
                                   void handleOperatorUpdate(operatorProfile, {
                                     full_name: operatorProfile.full_name || '',
                                     roles: nextRoles,
+                                    event_ids: nextEventIds,
                                     active: operatorProfile.active,
                                   })
                                 }}
@@ -567,6 +583,31 @@ export default function SettingsPage() {
                           )
                         })}
                       </div>
+
+                      {operatorProfile.roles.includes('event_admin') && (
+                        <div className="mt-4 max-w-md">
+                          <Label htmlFor={`operator-event-${operatorProfile.user_id}`}>Evento asignado</Label>
+                          <Select
+                            id={`operator-event-${operatorProfile.user_id}`}
+                            className="mt-2"
+                            value={operatorProfile.event_ids[0] ?? ''}
+                            disabled={updatingOperatorId === operatorProfile.user_id}
+                            onChange={(eventInput) => {
+                              void handleOperatorUpdate(operatorProfile, {
+                                full_name: operatorProfile.full_name || '',
+                                roles: operatorProfile.roles,
+                                event_ids: eventInput.target.value ? [eventInput.target.value] : [],
+                                active: operatorProfile.active,
+                              })
+                            }}
+                          >
+                            <option value="">Seleccionar evento</option>
+                            {events.map((event) => (
+                              <option key={event.id} value={event.id}>{event.name}</option>
+                            ))}
+                          </Select>
+                        </div>
+                      )}
 
                       <div className="mt-4 grid gap-3 text-sm text-muted-foreground sm:grid-cols-2">
                         <p>
@@ -617,6 +658,7 @@ export default function SettingsPage() {
                             void handleOperatorUpdate(operatorProfile, {
                               full_name: operatorProfile.full_name || '',
                               roles: operatorProfile.roles,
+                              event_ids: operatorProfile.event_ids,
                               active: !operatorProfile.active,
                             })
                           }}
@@ -744,6 +786,28 @@ export default function SettingsPage() {
                     ))}
                   </div>
                 </div>
+
+                {operatorForm.roles.includes('event_admin') && (
+                  <div>
+                    <Label htmlFor="operator-event" className="text-white">Evento asignado</Label>
+                    <Select
+                      id="operator-event"
+                      className="mt-2 border-white/10 bg-white/[0.06] text-white"
+                      value={operatorForm.event_ids[0] ?? ''}
+                      required
+                      onChange={(eventInput) => setOperatorForm((current) => ({
+                        ...current,
+                        event_ids: eventInput.target.value ? [eventInput.target.value] : [],
+                      }))}
+                    >
+                      <option value="">Seleccionar evento</option>
+                      {events.map((event) => (
+                        <option key={event.id} value={event.id}>{event.name}</option>
+                      ))}
+                    </Select>
+                    <p className="mt-2 text-xs text-slate-300">Solo podra ver y operar este evento.</p>
+                  </div>
+                )}
 
                 <label className="inline-flex items-center gap-2 text-sm text-slate-100">
                   <input

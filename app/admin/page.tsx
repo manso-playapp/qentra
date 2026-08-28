@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { ArrowRight, CalendarRange, CheckCircle2, Clock, Mail, Plus, ScanLine, Users2, Wallet } from 'lucide-react'
 import AdminLayout from '@/components/admin/AdminLayout'
 import { Badge } from '@/components/ui/badge'
@@ -7,6 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
 import { formatEventDate } from '@/lib/event-date'
 import type { Event } from '@/types'
+import { getCurrentOperatorProfile } from '@/lib/operator-auth'
+import { isAlistaStaff } from '@/lib/event-access'
 
 export const metadata = {
   title: 'Inicio',
@@ -46,6 +49,15 @@ export default async function AdminPage() {
   // Service role: RLS oculta guests/checkins al cliente con cookies (operator-auth
   // no crea sesion de Supabase). La ruta ya esta protegida por el layout del admin.
   const supabase = getSupabaseAdminClient()
+  const authState = await getCurrentOperatorProfile()
+  const hasGlobalAccess = isAlistaStaff(authState.access)
+
+  // Primer ingreso de una clienta: todavía no tiene ninguna fiesta, así que no
+  // tiene sentido mostrarle un panel vacío. El evento que crea acá es el mismo
+  // que después se activa: no hay un "evento demo" aparte.
+  if (!hasGlobalAccess && authState.manageableEventIds.length === 0) {
+    redirect('/admin/events/new')
+  }
 
   if (!supabase) {
     return (
@@ -63,10 +75,17 @@ export default async function AdminPage() {
     )
   }
 
-  const { data: eventsData, error } = await supabase
+  let eventsQuery = supabase
     .from('events')
     .select('*')
     .order('event_date', { ascending: true })
+
+  // El staff ve todo; el resto ve sus eventos propios y los asignados.
+  if (!hasGlobalAccess) {
+    eventsQuery = eventsQuery.in('id', authState.manageableEventIds)
+  }
+
+  const { data: eventsData, error } = await eventsQuery
 
   if (error) {
     return (

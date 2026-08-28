@@ -1,7 +1,7 @@
 import { createHash, randomBytes } from 'node:crypto'
 import { encryptPaymentCredential } from '@/lib/payment-credentials'
 import { getMercadoPagoOAuthConfig, isMercadoPagoPreviewEnvironment } from '@/lib/mercadopago'
-import { ensureAuthorizedApiAccess } from '@/lib/operator-auth'
+import { ensureAuthorizedEventApiAccess } from '@/lib/operator-auth'
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
 
 export const runtime = 'nodejs'
@@ -13,7 +13,8 @@ function createBase64UrlSecret(bytes: number) {
 }
 
 export async function POST(_request: Request, context: RouteContext) {
-  const { response: authErrorResponse, auth } = await ensureAuthorizedApiAccess(['admin'])
+  const { id: eventId } = await context.params
+  const { response: authErrorResponse, auth } = await ensureAuthorizedEventApiAccess(eventId)
   if (authErrorResponse || !auth) return authErrorResponse
 
   if (isMercadoPagoPreviewEnvironment()) {
@@ -26,7 +27,6 @@ export async function POST(_request: Request, context: RouteContext) {
     return Response.json({ error: 'La conexión de cuentas Mercado Pago todavía no está configurada.' }, { status: 503 })
   }
 
-  const { id: eventId } = await context.params
   const { data: event, error: eventError } = await adminClient
     .from('events')
     .select('id')
@@ -75,7 +75,8 @@ export async function POST(_request: Request, context: RouteContext) {
 }
 
 export async function DELETE(_request: Request, context: RouteContext) {
-  const { response: authErrorResponse } = await ensureAuthorizedApiAccess(['admin'])
+  const { id: eventId } = await context.params
+  const { response: authErrorResponse } = await ensureAuthorizedEventApiAccess(eventId)
   if (authErrorResponse) return authErrorResponse
 
   const adminClient = getSupabaseAdminClient()
@@ -83,7 +84,6 @@ export async function DELETE(_request: Request, context: RouteContext) {
     return Response.json({ error: 'SUPABASE_SERVICE_ROLE_KEY no está configurada en el entorno.' }, { status: 503 })
   }
 
-  const { id: eventId } = await context.params
   const { count, error: pendingTransactionsError } = await adminClient
     .from('payment_transactions')
     .select('*', { count: 'exact', head: true })

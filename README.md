@@ -2,7 +2,9 @@
 
 Alista es una plataforma web que vincula invitacion, pago y acceso en fiestas
 privadas con cupo limitado (fiestas de 15, egresados y celebraciones juveniles).
-Se ofrece a salones, productores y organizadores.
+La cuenta y el evento son de la **responsable de la fiesta** (habitualmente la madre);
+planners, salones y productoras participan como colaboradores invitados al evento.
+Ver `docs/Product/ALISTA_DECISIONES_PROPIEDAD_Y_PAGOS.md`.
 
 Estado actual del MVP:
 

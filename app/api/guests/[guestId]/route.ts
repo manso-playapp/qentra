@@ -1,5 +1,5 @@
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
-import { ensureAuthorizedApiAccess } from '@/lib/operator-auth'
+import { ensureAuthorizedApiAccess, ensureAuthorizedEventApiAccess } from '@/lib/operator-auth'
 import {
   buildGuestFullName,
   mapGuestStatusToDb,
@@ -20,7 +20,7 @@ type GuestRouteContext = {
 export const runtime = 'nodejs'
 
 export async function PATCH(request: Request, context: GuestRouteContext) {
-  const { response: authErrorResponse } = await ensureAuthorizedApiAccess(['admin'])
+  const { response: authErrorResponse } = await ensureAuthorizedApiAccess(['admin', 'event_admin'])
 
   if (authErrorResponse) {
     return authErrorResponse
@@ -57,6 +57,9 @@ export async function PATCH(request: Request, context: GuestRouteContext) {
     if (!currentGuest) {
       return Response.json({ error: 'Invitado inexistente.' }, { status: 404 })
     }
+
+    const { response: eventAuthError } = await ensureAuthorizedEventApiAccess(currentGuest.event_id)
+    if (eventAuthError) return eventAuthError
 
     const isCheckinReversal =
       body.restore_invitation_access === true ||
@@ -224,7 +227,7 @@ export async function PATCH(request: Request, context: GuestRouteContext) {
 }
 
 export async function DELETE(_request: Request, context: GuestRouteContext) {
-  const { response: authErrorResponse } = await ensureAuthorizedApiAccess(['admin'])
+  const { response: authErrorResponse } = await ensureAuthorizedApiAccess(['admin', 'event_admin'])
 
   if (authErrorResponse) {
     return authErrorResponse
@@ -241,6 +244,16 @@ export async function DELETE(_request: Request, context: GuestRouteContext) {
 
   try {
     const { guestId } = await context.params
+
+    const { data: guest, error: guestLookupError } = await adminClient
+      .from('guests')
+      .select('event_id')
+      .eq('id', guestId)
+      .maybeSingle()
+    if (guestLookupError) return Response.json({ error: guestLookupError.message }, { status: 500 })
+    if (!guest) return Response.json({ error: 'Invitado inexistente.' }, { status: 404 })
+    const { response: eventAuthError } = await ensureAuthorizedEventApiAccess(guest.event_id)
+    if (eventAuthError) return eventAuthError
 
     const { error: checkinsError } = await adminClient
       .from('checkins')

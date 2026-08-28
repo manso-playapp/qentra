@@ -12,6 +12,7 @@ import {
   Users2,
 } from 'lucide-react'
 import AdminLayout from '@/components/admin/AdminLayout'
+import EventActivationCard from '@/components/admin/EventActivationCard'
 import EventPaymentAccountCard from '@/components/admin/EventPaymentAccountCard'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -21,6 +22,9 @@ import { formatEventDate } from '@/lib/event-date'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { getMercadoPagoOAuthConfig } from '@/lib/mercadopago'
 import { isPaymentCredentialEncryptionConfigured } from '@/lib/payment-credentials'
+import { resolveActivation, type EventActivation } from '@/lib/event-activation'
+import { getCurrentOperatorProfile } from '@/lib/operator-auth'
+import { isAlistaStaff } from '@/lib/event-access'
 import type { Event, EventBranding, GuestType } from '@/types'
 
 export const metadata = {
@@ -70,6 +74,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
     guestsCountResponse,
     checkinsCountResponse,
     paymentAccountResponse,
+    activationResponse,
   ] = await Promise.all([
     supabase.from('events').select('*').eq('id', id).maybeSingle(),
     supabase.from('event_branding').select('*').eq('event_id', id).maybeSingle(),
@@ -87,6 +92,11 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
     supabase
       .from('event_payment_accounts')
       .select('updated_at')
+      .eq('event_id', id)
+      .maybeSingle(),
+    supabase
+      .from('event_activations')
+      .select('status, source, activated_at, expires_at, note')
       .eq('event_id', id)
       .maybeSingle(),
   ])
@@ -112,6 +122,11 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
   const checkinCount = checkinsCountResponse.count ?? 0
   const paymentAccount = paymentAccountResponse.data as { updated_at?: string | null } | null
   const paymentAccountConfigured = Boolean(getMercadoPagoOAuthConfig() && isPaymentCredentialEncryptionConfigured())
+  // Otorgar o dar de baja la activacion es solo del equipo de Alista.
+  const authState = await getCurrentOperatorProfile()
+  const activation = activationResponse.data as
+    | (EventActivation & { activated_at?: string | null; note?: string | null })
+    | null
   const availableSeats = Math.max(event.max_capacity - guestCount, 0)
   return (
     <AdminLayout>
@@ -290,6 +305,14 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
                 </div>
               </CardContent>
             </Card>
+
+            <EventActivationCard
+              event={event}
+              state={resolveActivation(activation)}
+              activatedAt={activation?.activated_at}
+              note={activation?.note}
+              canGrant={isAlistaStaff(authState.access)}
+            />
 
             <EventPaymentAccountCard
               eventId={event.id}

@@ -16,11 +16,13 @@ The architecture may remain reusable for future verticals, but marketing, UX pri
 
 For any substantial task, use the strategic documentation as source of truth:
 
-@./docs/HANDOFF_NUEVA_WEB_2026-08-24.md
-@./docs/ALISTA_ESTRATEGIA_NUEVA_WEB.md
-@./docs/ALISTA_WEB_ART_DIRECTION.md
-@./docs/Product/ALISTA_PRODUCTO_DECISIONES_MUST_HAVE.md
-@./docs/PLAN_TICKETS_NUEVA_WEB.md
+@./docs/CONTINUIDAD.md — **START HERE.** Today's state, open fronts, reading order.
+@./docs/Product/ALISTA_PRODUCTO_DECISIONES_MUST_HAVE.md — canonical product/UX decisions.
+@./docs/Product/ALISTA_DECISIONES_PROPIEDAD_Y_PAGOS.md — event ownership, who buys, the paywall
+  and Mercado Pago. Closes §42 of the previous doc and **overrides it on ownership/buyer/payments**.
+@./docs/DHARMA_CASE_PRIVACY.md — privacy and minors.
+@./docs/ALISTA_ESTRATEGIA_NUEVA_WEB.md — website direction. WARNING: predates the buyer change;
+  where it treats the planner/venue as the main buyer, the ownership doc wins.
 
 If old implementation or copy conflicts with these documents, identify the inconsistency rather than silently preserving outdated strategy.
 
@@ -42,14 +44,17 @@ It is to become unusually good at understanding and solving the world of 15s.
 
 ## Audience model
 
-### Primary commercial buyer
-Professional recurring actors:
-- planners;
-- venues;
-- producers;
-- agencies;
-- organizers;
-- providers that manage many 15s.
+### Primary commercial buyer — the event's responsable (typically the mother)
+
+**DECIDED 2026-08-28.** The product is personal and self-managed: the responsable owns the
+account, owns the event data, connects Mercado Pago and pays Alista.
+
+Planners, venues, producers and agencies remain important — as **collaborators invited into an
+event**, and as an acquisition channel. They are **not** the account owner and **not** the buyer.
+
+Reason: Mercado Pago treats ticket collection as a service payment, holds funds ~30 days and makes
+the collector the seller of record for tax purposes. A planner cannot hold money that is not
+theirs. Full argument: `docs/Product/ALISTA_DECISIONES_PROPIEDAD_Y_PAGOS.md` §1.
 
 ### Operational user
 - reception teams;

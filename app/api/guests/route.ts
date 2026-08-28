@@ -1,5 +1,5 @@
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
-import { ensureAuthorizedApiAccess } from '@/lib/operator-auth'
+import { ensureAuthorizedEventApiAccess } from '@/lib/operator-auth'
 import { buildGuestFullName, normalizeGuestRecord } from '@/lib/guest-schema'
 import { toE164 } from '@/lib/phone'
 import {
@@ -26,11 +26,11 @@ function normalizePhone(value?: string) {
 }
 
 export async function GET(request: Request) {
-  const { response: authErrorResponse } = await ensureAuthorizedApiAccess(['admin'])
-
-  if (authErrorResponse) {
-    return authErrorResponse
-  }
+  const url = new URL(request.url)
+  const eventId = url.searchParams.get('eventId')?.trim()
+  if (!eventId) return Response.json({ error: 'Falta eventId.' }, { status: 400 })
+  const { response: authErrorResponse } = await ensureAuthorizedEventApiAccess(eventId)
+  if (authErrorResponse) return authErrorResponse
 
   const adminClient = getSupabaseAdminClient()
 
@@ -39,13 +39,6 @@ export async function GET(request: Request) {
       { error: 'SUPABASE_SERVICE_ROLE_KEY no esta configurada en el entorno.' },
       { status: 503 }
     )
-  }
-
-  const url = new URL(request.url)
-  const eventId = url.searchParams.get('eventId')?.trim()
-
-  if (!eventId) {
-    return Response.json({ error: 'Falta eventId.' }, { status: 400 })
   }
 
   const { data, error } = await adminClient
@@ -90,11 +83,11 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const { response: authErrorResponse } = await ensureAuthorizedApiAccess(['admin'])
-
-  if (authErrorResponse) {
-    return authErrorResponse
-  }
+  const body = (await request.json()) as CreateGuestRequestBody
+  const eventId = body.event_id?.trim()
+  if (!eventId) return Response.json({ error: 'Falta eventId.' }, { status: 400 })
+  const { response: authErrorResponse } = await ensureAuthorizedEventApiAccess(eventId)
+  if (authErrorResponse) return authErrorResponse
 
   const adminClient = getSupabaseAdminClient()
 
@@ -105,8 +98,6 @@ export async function POST(request: Request) {
     )
   }
 
-  const body = (await request.json()) as CreateGuestRequestBody
-  const eventId = body.event_id?.trim()
   const guestTypeId = body.guest_type_id?.trim()
   const firstName = body.first_name?.trim()
   const lastName = body.last_name?.trim()

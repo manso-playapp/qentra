@@ -8,5 +8,8 @@ export default function NewEventLayout({
 }: {
   children: React.ReactNode
 }) {
+  // Sin guard de rol: crear un evento esta abierto a cualquier persona
+  // autenticada, que queda como duena. El layout de /admin ya exige sesion.
   return children
 }
+

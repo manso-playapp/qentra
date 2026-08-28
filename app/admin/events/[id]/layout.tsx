@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
+import RoleAccessDeniedNotice from '@/components/auth/RoleAccessDeniedNotice'
+import { requireAuthorizedEventPageAccess } from '@/lib/operator-auth'
 
 type EventLayoutProps = {
   children: ReactNode
@@ -27,6 +29,13 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   }
 }
 
-export default function EventLayout({ children }: EventLayoutProps) {
+export default async function EventLayout({ children, params }: EventLayoutProps) {
+  const { id } = await params
+  const access = await requireAuthorizedEventPageAccess(`/admin/events/${id}`, id)
+
+  if (!access.ok) {
+    return <RoleAccessDeniedNotice areaLabel="este evento" reason={access.reason} />
+  }
+
   return children
 }

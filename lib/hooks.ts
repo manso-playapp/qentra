@@ -147,6 +147,7 @@ export function useOperatorProfiles() {
           password: operatorData.password,
           fullName: operatorData.full_name,
           roles: operatorData.roles,
+          eventIds: operatorData.event_ids,
           active: operatorData.active,
         }),
       })
@@ -183,6 +184,7 @@ export function useOperatorProfiles() {
         body: JSON.stringify({
           fullName: operatorData.full_name,
           roles: operatorData.roles,
+          eventIds: operatorData.event_ids,
           active: operatorData.active,
         }),
       })
@@ -254,13 +256,10 @@ export function useEvents() {
   const fetchEvents = useCallback(async () => {
     try {
       setLoading(true)
-      const { data, error } = await supabase
-        .from('events')
-        .select('*')
-        .order('created_at', { ascending: false })
-
-      if (error) throw error
-      setEvents(data || [])
+      const response = await fetch('/api/events')
+      const payload = (await response.json().catch(() => null)) as { data?: Event[]; error?: string } | null
+      if (!response.ok) throw new Error(payload?.error || 'No se pudieron cargar los eventos.')
+      setEvents(payload?.data ?? [])
     } catch (error) {
       setError(getErrorMessage(error))
     } finally {
@@ -274,16 +273,13 @@ export function useEvents() {
 
   const createEvent = async (eventData: Omit<Event, 'id' | 'created_at' | 'updated_at'>): Promise<ApiResponse<Event>> => {
     try {
-      const { data, error } = await supabase
-        .from('events')
-        .insert(eventData)
-        .select()
-        .single()
-
-      if (error) throw error
-
-      setEvents(prev => [data, ...prev])
-      return { data }
+      const response = await fetch('/api/events', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(eventData),
+      })
+      const payload = (await response.json().catch(() => null)) as { data?: Event; error?: string } | null
+      if (!response.ok || !payload?.data) throw new Error(payload?.error || 'No se pudo crear el evento.')
+      setEvents(prev => [payload.data as Event, ...prev])
+      return { data: payload.data }
     } catch (error) {
       return { error: getErrorMessage(error) }
     }
@@ -668,7 +664,7 @@ export function useGuests(eventId?: string, initialGuests: GuestWithType[] = [])
   const createGuestAccess = async (
     guest: Pick<Guest, 'id' | 'event_id' | 'first_name' | 'last_name'>,
     options: CreateGuestAccessOptions
-  ): Promise<ApiResponse<GuestAccessArtifacts>> => {
+  ): Promise<ApiResponse<GuestAccessArtifacts> & { activationBlocked?: string }> => {
     try {
       const response = await fetch('/api/guest-access/issue', {
         method: 'POST',
@@ -691,6 +687,15 @@ export function useGuests(eventId?: string, initialGuests: GuestWithType[] = [])
             error?: string
           }
         | null
+
+      // 402 no es un fallo: es el muro de activacion, un estado esperado del
+      // producto. Se devuelve aparte para que la UI no lo muestre como error.
+      if (response.status === 402) {
+        return {
+          activationBlocked:
+            payload?.error ?? 'Activá tu evento para empezar a emitir las invitaciones.',
+        }
+      }
 
       if (!response.ok) {
         throw new Error(payload?.error || 'No se pudo emitir el acceso del invitado.')

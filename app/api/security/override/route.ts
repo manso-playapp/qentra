@@ -14,7 +14,7 @@ type SecurityOverrideRequestBody = {
 export const runtime = 'nodejs'
 
 export async function GET() {
-  const { response: authErrorResponse } = await ensureAuthorizedApiAccess(['admin', 'door', 'security_supervisor'])
+  const { response: authErrorResponse } = await ensureAuthorizedApiAccess(['admin', 'event_admin', 'door', 'security_supervisor'])
 
   if (authErrorResponse) {
     return authErrorResponse
@@ -27,7 +27,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const { response: authErrorResponse } = await ensureAuthorizedApiAccess(['admin', 'door', 'security_supervisor'])
+  const { response: authErrorResponse } = await ensureAuthorizedApiAccess(['admin', 'event_admin', 'door', 'security_supervisor'])
 
   if (authErrorResponse) {
     return authErrorResponse

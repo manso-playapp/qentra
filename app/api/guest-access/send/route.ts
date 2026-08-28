@@ -1,6 +1,6 @@
 import { sendGuestAccess } from '@/lib/access-delivery'
 import { persistDeliveryLog } from '@/lib/delivery-logs'
-import { ensureAuthorizedApiAccess } from '@/lib/operator-auth'
+import { ensureAuthorizedEventApiAccess } from '@/lib/operator-auth'
 
 export const runtime = 'nodejs'
 
@@ -20,11 +20,6 @@ type DeliveryRequestBody = {
 
 export async function POST(request: Request) {
   let body: DeliveryRequestBody | null = null
-  const { response: authErrorResponse } = await ensureAuthorizedApiAccess(['admin'])
-
-  if (authErrorResponse) {
-    return authErrorResponse
-  }
 
   try {
     body = (await request.json()) as DeliveryRequestBody
@@ -45,6 +40,9 @@ export async function POST(request: Request) {
         { status: 400 }
       )
     }
+
+    const { response: authErrorResponse } = await ensureAuthorizedEventApiAccess(body.eventId)
+    if (authErrorResponse) return authErrorResponse
 
     const result = await sendGuestAccess({
       channel: body.channel,

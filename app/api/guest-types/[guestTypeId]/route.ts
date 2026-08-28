@@ -1,5 +1,5 @@
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
-import { ensureAuthorizedApiAccess } from '@/lib/operator-auth'
+import { ensureAuthorizedApiAccess, ensureAuthorizedEventApiAccess } from '@/lib/operator-auth'
 
 type GuestTypeRouteContext = {
   params: Promise<{
@@ -27,7 +27,7 @@ function trimOptionalString(value: string) {
 }
 
 async function getAuthorizedAdminClient() {
-  const { response: authErrorResponse } = await ensureAuthorizedApiAccess(['admin'])
+  const { response: authErrorResponse } = await ensureAuthorizedApiAccess(['admin', 'event_admin'])
 
   if (authErrorResponse) {
     return { authErrorResponse, adminClient: null }
@@ -58,6 +58,13 @@ export async function PATCH(request: Request, context: GuestTypeRouteContext) {
   try {
     const { guestTypeId } = await context.params
     const body = (await request.json()) as UpdateGuestTypeRequestBody
+
+    const { data: guestType, error: guestTypeLookupError } = await adminClient
+      .from('guest_types').select('event_id').eq('id', guestTypeId).maybeSingle()
+    if (guestTypeLookupError) return Response.json({ error: guestTypeLookupError.message }, { status: 500 })
+    if (!guestType) return Response.json({ error: 'Tipo de invitado inexistente.' }, { status: 404 })
+    const { response: eventAuthError } = await ensureAuthorizedEventApiAccess(guestType.event_id)
+    if (eventAuthError) return eventAuthError
 
     const payload: Record<string, string | number | boolean | null> = {}
 
@@ -125,6 +132,13 @@ export async function DELETE(_request: Request, context: GuestTypeRouteContext) 
 
   try {
     const { guestTypeId } = await context.params
+
+    const { data: guestType, error: guestTypeLookupError } = await adminClient
+      .from('guest_types').select('event_id').eq('id', guestTypeId).maybeSingle()
+    if (guestTypeLookupError) return Response.json({ error: guestTypeLookupError.message }, { status: 500 })
+    if (!guestType) return Response.json({ error: 'Tipo de invitado inexistente.' }, { status: 404 })
+    const { response: eventAuthError } = await ensureAuthorizedEventApiAccess(guestType.event_id)
+    if (eventAuthError) return eventAuthError
 
     const { count, error: countError } = await adminClient
       .from('guests')

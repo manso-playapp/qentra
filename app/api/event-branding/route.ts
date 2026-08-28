@@ -1,5 +1,5 @@
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
-import { ensureAuthorizedApiAccess } from '@/lib/operator-auth'
+import { ensureAuthorizedEventApiAccess } from '@/lib/operator-auth'
 import type { UpdateEventBrandingForm } from '@/types'
 
 export const runtime = 'nodejs'
@@ -14,7 +14,11 @@ function trimmedOrNull(value: string | null | undefined) {
 }
 
 export async function GET(request: Request) {
-  const { response: authErrorResponse } = await ensureAuthorizedApiAccess(['admin'])
+  const eventId = new URL(request.url).searchParams.get('eventId')?.trim()
+  if (!eventId) {
+    return Response.json({ error: 'Falta eventId.' }, { status: 400 })
+  }
+  const { response: authErrorResponse } = await ensureAuthorizedEventApiAccess(eventId)
   if (authErrorResponse) return authErrorResponse
 
   const adminClient = getSupabaseAdminClient()
@@ -23,11 +27,6 @@ export async function GET(request: Request) {
       { error: 'SUPABASE_SERVICE_ROLE_KEY no esta configurada en el entorno.' },
       { status: 503 }
     )
-  }
-
-  const eventId = new URL(request.url).searchParams.get('eventId')?.trim()
-  if (!eventId) {
-    return Response.json({ error: 'Falta eventId.' }, { status: 400 })
   }
 
   const { data, error } = await adminClient
@@ -45,7 +44,13 @@ export async function GET(request: Request) {
 
 // PUT hace upsert: la fila de branding puede no existir todavia para un evento.
 export async function PUT(request: Request) {
-  const { response: authErrorResponse } = await ensureAuthorizedApiAccess(['admin'])
+  const body = (await request.json().catch(() => null)) as BrandingRequestBody | null
+  const eventId = body?.event_id?.trim()
+
+  if (!body || !eventId) {
+    return Response.json({ error: 'Falta event_id.' }, { status: 400 })
+  }
+  const { response: authErrorResponse } = await ensureAuthorizedEventApiAccess(eventId)
   if (authErrorResponse) return authErrorResponse
 
   const adminClient = getSupabaseAdminClient()
@@ -54,13 +59,6 @@ export async function PUT(request: Request) {
       { error: 'SUPABASE_SERVICE_ROLE_KEY no esta configurada en el entorno.' },
       { status: 503 }
     )
-  }
-
-  const body = (await request.json().catch(() => null)) as BrandingRequestBody | null
-  const eventId = body?.event_id?.trim()
-
-  if (!body || !eventId) {
-    return Response.json({ error: 'Falta event_id.' }, { status: 400 })
   }
 
   if (body.primary_color && !HEX_COLOR.test(body.primary_color)) {

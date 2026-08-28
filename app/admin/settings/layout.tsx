@@ -1,12 +1,6 @@
-// Configuración es un client component; el título se define aquí.
-export const metadata = {
-  title: 'Configuración',
-};
+import type { ReactNode } from 'react'
+import GlobalAdminGuard from '@/components/auth/GlobalAdminGuard'
 
-export default function SettingsLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  return children
+export default function SettingsLayout({ children }: { children: ReactNode }) {
+  return <GlobalAdminGuard nextPath="/admin/settings" areaLabel="la configuracion global">{children}</GlobalAdminGuard>
 }

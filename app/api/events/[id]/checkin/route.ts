@@ -1,5 +1,5 @@
 import { evaluateGuestAccess } from '@/lib/access-policy'
-import { ensureAuthorizedApiAccess } from '@/lib/operator-auth'
+import { ensureAuthorizedEventApiAccess } from '@/lib/operator-auth'
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
 import { parseCompanionNames, parseInvitationDetails } from '@/lib/invitation-response'
 import type { CheckinMethod } from '@/types'
@@ -62,7 +62,8 @@ async function notifyTotemOfApprovedCheckin(eventId: string) {
 }
 
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
-  const { response: authErrorResponse } = await ensureAuthorizedApiAccess([
+  const { id: eventId } = await context.params
+  const { response: authErrorResponse } = await ensureAuthorizedEventApiAccess(eventId, [
     'admin',
     'door',
     'security_supervisor',
@@ -77,7 +78,6 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     )
   }
 
-  const { id: eventId } = await context.params
   const body = (await request.json().catch(() => null)) as CheckinRequestBody | null
   const token = body?.token?.trim()
   const method: CheckinMethod = body?.method ?? 'manual'

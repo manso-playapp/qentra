@@ -1,3 +1,11 @@
+> [!WARNING]
+> **Parcialmente superado — 28/08/2026.** Este documento fue escrito con el planner/salón como
+> comprador principal. Esa decisión cambió: la compradora y dueña de la cuenta es la
+> **responsable de la fiesta**. Los profesionales siguen siendo canal de adquisición y
+> colaboradores, pero no son dueños ni compradores.
+> Donde este documento contradiga eso, manda `docs/Product/ALISTA_DECISIONES_PROPIEDAD_Y_PAGOS.md`.
+> El resto (arte, tono, estructura) sigue vigente.
+
 # ALISTA — ESTRATEGIA Y ARQUITECTURA DE LA NUEVA WEB
 ## Documento base para UX/UI, narrativa, contenido y desarrollo
 

@@ -1,5 +1,5 @@
 import { buildInvitationExpiry } from '@/lib/invitation-expiry'
-import { ensureAuthorizedApiAccess } from '@/lib/operator-auth'
+import { ensureAuthorizedEventApiAccess } from '@/lib/operator-auth'
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
 
 export const runtime = 'nodejs'
@@ -31,7 +31,8 @@ function isValidTime(value: string | undefined) {
 }
 
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
-  const { response: authErrorResponse } = await ensureAuthorizedApiAccess(['admin'])
+  const { id: eventId } = await context.params
+  const { response: authErrorResponse } = await ensureAuthorizedEventApiAccess(eventId)
   if (authErrorResponse) return authErrorResponse
 
   const adminClient = getSupabaseAdminClient()
@@ -42,7 +43,6 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     )
   }
 
-  const { id: eventId } = await context.params
   const body = (await request.json().catch(() => null)) as UpdateEventBody | null
 
   if (

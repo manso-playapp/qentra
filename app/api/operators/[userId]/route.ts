@@ -4,6 +4,7 @@ import { ensureAuthorizedApiAccess } from '@/lib/operator-auth'
 type UpdateOperatorRequestBody = {
   fullName?: string
   roles?: string[]
+  eventIds?: string[]
   active?: boolean
 }
 
@@ -12,9 +13,15 @@ function normalizeRoles(value: unknown) {
     return []
   }
 
-  return value.filter((role): role is 'admin' | 'door' | 'security_supervisor' =>
-    role === 'admin' || role === 'door' || role === 'security_supervisor'
+  return value.filter((role): role is 'admin' | 'event_admin' | 'door' | 'security_supervisor' =>
+    role === 'admin' || role === 'event_admin' || role === 'door' || role === 'security_supervisor'
   )
+}
+
+function normalizeEventIds(value: unknown) {
+  return Array.isArray(value)
+    ? Array.from(new Set(value.filter((id): id is string => typeof id === 'string' && id.length > 0)))
+    : []
 }
 
 export const runtime = 'nodejs'
@@ -42,11 +49,19 @@ export async function PATCH(
   const body = (await request.json()) as UpdateOperatorRequestBody
   const fullName = body.fullName?.trim()
   const roles = normalizeRoles(body.roles)
+  const eventIds = normalizeEventIds(body.eventIds)
   const active = body.active
 
   if (!userId || !fullName || roles.length === 0 || typeof active !== 'boolean') {
     return Response.json(
       { error: 'Nombre, roles y estado activo son obligatorios.' },
+      { status: 400 }
+    )
+  }
+
+  if (roles.includes('event_admin') && eventIds.length !== 1) {
+    return Response.json(
+      { error: 'El administrador de evento debe tener un unico evento asignado.' },
       { status: 400 }
     )
   }
@@ -76,12 +91,32 @@ export async function PATCH(
     return Response.json({ error: profileError.message }, { status: 500 })
   }
 
+  const { error: deleteAssignmentsError } = await adminClient
+    .from('event_admin_assignments')
+    .delete()
+    .eq('user_id', userId)
+
+  if (deleteAssignmentsError) {
+    return Response.json({ error: deleteAssignmentsError.message }, { status: 500 })
+  }
+
+  if (eventIds.length > 0) {
+    const { error: assignmentError } = await adminClient
+      .from('event_admin_assignments')
+      .insert(eventIds.map((eventId) => ({ user_id: userId, event_id: eventId })))
+
+    if (assignmentError) {
+      return Response.json({ error: assignmentError.message }, { status: 500 })
+    }
+  }
+
   return Response.json({
     data: {
       user_id: profileData.user_id,
       email: updatedUserData.user?.email ?? null,
       full_name: profileData.full_name,
       roles: profileData.roles,
+      event_ids: eventIds,
       active: profileData.active,
       last_sign_in_at: updatedUserData.user?.last_sign_in_at ?? null,
       created_at: profileData.created_at,

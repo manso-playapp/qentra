@@ -22,6 +22,13 @@ export interface Event {
   gift_info?: string | null
   contact_phone?: string
   created_by_user_id?: string
+  /**
+   * Dueño de la fiesta: quien la administra y, si hay entradas pagas, el único
+   * que puede conectar Mercado Pago y recibir el dinero. Es transferible: el
+   * planner puede crear y configurar, y después entregar la propiedad a la
+   * responsable. Distinto de `created_by_user_id`, que es sólo informativo.
+   */
+  owner_user_id?: string | null
   created_at: string
   updated_at: string
 }
@@ -100,7 +107,8 @@ export interface OperatorProfile {
   user_id: string
   email?: string | null
   full_name?: string | null
-  roles: Array<'admin' | 'door' | 'security_supervisor'>
+  roles: Array<'admin' | 'event_admin' | 'door' | 'security_supervisor'>
+  event_ids: string[]
   active: boolean
   last_sign_in_at?: string | null
   created_at: string
@@ -364,12 +372,14 @@ export interface CreateOperatorForm {
   password: string
   full_name: string
   roles: OperatorProfile['roles']
+  event_ids: string[]
   active: boolean
 }
 
 export interface UpdateOperatorForm {
   full_name: string
   roles: OperatorProfile['roles']
+  event_ids: string[]
   active: boolean
 }
 

@@ -1,4 +1,4 @@
-import { ensureAuthorizedApiAccess } from '@/lib/operator-auth'
+import { ensureAuthorizedEventApiAccess } from '@/lib/operator-auth'
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
 import { getEventTemplateByKey } from '@/lib/event-templates'
 
@@ -10,21 +10,6 @@ type ApplyEventTemplateRequestBody = {
 }
 
 export async function POST(request: Request) {
-  const { response: authErrorResponse } = await ensureAuthorizedApiAccess(['admin'])
-
-  if (authErrorResponse) {
-    return authErrorResponse
-  }
-
-  const adminClient = getSupabaseAdminClient()
-
-  if (!adminClient) {
-    return Response.json(
-      { error: 'SUPABASE_SERVICE_ROLE_KEY no esta configurada en el entorno.' },
-      { status: 503 }
-    )
-  }
-
   try {
     const body = (await request.json()) as ApplyEventTemplateRequestBody
     const eventId = body.eventId?.trim()
@@ -34,6 +19,17 @@ export async function POST(request: Request) {
       return Response.json(
         { error: 'Faltan datos para aplicar la plantilla del evento.' },
         { status: 400 }
+      )
+    }
+
+    const { response: authErrorResponse } = await ensureAuthorizedEventApiAccess(eventId)
+    if (authErrorResponse) return authErrorResponse
+
+    const adminClient = getSupabaseAdminClient()
+    if (!adminClient) {
+      return Response.json(
+        { error: 'SUPABASE_SERVICE_ROLE_KEY no esta configurada en el entorno.' },
+        { status: 503 }
       )
     }
 

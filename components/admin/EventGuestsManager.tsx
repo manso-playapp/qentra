@@ -5,6 +5,7 @@ import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { formatGuestTypeAccessPolicy } from '@/lib/access-policy'
 import { formatEventDate } from '@/lib/event-date'
+import { buildActivationRequestHref } from '@/lib/event-activation'
 import { mapGuestStatusToDb, type DbGuestStatus } from '@/lib/guest-schema'
 import { isInvitationExpired } from '@/lib/invitation-expiry'
 import {
@@ -319,6 +320,9 @@ export default function EventGuestsManager({
   }
   const [editGuestForm, setEditGuestForm] = useState<GuestEditFormState | null>(null)
   const [guestRowActionError, setGuestRowActionError] = useState<string | null>(null)
+  // El muro de activacion no es un error: se guarda aparte para darle su propio
+  // tratamiento visual y una salida concreta.
+  const [activationBlocked, setActivationBlocked] = useState<string | null>(null)
   const [guestRowActionNotice, setGuestRowActionNotice] = useState<string | null>(null)
   const [guestRowActionLoadingId, setGuestRowActionLoadingId] = useState<string | null>(null)
   const [guestAccessActionLoadingId, setGuestAccessActionLoadingId] = useState<string | null>(null)
@@ -988,7 +992,10 @@ export default function EventGuestsManager({
       eventStartTime: event.start_time,
     })
 
-    if (result.error) {
+    if (result.activationBlocked) {
+      // El muro tiene su propio cartel: no se rompio nada, falta activar.
+      setActivationBlocked(result.activationBlocked)
+    } else if (result.error) {
       setGuestRowActionError(result.error)
     } else {
       setGuestRowActionNotice(
@@ -2033,6 +2040,29 @@ export default function EventGuestsManager({
               </div>
             ) : (
               <div className="mt-4 space-y-3">
+                {activationBlocked && (
+                  <div className="rounded-xl border border-amber-200 bg-amber-50 p-5">
+                    <p className="text-sm font-semibold text-amber-900">
+                      Tu evento todavía no está activado
+                    </p>
+                    <p className="mt-1 text-sm leading-6 text-amber-800">{activationBlocked}</p>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <a
+                        href={buildActivationRequestHref(event)}
+                        className="inline-flex items-center rounded-full bg-amber-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-amber-700"
+                      >
+                        Quiero activar mi evento
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => setActivationBlocked(null)}
+                        className="inline-flex items-center rounded-full border border-amber-300 px-4 py-2 text-sm font-semibold text-amber-900 transition hover:bg-amber-100"
+                      >
+                        Seguir cargando invitados
+                      </button>
+                    </div>
+                  </div>
+                )}
                 {guestRowActionError && (
                   <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
                     Error al actualizar invitado: {guestRowActionError}

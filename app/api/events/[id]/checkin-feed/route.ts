@@ -1,5 +1,5 @@
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
-import { ensureAuthorizedApiAccess } from '@/lib/operator-auth'
+import { ensureAuthorizedEventApiAccess } from '@/lib/operator-auth'
 import { parseCompanionNames, parseInvitationDetails } from '@/lib/invitation-response'
 
 export const runtime = 'nodejs'
@@ -17,7 +17,8 @@ type RouteContext = {
 }
 
 export async function GET(_request: Request, context: RouteContext) {
-  const { response: authErrorResponse } = await ensureAuthorizedApiAccess([
+  const { id: eventId } = await context.params
+  const { response: authErrorResponse } = await ensureAuthorizedEventApiAccess(eventId, [
     'admin',
     'door',
     'security_supervisor',
@@ -31,8 +32,6 @@ export async function GET(_request: Request, context: RouteContext) {
       { status: 503 }
     )
   }
-
-  const { id: eventId } = await context.params
 
   const [feedResult, countResult] = await Promise.all([
     adminClient

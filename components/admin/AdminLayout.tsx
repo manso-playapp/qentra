@@ -15,6 +15,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { APP_VERSION, APP_VERSION_DATE } from '@/lib/version'
+import { useAdminAccess } from '@/components/admin/AdminAccessContext'
 
 interface AdminLayoutProps {
   children: ReactNode
@@ -142,6 +143,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname()
   const header = getPageHeader(pathname)
   const [collapsed, setCollapsed] = useState(false)
+  const { isGlobalAdmin, identity } = useAdminAccess()
   // Arranca en false para que server y cliente hidraten igual; la preferencia
   // guardada se aplica recien despues de montar.
   const skipPersist = useRef(true)
@@ -199,7 +201,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             </div>
 
             <nav className="mt-8 flex-1 space-y-2">
-              {ADMIN_NAV_ITEMS.map((item) => {
+              {ADMIN_NAV_ITEMS.filter((item) =>
+                isGlobalAdmin || (item.href !== '/admin/settings' && item.href !== '/admin/estado')
+              ).map((item) => {
                 const active = isNavItemActive(pathname, item.href)
                 const Icon = item.icon
 
@@ -249,7 +253,35 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               })}
             </nav>
 
-            <form action="/acceso/logout" method="post" className="mt-6">
+            {/* Con clientes y equipo usando el mismo panel, quien esta adentro
+                tiene que ser visible sin tener que adivinar. */}
+            <div
+              className={cn(
+                'mt-6 rounded-[22px] border border-white/8 bg-white/[0.03]',
+                collapsed ? 'p-2' : 'px-4 py-3'
+              )}
+              title={identity.email ?? undefined}
+            >
+              {collapsed ? (
+                <div className="grid size-9 place-items-center rounded-xl bg-white/10 text-xs font-bold uppercase text-slate-200">
+                  {(identity.name ?? identity.email ?? '?').slice(0, 1)}
+                </div>
+              ) : (
+                <>
+                  <p className="truncate text-sm font-semibold text-white">
+                    {identity.name ?? identity.email ?? 'Sesión activa'}
+                  </p>
+                  {identity.name && identity.email && (
+                    <p className="mt-0.5 truncate text-xs text-slate-400">{identity.email}</p>
+                  )}
+                  <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    {identity.isStaff ? 'Equipo Alista' : 'Tu cuenta'}
+                  </p>
+                </>
+              )}
+            </div>
+
+            <form action="/acceso/logout" method="post" className="mt-3">
               <Button
                 type="submit"
                 variant="outline"
