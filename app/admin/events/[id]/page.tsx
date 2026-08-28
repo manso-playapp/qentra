@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import AdminLayout from '@/components/admin/AdminLayout'
 import EventActivationCard from '@/components/admin/EventActivationCard'
+import EventOwnershipCard from '@/components/admin/EventOwnershipCard'
 import EventPaymentAccountCard from '@/components/admin/EventPaymentAccountCard'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -65,7 +66,8 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
   // Service role: RLS oculta guests/checkins al cliente con
   // cookies (operator-auth no crea sesion de Supabase). La ruta ya esta
   // protegida por el layout. Fallback al cliente con sesion si falta la key.
-  const supabase = getSupabaseAdminClient() ?? (await createServerSupabaseClient())
+  const adminClient = getSupabaseAdminClient()
+  const supabase = adminClient ?? (await createServerSupabaseClient())
 
   const [
     eventResponse,
@@ -127,6 +129,12 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
   const activation = activationResponse.data as
     | (EventActivation & { activated_at?: string | null; note?: string | null })
     | null
+  const canTransferOwnership = isAlistaStaff(authState.access)
+  let currentOwnerEmail: string | null = null
+  if (canTransferOwnership && event.owner_user_id && adminClient) {
+    const { data: ownerData } = await adminClient.auth.admin.getUserById(event.owner_user_id)
+    currentOwnerEmail = ownerData.user?.email ?? null
+  }
   const availableSeats = Math.max(event.max_capacity - guestCount, 0)
   return (
     <AdminLayout>
@@ -313,6 +321,10 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
               note={activation?.note}
               canGrant={isAlistaStaff(authState.access)}
             />
+
+            {canTransferOwnership && (
+              <EventOwnershipCard event={event} currentOwnerEmail={currentOwnerEmail} />
+            )}
 
             <EventPaymentAccountCard
               eventId={event.id}

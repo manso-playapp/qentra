@@ -182,6 +182,14 @@ sólo cambia la §6. Actualizar de más = churn y tokens.
   muestra *Quiero activar mi evento* con el mismo link. Así lo ve en la ficha del evento y
   no recién al chocar contra el muro después de cargar 200 invitados.
 
+- **Frente cerrado — transferencia de propiedad desde el panel Superadmin.**
+  `components/admin/EventOwnershipCard.tsx` agrega la tarjeta en el detalle del evento y
+  `app/api/events/[id]/transfer/route.ts` valida en servidor que el email exista en Supabase
+  Auth antes de cambiar `events.owner_user_id`. La acción sólo está disponible para el rol
+  `admin`, confirma evento y destinatario, y no modifica `created_by_user_id`, invitados,
+  colaboradores ni la cuenta de Mercado Pago. No requiere migración. Tests: 327; `tsc`, lint y
+  build OK.
+
 ### ✅ Circuito verificado de punta a punta (28/08/2026, en local contra la base real)
 Registro con Google (`hugojaviermanso@gmail.com`, sin perfil de operador) → panel → creó
 "XV Peteca" y quedó como dueña → cargó un invitado → intentó emitir y **el muro cortó**
@@ -259,9 +267,9 @@ Y `git status` para confirmar que no quedó nada colgado.
 
 ### 📍 Al retomar (estado al 2026-08-28, cambio de máquina)
 
-**Nada de esto está desplegado todavía.** Producción sigue con el código anterior: sin registro
-con Google, sin propiedad de evento y sin muro. Todo lo de hoy corrió y se verificó **en local
-contra la base real**.
+El código de registro con Google, propiedad de evento, muro de activación y transferencia desde
+el panel Superadmin ya está desplegado en producción. El deployment publicado quedó `Ready` y
+aliased a `https://www.alista.com.ar` y `https://alista.com.ar`.
 
 Ya está hecho y no hay que rehacerlo:
 - Las dos migraciones **están aplicadas** en Supabase (propiedad + activaciones).
@@ -271,11 +279,14 @@ Ya está hecho y no hay que rehacerlo:
 Falta, y no viaja por git:
 - **`.env.local`** → copiarlo de `.env.example` y completarlo desde los paneles.
   `NEXT_PUBLIC_APP_URL` va con **`https://www.alista.com.ar`** (con `www`: el apex redirige 308).
-- **Antes de desplegar:** actualizar `NEXT_PUBLIC_APP_URL` **en las variables de Vercel**, que
-  son distintas de las locales. Si queda el apex, cada link de invitación se come un salto de más.
+- `NEXT_PUBLIC_APP_URL` **ya fue actualizado en Vercel** y el deployment de producción fue
+  verificado con respuesta HTTP 200 en el dominio público.
+- Las cuatro variables de producción para vinculación OAuth de Mercado Pago también están
+  cargadas en Vercel: `MERCADOPAGO_CLIENT_ID`, `MERCADOPAGO_CLIENT_SECRET`,
+  `MERCADOPAGO_OAUTH_REDIRECT_URI` y `ALISTA_PAYMENT_CREDENTIALS_ENCRYPTION_KEY`.
 
-Al desplegar, revisar que el login con Google funcione en producción: si termina en la home
-pública, es que falta la Redirect URL, no que falle el código.
+Al probar el login con Google en producción, si termina en la home pública, revisar primero las
+Redirect URLs de Supabase: la callback debe aceptar el host y la query `?next=...`.
 
 ### Reponer una vez por máquina (NO está en git, a propósito)
 - **Dependencias** → `npm install`.
