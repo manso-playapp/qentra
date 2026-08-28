@@ -1,0 +1,24 @@
+# Los finales de linea los decide el repo, no la configuracion de cada maquina.
+#
+# Sin esto, `core.autocrlf` vive en .git/config —que NO viaja con el clone— y
+# dos computadoras con ajustes distintos terminan viendo archivos enteros como
+# modificados, o commiteando finales mezclados que ensucian todos los diffs.
+#
+# `text=auto`: git normaliza a LF al guardar en el repo y entrega el final de
+# linea nativo en cada sistema al hacer checkout.
+* text=auto
+
+# Scripts que corren en Linux: siempre LF, aunque se editen en Windows.
+*.sh text eol=lf
+
+# Binarios: que git no intente convertir nada.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.mp4 binary
+*.ico binary
+*.pdf binary
+*.woff binary
+*.woff2 binary
