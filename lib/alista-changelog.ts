@@ -20,6 +20,15 @@ export type AlistaChange = {
 
 export const ALISTA_CHANGELOG: AlistaChange[] = [
   {
+    commit: '17532d5',
+    date: '2026-08-29',
+    dateLabel: '29 ago 2026',
+    kind: 'producto',
+    area: 'Resumen del evento',
+    title: 'El evento abre mostrando lo que necesita atención',
+    summary: 'En lugar de una grilla de totales, la ficha señala invitaciones sin emitir, confirmaciones y pagos pendientes, portada faltante y cuenta de cobros sin vincular; la recepción cambia de tono el día de la fiesta y la descripción del evento se edita junto al resto de los datos.',
+  },
+  {
     commit: '4936f45',
     date: '2026-08-29',
     dateLabel: '29 ago 2026',
