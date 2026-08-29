@@ -22,7 +22,7 @@ export interface MvpFeature {
 }
 
 export const MODULES: Record<ModuleKey, { label: string; description: string }> = {
-  plataforma: { label: 'Plataforma', description: 'Auth, roles y base comun' },
+  plataforma: { label: 'Plataforma', description: 'Auth, cuentas y base comun' },
   admin: { label: 'Admin', description: 'Backoffice de eventos' },
   guest: { label: 'Guest', description: 'Invitacion, registro y QR' },
   checkin: { label: 'Check-In', description: 'Puerta y validacion de acceso' },
@@ -30,11 +30,31 @@ export const MODULES: Record<ModuleKey, { label: string; description: string }> 
   pagos: { label: 'Pagos', description: 'Cobros y monetizacion' },
 }
 
+/** Lectura ejecutiva de lo que la release actual ya permite hacer. */
+export const MVP_RELEASE_CAPABILITIES = [
+  {
+    title: 'Una cuenta, varios eventos',
+    detail: 'La responsable puede tener más de una fiesta en su cuenta y elegir cuál está operando.',
+  },
+  {
+    title: 'Propiedad clara',
+    detail: 'El evento puede transferirse a la cuenta real de la responsable sin duplicar invitados ni configuración.',
+  },
+  {
+    title: 'Activación automática',
+    detail: 'El pago de $89.000 activa la emisión de invitaciones; antes se puede seguir preparando el evento.',
+  },
+  {
+    title: 'Llegada operativa',
+    detail: 'Invitación, invitados, Tótem, Check-in y Puerta están reunidos en el contexto del evento.',
+  },
+] as const
+
 /** Features que hoy componen el alcance operativo del MVP. */
 export const MVP_FEATURES: MvpFeature[] = [
   {
     id: 'login',
-    title: 'Login interno',
+    title: 'Acceso y cuentas',
     module: 'plataforma',
     status: 'done',
     detail:

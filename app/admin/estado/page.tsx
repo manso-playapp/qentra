@@ -17,6 +17,7 @@ import {
   BEYOND_MVP,
   MVP_FEATURES,
   NEXT_STEPS,
+  MVP_RELEASE_CAPABILITIES,
   TECH_DEBT,
   featuresByStatus,
   summarize,
@@ -155,12 +156,38 @@ export default function MvpStatusPage() {
           </CardContent>
         </Card>
 
+        <section className="mt-6">
+          <div className="flex flex-wrap items-baseline justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-muted-foreground">Release actual</p>
+              <h2 className="admin-heading mt-2 text-3xl text-foreground">Qué ya puede hacer una clienta</h2>
+            </div>
+            <p className="max-w-xl text-sm leading-6 text-muted-foreground">
+              El MVP no es una demo descartable: es la misma fiesta que se configura, se activa y se opera.
+            </p>
+          </div>
+
+          <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {MVP_RELEASE_CAPABILITIES.map((capability, index) => (
+              <Card key={capability.title} className="bg-admin-panel">
+                <CardContent className="p-5">
+                  <span className="grid size-10 place-items-center rounded-2xl bg-sky-50 text-sky-700 ring-1 ring-sky-100">
+                    <span className="text-sm font-semibold">0{index + 1}</span>
+                  </span>
+                  <h3 className="mt-4 text-base font-semibold leading-6 text-foreground">{capability.title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">{capability.detail}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </section>
+
         {/* Lo primero: proximos pasos y deudas. */}
         <div className="mt-6 grid gap-6 xl:grid-cols-2">
           <Card className="bg-admin-navy text-white">
             <CardHeader>
               <CardDescription className="text-sky-200/70">Lo que sigue</CardDescription>
-              <CardTitle className="text-white">Proximos pasos</CardTitle>
+              <CardTitle className="text-white">Próximos pasos reales</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {NEXT_STEPS.map((step) => (
@@ -211,6 +238,22 @@ export default function MvpStatusPage() {
             </CardContent>
           </Card>
         </div>
+
+        <Card className="mt-6 border-sky-200/80 bg-sky-50/60">
+          <CardContent className="flex flex-col gap-4 p-6 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-700">Cómo leer este tablero</p>
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-sky-950">
+                “A medias” indica una superficie que ya funciona pero necesita pulido o validación final.
+                La automatización masiva de WhatsApp aparece como futuro: no bloquea el recorrido actual,
+                que usa el WhatsApp personal de la familia.
+              </p>
+            </div>
+            <Badge variant="info" className="self-start lg:self-center">
+              {summary.done} cerradas · {summary.partial} a medias · {summary.todo} futuras
+            </Badge>
+          </CardContent>
+        </Card>
 
         {/* Lo que falta: pendientes y a medias, con foco en el gap. */}
         <Card className="mt-6 bg-admin-panel">

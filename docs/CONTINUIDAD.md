@@ -197,6 +197,11 @@ sólo cambia la §6. Actualizar de más = churn y tokens.
   agregó una sección de “Tickets”: el producto opera con invitaciones, invitados y accesos QR.
   La lista se alimenta de los eventos que ya autoriza `/api/events`; no requiere migración.
 
+- **Pantalla de MVP actualizada para la release `0.9.0`.** `/admin/estado` ahora muestra el
+  recorrido operativo de una clienta, el avance ponderado de las 22 features, los cuatro hitos
+  de la release, los pendientes reales y lo que queda fuera de prioridad. La automatización
+  masiva de WhatsApp no se presenta como bloqueo del recorrido actual.
+
 ### ✅ Circuito verificado de punta a punta (28/08/2026, en local contra la base real)
 Registro con Google (`hugojaviermanso@gmail.com`, sin perfil de operador) → panel → creó
 "XV Peteca" y quedó como dueña → cargó un invitado → intentó emitir y **el muro cortó**
