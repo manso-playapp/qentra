@@ -251,6 +251,12 @@ body {
   font-family: var(--invitation-title-font, var(--font-playfair)), Georgia, serif;
 }
 
+/* Ayudas del formulario de respuesta: son datos del evento, no decoracion, asi
+   que siguen la tipografia de datos elegida y no la del navegador. */
+.invitation-form-hint {
+  font-family: var(--invitation-data-font, var(--font-nunito)), ui-sans-serif, system-ui, sans-serif;
+}
+
 .invitation-template-midnight > .relative {
   z-index: 1;
 }

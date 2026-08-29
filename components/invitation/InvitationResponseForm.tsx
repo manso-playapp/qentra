@@ -222,6 +222,7 @@ export default function InvitationResponseForm({ token, initialData, fields }: I
             <ImageUpload
               label="Tu foto"
               hint="Se usa para validar tu identidad en el ingreso. Podés sacártela con la cámara."
+              hintClassName="invitation-form-hint"
               value={photoUrl}
               onChange={setPhotoUrl}
               uploadUrl={`/api/invitacion/${token}/photo`}
@@ -246,7 +247,7 @@ export default function InvitationResponseForm({ token, initialData, fields }: I
           {companionLimit > 0 && (
             <div>
               <Label>Nombres de acompanantes</Label>
-              <p className="mt-1 text-xs text-slate-500">Opcional. No genera un QR individual.</p>
+              <p className="invitation-form-hint mt-1 text-xs text-slate-500">Opcional. No genera un QR individual.</p>
               <div className="mt-2 grid gap-3 sm:grid-cols-2">
                 {companionNames.map((name, index) => (
                   <Input

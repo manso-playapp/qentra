@@ -9,6 +9,8 @@ import { getErrorMessage } from '@/lib/errors'
 type ImageUploadProps = {
   label: string
   hint?: string
+  /** Clase extra para el texto de ayuda (la invitacion le aplica su tipografia). */
+  hintClassName?: string
   value: string
   onChange: (url: string) => void
   /** Endpoint de subida. Por defecto la API admin; el invitado usa la ruta por token. */
@@ -24,6 +26,7 @@ type ImageUploadProps = {
 export default function ImageUpload({
   label,
   hint,
+  hintClassName = '',
   value,
   onChange,
   uploadUrl = '/api/uploads',
@@ -103,7 +106,7 @@ export default function ImageUpload({
             )}
           </div>
 
-          {hint && <p className="text-xs leading-5 text-muted-foreground">{hint}</p>}
+          {hint && <p className={`text-xs leading-5 text-muted-foreground ${hintClassName}`}>{hint}</p>}
           {error && <p className="text-xs leading-5 text-rose-600">{error}</p>}
         </div>
       </div>
