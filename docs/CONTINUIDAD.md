@@ -196,9 +196,10 @@ sólo cambia la §6. Actualizar de más = churn y tokens.
   eventos y Nuevo evento como navegación global, y mantiene la cuenta logueada abajo. No se
   agregó una sección de “Tickets”: el producto opera con invitaciones, invitados y accesos QR.
   La lista se alimenta de los eventos que ya autoriza `/api/events`; no requiere migración. El
-  refinamiento visual posterior dejó scrolleable sólo el contexto operativo, redujo el aire entre
+  refinamiento visual posterior dejó un único scroll para toda la navegación, redujo el aire entre
   links y reemplazó los marcos de los botones por una barra lateral celeste para identificar el
-  activo. La cuenta y el cierre de sesión quedan en un footer compacto con menú de tres puntos.
+  activo. La scrollbar queda integrada al fondo navy y la cuenta y el cierre de sesión quedan en
+  un footer compacto con menú de tres puntos.
 
 - **Pantalla de MVP actualizada para la release `0.9.0`.** `/admin/estado` ahora muestra el
   recorrido operativo de una clienta, el avance ponderado de las 22 features, los cuatro hitos

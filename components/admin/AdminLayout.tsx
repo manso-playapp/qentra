@@ -213,61 +213,61 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               </button>
             </div>
 
-            <div className="mt-5 min-h-0 flex-1 overflow-y-auto pr-1">
+            <div className="admin-sidebar-scroll mt-5 min-h-0 flex-1 overflow-y-auto pr-1">
               <AdminEventSidebar collapsed={collapsed} isStaff={isGlobalAdmin} />
-            </div>
 
-            <div className={cn('my-4 border-t border-white/10', collapsed ? 'mx-2' : 'mx-1')} />
+              <div className={cn('my-4 border-t border-white/10', collapsed ? 'mx-2' : 'mx-1')} />
 
-            <nav className="shrink-0" aria-label="Navegación principal">
-              <section className="space-y-0.5">
-                {!collapsed && (
-                  <p className="mb-1.5 px-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-500">
-                    Alista
-                  </p>
-                )}
-                {ADMIN_NAV_ITEMS.filter((item) =>
-                  isGlobalAdmin || (item.href !== '/admin/settings' && item.href !== '/admin/estado')
-                ).map((item) => {
-                  const active = isNavItemActive(pathname, item.href)
-                  const Icon = item.icon
+              <nav aria-label="Navegación principal">
+                <section className="space-y-0.5">
+                  {!collapsed && (
+                    <p className="mb-1.5 px-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                      Alista
+                    </p>
+                  )}
+                  {ADMIN_NAV_ITEMS.filter((item) =>
+                    isGlobalAdmin || (item.href !== '/admin/settings' && item.href !== '/admin/estado')
+                  ).map((item) => {
+                    const active = isNavItemActive(pathname, item.href)
+                    const Icon = item.icon
 
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      title={collapsed ? item.label : undefined}
-                      className={cn(
-                        'group relative flex items-center transition',
-                        collapsed ? 'justify-center p-2.5' : 'gap-2 px-3 py-2.5',
-                        active ? 'text-white' : 'text-slate-200 hover:text-white'
-                      )}
-                    >
-                      {active && (
-                        <span
-                          aria-hidden="true"
-                          className={cn(
-                            'absolute left-0 w-1 rounded-full bg-sky-300 shadow-[0_0_14px_rgba(125,211,252,0.8)]',
-                            collapsed ? 'inset-y-2' : 'inset-y-1.5'
-                          )}
-                        />
-                      )}
-                      <span className={cn('p-2.5', active ? 'text-sky-200' : 'text-slate-400')}>
-                        <Icon className="size-4" />
-                      </span>
-                      {!collapsed && (
-                        <span className="min-w-0">
-                          <span className="block text-sm font-semibold">{item.href === '/admin/events' && !isGlobalAdmin ? 'Mis eventos' : item.label}</span>
-                          <span className={cn('mt-0.5 block text-xs', active ? 'text-sky-200/80' : 'text-slate-400')}>
-                            {item.description}
-                          </span>
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        title={collapsed ? item.label : undefined}
+                        className={cn(
+                          'group relative flex items-center transition',
+                          collapsed ? 'justify-center p-2.5' : 'gap-2 px-3 py-2.5',
+                          active ? 'text-white' : 'text-slate-200 hover:text-white'
+                        )}
+                      >
+                        {active && (
+                          <span
+                            aria-hidden="true"
+                            className={cn(
+                              'absolute left-0 w-1 rounded-full bg-sky-300 shadow-[0_0_14px_rgba(125,211,252,0.8)]',
+                              collapsed ? 'inset-y-2' : 'inset-y-1.5'
+                            )}
+                          />
+                        )}
+                        <span className={cn('p-2.5', active ? 'text-sky-200' : 'text-slate-400')}>
+                          <Icon className="size-4" />
                         </span>
-                      )}
-                    </Link>
-                  )
-                })}
-              </section>
-            </nav>
+                        {!collapsed && (
+                          <span className="min-w-0">
+                            <span className="block text-sm font-semibold">{item.href === '/admin/events' && !isGlobalAdmin ? 'Mis eventos' : item.label}</span>
+                            <span className={cn('mt-0.5 block text-xs', active ? 'text-sky-200/80' : 'text-slate-400')}>
+                              {item.description}
+                            </span>
+                          </span>
+                        )}
+                      </Link>
+                    )
+                  })}
+                </section>
+              </nav>
+            </div>
 
             {/* Cuenta y acciones secundarias: visibles, pero sin competir con la operación. */}
             <details className="relative mt-4 shrink-0 border-t border-white/10 pt-3">
