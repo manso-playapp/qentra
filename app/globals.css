@@ -145,7 +145,7 @@ body {
 }
 
 .admin-sidebar-scroll::-webkit-scrollbar {
-  width: 5px;
+  width: 3px;
 }
 
 .admin-sidebar-scroll::-webkit-scrollbar-track {
