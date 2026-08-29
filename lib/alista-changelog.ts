@@ -20,6 +20,15 @@ export type AlistaChange = {
 
 export const ALISTA_CHANGELOG: AlistaChange[] = [
   {
+    commit: '6d5098d',
+    date: '2026-08-29',
+    dateLabel: '29 ago 2026',
+    kind: 'experiencia',
+    area: 'Invitados',
+    title: 'El panel dice "invitación generada" en lugar de "link enviado"',
+    summary: 'Alista no envía: el link sale del WhatsApp de la familia. El estado del invitado ahora afirma solo lo que el sistema sabe, que la invitación quedó generada, tanto en el badge como en los avisos del panel.',
+  },
+  {
     commit: 'a7a4882',
     date: '2026-08-29',
     dateLabel: '29 ago 2026',
