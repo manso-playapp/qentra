@@ -151,14 +151,14 @@ export default async function AdminPage() {
     sinInvitar > 0 && {
       icon: Mail,
       count: sinInvitar,
-      label: 'sin invitación enviada',
-      cta: 'Enviar invitaciones',
+      label: 'sin invitación generada',
+      cta: 'Generar invitaciones',
     },
     sinConfirmar > 0 && {
       icon: Clock,
       count: sinConfirmar,
-      label: 'sin confirmar asistencia',
-      cta: 'Seguir a los pendientes',
+      label: 'con invitación generada sin responder',
+      cta: 'Ver los pendientes',
     },
     pagosPendientes > 0 && {
       icon: Wallet,

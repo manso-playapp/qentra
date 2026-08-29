@@ -165,15 +165,15 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
   const attentionItems = [
     withoutInvitation > 0
       ? {
-          title: `${withoutInvitation} ${withoutInvitation === 1 ? 'invitado todavía no recibió' : 'invitados todavía no recibieron'} su invitación`,
-          detail: 'Prepará los links pendientes desde la gestión de invitados.',
+          title: `${withoutInvitation} ${withoutInvitation === 1 ? 'invitado todavía no tiene' : 'invitados todavía no tienen'} su invitación generada`,
+          detail: 'Sin link generado no hay nada para mandar. Generalos desde la gestión de invitados.',
           href: `/admin/events/${event.id}/guests`,
         }
       : null,
     awaitingConfirmation > 0
       ? {
-          title: `${awaitingConfirmation} ${awaitingConfirmation === 1 ? 'confirmación pendiente' : 'confirmaciones pendientes'}`,
-          detail: 'Revisá quiénes todavía no respondieron.',
+          title: `${awaitingConfirmation} ${awaitingConfirmation === 1 ? 'invitación generada sin respuesta' : 'invitaciones generadas sin respuesta'}`,
+          detail: 'El link ya existe: falta mandarlo desde tu WhatsApp y esperar la confirmación.',
           href: `/admin/events/${event.id}/guests`,
         }
       : null,

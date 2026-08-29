@@ -3,9 +3,14 @@ import type { DbGuestStatus } from '@/lib/guest-schema'
 // Presentacion de los 7 estados reales del ciclo del invitado. Fuente unica para
 // el panel del evento y la vista global de invitados, para que el badge se lea
 // igual en todos lados.
+//
+// `link_sent` es un nombre historico de la base y NO significa que Alista haya
+// enviado nada: Alista no envia, el link sale del WhatsApp de la familia. Lo
+// unico que el sistema sabe es que la invitacion quedo generada. El texto
+// visible dice eso y solo eso.
 export const GUEST_DB_STATUS_LABELS: Record<DbGuestStatus, string> = {
-  preinvited: 'Sin invitar',
-  link_sent: 'Link enviado',
+  preinvited: 'Sin invitación',
+  link_sent: 'Invitación generada',
   registered: 'Registrado',
   enabled: 'Habilitado',
   checked_in: 'Ingreso',
