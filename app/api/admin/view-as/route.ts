@@ -1,5 +1,6 @@
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
-import { ensureAuthorizedApiAccess } from '@/lib/operator-auth'
+import { getRealAuthState } from '@/lib/operator-auth'
+import { isAlistaStaff } from '@/lib/event-access'
 import { VIEW_AS_COOKIE, viewAsCookieOptions } from '@/lib/impersonation'
 
 export const runtime = 'nodejs'
@@ -11,12 +12,17 @@ type PostBody = {
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
-// Entrar en "ver como". Solo el equipo de Alista: `ensureAuthorizedApiAccess`
-// exige perfil de operador con rol admin, y la cookie sola no habilita nada
-// (el servidor vuelve a comprobar la sesión real en cada render).
+// Entrar en "ver como". Solo el equipo de Alista, comprobado contra la sesión
+// real. La cookie sola no habilita nada: el servidor vuelve a exigir sesión de
+// staff en cada render antes de aplicar la lente.
 export async function POST(request: Request) {
-  const { response: authErrorResponse } = await ensureAuthorizedApiAccess(['admin'])
-  if (authErrorResponse) return authErrorResponse
+  // Con la sesión real: si esto mirara con la lente, quien ya está mirando no
+  // podría cambiar de cuenta ni el chequeo significaría lo que dice.
+  const real = await getRealAuthState()
+  if (!real.user) return Response.json({ error: 'Unauthorized.' }, { status: 401 })
+  if (!isAlistaStaff(real.access)) {
+    return Response.json({ error: 'Solo el equipo de Alista puede usar esta vista.' }, { status: 403 })
+  }
 
   const adminClient = getSupabaseAdminClient()
   if (!adminClient) {

@@ -272,6 +272,11 @@ export function verifySecuritySupervisorPin(candidate: string) {
  * autorizando con `getCurrentAuthState`, así que mirar no degrada la capacidad
  * de soporte: cambia el punto de vista, no los permisos.
  */
+/** La sesión real, sin lente. Solo para decidir quién puede activar "ver como". */
+export async function getRealAuthState() {
+  return getCurrentAuthState()
+}
+
 export async function getViewerAuthState() {
   const real = await getCurrentAuthState()
 
@@ -368,7 +373,7 @@ export async function requireAuthorizedPageAccess(
 }
 
 export async function ensureAuthorizedApiAccess(allowedRoles: readonly AppRole[]) {
-  const authState = await getCurrentAuthState()
+  const authState = await getViewerAuthState()
 
   if (!authState.user) {
     return {
@@ -448,7 +453,7 @@ export async function requireAuthenticatedPageAccess(
  * esta `ensureAuthorizedEventApiAccess`.
  */
 export async function ensureAuthenticatedApiAccess() {
-  const authState = await getCurrentAuthState()
+  const authState = await getViewerAuthState()
 
   if (!authState.user) {
     return {
@@ -525,7 +530,7 @@ export async function ensureAuthorizedEventApiAccess(
   eventId: string,
   allowedRoles: readonly AppRole[] = ['admin']
 ) {
-  const authState = await getCurrentAuthState()
+  const authState = await getViewerAuthState()
 
   if (!authState.user) {
     return {
