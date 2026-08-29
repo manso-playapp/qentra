@@ -24,6 +24,7 @@ import {
   type FeatureStatus,
   type MvpFeature,
 } from '@/lib/mvp-status'
+import { APP_VERSION, APP_VERSION_DATE } from '@/lib/version'
 
 export const metadata = {
   title: 'Estado del MVP',
@@ -109,31 +110,50 @@ export default function MvpStatusPage() {
   const partial = featuresByStatus(MVP_FEATURES, 'partial')
   const pending = [...todo, ...partial]
   const done = featuresByStatus(MVP_FEATURES, 'done')
+  const mvpStatusLabel = summary.todo === 0 && summary.partial === 0
+    ? 'MVP cerrado'
+    : 'MVP operativo en validación'
 
   return (
     <AdminLayout>
       <div className="px-4 py-6 sm:px-0">
-        {/* Cabecera compacta: sin el numero grande, solo el titulo y el pulso. */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="default">Estado del MVP</Badge>
-            <Badge variant="outline">{summary.total} features</Badge>
-          </div>
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-sm text-muted-foreground">
-            <span className="flex items-center gap-2">
-              <span className="size-2.5 rounded-full bg-emerald-500" />
-              {summary.done} funcionando
-            </span>
-            <span className="flex items-center gap-2">
-              <span className="size-2.5 rounded-full bg-amber-400" />
-              {summary.partial} a medias
-            </span>
-            <span className="flex items-center gap-2">
-              <span className="size-2.5 rounded-full bg-slate-300" />
-              {summary.todo} pendientes
-            </span>
-          </div>
-        </div>
+        <Card className="overflow-hidden bg-admin-navy text-white">
+          <CardContent className="grid gap-8 p-8 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-center">
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="info">MVP {APP_VERSION}</Badge>
+                <Badge className="border-white/15 bg-white/10 text-white">{mvpStatusLabel}</Badge>
+                <span className="text-xs text-slate-400">Actualizado {APP_VERSION_DATE}</span>
+              </div>
+              <h1 className="admin-heading mt-5 text-4xl leading-tight text-white sm:text-5xl">
+                El recorrido base de Alista ya está operativo.
+              </h1>
+              <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-300 sm:text-base">
+                Una clienta puede entrar con Google, recibir un evento, configurarlo, activar el servicio
+                y preparar sus invitaciones. El equipo puede operar la llegada desde la misma ficha.
+              </p>
+            </div>
+
+            <div className="rounded-[28px] border border-white/10 bg-white/[0.06] p-6">
+              <div className="flex items-end justify-between gap-3">
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-sky-200/70">Avance estimado</p>
+                  <p className="mt-2 text-6xl font-semibold tracking-tight text-white">{summary.percent}%</p>
+                </div>
+                <p className="pb-2 text-right text-xs leading-5 text-slate-400">
+                  {summary.done} de {summary.total}<br />cerradas
+                </p>
+              </div>
+              <div className="mt-5 h-2 overflow-hidden rounded-full bg-white/10">
+                <div className="h-full rounded-full bg-emerald-400" style={{ width: `${summary.percent}%` }} />
+              </div>
+              <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400">
+                <span>{summary.partial} a medias</span>
+                <span>{summary.todo} pendiente</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Lo primero: proximos pasos y deudas. */}
         <div className="mt-6 grid gap-6 xl:grid-cols-2">
