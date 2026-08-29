@@ -198,7 +198,7 @@ sólo cambia la §6. Actualizar de más = churn y tokens.
   La lista se alimenta de los eventos que ya autoriza `/api/events`; no requiere migración. El
   refinamiento visual posterior dejó scrolleable sólo el contexto operativo, redujo el aire entre
   links y reemplazó los marcos de los botones por una barra lateral celeste para identificar el
-  activo.
+  activo. La cuenta y el cierre de sesión quedan en un footer compacto con menú de tres puntos.
 
 - **Pantalla de MVP actualizada para la release `0.9.0`.** `/admin/estado` ahora muestra el
   recorrido operativo de una clienta, el avance ponderado de las 22 features, los cuatro hitos

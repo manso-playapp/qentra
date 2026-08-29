@@ -7,6 +7,7 @@ import {
   GaugeCircle,
   LayoutDashboard,
   LogOut,
+  MoreHorizontal,
   PanelLeft,
   PanelLeftClose,
   Plus,
@@ -268,57 +269,51 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               </section>
             </nav>
 
-            {/* Con clientes y equipo usando el mismo panel, quien esta adentro
-                tiene que ser visible sin tener que adivinar. */}
-            <div
-              className={cn(
-                'mt-6 rounded-[22px] border border-white/8 bg-white/[0.03]',
-                collapsed ? 'p-2' : 'px-4 py-3'
-              )}
-              title={identity.email ?? undefined}
-            >
-              {collapsed ? (
-                <div className="grid size-9 place-items-center rounded-xl bg-white/10 text-xs font-bold uppercase text-slate-200">
-                  {(identity.name ?? identity.email ?? '?').slice(0, 1)}
-                </div>
-              ) : (
-                <>
-                  <p className="truncate text-sm font-semibold text-white">
-                    {identity.name ?? identity.email ?? 'Sesión activa'}
-                  </p>
-                  {identity.name && identity.email && (
-                    <p className="mt-0.5 truncate text-xs text-slate-400">{identity.email}</p>
-                  )}
-                  <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                    {identity.isStaff ? 'Equipo Alista' : 'Tu cuenta'}
-                  </p>
-                </>
-              )}
-            </div>
-
-            <form action="/acceso/logout" method="post" className="mt-3">
-              <Button
-                type="submit"
-                variant="outline"
-                title={collapsed ? 'Cerrar sesión' : undefined}
+            {/* Cuenta y acciones secundarias: visibles, pero sin competir con la operación. */}
+            <details className="relative mt-4 shrink-0 border-t border-white/10 pt-3">
+              <summary
+                title={collapsed ? identity.email ?? 'Cuenta' : undefined}
                 className={cn(
-                  'w-full border-white/10 bg-white/5 text-slate-100 hover:bg-white/10 hover:text-white',
-                  collapsed && 'px-0'
+                  'group flex cursor-pointer list-none items-center rounded-2xl text-left transition hover:text-white [&::-webkit-details-marker]:hidden',
+                  collapsed ? 'justify-center p-1.5' : 'gap-2 px-1.5 py-1.5'
                 )}
               >
-                {collapsed ? <LogOut className="size-4" /> : 'Cerrar sesion'}
-              </Button>
-            </form>
+                <span className="grid size-8 flex-none place-items-center rounded-xl bg-white/10 text-xs font-bold uppercase text-slate-200">
+                  {(identity.name ?? identity.email ?? '?').slice(0, 1)}
+                </span>
+                {!collapsed && (
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-semibold text-white">
+                      {identity.name ?? identity.email ?? 'Sesión activa'}
+                    </span>
+                    <span className="mt-0.5 block truncate text-[11px] text-slate-500">
+                      {identity.isStaff ? 'Equipo Alista' : 'Tu cuenta'}
+                    </span>
+                  </span>
+                )}
+                <MoreHorizontal className="size-5 flex-none text-slate-400 transition group-hover:text-sky-200" aria-hidden="true" />
+              </summary>
 
-            {/* Control de version: que build esta corriendo en este entorno. */}
-            <div className="mt-4 text-center" title={`Version ${APP_VERSION} · ${APP_VERSION_DATE}`}>
-              <p className="text-[11px] font-medium tracking-wide text-slate-400">
-                {collapsed ? `v${APP_VERSION}` : `Alista · v${APP_VERSION}`}
-              </p>
-              {!collapsed && (
-                <p className="mt-0.5 text-[10px] text-slate-500">{APP_VERSION_DATE}</p>
-              )}
-            </div>
+              <div className="absolute bottom-full left-0 z-30 mb-2 min-w-[220px] rounded-2xl border border-white/10 bg-slate-950 p-2 shadow-[0_20px_60px_rgba(0,0,0,0.35)]">
+                {identity.email && (
+                  <p className="truncate px-3 py-2 text-xs text-slate-400" title={identity.email}>
+                    {identity.email}
+                  </p>
+                )}
+                <form action="/acceso/logout" method="post">
+                  <button
+                    type="submit"
+                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-white/10 hover:text-white"
+                  >
+                    <LogOut className="size-4 text-slate-400" />
+                    Cerrar sesión
+                  </button>
+                </form>
+                <p className="border-t border-white/10 px-3 pb-1 pt-2 text-[10px] text-slate-500" title={`Versión ${APP_VERSION} · ${APP_VERSION_DATE}`}>
+                  Alista · v{APP_VERSION} · {APP_VERSION_DATE}
+                </p>
+              </div>
+            </details>
           </div>
         </aside>
 
