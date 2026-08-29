@@ -20,6 +20,15 @@ export type AlistaChange = {
 
 export const ALISTA_CHANGELOG: AlistaChange[] = [
   {
+    commit: 'd35ae66',
+    date: '2026-08-29',
+    dateLabel: '29 ago 2026',
+    kind: 'producto',
+    area: 'Soporte',
+    title: 'El equipo puede ver el panel como lo ve la responsable',
+    summary: 'Desde la ficha del evento, Alista abre el panel con los ojos de la cuenta responsable: sus eventos y sin las herramientas del equipo. Una barra fija avisa mientras dure y la vista vence sola en una hora.',
+  },
+  {
     commit: '26cfa17',
     date: '2026-08-29',
     dateLabel: '29 ago 2026',
