@@ -14,7 +14,6 @@ import {
 import AdminLayout from '@/components/admin/AdminLayout'
 import EventActivationCard from '@/components/admin/EventActivationCard'
 import EventOwnershipCard from '@/components/admin/EventOwnershipCard'
-import EventPaymentAccountCard from '@/components/admin/EventPaymentAccountCard'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -142,9 +141,12 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
   const canTransferOwnership = isAlistaStaff(authState.access)
   const canPayActivation = !isAlistaStaff(authState.access) && event.owner_user_id === authState.user?.id
   let currentOwnerEmail: string | null = null
-  if (canTransferOwnership && event.owner_user_id && adminClient) {
+  if (event.owner_user_id && adminClient) {
     const { data: ownerData } = await adminClient.auth.admin.getUserById(event.owner_user_id)
     currentOwnerEmail = ownerData.user?.email ?? null
+  }
+  if (!currentOwnerEmail && event.owner_user_id === authState.user?.id) {
+    currentOwnerEmail = authState.user?.email ?? null
   }
   const availableSeats = Math.max(event.max_capacity - guestCount, 0)
   return (
@@ -195,11 +197,18 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
           ))}
         </div>
 
-        {canTransferOwnership && (
-          <section className="mt-6" aria-label="Cuenta responsable del evento">
-            <EventOwnershipCard event={event} currentOwnerEmail={currentOwnerEmail} />
-          </section>
-        )}
+        <section className="mt-6" aria-label="Cuenta responsable del evento">
+          <EventOwnershipCard
+            event={event}
+            currentOwnerEmail={currentOwnerEmail}
+            canTransferOwnership={canTransferOwnership}
+            paymentAccount={{
+              connected: Boolean(paymentAccount),
+              configured: paymentAccountConfigured,
+              updatedAt: paymentAccount?.updated_at,
+            }}
+          />
+        </section>
 
         {/* Paginas publicas: lo que ven invitados y salon. Cada una lleva a su personalizacion. */}
         <section className="mt-8">
@@ -339,13 +348,6 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
               canGrant={isAlistaStaff(authState.access)}
               canPay={canPayActivation}
               paymentStatus={activationPaymentStatus}
-            />
-
-            <EventPaymentAccountCard
-              eventId={event.id}
-              connected={Boolean(paymentAccount)}
-              configured={paymentAccountConfigured}
-              updatedAt={paymentAccount?.updated_at}
             />
 
             {/* Puerta / check-in */}

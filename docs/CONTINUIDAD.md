@@ -189,8 +189,9 @@ sólo cambia la §6. Actualizar de más = churn y tokens.
   `admin`, confirma evento y destinatario, y no modifica `created_by_user_id`, invitados,
   colaboradores ni la cuenta de Mercado Pago. La tarjeta se muestra arriba de las páginas
   públicas, usa “cuenta responsable” como lenguaje visible, explica qué ya está resuelto y deja
-  claro que la transferencia es inmediata y no requiere aceptación. No requiere migración.
-  Tests: 327; `tsc`, lint y build OK.
+  claro que la transferencia es inmediata y no requiere aceptación. La vinculación de Mercado
+  Pago vive dentro de la misma tarjeta, con su estado y acciones según permisos. No requiere
+  migración. Tests: 327; `tsc`, lint y build OK.
 
 - **Frente cerrado — sidebar contextual por evento.** `components/admin/AdminEventSidebar.tsx`
   agrega selector de eventos, estado comercial (`Sin activar` / `Activado`) y accesos directos
