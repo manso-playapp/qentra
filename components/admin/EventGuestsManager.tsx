@@ -342,6 +342,7 @@ export default function EventGuestsManager({
   const [selectedGuestIds, setSelectedGuestIds] = useState<Set<string>>(new Set())
   const [bulkGuestTypeId, setBulkGuestTypeId] = useState('')
   const [bulkActionLoading, setBulkActionLoading] = useState(false)
+  const [bulkIssueProgress, setBulkIssueProgress] = useState<{ done: number; total: number } | null>(null)
   const selectedGuestTypeId = guestForm.guest_type_id || visibleGuestTypes[0]?.id || ''
   const latestInvitationTokenByGuestId = useMemo(() => {
     const map = new Map<string, InvitationToken>()
@@ -797,7 +798,66 @@ export default function EventGuestsManager({
     })
   }
 
-  const runBulkStatusUpdate = async (status: 'confirmed' | 'cancelled') => {
+  // La seleccion masiva no confirma: confirmar es un acto del invitado, no del
+  // organizador. Lo que se hace en lote es emitir los links de invitacion.
+  const runBulkIssueAccess = async () => {
+    if (selectedGuests.length === 0) return
+
+    setBulkActionLoading(true)
+    setGuestRowActionError(null)
+    setGuestRowActionNotice(null)
+    setActivationBlocked(null)
+    setBulkIssueProgress({ done: 0, total: selectedGuests.length })
+
+    let issued = 0
+    let failed = 0
+    let blocked: string | null = null
+
+    // De a tandas: cada invitacion escribe token y QR. Si aparece el muro de
+    // activacion se corta ahi, porque ninguna de las siguientes va a poder
+    // emitirse tampoco.
+    const BATCH_SIZE = 5
+
+    for (let index = 0; index < selectedGuests.length; index += BATCH_SIZE) {
+      const batch = selectedGuests.slice(index, index + BATCH_SIZE)
+      const results = await Promise.all(
+        batch.map((guest) =>
+          createGuestAccess(guest, {
+            eventSlug: event.slug,
+            eventDate: event.event_date,
+            eventStartTime: event.start_time,
+          })
+        )
+      )
+
+      for (const result of results) {
+        if (result.activationBlocked) blocked = result.activationBlocked
+        else if (result.error) failed += 1
+        else issued += 1
+      }
+
+      setBulkIssueProgress({ done: Math.min(index + BATCH_SIZE, selectedGuests.length), total: selectedGuests.length })
+      if (blocked) break
+    }
+
+    if (blocked) {
+      setActivationBlocked(blocked)
+    } else if (failed > 0) {
+      setGuestRowActionError(
+        `Se generaron ${issued} invitaciones y ${failed} no pudieron emitirse. Volvé a intentar con las que quedaron sin link.`
+      )
+    } else {
+      setGuestRowActionNotice(
+        `${issued} ${issued === 1 ? 'invitación generada' : 'invitaciones generadas'}. Ya podés enviarlas desde cada invitado.`
+      )
+      setSelectedGuestIds(new Set())
+    }
+
+    setBulkIssueProgress(null)
+    setBulkActionLoading(false)
+  }
+
+  const runBulkCancel = async () => {
     if (selectedGuests.length === 0) return
 
     setBulkActionLoading(true)
@@ -805,23 +865,14 @@ export default function EventGuestsManager({
     setGuestRowActionNotice(null)
 
     const results = await Promise.all(
-      selectedGuests.map((guest) =>
-        updateGuest(guest.id, {
-          status,
-          ...(status === 'confirmed' && guest.status === 'checked_in'
-            ? { restore_invitation_access: true }
-            : {}),
-        })
-      )
+      selectedGuests.map((guest) => updateGuest(guest.id, { status: 'cancelled' }))
     )
     const failed = results.filter((result) => result.error)
 
     if (failed.length > 0) {
       setGuestRowActionError(`No se pudieron actualizar ${failed.length} de ${selectedGuests.length} invitados.`)
     } else {
-      setGuestRowActionNotice(
-        `${selectedGuests.length} invitados quedaron ${status === 'confirmed' ? 'confirmados' : 'cancelados'}.`
-      )
+      setGuestRowActionNotice(`${selectedGuests.length} invitados quedaron cancelados.`)
       setSelectedGuestIds(new Set())
     }
 
@@ -1978,15 +2029,17 @@ export default function EventGuestsManager({
                 <div className="flex flex-wrap items-center gap-2">
                   <button
                     type="button"
-                    onClick={() => void runBulkStatusUpdate('confirmed')}
+                    onClick={() => void runBulkIssueAccess()}
                     disabled={bulkActionLoading}
-                    className="rounded-lg bg-emerald-400 px-3 py-2 text-xs font-semibold text-emerald-950 hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="rounded-lg bg-violet-400 px-3 py-2 text-xs font-semibold text-violet-950 hover:bg-violet-300 disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    Confirmar
+                    {bulkIssueProgress
+                      ? `Generando ${bulkIssueProgress.done}/${bulkIssueProgress.total}...`
+                      : 'Generar invitación'}
                   </button>
                   <button
                     type="button"
-                    onClick={() => void runBulkStatusUpdate('cancelled')}
+                    onClick={() => void runBulkCancel()}
                     disabled={bulkActionLoading}
                     className="rounded-lg border border-white/20 px-3 py-2 text-xs font-semibold text-white hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
                   >

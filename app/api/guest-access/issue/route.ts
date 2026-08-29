@@ -106,6 +106,22 @@ export async function POST(request: Request) {
       throw tokenError
     }
 
+    // Emitir el link es el hecho que mueve al invitado de "todavía no recibió
+    // nada" a "esperando su respuesta". Solo avanza desde preinvited: quien ya
+    // respondió, quedó habilitado o ingresó no puede retroceder por regenerar
+    // su acceso.
+    if (guestData.status === 'preinvited') {
+      const { error: statusError } = await adminClient
+        .from('guests')
+        .update({ status: 'link_sent', updated_at: new Date().toISOString() })
+        .eq('id', body.guestId)
+        .eq('status', 'preinvited')
+
+      if (statusError) {
+        throw statusError
+      }
+    }
+
     const revokedAt = new Date().toISOString()
 
     const { error: revokeQrError } = await adminClient
