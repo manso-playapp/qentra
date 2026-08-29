@@ -74,7 +74,7 @@ export async function POST(request: Request, context: RouteContext) {
   }
 
   if (targetUser.id === event.owner_user_id) {
-    return Response.json({ error: 'Esa cuenta ya es la dueña del evento.' }, { status: 409 })
+    return Response.json({ error: 'Esa cuenta ya es la responsable del evento.' }, { status: 409 })
   }
 
   const { data: updatedEvent, error: updateError } = await adminClient

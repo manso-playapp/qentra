@@ -187,8 +187,10 @@ sólo cambia la §6. Actualizar de más = churn y tokens.
   `app/api/events/[id]/transfer/route.ts` valida en servidor que el email exista en Supabase
   Auth antes de cambiar `events.owner_user_id`. La acción sólo está disponible para el rol
   `admin`, confirma evento y destinatario, y no modifica `created_by_user_id`, invitados,
-  colaboradores ni la cuenta de Mercado Pago. No requiere migración. Tests: 327; `tsc`, lint y
-  build OK.
+  colaboradores ni la cuenta de Mercado Pago. La tarjeta se muestra arriba de las páginas
+  públicas, usa “cuenta responsable” como lenguaje visible, explica qué ya está resuelto y deja
+  claro que la transferencia es inmediata y no requiere aceptación. No requiere migración.
+  Tests: 327; `tsc`, lint y build OK.
 
 - **Frente cerrado — sidebar contextual por evento.** `components/admin/AdminEventSidebar.tsx`
   agrega selector de eventos, estado comercial (`Sin activar` / `Activado`) y accesos directos

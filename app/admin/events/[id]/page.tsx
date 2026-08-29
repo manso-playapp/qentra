@@ -195,6 +195,12 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
           ))}
         </div>
 
+        {canTransferOwnership && (
+          <section className="mt-6" aria-label="Cuenta responsable del evento">
+            <EventOwnershipCard event={event} currentOwnerEmail={currentOwnerEmail} />
+          </section>
+        )}
+
         {/* Paginas publicas: lo que ven invitados y salon. Cada una lleva a su personalizacion. */}
         <section className="mt-8">
           <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
@@ -334,10 +340,6 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
               canPay={canPayActivation}
               paymentStatus={activationPaymentStatus}
             />
-
-            {canTransferOwnership && (
-              <EventOwnershipCard event={event} currentOwnerEmail={currentOwnerEmail} />
-            )}
 
             <EventPaymentAccountCard
               eventId={event.id}
