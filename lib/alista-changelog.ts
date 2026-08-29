@@ -20,7 +20,7 @@ export type AlistaChange = {
 
 export const ALISTA_CHANGELOG: AlistaChange[] = [
   {
-    commit: 'pending',
+    commit: '4936f45',
     date: '2026-08-29',
     dateLabel: '29 ago 2026',
     kind: 'producto',
