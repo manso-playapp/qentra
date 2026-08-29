@@ -338,7 +338,9 @@ export default function EventGuestsManager({
   const [guestTypeFilter, setGuestTypeFilter] = useState('all')
   const [csvGuestTypeId, setCsvGuestTypeId] = useState('all')
   const [guestPage, setGuestPage] = useState(0)
-  const [guestsPerPage, setGuestsPerPage] = useState<25 | 50 | 'all'>(25)
+  // La lista abre completa: el organizador busca a una persona concreta, y
+  // paginar de a 25 esconde a la mayoria detras de un control que no pidio.
+  const [guestsPerPage, setGuestsPerPage] = useState<25 | 50 | 'all'>('all')
   const [selectedGuestIds, setSelectedGuestIds] = useState<Set<string>>(new Set())
   const [bulkGuestTypeId, setBulkGuestTypeId] = useState('')
   const [bulkActionLoading, setBulkActionLoading] = useState(false)
