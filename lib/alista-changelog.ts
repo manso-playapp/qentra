@@ -20,6 +20,15 @@ export type AlistaChange = {
 
 export const ALISTA_CHANGELOG: AlistaChange[] = [
   {
+    commit: '76e2389',
+    date: '2026-08-29',
+    dateLabel: '29 ago 2026',
+    kind: 'producto',
+    area: 'Invitados',
+    title: 'La selección masiva genera invitaciones en lugar de confirmar',
+    summary: 'Confirmar es un acto del invitado, no del organizador: la acción en lote pasó a emitir los links de los seleccionados. Emitir un link también deja al invitado en espera de respuesta, un estado que hasta ahora nunca se escribía.',
+  },
+  {
     commit: '17532d5',
     date: '2026-08-29',
     dateLabel: '29 ago 2026',
