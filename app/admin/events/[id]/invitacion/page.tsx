@@ -10,7 +10,7 @@ import InvitationEditor, {
 } from '@/components/admin/InvitationEditor'
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
 import { DEFAULT_INVITATION_BLOCKS } from '@/lib/invitation-blocks'
-import { getInvitationConfigHistory, getInvitationConfigState, getDraftInvitationConfig } from '@/lib/invitation-config-state'
+import { getInvitationConfigHistory, getDraftInvitationConfig } from '@/lib/invitation-config-state'
 
 export const metadata = { title: 'Personalizar invitación' }
 
@@ -86,7 +86,6 @@ export default async function InvitationEditorPage({ params }: { params: Promise
     .maybeSingle()
 
   const brandingRow = (branding ?? {}) as Record<string, unknown>
-  const invitationConfigState = getInvitationConfigState(brandingRow.config)
 
   return (
     <AdminLayout>
@@ -144,7 +143,6 @@ export default async function InvitationEditorPage({ params }: { params: Promise
             cover_image_url: (brandingRow.cover_image_url as string) ?? '',
           }}
           initialConfig={mergeConfig(getDraftInvitationConfig(brandingRow.config))}
-          initialHasDraft={invitationConfigState.hasDraft}
           initialHistory={getInvitationConfigHistory(brandingRow.config)}
         />
       </div>

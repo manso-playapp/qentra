@@ -19,6 +19,7 @@ import {
 } from '@/lib/invitation-templates'
 import {
   DEFAULT_INVITATION_FONTS,
+  getInvitationFonts,
   INVITATION_FONT_KEYS,
   INVITATION_FONT_LABELS,
   type InvitationFontKey,
@@ -105,14 +106,12 @@ export default function InvitationEditor({
   event,
   initialVisual,
   initialConfig,
-  initialHasDraft = false,
   initialHistory = [],
 }: {
   eventId: string
   event: EventInfo
   initialVisual: InvitationVisual
   initialConfig: InvitationConfig
-  initialHasDraft?: boolean
   initialHistory?: InvitationConfigHistoryEntry[]
 }) {
   const [visual, setVisual] = useState<InvitationVisual>(initialVisual)
@@ -133,6 +132,11 @@ export default function InvitationEditor({
     accent: secondary,
   }
   const isMidnight = config.template === 'midnight'
+  // La invitación resuelve sus tipografías con getInvitationFonts. El editor
+  // tiene que leer exactamente lo mismo: un <select> cuyo value no coincide con
+  // ninguna opción muestra la primera (Nunito) y afirma una fuente que no es la
+  // que se está aplicando.
+  const fonts = getInvitationFonts(config)
   const previewEvent = event as InvitationEventInfo
   const previewBranding = {
     primary_color: primary,
@@ -169,7 +173,10 @@ export default function InvitationEditor({
       },
     }))
 
-  const handleSave = async (mode: 'draft' | 'publish') => {
+  // Guardar es publicar. No hay borrador: lo que se guarda es lo que ven todos
+  // los invitados, en el momento. La red de seguridad son las versiones
+  // guardadas, no un estado intermedio invisible.
+  const handleSave = async () => {
     setSaving(true)
     setError(null)
     setNotice(null)
@@ -177,7 +184,7 @@ export default function InvitationEditor({
       const response = await fetch(`/api/events/${eventId}/invitation`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ visual, config, mode }),
+        body: JSON.stringify({ visual, config, mode: 'publish' }),
       })
       const payload = (await response.json().catch(() => null)) as
         | { error?: string; configPersisted?: boolean; history?: InvitationConfigHistoryEntry[] }
@@ -189,7 +196,7 @@ export default function InvitationEditor({
           : 'Invitación guardada.'
       )
       if (payload?.configPersisted !== false) {
-        setNotice(mode === 'publish' ? 'Invitación publicada.' : 'Borrador guardado.')
+        setNotice('Invitación guardada. Ya la ven todos los invitados.')
         if (payload?.history) setHistory(payload.history)
       }
     } catch (saveError) {
@@ -210,7 +217,7 @@ export default function InvitationEditor({
       fields: { ...DEFAULT_INVITATION_CONFIG.fields, ...(value.fields as Partial<InvitationConfig['fields']> ?? {}) },
       blocks: { ...DEFAULT_INVITATION_BLOCKS, ...(value.blocks as Partial<InvitationBlocks> ?? {}) },
     })
-    setNotice('Versión restaurada como borrador. Guardala o publicala para aplicarla.')
+    setNotice('Versión restaurada en el editor. Guardá para aplicarla.')
     setError(null)
   }
 
@@ -259,22 +266,19 @@ export default function InvitationEditor({
           <Field label="Tipografía">
             <div className="grid gap-3 sm:grid-cols-2">
               <FontControl
-                label="TipografÃ­a de tÃ­tulos"
                 role="titles"
-                value={config.fonts.titles}
-                onChange={(value) => setConfig((current) => ({ ...current, fonts: { ...current.fonts, titles: value } }))}
+                value={fonts.titles}
+                onChange={(value) => setConfig((current) => ({ ...current, fonts: { ...fonts, titles: value } }))}
               />
               <FontControl
-                label="TipografÃ­a de subtÃ­tulos"
                 role="subtitles"
-                value={config.fonts.subtitles}
-                onChange={(value) => setConfig((current) => ({ ...current, fonts: { ...current.fonts, subtitles: value } }))}
+                value={fonts.subtitles}
+                onChange={(value) => setConfig((current) => ({ ...current, fonts: { ...fonts, subtitles: value } }))}
               />
               <FontControl
-                label="TipografÃ­a de datos"
                 role="data"
-                value={config.fonts.data}
-                onChange={(value) => setConfig((current) => ({ ...current, fonts: { ...current.fonts, data: value } }))}
+                value={fonts.data}
+                onChange={(value) => setConfig((current) => ({ ...current, fonts: { ...fonts, data: value } }))}
               />
             </div>
           </Field>
@@ -363,34 +367,24 @@ export default function InvitationEditor({
         <div className="flex flex-wrap items-center gap-3">
           <button
             type="button"
-            onClick={() => void handleSave('publish')}
+            onClick={() => void handleSave()}
             disabled={saving}
             className="inline-flex w-full items-center justify-center rounded-md bg-gray-900 px-4 py-3 text-sm font-medium text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
           >
-            {saving ? 'Publicando...' : 'Publicar invitación'}
+            {saving ? 'Guardando...' : 'Guardar invitación'}
           </button>
-          <button
-            type="button"
-            onClick={() => void handleSave('draft')}
-          disabled={saving}
-          className="inline-flex w-full items-center justify-center rounded-md bg-gray-900 px-4 py-3 text-sm font-medium text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
-        >
-          {saving ? 'Guardando...' : 'Guardar invitación'}
-        </button>
           <span className="text-xs text-gray-500">
-            {initialHasDraft ? 'Hay un borrador guardado.' : 'La versión pública no cambia hasta publicar.'}
+            Lo que guardes se ve al instante en todas las invitaciones ya enviadas.
           </span>
         </div>
 
         {history.length > 0 ? (
-          <Section title="Versiones guardadas" desc="Restaurá una versión como borrador. No se publica hasta que lo confirmes.">
+          <Section title="Versiones guardadas" desc="Volvé a una versión anterior. Se aplica cuando guardás.">
             <div className="space-y-2">
               {history.map((entry) => (
                 <div key={entry.id} className="flex items-center justify-between gap-3 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
                   <div className="min-w-0">
-                    <p className="text-xs font-semibold text-gray-800">
-                      {entry.mode === 'publish' ? 'Publicada' : 'Borrador'}
-                    </p>
+                    <p className="text-xs font-semibold text-gray-800">Versión guardada</p>
                     <p className="truncate text-xs text-gray-500">
                       {formatArgentinaDateTime(entry.saved_at)}
                     </p>
@@ -534,8 +528,7 @@ function Field({ label, children }: { label: React.ReactNode; children: React.Re
   )
 }
 
-function FontControl(props: { label?: string; role: keyof typeof DEFAULT_INVITATION_FONTS; value: InvitationFontKey; onChange: (value: InvitationFontKey) => void }) {
-  const { role, value, onChange } = props
+function FontControl({ role, value, onChange }: { role: keyof typeof DEFAULT_INVITATION_FONTS; value: InvitationFontKey; onChange: (value: InvitationFontKey) => void }) {
   const label = role === 'titles' ? <>Tipograf&iacute;a de t&iacute;tulos</> : role === 'subtitles' ? <>Tipograf&iacute;a de subt&iacute;tulos</> : <>Tipograf&iacute;a de datos</>
 
   return (
