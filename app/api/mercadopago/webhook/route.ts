@@ -3,6 +3,10 @@ import { getEventPaymentAccessToken } from '@/lib/event-payment-account'
 import { buildGuestAccessQrPayload } from '@/lib/guest-access'
 import { buildGuestFullName } from '@/lib/guest-schema'
 import { getAlistaMercadoPagoConfig, mapMercadoPagoPaymentStatus } from '@/lib/mercadopago'
+import {
+  ALISTA_SERVICE_ACTIVATION_AMOUNT_CENTS,
+  ALISTA_SERVICE_ACTIVATION_CURRENCY,
+} from '@/lib/alista-service-payment'
 import { validMercadoPagoWebhookSignature } from '@/lib/mercadopago-webhook'
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
 
@@ -107,6 +111,100 @@ async function syncGuestAccessFromPayments(
   if (revokeQrError) throw revokeQrError
 }
 
+async function syncEventActivationFromPayment(
+  adminClient: NonNullable<ReturnType<typeof getSupabaseAdminClient>>,
+  activationPaymentId: string,
+  dataId: string
+) {
+  const { data: activationPayment, error: activationPaymentError } = await adminClient
+    .from('event_activation_payments')
+    .select('id, event_id, payer_user_id, amount_cents, currency_id, external_reference')
+    .eq('id', activationPaymentId)
+    .maybeSingle()
+  if (activationPaymentError) throw activationPaymentError
+  if (!activationPayment) return Response.json({ ok: true })
+
+  const mercadoPago = getAlistaMercadoPagoConfig()
+  if (!mercadoPago) {
+    return Response.json({ error: 'No se pudo identificar la cuenta de Alista.' }, { status: 503 })
+  }
+
+  const paymentResponse = await fetch(`https://api.mercadopago.com/v1/payments/${encodeURIComponent(dataId)}`, {
+    headers: { Authorization: `Bearer ${mercadoPago.accessToken}` },
+    cache: 'no-store',
+  })
+  const payment = (await paymentResponse.json().catch(() => null)) as MercadoPagoPayment | null
+  if (!paymentResponse.ok || !payment?.external_reference || !payment.id) {
+    return Response.json({ error: 'No se pudo verificar el pago de activación.' }, { status: 502 })
+  }
+
+  if (
+    payment.external_reference !== activationPayment.external_reference ||
+    Math.round((payment.transaction_amount ?? 0) * 100) !== ALISTA_SERVICE_ACTIVATION_AMOUNT_CENTS ||
+    activationPayment.amount_cents !== ALISTA_SERVICE_ACTIVATION_AMOUNT_CENTS ||
+    payment.currency_id !== ALISTA_SERVICE_ACTIVATION_CURRENCY ||
+    activationPayment.currency_id !== ALISTA_SERVICE_ACTIVATION_CURRENCY
+  ) {
+    return Response.json({ error: 'El importe o referencia del pago de activación no coincide.' }, { status: 409 })
+  }
+
+  const status = mapMercadoPagoPaymentStatus(payment.status)
+  const { error: updatePaymentError } = await adminClient
+    .from('event_activation_payments')
+    .update({
+      provider_payment_id: payment.id.toString(),
+      status,
+      status_detail: payment.status_detail ?? null,
+      paid_at: status === 'approved' ? payment.date_approved ?? new Date().toISOString() : null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', activationPayment.id)
+  if (updatePaymentError) throw updatePaymentError
+
+  const { data: existingActivation, error: existingActivationError } = await adminClient
+    .from('event_activations')
+    .select('status, source, mp_payment_id')
+    .eq('event_id', activationPayment.event_id)
+    .maybeSingle()
+  if (existingActivationError) throw existingActivationError
+
+  if (status === 'approved') {
+    // Una cortesía o activación manual existente no se pisa por accidente. El
+    // pago queda conciliado, pero conserva la decisión operativa del staff.
+    if (!existingActivation || existingActivation.status !== 'active' || existingActivation.source === 'payment') {
+      const { error } = await adminClient
+        .from('event_activations')
+        .upsert({
+          event_id: activationPayment.event_id,
+          status: 'active',
+          source: 'payment',
+          activated_at: payment.date_approved ?? new Date().toISOString(),
+          granted_by_user_id: null,
+          payer_user_id: activationPayment.payer_user_id,
+          amount_cents: ALISTA_SERVICE_ACTIVATION_AMOUNT_CENTS,
+          currency_id: ALISTA_SERVICE_ACTIVATION_CURRENCY,
+          mp_payment_id: payment.id.toString(),
+          note: null,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'event_id' })
+      if (error) throw error
+    }
+  } else if (
+    (status === 'refunded' || status === 'cancelled') &&
+    existingActivation?.status === 'active' &&
+    existingActivation.source === 'payment' &&
+    existingActivation.mp_payment_id === payment.id.toString()
+  ) {
+    const { error } = await adminClient
+      .from('event_activations')
+      .update({ status: 'revoked', updated_at: new Date().toISOString() })
+      .eq('event_id', activationPayment.event_id)
+    if (error) throw error
+  }
+
+  return Response.json({ ok: true })
+}
+
 export async function POST(request: Request) {
   const adminClient = getSupabaseAdminClient()
   const webhookSecret = process.env.MERCADOPAGO_WEBHOOK_SECRET?.trim()
@@ -131,6 +229,11 @@ export async function POST(request: Request) {
   }
 
   const webhookUrl = new URL(request.url)
+  const activationPaymentId = webhookUrl.searchParams.get('activation_payment_id')?.trim()
+  if (activationPaymentId) {
+    return syncEventActivationFromPayment(adminClient, activationPaymentId, dataId)
+  }
+
   const transactionId = webhookUrl.searchParams.get('transaction_id')?.trim()
   let transaction: {
     id: string

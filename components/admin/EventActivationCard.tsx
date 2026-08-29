@@ -5,6 +5,7 @@ import { BadgeCheck, Gift, LoaderCircle, Lock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { getErrorMessage } from '@/lib/errors'
+import { formatAlistaServicePrice, type ActivationPaymentStatus } from '@/lib/alista-service-payment'
 import { buildActivationRequestHref, type ActivationSource, type ActivationState } from '@/lib/event-activation'
 
 type EventActivationCardProps = {
@@ -14,6 +15,9 @@ type EventActivationCardProps = {
   note?: string | null
   /** Otorgar y dar de baja es solo del equipo de Alista. */
   canGrant: boolean
+  /** Solo la dueña puede pagar la activación del evento. */
+  canPay: boolean
+  paymentStatus?: ActivationPaymentStatus | null
 }
 
 function formatDate(value?: string | null) {
@@ -41,11 +45,34 @@ export default function EventActivationCard({
   activatedAt,
   note,
   canGrant,
+  canPay,
+  paymentStatus = null,
 }: EventActivationCardProps) {
   const [state, setState] = useState(initialState)
-  const [busy, setBusy] = useState<ActivationSource | 'revoke' | null>(null)
+  const [busy, setBusy] = useState<ActivationSource | 'revoke' | 'payment' | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [changedAt, setChangedAt] = useState<string | null>(activatedAt ?? null)
+
+  const startPayment = async () => {
+    setBusy('payment')
+    setError(null)
+
+    try {
+      const response = await fetch(`/api/events/${event.id}/activation/payment`, { method: 'POST' })
+      const payload = (await response.json().catch(() => null)) as {
+        data?: { checkoutUrl?: string }
+        error?: string
+      } | null
+      const checkoutUrl = payload?.data?.checkoutUrl
+      if (!response.ok || !checkoutUrl) {
+        throw new Error(payload?.error ?? 'No se pudo iniciar el pago de activación.')
+      }
+      window.location.assign(checkoutUrl)
+    } catch (caught) {
+      setError(getErrorMessage(caught))
+      setBusy(null)
+    }
+  }
 
   const run = async (action: 'grant' | 'revoke', source?: ActivationSource) => {
     setBusy(action === 'revoke' ? 'revoke' : (source ?? 'manual'))
@@ -134,13 +161,28 @@ export default function EventActivationCard({
           </p>
         )}
 
-        {!canGrant && !state.activated && (
+        {!canGrant && !state.activated && canPay && (
           <div className="mt-auto">
+            <p className="mb-3 text-sm text-muted-foreground">
+              Activá el evento por {formatAlistaServicePrice()} para empezar a emitir las invitaciones.
+            </p>
+            <Button type="button" onClick={() => void startPayment()} disabled={busy !== null}>
+              {busy === 'payment' ? <LoaderCircle className="size-4 animate-spin" /> : null}
+              {paymentStatus === 'pending' ? 'Continuar con el pago' : `Activar por ${formatAlistaServicePrice()}`}
+            </Button>
+          </div>
+        )}
+
+        {!canGrant && !state.activated && !canPay && (
+          <div className="mt-auto">
+            <p className="text-sm text-muted-foreground">
+              La responsable del evento debe completar la activación para empezar a emitir invitaciones.
+            </p>
             <a
               href={buildActivationRequestHref(event)}
-              className="inline-flex items-center rounded-full bg-amber-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-amber-700"
+              className="mt-3 inline-flex items-center rounded-full border border-amber-300 px-4 py-2 text-sm font-semibold text-amber-800 transition hover:bg-amber-50"
             >
-              Quiero activar mi evento
+              Consultar con Alista
             </a>
           </div>
         )}

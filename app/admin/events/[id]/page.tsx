@@ -24,6 +24,7 @@ import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { getMercadoPagoOAuthConfig } from '@/lib/mercadopago'
 import { isPaymentCredentialEncryptionConfigured } from '@/lib/payment-credentials'
 import { resolveActivation, type EventActivation } from '@/lib/event-activation'
+import type { ActivationPaymentStatus } from '@/lib/alista-service-payment'
 import { getCurrentOperatorProfile } from '@/lib/operator-auth'
 import { isAlistaStaff } from '@/lib/event-access'
 import type { Event, EventBranding, GuestType } from '@/types'
@@ -77,6 +78,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
     checkinsCountResponse,
     paymentAccountResponse,
     activationResponse,
+    activationPaymentResponse,
   ] = await Promise.all([
     supabase.from('events').select('*').eq('id', id).maybeSingle(),
     supabase.from('event_branding').select('*').eq('event_id', id).maybeSingle(),
@@ -100,6 +102,13 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
       .from('event_activations')
       .select('status, source, activated_at, expires_at, note')
       .eq('event_id', id)
+      .maybeSingle(),
+    supabase
+      .from('event_activation_payments')
+      .select('status')
+      .eq('event_id', id)
+      .order('created_at', { ascending: false })
+      .limit(1)
       .maybeSingle(),
   ])
 
@@ -129,7 +138,9 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
   const activation = activationResponse.data as
     | (EventActivation & { activated_at?: string | null; note?: string | null })
     | null
+  const activationPaymentStatus = (activationPaymentResponse.data as { status?: ActivationPaymentStatus } | null)?.status ?? null
   const canTransferOwnership = isAlistaStaff(authState.access)
+  const canPayActivation = !isAlistaStaff(authState.access) && event.owner_user_id === authState.user?.id
   let currentOwnerEmail: string | null = null
   if (canTransferOwnership && event.owner_user_id && adminClient) {
     const { data: ownerData } = await adminClient.auth.admin.getUserById(event.owner_user_id)
@@ -320,6 +331,8 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
               activatedAt={activation?.activated_at}
               note={activation?.note}
               canGrant={isAlistaStaff(authState.access)}
+              canPay={canPayActivation}
+              paymentStatus={activationPaymentStatus}
             />
 
             {canTransferOwnership && (

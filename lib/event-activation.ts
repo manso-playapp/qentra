@@ -61,10 +61,9 @@ export const ALISTA_CONTACT_EMAIL = 'hola@alista.com.ar'
 /**
  * Salida concreta desde el muro.
  *
- * Apunta a una conversacion con Alista, NO a un checkout: el precio de
- * lanzamiento todavia no esta validado (§42 del canonico), y estas primeras
- * conversaciones son justamente como se valida. Cuando el cobro exista, cambia
- * el destino de este link y nada mas.
+ * Apunta a una conversacion con Alista para los casos en que quien mira el
+ * evento no es la responsable. La dueña tiene el checkout automatico en su
+ * panel; este link no debe permitir que un colaborador pague en su nombre.
  */
 export function buildActivationRequestHref(event: {
   id: string

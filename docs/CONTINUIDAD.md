@@ -201,9 +201,11 @@ Los eventos reales (DRM 287 tokens, Alfonsina 2) no se vieron afectados, gracias
 > haga falta (arrastra en cascada su invitado, token y activación).
 
 ### Frentes abiertos, en orden de dependencia
-1. **Cobro de los $89.000 a Alista.** Deliberadamente postergado: el precio de lanzamiento
-   sigue sin validar (§42 del canónico), y el muro ya funciona con activación manual. Cuando
-   se automatice, el webhook escribe la misma fila con `source: 'payment'`.
+1. **Cobro de los $89.000 a Alista.** Precio de lanzamiento confirmado por el owner. El código
+   quedó implementado en `app/api/events/[id]/activation/payment/route.ts` y en el webhook: usa
+   la cuenta propia de Alista, concilia por referencia/importe/moneda, y solo entonces escribe
+   la misma fila de `event_activations` con `source: 'payment'`. Falta que el owner aplique en
+   Supabase la migración `20260829010000_add_event_activation_payments.sql` y luego desplegar.
 2. **Política de retención del evento sin activar.** Con Google abierto entran datos reales
    —teléfonos de menores— de cuentas que quizá nunca paguen. Ver decisiones §5.
 3. **Revisar qué ve una clienta en `/admin`.** El panel funciona, pero su copy y jerarquía
