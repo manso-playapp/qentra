@@ -30,7 +30,7 @@ export const MODULES: Record<ModuleKey, { label: string; description: string }> 
   pagos: { label: 'Pagos', description: 'Cobros y monetizacion' },
 }
 
-/** Las 20 features que el playbook define como alcance del MVP. */
+/** Features que hoy componen el alcance operativo del MVP. */
 export const MVP_FEATURES: MvpFeature[] = [
   {
     id: 'login',
@@ -38,8 +38,17 @@ export const MVP_FEATURES: MvpFeature[] = [
     module: 'plataforma',
     status: 'done',
     detail:
-      'Supabase Auth real con roles (admin, door, security_supervisor), perfil activo y redireccion protegida por ruta.',
-    evidence: ['lib/operator-auth.ts', 'app/acceso/page.tsx'],
+      'Supabase Auth real con roles (admin, door, security_supervisor), acceso con Google para clientas, perfil activo y redireccion protegida por ruta.',
+    evidence: ['lib/operator-auth.ts', 'app/acceso/page.tsx', 'app/acceso/callback/route.ts'],
+  },
+  {
+    id: 'propiedad-evento',
+    title: 'Propiedad del evento',
+    module: 'plataforma',
+    status: 'done',
+    detail:
+      'Cada evento tiene una responsable como dueña, puede tener colaboradores y la propiedad se puede transferir a una cuenta existente sin duplicar el evento.',
+    evidence: ['supabase/migrations/20260828120000_add_event_admin_assignments.sql', 'app/api/events/[id]/transfer/route.ts'],
   },
   {
     id: 'crear-evento',
@@ -136,6 +145,15 @@ export const MVP_FEATURES: MvpFeature[] = [
     evidence: ['components/door/DoorScanner.tsx', 'components/admin/DoorScannerLink.tsx', 'app/api/events/[id]/checkin/route.ts'],
   },
   {
+    id: 'activacion-evento',
+    title: 'Activación comercial del evento',
+    module: 'pagos',
+    status: 'done',
+    detail:
+      'El evento se puede configurar y cargar invitados antes del pago. La activación controla la emisión de links de invitación y conserva el origen: pago, cortesía o manual.',
+    evidence: ['supabase/migrations/20260828160000_add_event_activations.sql', 'app/api/guest-access/issue/route.ts', 'components/admin/EventActivationCard.tsx'],
+  },
+  {
     id: 'validacion-horario',
     title: 'Validacion por horario',
     module: 'checkin',
@@ -213,9 +231,10 @@ export const MVP_FEATURES: MvpFeature[] = [
     module: 'pagos',
     status: 'done',
     detail:
-      'Checkout Pro crea una preferencia por invitado, usa Sandbox en Preview y cobros reales en Producción. Los webhooks firmados y la conciliación autenticada de respaldo validan importe/moneda, actualizan el pago y habilitan o revocan el QR. Flujo end-to-end verificado con una cuenta de prueba.',
+      'Checkout Pro crea una preferencia por invitado para la cuenta receptora del evento y una preferencia separada para el servicio de Alista. Usa Sandbox en Preview y cobros reales en Producción. Los webhooks firmados validan importe, moneda y referencia; los pagos aprobados habilitan el QR del invitado o activan el evento.',
     evidence: [
       'app/api/invitacion/[token]/payment/route.ts',
+      'app/api/events/[id]/activation/payment/route.ts',
       'app/api/mercadopago/webhook/route.ts',
       'app/api/invitacion/[token]/payment/sync/route.ts',
       'lib/mercadopago-webhook.ts',
@@ -254,8 +273,12 @@ export const BEYOND_MVP: { title: string; detail: string }[] = [
     detail: 'Registro de envios y trazabilidad de delivery en la vista de configuracion.',
   },
   {
-    title: '275 tests automatizados',
-    detail: 'Cobertura de política de acceso, respuestas de invitación, configuración de Mercado Pago y firma de webhooks.',
+    title: '329 tests automatizados',
+    detail: 'Cobertura de política de acceso, respuestas de invitación, activación comercial, configuración de Mercado Pago y firma de webhooks.',
+  },
+  {
+    title: 'Sidebar contextual por evento',
+    detail: 'Selector de eventos y accesos directos a Invitación, Invitados, Tótem, Check-in y Puerta, sin mezclar la navegación de la cuenta con la operación de una fiesta.',
   },
 ]
 

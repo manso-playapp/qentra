@@ -325,11 +325,11 @@ export default function MvpStatusPage() {
               </span>
               <div className="max-w-2xl">
                 <p className="admin-heading text-2xl leading-tight text-white">
-                  El hito de cierre del primer sprint ya esta superado.
+                  El recorrido base de Alista ya está operativo.
                 </p>
                 <p className="mt-2 text-sm leading-6 text-slate-300">
-                  Next levanta, Supabase devuelve datos, el listado y el detalle de eventos existen. El
-                  proyecto esta en fase 3 y 4 del playbook, no en fase 1.
+                  Una clienta puede entrar con Google, recibir un evento, configurarlo, activarlo y preparar
+                  sus invitaciones. El equipo puede operar la llegada desde la misma ficha del evento.
                 </p>
               </div>
             </div>

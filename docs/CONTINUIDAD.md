@@ -98,14 +98,16 @@ sólo cambia la §6. Actualizar de más = churn y tokens.
 
 ## 6. Estado HOY
 
-**Fecha de este estado:** 2026-08-28.
+**Fecha de este estado:** 2026-08-29.
 **Rama de trabajo:** `main`.
 
 ### En producción, funcionando
 - Admin de eventos, invitados y tipos de acceso; carga masiva con plantilla.
 - Invitaciones con QR único; check-in manual y por QR; vistas `admin`, `puerta` y `totem`.
-- Autenticación operativa con Supabase Auth (email/contraseña, cuentas creadas por admin).
+- Autenticación operativa con Supabase Auth (email/contraseña y Google para clientas).
 - Checkout Pro por cuenta receptora del evento: pago, conciliación y habilitación del QR.
+- Activación automática del evento mediante cobro propio de Alista por $89.000 ARS.
+- Propiedad transferible y sidebar contextual con selector de eventos.
 - Envío por email y WhatsApp manual desde el teléfono propio.
 
 ### Cerrado en esta sesión (28/08/2026)
@@ -146,10 +148,8 @@ sólo cambia la §6. Actualizar de más = churn y tokens.
   - El menú lateral **no necesitó cambios**: ya ocultaba `Configuración` y `Estado del MVP` a
     quien no es admin global, así que una clienta ve exactamente `Inicio` + `Eventos`.
 
-> ⚠️ **BLOQUEANTE — falta configurar Google en el panel de Supabase.** El código está listo,
-> pero el botón no va a funcionar hasta que estén: el proveedor Google habilitado, el Client
-> ID/Secret desde Google Cloud Console, y las Redirect URLs con `/acceso/callback` (local y
-> producción). Detalle en la respuesta del 28/08 o en la doc de Supabase.
+> ✅ **Google configurado y verificado en producción.** El acceso con Google usa el callback
+> `/acceso/callback` y mantiene el verificador PKCE en cookie.
 
 - **Frente del muro CERRADO — el evento nace sin activar y el pago lo activa.**
   - **No existe un "evento demo" aparte.** Es *su* evento, sin activar. Es la decisión B
@@ -208,11 +208,10 @@ Los eventos reales (DRM 287 tokens, Alfonsina 2) no se vieron afectados, gracias
 > haga falta (arrastra en cascada su invitado, token y activación).
 
 ### Frentes abiertos, en orden de dependencia
-1. **Cobro de los $89.000 a Alista.** Precio de lanzamiento confirmado por el owner. El código
-   quedó implementado en `app/api/events/[id]/activation/payment/route.ts` y en el webhook: usa
-   la cuenta propia de Alista, concilia por referencia/importe/moneda, y solo entonces escribe
-   la misma fila de `event_activations` con `source: 'payment'`. Falta que el owner aplique en
-   Supabase la migración `20260829010000_add_event_activation_payments.sql` y luego desplegar.
+1. **Cobro de los $89.000 a Alista.** **CERRADO (29/08/2026).** La migración
+   `20260829010000_add_event_activation_payments.sql` fue aplicada en Supabase y el flujo está
+   desplegado en producción. Usa la cuenta propia de Alista, concilia por referencia/importe/
+   moneda y solo entonces escribe `event_activations` con `source: 'payment'`.
 2. **Política de retención del evento sin activar.** Con Google abierto entran datos reales
    —teléfonos de menores— de cuentas que quizá nunca paguen. Ver decisiones §5.
 3. **Revisar qué ve una clienta en `/admin`.** El panel funciona, pero su copy y jerarquía
