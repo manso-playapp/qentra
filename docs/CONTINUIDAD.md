@@ -190,6 +190,13 @@ sólo cambia la §6. Actualizar de más = churn y tokens.
   colaboradores ni la cuenta de Mercado Pago. No requiere migración. Tests: 327; `tsc`, lint y
   build OK.
 
+- **Frente cerrado — sidebar contextual por evento.** `components/admin/AdminEventSidebar.tsx`
+  agrega selector de eventos, estado comercial (`Sin activar` / `Activado`) y accesos directos
+  a Resumen, Invitación, Invitados, Tótem, Check-in y Puerta. La barra conserva Inicio, Mis
+  eventos y Nuevo evento como navegación global, y mantiene la cuenta logueada abajo. No se
+  agregó una sección de “Tickets”: el producto opera con invitaciones, invitados y accesos QR.
+  La lista se alimenta de los eventos que ya autoriza `/api/events`; no requiere migración.
+
 ### ✅ Circuito verificado de punta a punta (28/08/2026, en local contra la base real)
 Registro con Google (`hugojaviermanso@gmail.com`, sin perfil de operador) → panel → creó
 "XV Peteca" y quedó como dueña → cargó un invitado → intentó emitir y **el muro cortó**

@@ -9,6 +9,7 @@ import {
   LogOut,
   PanelLeft,
   PanelLeftClose,
+  Plus,
   Settings2,
 } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
@@ -16,6 +17,7 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { APP_VERSION, APP_VERSION_DATE } from '@/lib/version'
 import { useAdminAccess } from '@/components/admin/AdminAccessContext'
+import AdminEventSidebar from '@/components/admin/AdminEventSidebar'
 
 interface AdminLayoutProps {
   children: ReactNode
@@ -31,8 +33,14 @@ const ADMIN_NAV_ITEMS = [
   {
     href: '/admin/events',
     label: 'Eventos',
-    description: 'Agenda y operacion',
+    description: 'Mis agendas',
     icon: CalendarRange,
+  },
+  {
+    href: '/admin/events/new',
+    label: 'Nuevo evento',
+    description: 'Empezar una agenda',
+    icon: Plus,
   },
   {
     href: '/admin/settings',
@@ -51,6 +59,10 @@ const ADMIN_NAV_ITEMS = [
 function isNavItemActive(pathname: string, href: string) {
   if (href === '/admin') {
     return pathname === '/admin'
+  }
+
+  if (href === '/admin/events') {
+    return pathname === href
   }
 
   return pathname === href || pathname.startsWith(`${href}/`)
@@ -200,57 +212,51 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               </button>
             </div>
 
-            <nav className="mt-8 flex-1 space-y-2">
-              {ADMIN_NAV_ITEMS.filter((item) =>
-                isGlobalAdmin || (item.href !== '/admin/settings' && item.href !== '/admin/estado')
-              ).map((item) => {
-                const active = isNavItemActive(pathname, item.href)
-                const Icon = item.icon
+            <nav className="mt-6 flex-1 overflow-y-auto pr-1" aria-label="Navegación principal">
+              <AdminEventSidebar collapsed={collapsed} isStaff={isGlobalAdmin} />
 
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    title={collapsed ? item.label : undefined}
-                    className={cn(
-                      'group flex items-center rounded-[26px] border transition',
-                      collapsed ? 'justify-center p-3' : 'justify-between px-4 py-4',
-                      active
-                        ? 'border-sky-400/30 bg-sky-400/15 text-white shadow-[0_12px_32px_rgba(0,156,221,0.18)]'
-                        : 'border-white/8 bg-white/[0.03] text-slate-200 hover:border-white/12 hover:bg-white/[0.06]'
-                    )}
-                  >
-                    <div className={cn('flex items-center', !collapsed && 'gap-3')}>
-                      <span
-                        className={cn(
-                          'rounded-2xl border p-2.5',
-                          active ? 'border-white/10 bg-white/10' : 'border-white/8 bg-black/10'
-                        )}
-                      >
+              <div className={cn('my-6 border-t border-white/10', collapsed ? 'mx-2' : 'mx-1')} />
+
+              <section className="space-y-1.5">
+                {!collapsed && (
+                  <p className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                    Alista
+                  </p>
+                )}
+                {ADMIN_NAV_ITEMS.filter((item) =>
+                  isGlobalAdmin || (item.href !== '/admin/settings' && item.href !== '/admin/estado')
+                ).map((item) => {
+                  const active = isNavItemActive(pathname, item.href)
+                  const Icon = item.icon
+
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      title={collapsed ? item.label : undefined}
+                      className={cn(
+                        'group flex items-center rounded-[22px] border transition',
+                        collapsed ? 'justify-center p-3' : 'gap-3 px-4 py-3',
+                        active
+                          ? 'border-sky-400/30 bg-sky-400/15 text-white shadow-[0_12px_32px_rgba(0,156,221,0.18)]'
+                          : 'border-white/8 bg-white/[0.03] text-slate-200 hover:border-white/12 hover:bg-white/[0.06]'
+                      )}
+                    >
+                      <span className={cn('rounded-2xl border p-2.5', active ? 'border-white/10 bg-white/10' : 'border-white/8 bg-black/10')}>
                         <Icon className="size-4" />
                       </span>
                       {!collapsed && (
-                        <div>
-                          <p className="text-sm font-semibold">{item.label}</p>
-                          <p className={cn('mt-1 text-xs', active ? 'text-sky-200/80' : 'text-slate-400')}>
+                        <span className="min-w-0">
+                          <span className="block text-sm font-semibold">{item.href === '/admin/events' && !isGlobalAdmin ? 'Mis eventos' : item.label}</span>
+                          <span className={cn('mt-1 block text-xs', active ? 'text-sky-200/80' : 'text-slate-400')}>
                             {item.description}
-                          </p>
-                        </div>
+                          </span>
+                        </span>
                       )}
-                    </div>
-                    {!collapsed && (
-                      <span
-                        className={cn(
-                          'text-xs font-semibold uppercase tracking-[0.24em]',
-                          active ? 'text-sky-300' : 'text-slate-500 group-hover:text-slate-300'
-                        )}
-                      >
-                        go
-                      </span>
-                    )}
-                  </Link>
-                )
-              })}
+                    </Link>
+                  )
+                })}
+              </section>
             </nav>
 
             {/* Con clientes y equipo usando el mismo panel, quien esta adentro
