@@ -20,6 +20,33 @@ export type AlistaChange = {
 
 export const ALISTA_CHANGELOG: AlistaChange[] = [
   {
+    commit: '26cfa17',
+    date: '2026-08-29',
+    dateLabel: '29 ago 2026',
+    kind: 'experiencia',
+    area: 'Invitados',
+    title: 'La lista de invitados abre completa',
+    summary: 'Dejó de paginarse de a 25: el organizador entra a buscar a una persona concreta y la lista ya no la esconde detrás de un control que no pidió.',
+  },
+  {
+    commit: '8755d7d',
+    date: '2026-08-29',
+    dateLabel: '29 ago 2026',
+    kind: 'experiencia',
+    area: 'Invitación',
+    title: 'Las ayudas del formulario usan la tipografía del evento',
+    summary: 'Los textos de apoyo de la foto y de los acompañantes son datos del evento, no adorno del navegador: ahora siguen la tipografía de datos elegida en la personalización.',
+  },
+  {
+    commit: '7fad6e0',
+    date: '2026-08-29',
+    dateLabel: '29 ago 2026',
+    kind: 'producto',
+    area: 'Personalización de la invitación',
+    title: 'Guardar la invitación es publicarla',
+    summary: 'Se retiró el borrador: dos botones oscuros para una sola intención obligaban a decidir algo que nadie podía responder. Lo que se guarda se ve en todas las invitaciones ya enviadas, y las versiones guardadas siguen siendo el camino de vuelta. Además, los selectores de tipografía dejaron de mostrar Nunito cuando la fuente aplicada era otra.',
+  },
+  {
     commit: '6d5098d',
     date: '2026-08-29',
     dateLabel: '29 ago 2026',
