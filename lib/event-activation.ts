@@ -20,15 +20,26 @@ export type EventActivation = {
   status: ActivationStatus
   source: ActivationSource
   expires_at?: string | null
+  /** Primer ingreso registrado: la fiesta ocurrio. Ver §4 bis del doc de propiedad y pagos. */
+  consumed_at?: string | null
+  /** `events.event_date` al momento de consumirse. */
+  consumed_for_date?: string | null
 }
 
 export type ActivationState =
   | { activated: true; source: ActivationSource }
-  | { activated: false; reason: 'never_activated' | 'revoked' | 'expired' }
+  | { activated: false; reason: 'never_activated' | 'revoked' | 'expired' | 'consumed' }
 
+/**
+ * `eventDate` es la fecha actual del evento. Sin ella no se puede distinguir
+ * "sigo operando mi fiesta" de "estoy montando otra sobre la misma fila", asi
+ * que en su ausencia la activacion consumida NO se invalida: preferimos no
+ * cortar la emision por no saber, antes que cortarla de mas.
+ */
 export function resolveActivation(
   activation: EventActivation | null | undefined,
-  now: Date = new Date()
+  now: Date = new Date(),
+  eventDate?: string | null
 ): ActivationState {
   if (!activation) {
     return { activated: false, reason: 'never_activated' }
@@ -36,6 +47,15 @@ export function resolveActivation(
 
   if (activation.status === 'revoked') {
     return { activated: false, reason: 'revoked' }
+  }
+
+  // La fiesta ya se celebro. Mientras la fecha siga siendo la misma, todo lo de
+  // esa noche sigue funcionando —reponer un QR perdido a las 2 de la manana no
+  // puede depender de un pago—. Moverla es empezar otra fiesta.
+  if (activation.consumed_at && activation.consumed_for_date && eventDate) {
+    if (eventDate !== activation.consumed_for_date) {
+      return { activated: false, reason: 'consumed' }
+    }
   }
 
   if (activation.expires_at) {
@@ -51,9 +71,10 @@ export function resolveActivation(
 
 export function isEventActivated(
   activation: EventActivation | null | undefined,
-  now: Date = new Date()
+  now: Date = new Date(),
+  eventDate?: string | null
 ): boolean {
-  return resolveActivation(activation, now).activated
+  return resolveActivation(activation, now, eventDate).activated
 }
 
 export const ALISTA_CONTACT_EMAIL = 'hola@alista.com.ar'
@@ -100,6 +121,8 @@ export function getActivationBlockedMessage(state: ActivationState): string {
       return 'La activación de este evento fue dada de baja. Escribinos para reactivarlo.'
     case 'expired':
       return 'La activación de este evento venció. Escribinos para reactivarlo.'
+    case 'consumed':
+      return 'Esta fiesta ya se hizo y su activación quedó usada. La próxima es un evento nuevo: podés duplicar esta para no empezar de cero.'
     default:
       return 'Activá tu evento para empezar a emitir las invitaciones. Mientras tanto podés seguir configurándolo y cargando invitados.'
   }

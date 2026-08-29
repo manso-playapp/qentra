@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { BadgeCheck, Gift, LoaderCircle, Lock } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { BadgeCheck, CopyPlus, Gift, LoaderCircle, Lock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { getErrorMessage } from '@/lib/errors'
 import { formatAlistaServicePrice, type ActivationPaymentStatus } from '@/lib/alista-service-payment'
@@ -31,10 +32,11 @@ const SOURCE_LABEL: Record<ActivationSource, string> = {
   manual: 'Activación manual',
 }
 
-const BLOCKED_LABEL: Record<'never_activated' | 'revoked' | 'expired', string> = {
+const BLOCKED_LABEL: Record<'never_activated' | 'revoked' | 'expired' | 'consumed', string> = {
   never_activated: 'Sin activar',
   revoked: 'Activación dada de baja',
   expired: 'Activación vencida',
+  consumed: 'Esta fiesta ya se hizo',
 }
 
 export default function EventActivationCard({
@@ -46,10 +48,34 @@ export default function EventActivationCard({
   canPay,
   paymentStatus = null,
 }: EventActivationCardProps) {
+  const router = useRouter()
   const [state, setState] = useState(initialState)
-  const [busy, setBusy] = useState<ActivationSource | 'revoke' | 'payment' | null>(null)
+  const [busy, setBusy] = useState<ActivationSource | 'revoke' | 'payment' | 'duplicate' | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [changedAt, setChangedAt] = useState<string | null>(activatedAt ?? null)
+  const isConsumed = !state.activated && state.reason === 'consumed'
+
+  const duplicateEvent = async () => {
+    setBusy('duplicate')
+    setError(null)
+
+    try {
+      const response = await fetch(`/api/events/${event.id}/duplicate`, { method: 'POST' })
+      const payload = (await response.json().catch(() => null)) as
+        | { data?: { id?: string }; error?: string }
+        | null
+      if (!response.ok || !payload?.data?.id) {
+        throw new Error(payload?.error || 'No se pudo crear la nueva fiesta.')
+      }
+      // Cae en la edición: lo único que la copia no puede adivinar es el nombre
+      // y la fecha, y son justo lo primero que hay que corregir.
+      router.push(`/admin/events/${payload.data.id}/edit`)
+      router.refresh()
+    } catch (duplicateError) {
+      setError(getErrorMessage(duplicateError))
+      setBusy(null)
+    }
+  }
 
   const startPayment = async () => {
     setBusy('payment')
@@ -177,8 +203,9 @@ export default function EventActivationCard({
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold text-amber-950">{BLOCKED_LABEL[state.reason]}</p>
           <p className="mt-0.5 text-sm leading-5 text-amber-900/80">
-            Podés configurar el evento y cargar invitados. Para emitir sus links de invitación,
-            primero hay que activar el servicio.
+            {isConsumed
+              ? 'Su activación quedó usada el día que se celebró. Todo lo de esa noche se conserva: la próxima fiesta es un evento nuevo.'
+              : 'Podés configurar el evento y cargar invitados. Para emitir sus links de invitación, primero hay que activar el servicio.'}
           </p>
         </div>
       </div>
@@ -190,7 +217,24 @@ export default function EventActivationCard({
       )}
 
       <div className="mt-4 pl-11">
-        {!canGrant && canPay && (
+        {isConsumed && (
+          <div className="mb-4">
+            <Button type="button" onClick={() => void duplicateEvent()} disabled={busy !== null}>
+              {busy === 'duplicate' ? (
+                <LoaderCircle className="size-4 animate-spin" />
+              ) : (
+                <CopyPlus className="size-4" />
+              )}
+              Armar la próxima fiesta
+            </Button>
+            <p className="mt-2 text-sm text-amber-950/75">
+              Se copian el diseño de la invitación, los tipos de invitado y los textos. La lista
+              de invitados arranca vacía.
+            </p>
+          </div>
+        )}
+
+        {!canGrant && canPay && !isConsumed && (
           <div>
             <p className="mb-3 text-sm text-amber-950/75">
               Activá el evento por {formatAlistaServicePrice()} para empezar a emitir las invitaciones.
@@ -204,7 +248,7 @@ export default function EventActivationCard({
           </div>
         )}
 
-        {!canGrant && !canPay && (
+        {!canGrant && !canPay && !isConsumed && (
           <div>
             <p className="text-sm text-amber-950/75">
               La responsable del evento debe completar la activación para empezar a emitir invitaciones.

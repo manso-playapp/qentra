@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { formatGuestTypeAccessPolicy } from '@/lib/access-policy'
 import { formatEventDate } from '@/lib/event-date'
@@ -481,6 +481,28 @@ export default function EventGuestsManager({
   const selectedGuests = visibleGuests.filter((guest) => selectedGuestIds.has(guest.id))
   // Quien todavia no tiene link emitido. Un invitado cancelado no cuenta: no
   // hay nada que mandarle.
+  useEffect(() => {
+    const closeMenus = (domEvent: globalThis.Event) => {
+      const target = domEvent.target as Node | null
+      document.querySelectorAll<HTMLDetailsElement>('details[data-menu][open]').forEach((menu) => {
+        if (!target || !menu.contains(target)) menu.open = false
+      })
+    }
+    const closeOnEscape = (keyEvent: KeyboardEvent) => {
+      if (keyEvent.key !== 'Escape') return
+      document.querySelectorAll<HTMLDetailsElement>('details[data-menu][open]').forEach((menu) => {
+        menu.open = false
+      })
+    }
+
+    document.addEventListener('pointerdown', closeMenus)
+    document.addEventListener('keydown', closeOnEscape)
+    return () => {
+      document.removeEventListener('pointerdown', closeMenus)
+      document.removeEventListener('keydown', closeOnEscape)
+    }
+  }, [])
+
   const guestTypePriceById = useMemo(() => {
     const map = new Map<string, number>()
     for (const guestType of visibleGuestTypes) map.set(guestType.id, guestType.payment_amount_cents ?? 0)
@@ -2510,12 +2532,18 @@ export default function EventGuestsManager({
 
                               <div className="mt-3 flex flex-wrap items-center gap-2">
                                 {latestToken ? (
-                                  <details className="relative">
+                                  <details className="relative" data-menu>
                                     <summary className="inline-flex cursor-pointer list-none items-center gap-1 whitespace-nowrap rounded-md border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-100 [&::-webkit-details-marker]:hidden">
                                       Enviar invitación
                                       <span aria-hidden="true">▾</span>
                                     </summary>
-                                    <div className="absolute left-0 z-10 mt-1 w-64 rounded-lg border border-gray-200 bg-white p-1 shadow-lg">
+                                    <div
+                                      className="absolute left-0 z-10 mt-1 w-64 rounded-lg border border-gray-200 bg-white p-1 shadow-lg"
+                                      onClick={(clickEvent) => {
+                                        const acted = (clickEvent.target as HTMLElement).closest('button, a')
+                                        if (acted) clickEvent.currentTarget.closest('details')?.removeAttribute('open')
+                                      }}
+                                    >
                                       <p className="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
                                         Email (lo manda Alista)
                                       </p>

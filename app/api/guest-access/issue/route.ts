@@ -1,5 +1,5 @@
 import QRCode from 'qrcode'
-import { getActivationBlockedMessage, resolveActivation } from '@/lib/event-activation'
+import { getActivationBlockedMessage, resolveActivation, type EventActivation } from '@/lib/event-activation'
 import { buildGuestAccessQrPayload } from '@/lib/guest-access'
 import { buildInvitationExpiry } from '@/lib/invitation-expiry'
 import { isInvitationAccessReady } from '@/lib/invitation-response'
@@ -9,6 +9,11 @@ import { getSupabaseAdminClient } from '@/lib/supabase-admin'
 /** La app puede desplegarse unos segundos antes que la migración. */
 function isMissingActivationsTable(code: string | undefined) {
   return code === 'PGRST205' || code === '42P01'
+}
+
+/** Columna inexistente: la migración de §4 bis todavía no corrió. */
+function isMissingColumn(code: string | undefined) {
+  return code === '42703' || code === 'PGRST204'
 }
 
 type IssueGuestAccessRequestBody = {
@@ -51,11 +56,26 @@ export async function POST(request: Request) {
     // Muro de activación. Es el único punto donde se emiten `invitation_tokens`,
     // así que alcanza con cortar acá. No bloquea editar ni cargar invitados: la
     // dueña llega a sus datos siempre.
-    const { data: activationData, error: activationError } = await adminClient
+    const activationRead = await adminClient
       .from('event_activations')
-      .select('status, source, expires_at')
+      .select('status, source, expires_at, consumed_at, consumed_for_date')
       .eq('event_id', body.eventId)
       .maybeSingle()
+
+    let activationData = activationRead.data as EventActivation | null
+    let activationError = activationRead.error
+
+    // Sin las columnas de §4 bis se lee la forma anterior: la activación sigue
+    // gobernando la emisión, solo que todavía no se puede consumir.
+    if (activationError && isMissingColumn(activationError.code)) {
+      const fallback = await adminClient
+        .from('event_activations')
+        .select('status, source, expires_at')
+        .eq('event_id', body.eventId)
+        .maybeSingle()
+      activationData = fallback.data as EventActivation | null
+      activationError = fallback.error
+    }
 
     if (activationError && !isMissingActivationsTable(activationError.code)) {
       throw activationError
@@ -64,7 +84,9 @@ export async function POST(request: Request) {
     // Si la tabla todavía no existe (despliegue antes que la migración) no se
     // bloquea nada: el muro se activa cuando la migración está aplicada.
     if (!activationError) {
-      const activationState = resolveActivation(activationData)
+      // La fecha viaja en el body porque es la que el panel esta operando; se
+      // compara contra la fecha para la que la activacion ya se consumio.
+      const activationState = resolveActivation(activationData, new Date(), body.eventDate)
 
       if (!activationState.activated) {
         return Response.json(
