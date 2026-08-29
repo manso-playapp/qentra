@@ -20,6 +20,15 @@ export type AlistaChange = {
 
 export const ALISTA_CHANGELOG: AlistaChange[] = [
   {
+    commit: '5e576ca',
+    date: '2026-08-29',
+    dateLabel: '29 ago 2026',
+    kind: 'producto',
+    area: 'Activación',
+    title: 'El primer ingreso consume la activación del evento',
+    summary: 'La fiesta que ya se celebró deja de habilitar la emisión de invitaciones para una fecha distinta, así que la próxima es un evento nuevo. Postergar sigue siendo gratis mientras nadie haya ingresado, y el aviso ofrece duplicar la fiesta —diseño, tipos y textos— en lugar de bloquear.',
+  },
+  {
     commit: 'd9bce6b',
     date: '2026-08-29',
     dateLabel: '29 ago 2026',
