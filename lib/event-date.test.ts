@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatEventDate, getEventStartInstant, parseEventDate } from './event-date'
+import { formatArgentinaDateTime, formatEventDate, getEventStartInstant, parseEventDate } from './event-date'
 
 describe('event dates', () => {
   it('keeps a date-only event on its calendar day', () => {
@@ -30,5 +30,19 @@ describe('getEventStartInstant', () => {
 
   it('returns null for an invalid date', () => {
     expect(getEventStartInstant('not-a-date', '20:30')).toBeNull()
+  })
+})
+
+describe('formatArgentinaDateTime', () => {
+  it('uses stable Argentina date and time text', () => {
+    expect(formatArgentinaDateTime('2026-08-28T17:08:00.000Z')).toBe('28/8/26, 2:08 p. m.')
+  })
+
+  it('formats midnight without locale-dependent whitespace', () => {
+    expect(formatArgentinaDateTime('2026-08-28T03:05:00.000Z')).toBe('28/8/26, 12:05 a. m.')
+  })
+
+  it('handles invalid timestamps', () => {
+    expect(formatArgentinaDateTime('not-a-date')).toBe('Fecha inválida')
   })
 })

@@ -24,6 +24,7 @@ import {
   type InvitationFontKey,
 } from '@/lib/invitation-fonts'
 import type { InvitationConfigHistoryEntry } from '@/lib/invitation-config-state'
+import { formatArgentinaDateTime } from '@/lib/event-date'
 
 // Editor tipo "front editor" para la invitacion: panel de controles a la
 // izquierda, preview en vivo (mockup de celular) a la derecha. Los campos
@@ -391,7 +392,7 @@ export default function InvitationEditor({
                       {entry.mode === 'publish' ? 'Publicada' : 'Borrador'}
                     </p>
                     <p className="truncate text-xs text-gray-500">
-                      {new Date(entry.saved_at).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' })}
+                      {formatArgentinaDateTime(entry.saved_at)}
                     </p>
                   </div>
                   <button

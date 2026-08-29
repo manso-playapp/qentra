@@ -1,4 +1,5 @@
 const DATE_ONLY_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/
+const ARGENTINA_TIME_ZONE = 'America/Argentina/Cordoba'
 
 /**
  * `event_date` es una fecha de calendario, no un instante UTC. La convertimos
@@ -31,6 +32,32 @@ export function formatEventDate(value: string, options: Intl.DateTimeFormatOptio
   if (!date) return value
 
   return new Intl.DateTimeFormat('es-AR', { ...options, timeZone: 'UTC' }).format(date)
+}
+
+/**
+ * Formats an instant consistently in SSR and the browser. `Intl.format()` can
+ * emit different whitespace characters across runtimes, which is enough to
+ * break hydration when this value is rendered in a Client Component.
+ */
+export function formatArgentinaDateTime(value: string) {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return 'Fecha inválida'
+
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: ARGENTINA_TIME_ZONE,
+    year: '2-digit',
+    month: 'numeric',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(date)
+  const valueFor = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value ?? ''
+  const hour24 = Number(valueFor('hour'))
+  const hour12 = hour24 % 12 || 12
+  const period = hour24 < 12 ? 'a. m.' : 'p. m.'
+
+  return `${valueFor('day')}/${valueFor('month')}/${valueFor('year')}, ${hour12}:${valueFor('minute')} ${period}`
 }
 
 const TIME_ONLY_PATTERN = /^(\d{2}):(\d{2})/
