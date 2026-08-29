@@ -20,6 +20,15 @@ export type AlistaChange = {
 
 export const ALISTA_CHANGELOG: AlistaChange[] = [
   {
+    commit: 'a7a4882',
+    date: '2026-08-29',
+    dateLabel: '29 ago 2026',
+    kind: 'experiencia',
+    area: 'Invitados',
+    title: 'Cargar invitados termina ofreciendo generar sus invitaciones',
+    summary: 'Emitir los links sigue siendo un acto aparte —el muro de activación vive ahí—, pero ya no hay que ir a buscarlo: después de importar o dar de alta, la lista ofrece emitir el link de quienes todavía no lo tienen.',
+  },
+  {
     commit: '76e2389',
     date: '2026-08-29',
     dateLabel: '29 ago 2026',
