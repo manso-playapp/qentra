@@ -20,6 +20,15 @@ export type AlistaChange = {
 
 export const ALISTA_CHANGELOG: AlistaChange[] = [
   {
+    commit: 'd9bce6b',
+    date: '2026-08-29',
+    dateLabel: '29 ago 2026',
+    kind: 'documentación',
+    area: 'Activación',
+    title: 'Un evento es una fiesta que ocurrió, y el check-in es la marca',
+    summary: 'Quedó decidido qué cuenta como un evento: postergar es gratis mientras no haya ingresos, el primer check-in consume la activación y la fiesta siguiente es un evento nuevo, con una oferta de duplicar en lugar de un bloqueo. Decisión escrita; falta implementarla.',
+  },
+  {
     commit: '774caa5',
     date: '2026-08-29',
     dateLabel: '29 ago 2026',
