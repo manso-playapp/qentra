@@ -2,6 +2,8 @@ import AdminLayout from '@/components/admin/AdminLayout'
 import { Card, CardContent } from '@/components/ui/card'
 import GlobalGuestsView, { type GlobalGuest } from '@/components/admin/GlobalGuestsView'
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
+import { getCurrentOperatorProfile } from '@/lib/operator-auth'
+import { isAlistaStaff } from '@/lib/event-access'
 
 export const metadata = {
   title: 'Invitados',
@@ -25,11 +27,17 @@ function guestTypeName(value: GuestRow['guest_types']): string | null {
   return (Array.isArray(value) ? value[0]?.name : value.name) ?? null
 }
 
-// Vista maestra: invitados de todos los eventos. Lee con service role porque RLS
-// oculta guests al cliente con cookies (operator-auth no crea sesion de
-// Supabase); la ruta ya esta protegida por el layout del admin.
+// Vista transversal de invitados. Lee con service role porque RLS oculta guests
+// al cliente con cookies (operator-auth no crea sesion de Supabase), y por eso
+// mismo el alcance TIENE que restringirse aca: el layout del admin solo exige
+// estar autenticado, no da acceso a los eventos de otra persona. Sin este filtro
+// cualquier clienta veia nombre, email, telefono y foto de los invitados de
+// todas las fiestas de Alista.
 export default async function GuestsPage() {
   const supabase = getSupabaseAdminClient()
+  const authState = await getCurrentOperatorProfile()
+  const seesEveryEvent = isAlistaStaff(authState.access)
+  const allowedEventIds = authState.manageableEventIds
 
   const errorCard = (message: string) => (
     <AdminLayout>
@@ -47,15 +55,32 @@ export default async function GuestsPage() {
     return errorCard('El panel de invitados no está disponible temporalmente. Contactá al equipo de Alista.')
   }
 
-  const [guestsResponse, eventsResponse] = await Promise.all([
-    supabase
-      .from('guests')
-      .select(
-        'id, first_name, last_name, email, phone, status, photo_url, event_id, created_at, guest_types(name)'
-      )
-      .order('created_at', { ascending: false }),
-    supabase.from('events').select('id, name').order('event_date', { ascending: false }),
-  ])
+  // Sin eventos propios no hay nada que mostrar, y consultar sin filtro seria
+  // justamente el bug.
+  if (!seesEveryEvent && allowedEventIds.length === 0) {
+    return (
+      <AdminLayout>
+        <div className="px-4 py-6 sm:px-0">
+          <GlobalGuestsView guests={[]} events={[]} />
+        </div>
+      </AdminLayout>
+    )
+  }
+
+  let guestsQuery = supabase
+    .from('guests')
+    .select(
+      'id, first_name, last_name, email, phone, status, photo_url, event_id, created_at, guest_types(name)'
+    )
+    .order('created_at', { ascending: false })
+  let eventsQuery = supabase.from('events').select('id, name').order('event_date', { ascending: false })
+
+  if (!seesEveryEvent) {
+    guestsQuery = guestsQuery.in('event_id', allowedEventIds)
+    eventsQuery = eventsQuery.in('id', allowedEventIds)
+  }
+
+  const [guestsResponse, eventsResponse] = await Promise.all([guestsQuery, eventsQuery])
 
   if (guestsResponse.error) {
     return errorCard(`No se pudieron cargar los invitados: ${guestsResponse.error.message}`)

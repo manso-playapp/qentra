@@ -339,7 +339,10 @@ export async function requireAuthorizedPageAccess(
   nextPath: string,
   allowedRoles: readonly AppRole[]
 ): Promise<AuthorizedPageAccessResult> {
-  const authState = await getCurrentAuthState()
+  // Con la lente puesta, las secciones del equipo se cierran igual que para la
+  // cuenta mirada. Si esta puerta leyera la sesión real, "ver como" mostraría un
+  // panel que mezcla dos personas: sus eventos, pero las herramientas de Alista.
+  const authState = await getViewerAuthState()
 
   if (!authState.user) {
     redirect(`/acceso?next=${encodeURIComponent(nextPath)}`)
