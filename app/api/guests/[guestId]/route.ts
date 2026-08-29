@@ -1,5 +1,5 @@
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
-import { ensureAuthorizedApiAccess, ensureAuthorizedEventApiAccess } from '@/lib/operator-auth'
+import { ensureAuthorizedEventApiAccess } from '@/lib/operator-auth'
 import {
   buildGuestFullName,
   mapGuestStatusToDb,
@@ -19,13 +19,12 @@ type GuestRouteContext = {
 
 export const runtime = 'nodejs'
 
+// La autorizacion es por acceso al EVENTO, no por rol: `ensureAuthorizedEventApiAccess`
+// ya cubre staff, duena y colaborador invitado, y espeja `can_manage_event()`.
+// Exigir ademas perfil de operador dejaba afuera justo a la clienta —el caso
+// normal del self-serve—, que recibia "Operator profile not found" sobre su
+// propio invitado. Ver decisiones §3 y §7.1.
 export async function PATCH(request: Request, context: GuestRouteContext) {
-  const { response: authErrorResponse } = await ensureAuthorizedApiAccess(['admin', 'event_admin'])
-
-  if (authErrorResponse) {
-    return authErrorResponse
-  }
-
   const adminClient = getSupabaseAdminClient()
 
   if (!adminClient) {
@@ -227,12 +226,6 @@ export async function PATCH(request: Request, context: GuestRouteContext) {
 }
 
 export async function DELETE(_request: Request, context: GuestRouteContext) {
-  const { response: authErrorResponse } = await ensureAuthorizedApiAccess(['admin', 'event_admin'])
-
-  if (authErrorResponse) {
-    return authErrorResponse
-  }
-
   const adminClient = getSupabaseAdminClient()
 
   if (!adminClient) {
