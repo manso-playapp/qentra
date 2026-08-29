@@ -66,7 +66,7 @@ export default async function AdminPage() {
           <Card className="bg-admin-panel">
             <CardContent className="p-8">
               <p className="text-sm text-rose-700">
-                SUPABASE_SERVICE_ROLE_KEY no está configurada en el entorno.
+                El panel no está disponible temporalmente. Contactá al equipo de Alista.
               </p>
             </CardContent>
           </Card>

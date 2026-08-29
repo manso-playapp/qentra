@@ -51,8 +51,8 @@ const ADMIN_NAV_ITEMS = [
   },
   {
     href: '/admin/estado',
-    label: 'Estado del MVP',
-    description: 'Avance del producto',
+    label: 'Estado ALISTA',
+    description: 'Historial de cambios',
     icon: GaugeCircle,
   },
 ] as const
@@ -129,8 +129,8 @@ function getPageHeader(pathname: string): PageHeader {
   if (pathname.startsWith('/admin/estado')) {
     return {
       eyebrow: 'Producto',
-      title: 'Estado del MVP',
-      description: 'Qué está construido, qué está a medias y qué falta para cerrar el alcance.',
+      title: 'Estado ALISTA',
+      description: 'Historial de decisiones, mejoras y correcciones de la aplicación.',
       actions: [],
     }
   }

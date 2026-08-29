@@ -103,7 +103,7 @@ function HealthItem({
         <p className="mt-2 text-sm text-muted-foreground">Configuracion completa para operar este servicio.</p>
       ) : (
         <p className="mt-2 text-sm text-muted-foreground">
-          Falta: {status.missing.join(', ')}
+          Requiere atención del equipo de Alista antes de poder usarse.
         </p>
       )}
     </div>
@@ -866,7 +866,7 @@ export default function SettingsPage() {
                         <p className="mt-2 text-sm text-muted-foreground">
                           {deliveryHealth.alistaMercadoPago.ready
                             ? `Cuenta propia configurada (${deliveryHealth.alistaMercadoPago.mode === 'test' ? 'pruebas' : 'producción'}). Se usa solo para el servicio de Alista.`
-                            : `Falta ${deliveryHealth.alistaMercadoPago.missing.join(', ')} en el entorno.`}
+                            : 'La cuenta propia de Alista necesita atención antes de activar nuevos eventos.'}
                         </p>
                       </div>
                       <div className="rounded-[24px] border border-border/70 bg-white/75 p-4">
@@ -877,7 +877,7 @@ export default function SettingsPage() {
                         <p className="mt-2 text-sm text-muted-foreground">
                           {deliveryHealth.serviceRoleConfigured
                             ? 'Disponible para gestion de operadores y links de acceso.'
-                            : 'Falta SUPABASE_SERVICE_ROLE_KEY en el entorno.'}
+                            : 'La gestión operativa no está disponible temporalmente.'}
                         </p>
                       </div>
                       <div className="rounded-[24px] border border-border/70 bg-white/75 p-4">

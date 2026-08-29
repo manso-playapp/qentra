@@ -44,7 +44,7 @@ export default async function GuestsPage() {
   )
 
   if (!supabase) {
-    return errorCard('SUPABASE_SERVICE_ROLE_KEY no está configurada en el entorno.')
+    return errorCard('El panel de invitados no está disponible temporalmente. Contactá al equipo de Alista.')
   }
 
   const [guestsResponse, eventsResponse] = await Promise.all([

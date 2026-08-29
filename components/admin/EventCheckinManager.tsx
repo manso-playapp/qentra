@@ -1283,10 +1283,10 @@ export default function EventCheckinManager({
                         {overridePolicyLoading
                           ? 'Cargando política de excepción...'
                           : !overridePinConfigured
-                          ? 'La excepción no está configurada en este entorno. Define ALISTA_SECURITY_OVERRIDE_PIN para habilitarla.'
+                          ? 'La excepción de seguridad todavía no está habilitada. Contactá al responsable de Alista.'
                           : overrideSupervisorRequired
-                          ? 'Este entorno exige doble control: PIN de override y PIN de supervisor.'
-                          : 'Este entorno exige PIN de override y motivo operativo.'}
+                          ? 'Esta acción exige un segundo control de supervisor.'
+                          : 'Esta acción exige un PIN y un motivo operativo.'}
                       </div>
 
                       {overrideError && (
@@ -1768,10 +1768,10 @@ export default function EventCheckinManager({
                   {overridePolicyLoading
                     ? 'Cargando politica de override...'
                     : !overridePinConfigured
-                    ? 'Override no configurado en este entorno. Define ALISTA_SECURITY_OVERRIDE_PIN para habilitar excepciones.'
+                          ? 'La excepción de seguridad todavía no está habilitada. Contactá al responsable de Alista.'
                     : overrideSupervisorRequired
-                    ? 'Este entorno exige doble control: PIN de override y PIN de supervisor.'
-                    : 'Este entorno exige PIN de override y motivo operativo.'}
+                    ? 'Esta acción exige un segundo control de supervisor.'
+                    : 'Esta acción exige un PIN y un motivo operativo.'}
                 </div>
 
                 {overrideError && (
@@ -1938,7 +1938,7 @@ export default function EventCheckinManager({
               <p>Si el invitado ya ingreso, el sistema advierte y no habilita un nuevo acceso.</p>
               <p>Si el tipo o rol tiene ventana horaria, se bloquea el QR fuera de esa franja.</p>
               <p>Solo `ya ingresado` o `fuera de horario` pueden resolverse por override con PIN y motivo; `cancelado`, `vencido` o `invalido` no.</p>
-              <p>Si el entorno define `ALISTA_SECURITY_SUPERVISOR_PIN`, el override exige doble control.</p>
+              <p>Algunas excepciones requieren un segundo control de supervisor.</p>
               <p>Al validar, se marca `used_at` y se registra una fila en `checkins`.</p>
               <p>Tambien se puede operar check-in manual desde la busqueda de invitados.</p>
             </div>

@@ -12,16 +12,14 @@ export default function OperatorAuthConfigNotice({
           Acceso protegido
         </p>
         <h1 className="mt-4 text-3xl font-semibold text-white">
-          Falta configurar la clave operativa
+          Esta sección todavía no está disponible
         </h1>
         <p className="mt-4 text-sm leading-6 text-slate-300">
-          La vista de {areaLabel} quedo protegida, pero el entorno no tiene definida
-          `ALISTA_OPERATOR_PASSWORD`.
+          La vista de {areaLabel} está protegida y necesita una configuración adicional antes
+          de poder usarse.
         </p>
         <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-950/70 p-4 text-sm text-slate-300">
-          Define `ALISTA_OPERATOR_PASSWORD` y, opcionalmente,
-          `ALISTA_OPERATOR_SESSION_SECRET` en el entorno antes de usar esta superficie
-          en produccion.
+          Contactá al equipo de Alista para completar la configuración y habilitar este acceso.
         </div>
       </div>
     </main>

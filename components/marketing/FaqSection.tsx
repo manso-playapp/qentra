@@ -7,11 +7,11 @@ const FAQS = [
   },
   {
     q: '¿Cómo funciona el aporte o pago?',
-    a: 'Alista está diseñado para vincular cada aporte con la persona correspondiente y diferenciar su estado de una simple captura. Durante los pilotos trabajamos con conciliación acompañada.',
+    a: 'Alista está diseñado para vincular cada aporte con la persona correspondiente y diferenciar su estado de una simple captura. Cuando hace falta, el equipo acompaña la conciliación.',
   },
   {
     q: '¿Quién contrata Alista?',
-    a: 'Podemos conversar con una familia que organiza sus 15 o con planners, salones y productoras que quieren incorporar Alista a su servicio. El recorrido y la propuesta cambian según cada caso.',
+    a: 'La responsable de la fiesta contrata Alista y conserva el control de sus datos. Puede invitar a planners, salones o equipos de recepción para colaborar en la organización y la llegada.',
   },
   {
     q: '¿La invitación puede tener la identidad de la fiesta?',

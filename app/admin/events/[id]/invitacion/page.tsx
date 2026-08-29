@@ -42,7 +42,7 @@ export default async function InvitationEditorPage({ params }: { params: Promise
         <div className="px-4 py-6 sm:px-0">
           <Card className="bg-admin-panel">
             <CardContent className="p-8">
-              <p className="text-sm text-rose-700">SUPABASE_SERVICE_ROLE_KEY no está configurada.</p>
+              <p className="text-sm text-rose-700">El editor de invitaciones no está disponible temporalmente. Contactá al equipo de Alista.</p>
             </CardContent>
           </Card>
         </div>

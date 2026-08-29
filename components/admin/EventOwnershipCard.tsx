@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import {
   ArrowRightLeft,
-  CheckCircle2,
   CreditCard,
   Link2,
   LoaderCircle,
@@ -133,28 +132,6 @@ export default function EventOwnershipCard({
           </div>
         </div>
 
-        <div className="rounded-2xl border border-sky-100 bg-sky-50/70 p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-sky-800">Ya está resuelto</p>
-          <ul className="mt-3 grid gap-2 text-sm text-sky-950 sm:grid-cols-2">
-            <li className="flex items-start gap-2">
-              <CheckCircle2 className="mt-0.5 size-4 flex-none text-sky-600" />
-              El evento tiene una cuenta responsable asignada.
-            </li>
-            <li className="flex items-start gap-2">
-              <CheckCircle2 className="mt-0.5 size-4 flex-none text-sky-600" />
-              Puede administrarlo y trabajar con colaboradores operativos.
-            </li>
-            <li className="flex items-start gap-2">
-              <CheckCircle2 className="mt-0.5 size-4 flex-none text-sky-600" />
-              La responsabilidad se puede transferir sin perder datos.
-            </li>
-            <li className="flex items-start gap-2">
-              <CheckCircle2 className="mt-0.5 size-4 flex-none text-sky-600" />
-              Mercado Pago se conserva al transferir la responsabilidad.
-            </li>
-          </ul>
-        </div>
-
         <dl className="grid gap-1 text-sm">
           <div className="flex flex-wrap items-baseline gap-x-2">
             <dt className="text-muted-foreground">Cuenta responsable actual:</dt>
@@ -248,13 +225,13 @@ export default function EventOwnershipCard({
               </div>
               {!paymentAccount.configured && (
                 <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-                  La cuenta está vinculada. Si fuera necesario volver a vincularla o renovar sus credenciales, el equipo de Alista debe completar una configuración técnica pendiente.
+                  La cuenta está vinculada y puede recibir nuevos pagos. Para modificar la vinculación o renovarla, contactá al equipo de Alista.
                 </p>
               )}
             </>
           ) : !paymentAccount.configured ? (
             <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-              La vinculación está temporalmente deshabilitada porque falta configurar OAuth y el cifrado seguro de cuentas.
+              La vinculación está temporalmente no disponible. Si el evento cobra entradas, contactá al equipo de Alista para habilitarla.
             </p>
           ) : (
             <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">

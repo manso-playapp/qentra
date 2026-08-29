@@ -50,7 +50,7 @@ export default function EventsPage() {
             <div className="rounded-[24px] border border-dashed border-border bg-white/70 px-6 py-14 text-center">
               <h3 className="admin-heading text-3xl text-foreground">No hay eventos cargados</h3>
               <p className="mx-auto mt-4 max-w-lg text-sm leading-7 text-muted-foreground">
-                Arranca con la primera agenda y deja resuelto desde el principio el delivery, el telefono operativo y la superficie de control.
+                Empezá con tu fiesta y organizá desde el principio las invitaciones, los invitados y la llegada.
               </p>
               <Button asChild className="mt-6">
                 <Link href="/admin/events/new">Crear primer evento</Link>

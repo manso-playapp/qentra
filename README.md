@@ -6,7 +6,7 @@ La cuenta y el evento son de la **responsable de la fiesta** (habitualmente la m
 planners, salones y productoras participan como colaboradores invitados al evento.
 Ver `docs/Product/ALISTA_DECISIONES_PROPIEDAD_Y_PAGOS.md`.
 
-Estado actual del MVP:
+Estado actual de Alista 1.0.0:
 
 - admin de eventos, invitados y tipos de invitado
 - invitaciones con QR unico por invitado

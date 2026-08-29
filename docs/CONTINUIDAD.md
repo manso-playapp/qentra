@@ -88,6 +88,13 @@ interna de cualquier motor es efímera y **no es un puente**.
 Se actualiza **al CERRAR un frente**, no mientras trabajás, y **en el MISMO commit**. Normalmente
 sólo cambia la §6. Actualizar de más = churn y tokens.
 
+### Mantener Estado ALISTA actualizado
+`lib/alista-changelog.ts` es la fuente del listado visible en `/admin/estado`. Todo commit que
+cambie producto, experiencia o estabilidad debe agregar en el mismo commit una entrada con hash,
+fecha, área e impacto sintetizado. El texto visible se escribe para entender el cambio, no para
+repetir el título técnico del commit. Los comentarios, tests y diagnósticos internos que no ve el
+usuario permanecen en el código o en esta continuidad; no se copian al panel.
+
 ### Ahorrar tokens (en orden de impacto)
 1. **Sesiones cortas, una por frente.** Cerrás → actualizás docs → **sesión nueva**. Palanca #1.
 2. Traé la función puntual, no el archivo entero.
@@ -145,7 +152,7 @@ sólo cambia la §6. Actualizar de más = churn y tokens.
   - `app/admin/page.tsx`: filtra por `manageableEventIds`; el staff sigue viendo todo.
   - `app/admin/events/new/layout.tsx`: sin `GlobalAdminGuard` — crear evento es de cualquiera.
   - Los botones "Crear evento" dejaron de estar detrás de `isGlobalAdmin`.
-  - El menú lateral **no necesitó cambios**: ya ocultaba `Configuración` y `Estado del MVP` a
+  - El menú lateral **no necesitó cambios**: ya ocultaba `Configuración` y `Estado ALISTA` a
     quien no es admin global, así que una clienta ve exactamente `Inicio` + `Eventos`.
 
 > ✅ **Google configurado y verificado en producción.** El acceso con Google usa el callback
@@ -188,8 +195,8 @@ sólo cambia la §6. Actualizar de más = churn y tokens.
   Auth antes de cambiar `events.owner_user_id`. La acción sólo está disponible para el rol
   `admin`, confirma evento y destinatario, y no modifica `created_by_user_id`, invitados,
   colaboradores ni la cuenta de Mercado Pago. La tarjeta se muestra arriba de las páginas
-  públicas, usa “cuenta responsable” como lenguaje visible, explica qué ya está resuelto y deja
-  claro que la transferencia es inmediata y no requiere aceptación. La vinculación de Mercado
+  públicas, usa “cuenta responsable” como lenguaje visible y deja claro que la transferencia es
+  inmediata y no requiere aceptación. La vinculación de Mercado
   Pago vive dentro de la misma tarjeta, con su estado y acciones según permisos. No requiere
   migración. Tests: 327; `tsc`, lint y build OK.
 
@@ -204,11 +211,10 @@ sólo cambia la §6. Actualizar de más = churn y tokens.
   activo. La scrollbar queda integrada al fondo navy y la cuenta y el cierre de sesión quedan en
   un footer compacto con menú de tres puntos.
 
-- **Pantalla de MVP actualizada para la release `0.9.0`.** `/admin/estado` ahora muestra el
-  recorrido operativo de una clienta, el avance ponderado de las 22 features, los cuatro hitos
-  de la release, los pendientes reales y lo que queda fuera de prioridad. La automatización
-  masiva de WhatsApp no se presenta como bloqueo del recorrido actual. El cálculo actual es
-  correcto: 19 funcionando, 2 a medias, 1 futura y 91% ponderado.
+- **Frente cerrado — Estado ALISTA.** `/admin/estado` dejó de funcionar como tablero de MVP y
+  ahora presenta un log cronológico de cambios sintetizados desde Git, con fecha, área, tipo,
+  hash e impacto. Las decisiones abiertas quedan en una lista breve y separada. La fuente es
+  `lib/alista-changelog.ts`, que debe actualizarse junto con cada cambio funcional.
 
 ### ✅ Circuito verificado de punta a punta (28/08/2026, en local contra la base real)
 Registro con Google (`hugojaviermanso@gmail.com`, sin perfil de operador) → panel → creó
@@ -229,9 +235,9 @@ Los eventos reales (DRM 287 tokens, Alfonsina 2) no se vieron afectados, gracias
    —teléfonos de menores— de cuentas que quizá nunca paguen. Ver decisiones §5.
 3. **Revisar qué ve una clienta en `/admin`.** El panel funciona, pero su copy y jerarquía
    fueron escritos para el equipo operativo, no para una madre organizando su fiesta.
-4. **Ajuste editorial final del tablero MVP.** Separar visualmente “pendiente para cerrar”,
-   “riesgo o decisión abierta” y “futuro fuera de prioridad”. El sidebar contextual pertenece a
-   la experiencia principal de la release, no debe quedar presentado como algo construido de más.
+4. **Revisión editorial del panel para clientas.** El panel funciona, pero todavía hay que
+   detectar y simplificar copy escrito para el equipo operativo cuando no aporta valor a una
+   madre organizando su fiesta.
 
 ### Hilos sueltos anotados
 - **Retención de datos del demo:** cargar invitados sin pagar guarda datos reales de menores.

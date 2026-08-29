@@ -19,7 +19,7 @@ export default function ContactoPage() {
             Empecemos por entender qué estás organizando.
           </h1>
           <p className="mt-7 max-w-xl text-base leading-7 text-black/58">
-            Puede ser una fiesta de 15, una propuesta piloto o una operación profesional. Contanos el contexto y te respondemos con claridad.
+            Contanos qué estás organizando para tus 15 y te respondemos con claridad sobre el recorrido que mejor se adapta a tu fiesta.
           </p>
 
           <div className="mt-12 border-y border-black/15">

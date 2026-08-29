@@ -40,7 +40,7 @@ const STEPS = [
     number: '05',
     name: 'Cobrá',
     title: 'El aporte no queda separado de la persona.',
-    body: 'Cuando la fiesta incluye un aporte, Alista está diseñado para conservar ese vínculo. Durante los pilotos, la conciliación es acompañada.',
+    body: 'Cuando la fiesta incluye un aporte, Alista está diseñado para conservar ese vínculo. Cuando hace falta, el equipo acompaña la conciliación.',
   },
   {
     number: '06',
