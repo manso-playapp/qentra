@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Save } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -30,6 +29,7 @@ type EditEventFormProps = {
     | 'dresscode'
     | 'directions_url'
     | 'max_capacity'
+    | 'description'
     | 'gift_info'
     | 'contact_phone'
     | 'status'
@@ -48,6 +48,7 @@ type EventFormState = {
   dresscode: string
   directions_url: string
   max_capacity: number
+  description: string
   gift_info: string
   contact_phone: string
   status: Event['status']
@@ -70,6 +71,7 @@ export default function EditEventForm({ event }: EditEventFormProps) {
     dresscode: event.dresscode || '',
     directions_url: event.directions_url || '',
     max_capacity: event.max_capacity,
+    description: event.description || '',
     gift_info: event.gift_info || '',
     contact_phone: event.contact_phone || '',
     status: event.status,
@@ -114,6 +116,7 @@ export default function EditEventForm({ event }: EditEventFormProps) {
         dresscode: formData.dresscode.trim() || null,
         directions_url: formData.directions_url.trim() || null,
         max_capacity: formData.max_capacity,
+        description: formData.description.trim() || null,
         gift_info: formData.gift_info.trim() || null,
         contact_phone: formData.contact_phone.trim() || null,
         status: formData.status,
@@ -143,44 +146,36 @@ export default function EditEventForm({ event }: EditEventFormProps) {
   return (
     <div className="mx-auto max-w-5xl px-4 py-6 sm:px-0">
       <form onSubmit={handleSubmit} className="space-y-6">
-        <Card className="overflow-hidden bg-admin-panel">
-          <CardContent className="p-8">
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-              <div className="max-w-3xl">
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant="default">Editar evento</Badge>
-                  <Badge variant="outline">Ajuste operativo</Badge>
-                  <Badge variant="outline">Datos operativos</Badge>
-                </div>
-                <h1 className="admin-heading mt-5 text-5xl leading-none text-foreground">
-                  Información del Evento
-                </h1>
-                <p className="mt-4 text-base leading-7 text-muted-foreground">
-                  Corrige agenda, venue, contacto y estado sin salir del centro de operaciones.
-                </p>
-              </div>
+        <header className="flex flex-col gap-6 border-b border-border/70 pb-6 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-3xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">Datos del evento</p>
+            <h1 className="admin-heading mt-2 text-4xl leading-none text-foreground sm:text-5xl">
+              Editar {event.name}
+            </h1>
+            <p className="mt-3 text-sm leading-6 text-muted-foreground">
+              Esta información define la fecha, el lugar y los datos que verán los invitados.
+            </p>
+          </div>
 
-              <div className="flex flex-wrap gap-3">
-                <Button asChild variant="outline">
-                  <Link href={`/admin/events/${event.id}`}>
-                    <ArrowLeft className="size-4" />
-                    Volver a la ficha
-                  </Link>
-                </Button>
-                <Button type="submit" size="lg" disabled={loading}>
-                  <Save className="size-4" />
-                  {loading ? 'Guardando...' : 'Guardar cambios'}
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+          <div className="flex flex-wrap gap-3">
+            <Button asChild variant="outline">
+              <Link href={`/admin/events/${event.id}`}>
+                <ArrowLeft className="size-4" />
+                Volver al resumen
+              </Link>
+            </Button>
+            <Button type="submit" size="lg" disabled={loading}>
+              <Save className="size-4" />
+              {loading ? 'Guardando...' : 'Guardar cambios'}
+            </Button>
+          </div>
+        </header>
 
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_360px]">
           <Card className="bg-admin-panel">
             <CardHeader>
-              <CardDescription>Base del evento</CardDescription>
-              <CardTitle className="admin-heading text-3xl">Datos principales</CardTitle>
+              <CardDescription>Información principal</CardDescription>
+              <CardTitle className="admin-heading text-3xl">Fecha y lugar</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid gap-6">
@@ -227,12 +222,12 @@ export default function EditEventForm({ event }: EditEventFormProps) {
                 </div>
 
                 <div>
-                  <Label htmlFor="venue_name">Venue</Label>
+                  <Label htmlFor="venue_name">Lugar</Label>
                   <Input id="venue_name" name="venue_name" required value={formData.venue_name} onChange={handleInputChange} className="mt-2" />
                 </div>
 
                 <div>
-                  <Label htmlFor="venue_address">Direccion del venue</Label>
+                  <Label htmlFor="venue_address">Dirección</Label>
                   <Input id="venue_address" name="venue_address" required value={formData.venue_address} onChange={handleInputChange} className="mt-2" />
                 </div>
 
@@ -245,6 +240,22 @@ export default function EditEventForm({ event }: EditEventFormProps) {
                     <Label htmlFor="directions_url">Cómo llegar (link de mapa)</Label>
                     <Input id="directions_url" name="directions_url" type="url" value={formData.directions_url} onChange={handleInputChange} className="mt-2" placeholder="https://maps.google.com/..." />
                   </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="description">Descripción del evento</Label>
+                  <Textarea
+                    id="description"
+                    name="description"
+                    rows={4}
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    className="mt-2"
+                    placeholder="Una breve presentación de la fiesta..."
+                  />
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    Se muestra a los invitados como presentación general del evento.
+                  </p>
                 </div>
 
                 <div>
@@ -267,42 +278,42 @@ export default function EditEventForm({ event }: EditEventFormProps) {
           </Card>
 
           <div className="space-y-6">
-            <Card className="bg-admin-navy text-white">
+            <Card className="bg-admin-panel">
               <CardHeader>
-                <CardDescription className="text-sky-300/80">Datos operativos</CardDescription>
-                <CardTitle className="text-white">Contacto y estado</CardTitle>
+                <CardDescription>Publicación y capacidad</CardDescription>
+                <CardTitle>Estado del evento</CardTitle>
               </CardHeader>
               <CardContent className="space-y-5">
                 <div>
-                  <Label htmlFor="contact_phone" className="text-white">Telefono visible del evento</Label>
+                  <Label htmlFor="contact_phone">Teléfono de contacto</Label>
                   <Input
                     id="contact_phone"
                     name="contact_phone"
                     type="tel"
                     value={formData.contact_phone}
                     onChange={handleInputChange}
-                    className="mt-2 border-white/10 bg-white/6 text-white placeholder:text-slate-400"
+                    className="mt-2"
                     placeholder="+54 9 351 ..."
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="status" className="text-white">Estado</Label>
+                  <Label htmlFor="status">Publicación</Label>
                   <Select
                     id="status"
                     name="status"
                     value={formData.status}
                     onChange={handleInputChange}
-                    className="mt-2 border-white/10 bg-white/6 text-white"
+                    className="mt-2"
                   >
-                    <option className="bg-white text-slate-950" value="active">Activo</option>
-                    <option className="bg-white text-slate-950" value="inactive">Inactivo</option>
-                    <option className="bg-white text-slate-950" value="cancelled">Cancelado</option>
+                    <option value="active">Publicado</option>
+                    <option value="inactive">No publicado</option>
+                    <option value="cancelled">Cancelado</option>
                   </Select>
                 </div>
 
                 <div>
-                  <Label htmlFor="max_capacity" className="text-white">Capacidad maxima</Label>
+                  <Label htmlFor="max_capacity">Capacidad máxima</Label>
                   <Input
                     id="max_capacity"
                     name="max_capacity"
@@ -311,7 +322,7 @@ export default function EditEventForm({ event }: EditEventFormProps) {
                     required
                     value={formData.max_capacity}
                     onChange={handleInputChange}
-                    className="mt-2 border-white/10 bg-white/6 text-white"
+                    className="mt-2"
                   />
                 </div>
               </CardContent>

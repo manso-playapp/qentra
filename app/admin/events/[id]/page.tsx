@@ -1,9 +1,13 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import {
+  AlertCircle,
   ArrowRight,
+  CalendarDays,
+  Clock3,
   ExternalLink,
   Mail,
+  MapPin,
   Palette,
   Pencil,
   ScanLine,
@@ -16,7 +20,6 @@ import EventActivationCard from '@/components/admin/EventActivationCard'
 import EventOwnershipCard from '@/components/admin/EventOwnershipCard'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
 import { formatEventDate } from '@/lib/event-date'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
@@ -26,26 +29,28 @@ import { resolveActivation, type EventActivation } from '@/lib/event-activation'
 import type { ActivationPaymentStatus } from '@/lib/alista-service-payment'
 import { getCurrentOperatorProfile } from '@/lib/operator-auth'
 import { isAlistaStaff } from '@/lib/event-access'
-import type { Event, EventBranding, GuestType } from '@/types'
+import type { Event, EventBranding } from '@/types'
 
 export const metadata = {
-  title: 'Detalle',
+  title: 'Resumen del evento',
 }
 
 type EventDetailPageProps = {
   params: Promise<{ id: string }>
 }
 
-const EVENT_TYPE_LABELS = {
-  quince: '15 anos',
-  wedding: 'Boda',
-  corporate: 'Corporativo',
-  private: 'Privado',
-} as const
+type GuestStateRow = {
+  status: string | null
+  payment_status: string | null
+}
+
+type GuestTypePaymentRow = {
+  payment_amount_cents: number | null
+}
 
 const EVENT_STATUS_LABELS = {
-  active: 'Activo',
-  inactive: 'Inactivo',
+  active: 'Publicado',
+  inactive: 'No publicado',
   cancelled: 'Cancelado',
 } as const
 
@@ -55,17 +60,19 @@ const EVENT_STATUS_VARIANTS = {
   cancelled: 'danger',
 } as const
 
-function formatTimestampDate(date: string) {
-  return new Intl.DateTimeFormat('es-AR', {
-    dateStyle: 'full',
-  }).format(new Date(date))
+function argentinaTodayIso() {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Argentina/Cordoba',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(new Date())
+  const valueFor = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value ?? ''
+  return `${valueFor('year')}-${valueFor('month')}-${valueFor('day')}`
 }
 
 export default async function EventDetailPage({ params }: EventDetailPageProps) {
   const { id } = await params
-  // Service role: RLS oculta guests/checkins al cliente con
-  // cookies (operator-auth no crea sesion de Supabase). La ruta ya esta
-  // protegida por el layout. Fallback al cliente con sesion si falta la key.
   const adminClient = getSupabaseAdminClient()
   const supabase = adminClient ?? (await createServerSupabaseClient())
 
@@ -73,7 +80,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
     eventResponse,
     brandingResponse,
     guestTypesResponse,
-    guestsCountResponse,
+    guestStatesResponse,
     checkinsCountResponse,
     paymentAccountResponse,
     activationResponse,
@@ -83,10 +90,10 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
     supabase.from('event_branding').select('*').eq('event_id', id).maybeSingle(),
     supabase
       .from('guest_types')
-      .select('id, name, description')
+      .select('payment_amount_cents')
       .eq('event_id', id)
       .order('created_at', { ascending: true }),
-    supabase.from('guests').select('*', { count: 'exact', head: true }).eq('event_id', id),
+    supabase.from('guests').select('status, payment_status').eq('event_id', id),
     supabase
       .from('checkins')
       .select('*', { count: 'exact', head: true })
@@ -114,32 +121,33 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
   if (eventResponse.error) {
     return (
       <AdminLayout>
-        <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-red-800">
-          No se pudo cargar el evento. Verifica la conexion con Supabase y las politicas de acceso.
+        <div className="mx-4 mt-6 rounded-2xl border border-rose-200 bg-rose-50 p-6 text-sm text-rose-800 sm:mx-0">
+          No se pudo cargar el evento. Volvé a intentarlo en unos instantes.
         </div>
       </AdminLayout>
     )
   }
 
-  if (!eventResponse.data) {
-    notFound()
-  }
+  if (!eventResponse.data) notFound()
 
   const event = eventResponse.data as Event
   const branding = brandingResponse.data as EventBranding | null
-  const guestTypes = (guestTypesResponse.data ?? []) as GuestType[]
-  const guestCount = guestsCountResponse.count ?? 0
+  const guestTypes = (guestTypesResponse.data ?? []) as GuestTypePaymentRow[]
+  const guestRows = (guestStatesResponse.data ?? []) as GuestStateRow[]
+  const guestCount = guestRows.length
   const checkinCount = checkinsCountResponse.count ?? 0
   const paymentAccount = paymentAccountResponse.data as { updated_at?: string | null } | null
   const paymentAccountConfigured = Boolean(getMercadoPagoOAuthConfig() && isPaymentCredentialEncryptionConfigured())
-  // Otorgar o dar de baja la activacion es solo del equipo de Alista.
-  const authState = await getCurrentOperatorProfile()
+  const hasPaidAccess = guestTypes.some((guestType) => (guestType.payment_amount_cents ?? 0) > 0)
   const activation = activationResponse.data as
     | (EventActivation & { activated_at?: string | null; note?: string | null })
     | null
+  const activationState = resolveActivation(activation)
   const activationPaymentStatus = (activationPaymentResponse.data as { status?: ActivationPaymentStatus } | null)?.status ?? null
-  const canTransferOwnership = isAlistaStaff(authState.access)
-  const canPayActivation = !isAlistaStaff(authState.access) && event.owner_user_id === authState.user?.id
+  const authState = await getCurrentOperatorProfile()
+  const staffAccess = isAlistaStaff(authState.access)
+  const canPayActivation = !staffAccess && event.owner_user_id === authState.user?.id
+
   let currentOwnerEmail: string | null = null
   if (event.owner_user_id && adminClient) {
     const { data: ownerData } = await adminClient.auth.admin.getUserById(event.owner_user_id)
@@ -148,327 +156,294 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
   if (!currentOwnerEmail && event.owner_user_id === authState.user?.id) {
     currentOwnerEmail = authState.user?.email ?? null
   }
-  const availableSeats = Math.max(event.max_capacity - guestCount, 0)
+
+  const withoutInvitation = guestRows.filter((guest) => guest.status === 'preinvited').length
+  const awaitingConfirmation = guestRows.filter((guest) => guest.status === 'link_sent').length
+  const pendingPayments = guestRows.filter((guest) => guest.payment_status === 'pending').length
+  const readyGuests = guestRows.filter((guest) => guest.status === 'enabled' || guest.status === 'checked_in').length
+
+  const attentionItems = [
+    withoutInvitation > 0
+      ? {
+          title: `${withoutInvitation} ${withoutInvitation === 1 ? 'invitado todavía no recibió' : 'invitados todavía no recibieron'} su invitación`,
+          detail: 'Prepará los links pendientes desde la gestión de invitados.',
+          href: `/admin/events/${event.id}/guests`,
+        }
+      : null,
+    awaitingConfirmation > 0
+      ? {
+          title: `${awaitingConfirmation} ${awaitingConfirmation === 1 ? 'confirmación pendiente' : 'confirmaciones pendientes'}`,
+          detail: 'Revisá quiénes todavía no respondieron.',
+          href: `/admin/events/${event.id}/guests`,
+        }
+      : null,
+    hasPaidAccess && pendingPayments > 0
+      ? {
+          title: `${pendingPayments} ${pendingPayments === 1 ? 'pago pendiente' : 'pagos pendientes'} de revisión`,
+          detail: 'La acreditación debe quedar asociada al invitado correcto.',
+          href: `/admin/events/${event.id}/guests`,
+        }
+      : null,
+    !branding?.cover_image_url
+      ? {
+          title: 'La invitación todavía no tiene portada',
+          detail: 'Completá la imagen principal antes de compartirla.',
+          href: `/admin/events/${event.id}/invitacion`,
+        }
+      : null,
+    hasPaidAccess && !paymentAccount
+      ? {
+          title: 'La cuenta de cobros todavía no está vinculada',
+          detail: 'Es necesaria para acreditar los pagos de invitados en la cuenta responsable.',
+          href: '#cuenta-y-cobros',
+        }
+      : null,
+  ].filter(Boolean) as { title: string; detail: string; href: string }[]
+
+  const today = argentinaTodayIso()
+  const isEventDay = event.event_date === today
+  const eventHasPassed = event.event_date < today
+  const receptionTitle = isEventDay
+    ? 'La recepción está en curso'
+    : eventHasPassed
+      ? 'Resumen de la recepción'
+      : 'Recepción y check-in'
+  const receptionDetail = isEventDay
+    ? 'Abrí Puerta para validar ingresos y usá el panel para seguir el aforo en tiempo real.'
+    : eventHasPassed
+      ? `${checkinCount} ${checkinCount === 1 ? 'ingreso registrado' : 'ingresos registrados'} durante el evento.`
+      : 'Prepará el control de acceso ahora. El día de la fiesta esta sección pasará a ser la acción principal.'
+
   return (
     <AdminLayout>
       <div className="px-4 py-6 sm:px-0">
-        <Card className="overflow-hidden bg-admin-panel">
-          <CardContent className="p-8">
-            <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-              <div>
-                <Link href="/admin/events" className="text-sm font-medium text-primary hover:text-primary/80">
-                  ← Volver a eventos
-                </Link>
-                <h1 className="admin-heading mt-4 text-5xl leading-none text-foreground">{event.name}</h1>
-                <p className="mt-3 text-base text-muted-foreground">
-                  {EVENT_TYPE_LABELS[event.event_type]} · slug <span className="rounded-full bg-secondary px-3 py-1 font-mono text-sm text-secondary-foreground">{event.slug}</span>
-                </p>
-              </div>
+        <header className="border-b border-border/70 pb-6">
+          <Link href="/admin/events" className="text-sm font-medium text-primary hover:text-primary/80">
+            ← Volver a eventos
+          </Link>
 
+          <div className="mt-5 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-3">
+                <h1 className="admin-heading text-4xl leading-none text-foreground sm:text-5xl">{event.name}</h1>
                 <Badge variant={EVENT_STATUS_VARIANTS[event.status] as 'success' | 'outline' | 'danger'}>
                   {EVENT_STATUS_LABELS[event.status]}
                 </Badge>
-                <Button asChild size="lg">
-                  <Link href={`/admin/events/${event.id}/edit`}>
-                    <Pencil className="size-4" />
-                    Editar datos del evento
-                  </Link>
-                </Button>
+              </div>
+
+              <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
+                <span className="inline-flex items-center gap-2">
+                  <CalendarDays className="size-4 text-primary" />
+                  {formatEventDate(event.event_date, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                </span>
+                <span className="inline-flex items-center gap-2">
+                  <Clock3 className="size-4 text-primary" />
+                  {event.start_time}
+                </span>
+                <span className="inline-flex items-center gap-2">
+                  <MapPin className="size-4 text-primary" />
+                  {event.venue_name}
+                </span>
               </div>
             </div>
-          </CardContent>
-        </Card>
 
-        <div className="mb-8 mt-6 grid gap-4 md:grid-cols-4">
-          {[
-            { label: 'Fecha', value: formatEventDate(event.event_date, { dateStyle: 'full' }), detail: `Inicio a las ${event.start_time}` },
-            { label: 'Capacidad', value: `${event.max_capacity} personas`, detail: `${availableSeats} lugares disponibles` },
-            { label: 'Invitados', value: String(guestCount), detail: `${guestTypes.length} tipos configurados` },
-            { label: 'Check-ins', value: String(checkinCount), detail: 'Control de acceso registrado' },
-          ].map((item) => (
-            <Card key={item.label}>
-              <CardContent className="p-5">
-                <p className="text-sm text-muted-foreground">{item.label}</p>
-                <p className="mt-2 text-lg font-semibold text-foreground">{item.value}</p>
-                <p className="mt-1 text-sm text-muted-foreground">{item.detail}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+            <Button asChild variant="outline">
+              <Link href={`/admin/events/${event.id}/edit`}>
+                <Pencil className="size-4" />
+                Editar datos del evento
+              </Link>
+            </Button>
+          </div>
 
-        <section className="mt-6" aria-label="Cuenta responsable del evento">
+          <div className="mt-6 flex flex-wrap items-baseline gap-x-6 gap-y-2 border-t border-border/60 pt-4 text-sm text-muted-foreground">
+            <span><strong className="text-lg text-foreground">{guestCount}</strong> invitados cargados</span>
+            <span><strong className="text-lg text-foreground">{readyGuests}</strong> listos para ingresar</span>
+            <span>Capacidad declarada: <strong className="text-foreground">{event.max_capacity}</strong></span>
+            {isEventDay || eventHasPassed ? (
+              <span><strong className="text-lg text-foreground">{checkinCount}</strong> ingresos</span>
+            ) : null}
+          </div>
+        </header>
+
+        <section id="cuenta-y-cobros" className="mt-6 space-y-3" aria-label="Cuenta y estado del evento">
           <EventOwnershipCard
             event={event}
             currentOwnerEmail={currentOwnerEmail}
-            canTransferOwnership={canTransferOwnership}
+            canTransferOwnership={staffAccess}
+            showPaymentAccount={hasPaidAccess}
             paymentAccount={{
               connected: Boolean(paymentAccount),
               configured: paymentAccountConfigured,
               updatedAt: paymentAccount?.updated_at,
             }}
           />
+          <EventActivationCard
+            event={event}
+            state={activationState}
+            activatedAt={activation?.activated_at}
+            note={activation?.note}
+            canGrant={staffAccess}
+            canPay={canPayActivation}
+            paymentStatus={activationPaymentStatus}
+          />
         </section>
 
-        {/* Paginas publicas: lo que ven invitados y salon. Cada una lleva a su personalizacion. */}
-        <section className="mt-8">
-          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <h2 className="admin-heading text-2xl text-foreground">Páginas públicas</h2>
-            <p className="text-sm text-muted-foreground">Lo que ven tus invitados y el salón — personalizables</p>
+        {attentionItems.length > 0 ? (
+          <section className="mt-8" aria-labelledby="attention-heading">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="size-5 text-amber-700" />
+              <h2 id="attention-heading" className="admin-heading text-2xl text-foreground">Necesita tu atención</h2>
+            </div>
+            <div className="mt-3 divide-y divide-amber-200/80 overflow-hidden rounded-2xl border border-amber-200 bg-amber-50/60">
+              {attentionItems.map((item) => (
+                <Link
+                  key={item.title}
+                  href={item.href}
+                  className="flex items-center gap-4 px-5 py-4 transition hover:bg-amber-100/60"
+                >
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-semibold text-amber-950">{item.title}</span>
+                    <span className="mt-1 block text-sm text-amber-900/75">{item.detail}</span>
+                  </span>
+                  <ArrowRight className="size-4 flex-none text-amber-700" />
+                </Link>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+        <section className="mt-8" aria-labelledby="preparation-heading">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">Trabajo principal</p>
+            <h2 id="preparation-heading" className="admin-heading mt-1 text-2xl text-foreground">Preparación del evento</h2>
           </div>
 
-          <div className="mt-4 grid gap-6 lg:grid-cols-2">
-            {/* Invitacion */}
-            <Card className="event-theme-surface">
-              <CardContent className="flex h-full flex-col gap-5 p-6">
+          <div className="mt-4 overflow-hidden rounded-3xl border border-border/70 bg-white/65">
+            <div className="grid lg:grid-cols-[minmax(0,1.25fr)_minmax(320px,.75fr)]">
+              <article className="flex flex-col gap-5 border-b border-border/60 p-6 lg:border-b-0 lg:border-r">
                 <div className="flex items-start gap-4">
-                  <span className="grid size-12 flex-none place-items-center rounded-2xl bg-white/70 text-primary ring-1 ring-primary/15">
-                    <Mail className="size-6" strokeWidth={1.75} />
+                  <span className="grid size-11 flex-none place-items-center rounded-2xl bg-sky-50 text-sky-700">
+                    <Users2 className="size-5" />
                   </span>
                   <div className="min-w-0">
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Página pública</p>
-                    <h3 className="admin-heading mt-1 text-2xl text-foreground">Invitación</h3>
+                    <h3 className="text-xl font-semibold text-foreground">Invitados y confirmaciones</h3>
                     <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                      Lo que recibe cada invitado: portada, colores y la experiencia (canción, saludo).
+                      {guestCount} cargados · {withoutInvitation} sin invitar · {awaitingConfirmation} sin confirmar
+                      {hasPaidAccess && pendingPayments > 0 ? ` · ${pendingPayments} pagos pendientes` : ''}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex flex-wrap gap-2 text-xs">
-                  <span className={`rounded-full px-2.5 py-1 font-medium ${branding?.cover_image_url ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
-                    {branding?.cover_image_url ? 'Portada configurada' : 'Portada pendiente'}
-                  </span>
-                  <span className={`rounded-full px-2.5 py-1 font-medium ${branding ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-600'}`}>
-                    {branding ? 'Colores definidos' : 'Colores por defecto'}
-                  </span>
-                </div>
-
-                <div className="mt-auto flex flex-wrap gap-3">
-                  <Button asChild>
-                    <Link href={`/admin/events/${event.id}/invitacion`}>
-                      <Palette className="size-4" />
-                      Personalizar invitación
-                    </Link>
-                  </Button>
-                  <Button asChild variant="outline">
-                    <Link href={`/invitacion/preview/${event.id}`} target="_blank" rel="noreferrer">
-                      Ver en vivo
-                      <ExternalLink className="size-4" />
-                    </Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Totem */}
-            <Card className="bg-admin-panel">
-              <CardContent className="flex h-full flex-col gap-5 p-6">
-                <div className="flex items-start gap-4">
-                  <span className="grid size-12 flex-none place-items-center rounded-2xl bg-event-surface text-primary ring-1 ring-primary/15">
-                    <Tv className="size-6" strokeWidth={1.75} />
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Página pública</p>
-                    <h3 className="admin-heading mt-1 text-2xl text-foreground">Tótem</h3>
-                    <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                      La pantalla de bienvenida en el salón: fondo y mensajes que reciben a cada invitado con su foto.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap gap-2 text-xs">
-                  <span className={`rounded-full px-2.5 py-1 font-medium ${branding?.background_image_url ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
-                    {branding?.background_image_url ? 'Fondo configurado' : 'Fondo pendiente'}
-                  </span>
-                  <span className={`rounded-full px-2.5 py-1 font-medium ${branding?.welcome_message ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-600'}`}>
-                    {branding?.welcome_message ? 'Mensajes propios' : 'Mensajes por defecto'}
-                  </span>
-                </div>
-
-                <div className="mt-auto flex flex-wrap gap-3">
-                  <Button asChild>
-                    <Link href={`/admin/events/${event.id}/branding#mensajes-totem`}>
-                      <Palette className="size-4" />
-                      Personalizar
-                    </Link>
-                  </Button>
-                  <Button asChild variant="outline">
-                    <Link href={`/t/${event.slug}`} target="_blank">
-                      Ver en vivo
-                      <ExternalLink className="size-4" />
-                    </Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </section>
-
-        {/* Operacion: gestion y control de acceso. */}
-        <section className="mt-8">
-          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <h2 className="admin-heading text-2xl text-foreground">Operación</h2>
-            <p className="text-sm text-muted-foreground">Gestión de invitados y control de acceso</p>
-          </div>
-
-          <div className="mt-4 grid gap-6 lg:grid-cols-2">
-            {/* Gestion de invitados */}
-            <Card className="bg-admin-panel">
-              <CardContent className="flex h-full flex-col gap-5 p-6">
-                <div className="flex items-start gap-4">
-                  <span className="grid size-12 flex-none place-items-center rounded-2xl bg-event-surface text-primary ring-1 ring-primary/15">
-                    <Users2 className="size-6" strokeWidth={1.75} />
-                  </span>
-                  <div className="min-w-0">
-                    <h3 className="admin-heading text-2xl text-foreground">Gestión de invitados</h3>
-                    <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                      Alta manual o masiva, tipos, estados, QR, envíos y conciliación de pagos.
-                    </p>
-                    <p className="mt-2 text-sm font-medium text-foreground">
-                      {guestCount} invitados · {guestTypes.length} tipos
-                    </p>
-                  </div>
-                </div>
                 <div className="mt-auto">
                   <Button asChild>
                     <Link href={`/admin/events/${event.id}/guests`}>
-                      Abrir gestión
+                      Abrir invitados
                       <ArrowRight className="size-4" />
                     </Link>
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
+              </article>
 
-            <EventActivationCard
-              event={event}
-              state={resolveActivation(activation)}
-              activatedAt={activation?.activated_at}
-              note={activation?.note}
-              canGrant={isAlistaStaff(authState.access)}
-              canPay={canPayActivation}
-              paymentStatus={activationPaymentStatus}
-            />
-
-            {/* Puerta / check-in */}
-            <Card className="bg-admin-navy text-white">
-              <CardContent className="flex h-full flex-col gap-5 p-6">
-                <div className="flex items-start gap-4">
-                  <span className="grid size-12 flex-none place-items-center rounded-2xl bg-white/10 text-sky-300 ring-1 ring-white/10">
-                    <ShieldCheck className="size-6" strokeWidth={1.75} />
-                  </span>
-                  <div className="min-w-0">
-                    <h3 className="admin-heading text-2xl text-white">Puerta y check-in</h3>
-                    <p className="mt-1 text-sm leading-6 text-slate-300">
-                      Validación de acceso, aforo en vivo y excepciones en el ingreso.
-                    </p>
-                    <p className="mt-2 text-sm font-medium text-white">{checkinCount} ingresos registrados</p>
+              <div className="divide-y divide-border/60">
+                <article className="p-5">
+                  <div className="flex items-start gap-3">
+                    <Mail className="mt-0.5 size-5 flex-none text-primary" />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <h3 className="font-semibold text-foreground">Invitación</h3>
+                        <Badge variant={branding?.cover_image_url ? 'success' : 'warning'}>
+                          {branding?.cover_image_url ? 'Portada lista' : 'Portada pendiente'}
+                        </Badge>
+                      </div>
+                      <div className="mt-3 flex flex-wrap gap-3 text-sm font-semibold">
+                        <Link href={`/admin/events/${event.id}/invitacion`} className="inline-flex items-center gap-1 text-primary hover:text-primary/80">
+                          <Palette className="size-4" /> Editar
+                        </Link>
+                        <Link href={`/invitacion/preview/${event.id}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground">
+                          Ver como invitado <ExternalLink className="size-3.5" />
+                        </Link>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div className="mt-auto flex flex-wrap gap-3">
-                  <Button asChild variant="outline" className="border-white/15 bg-white/5 text-slate-100 hover:bg-white/10 hover:text-white">
-                    <Link href={`/admin/events/${event.id}/check-in`}>
-                      <ScanLine className="size-4" />
-                      Panel de check-in
-                    </Link>
-                  </Button>
-                  <Button asChild variant="outline" className="border-white/15 bg-white/5 text-slate-100 hover:bg-white/10 hover:text-white">
-                    <Link href={`/puerta/${event.id}`} target="_blank">
-                      Abrir puerta
-                      <ExternalLink className="size-4" />
-                    </Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+                </article>
+
+                <article className="p-5">
+                  <div className="flex items-start gap-3">
+                    <Tv className="mt-0.5 size-5 flex-none text-primary" />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <h3 className="font-semibold text-foreground">Tótem</h3>
+                        <Badge variant={branding?.background_image_url ? 'success' : 'warning'}>
+                          {branding?.background_image_url ? 'Fondo listo' : 'Fondo pendiente'}
+                        </Badge>
+                      </div>
+                      <div className="mt-3 flex flex-wrap gap-3 text-sm font-semibold">
+                        <Link href={`/admin/events/${event.id}/branding#mensajes-totem`} className="inline-flex items-center gap-1 text-primary hover:text-primary/80">
+                          <Palette className="size-4" /> Personalizar
+                        </Link>
+                        <Link href={`/t/${event.slug}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground">
+                          Ver en vivo <ExternalLink className="size-3.5" />
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                </article>
+              </div>
+            </div>
           </div>
         </section>
 
-        {/* Referencia: datos base y tipos de invitado. */}
-        <div className="mt-8 grid items-start gap-6 lg:grid-cols-2">
-          <Card className="bg-admin-panel">
-              <CardHeader>
-                <CardDescription>Base del evento</CardDescription>
-                <CardTitle>Datos del evento</CardTitle>
-              </CardHeader>
-              <CardContent>
-              <dl className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <dt className="text-sm text-muted-foreground">Venue</dt>
-                  <dd className="mt-1 font-medium text-foreground">{event.venue_name}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm text-muted-foreground">Direccion</dt>
-                  <dd className="mt-1 font-medium text-foreground">{event.venue_address}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm text-muted-foreground">Tipo de evento</dt>
-                  <dd className="mt-1 font-medium text-foreground">{EVENT_TYPE_LABELS[event.event_type]}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm text-muted-foreground">Creado</dt>
-                  <dd className="mt-1 font-medium text-foreground">{formatTimestampDate(event.created_at)}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm text-muted-foreground">Telefono del evento</dt>
-                  <dd className="mt-1 font-medium text-foreground">{event.contact_phone || 'No configurado'}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm text-muted-foreground">Regalo</dt>
-                  <dd className="mt-1 whitespace-pre-line font-medium text-foreground">{event.gift_info || 'No configurado'}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm text-muted-foreground">Fecha límite para confirmar</dt>
-                  <dd className="mt-1 font-medium text-foreground">
-                    {event.confirmation_deadline
-                      ? formatEventDate(event.confirmation_deadline, { dateStyle: 'long' })
-                      : 'No configurada'}
-                  </dd>
-                </div>
-              </dl>
-
-              <div className="mt-6 border-t border-border/60 pt-6">
-                <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Descripcion</h3>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                  {event.description?.trim() || 'Este evento todavia no tiene una descripcion cargada.'}
+        <section
+          className={
+            isEventDay
+              ? 'mt-8 rounded-3xl border border-slate-800 bg-admin-navy p-6 text-white shadow-[0_18px_50px_rgba(23,37,84,0.18)]'
+              : 'mt-8 rounded-3xl border border-border/70 bg-white/65 p-6'
+          }
+          aria-labelledby="reception-heading"
+        >
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex items-start gap-4">
+              <span className={isEventDay ? 'grid size-11 flex-none place-items-center rounded-2xl bg-white/10 text-sky-300' : 'grid size-11 flex-none place-items-center rounded-2xl bg-slate-100 text-slate-700'}>
+                <ShieldCheck className="size-5" />
+              </span>
+              <div>
+                <p className={isEventDay ? 'text-xs font-semibold uppercase tracking-[0.22em] text-sky-200/70' : 'text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground'}>
+                  {isEventDay ? 'Evento en curso' : eventHasPassed ? 'Después de la fiesta' : 'Día del evento'}
+                </p>
+                <h2 id="reception-heading" className={isEventDay ? 'admin-heading mt-1 text-2xl text-white' : 'admin-heading mt-1 text-2xl text-foreground'}>
+                  {receptionTitle}
+                </h2>
+                <p className={isEventDay ? 'mt-2 max-w-2xl text-sm leading-6 text-slate-300' : 'mt-2 max-w-2xl text-sm leading-6 text-muted-foreground'}>
+                  {receptionDetail}
                 </p>
               </div>
-              </CardContent>
-            </Card>
+            </div>
 
-            <Card className="bg-admin-panel">
-              <CardHeader className="flex-row items-center justify-between">
-                <div>
-                  <CardDescription>Acceso</CardDescription>
-                  <CardTitle>Tipos de invitado</CardTitle>
-                </div>
-                <Badge variant="outline">{guestTypes.length} configurados</Badge>
-              </CardHeader>
-              <CardContent>
-
-              {guestTypes.length === 0 ? (
-                <p className="rounded-lg border border-dashed border-border bg-secondary/60 p-4 text-sm text-muted-foreground">
-                  Todavia no hay tipos de invitado definidos para este evento.
-                </p>
-              ) : (
-                <div className="space-y-3">
-                  {guestTypes.map((guestType) => (
-                    <div key={guestType.id} className="rounded-[24px] border border-border/70 bg-white/75 p-4">
-                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                        <div>
-                          <h3 className="font-medium text-foreground">{guestType.name}</h3>
-                          <p className="mt-1 text-sm text-muted-foreground">
-                            {guestType.description?.trim() || 'Sin descripcion adicional.'}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-              </CardContent>
-            </Card>
-        </div>
+            <div className="flex flex-wrap gap-3">
+              {isEventDay ? (
+                <Button asChild variant="info">
+                  <Link href={`/puerta/${event.id}`} target="_blank" rel="noreferrer">
+                    <ScanLine className="size-4" /> Abrir puerta
+                    <ExternalLink className="size-3.5" />
+                  </Link>
+                </Button>
+              ) : null}
+              <Button asChild variant="outline" className={isEventDay ? 'border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white' : undefined}>
+                <Link href={`/admin/events/${event.id}/check-in`}>
+                  <ScanLine className="size-4" />
+                  {eventHasPassed ? 'Ver actividad' : 'Preparar check-in'}
+                </Link>
+              </Button>
+              {!isEventDay && !eventHasPassed ? (
+                <Button asChild variant="ghost">
+                  <Link href={`/puerta/${event.id}`} target="_blank" rel="noreferrer">
+                    Abrir puerta <ExternalLink className="size-3.5" />
+                  </Link>
+                </Button>
+              ) : null}
+            </div>
+          </div>
+        </section>
       </div>
     </AdminLayout>
   )
