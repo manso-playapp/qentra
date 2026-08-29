@@ -200,7 +200,8 @@ sólo cambia la §6. Actualizar de más = churn y tokens.
 - **Pantalla de MVP actualizada para la release `0.9.0`.** `/admin/estado` ahora muestra el
   recorrido operativo de una clienta, el avance ponderado de las 22 features, los cuatro hitos
   de la release, los pendientes reales y lo que queda fuera de prioridad. La automatización
-  masiva de WhatsApp no se presenta como bloqueo del recorrido actual.
+  masiva de WhatsApp no se presenta como bloqueo del recorrido actual. El cálculo actual es
+  correcto: 19 funcionando, 2 a medias, 1 futura y 91% ponderado.
 
 ### ✅ Circuito verificado de punta a punta (28/08/2026, en local contra la base real)
 Registro con Google (`hugojaviermanso@gmail.com`, sin perfil de operador) → panel → creó
@@ -221,6 +222,9 @@ Los eventos reales (DRM 287 tokens, Alfonsina 2) no se vieron afectados, gracias
    —teléfonos de menores— de cuentas que quizá nunca paguen. Ver decisiones §5.
 3. **Revisar qué ve una clienta en `/admin`.** El panel funciona, pero su copy y jerarquía
    fueron escritos para el equipo operativo, no para una madre organizando su fiesta.
+4. **Ajuste editorial final del tablero MVP.** Separar visualmente “pendiente para cerrar”,
+   “riesgo o decisión abierta” y “futuro fuera de prioridad”. El sidebar contextual pertenece a
+   la experiencia principal de la release, no debe quedar presentado como algo construido de más.
 
 ### Hilos sueltos anotados
 - **Retención de datos del demo:** cargar invitados sin pagar guarda datos reales de menores.
