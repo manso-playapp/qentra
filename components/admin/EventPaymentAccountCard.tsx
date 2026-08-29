@@ -79,23 +79,32 @@ export default function EventPaymentAccountCard({
           </span>
           <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Cobros de invitados</p>
-            <h3 className="admin-heading mt-1 text-2xl text-foreground">Cuenta receptora</h3>
+            <h3 className="admin-heading mt-1 text-2xl text-foreground">Cuenta Mercado Pago del evento</h3>
             <p className="mt-1 text-sm leading-6 text-muted-foreground">
-              Los aportes y entradas se acreditan en la cuenta Mercado Pago de la responsable del evento. El servicio de Alista se cobra por separado.
+              {connected
+                ? 'La cuenta Mercado Pago de la responsable está vinculada. Los pagos de invitados se acreditan allí; el servicio de Alista se cobra por separado.'
+                : 'Cuando el evento cobre entradas, la responsable puede vincular su cuenta Mercado Pago. El servicio de Alista se cobra por separado.'}
             </p>
           </div>
         </div>
 
-        {!configured ? (
+        {connected ? (
+          <>
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900">
+              <p className="font-semibold">Cuenta Mercado Pago vinculada</p>
+              <p className="mt-1">Los nuevos pagos de invitados se crearán para esta cuenta.</p>
+              {formattedUpdatedAt ? <p className="mt-1 text-xs text-emerald-800">Vinculada o renovada: {formattedUpdatedAt}</p> : null}
+            </div>
+            {!configured && (
+              <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+                La cuenta ya está vinculada, pero este entorno no permite volver a vincularla ni renovar credenciales vencidas hasta completar la configuración de Alista.
+              </p>
+            )}
+          </>
+        ) : !configured ? (
           <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-            Falta configurar OAuth y el cifrado de credenciales en el entorno antes de vincular una cuenta.
+            La vinculación está temporalmente deshabilitada porque falta configurar OAuth y el cifrado seguro de cuentas.
           </p>
-        ) : connected ? (
-          <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900">
-            <p className="font-semibold">Cuenta Mercado Pago vinculada</p>
-            <p className="mt-1">Los nuevos pagos de invitados se crearán para esta cuenta.</p>
-            {formattedUpdatedAt ? <p className="mt-1 text-xs text-emerald-800">Vinculada o renovada: {formattedUpdatedAt}</p> : null}
-          </div>
         ) : (
           <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
             Antes de asignar importes a invitados, pedile a la responsable que vincule su cuenta Mercado Pago.
