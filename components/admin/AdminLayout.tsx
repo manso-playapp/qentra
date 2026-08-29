@@ -219,7 +219,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               <div className={cn('my-4 border-t border-white/10', collapsed ? 'mx-2' : 'mx-1')} />
 
               <nav aria-label="Navegación principal">
-                <section className="space-y-0.5">
+                <section className="space-y-0">
                   {!collapsed && (
                     <p className="mb-1.5 px-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-500">
                       Alista
@@ -238,7 +238,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                         title={collapsed ? item.label : undefined}
                         className={cn(
                           'group relative flex items-center transition',
-                          collapsed ? 'justify-center p-2.5' : 'gap-2 px-3 py-2.5',
+                          collapsed ? 'justify-center p-2' : 'gap-1.5 px-2.5 py-2',
                           active ? 'text-white' : 'text-slate-200 hover:text-white'
                         )}
                       >
@@ -251,7 +251,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                             )}
                           />
                         )}
-                        <span className={cn('p-2.5', active ? 'text-sky-200' : 'text-slate-400')}>
+                        <span className={cn('p-2', active ? 'text-sky-200' : 'text-slate-400')}>
                           <Icon className="size-4" />
                         </span>
                         {!collapsed && (

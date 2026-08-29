@@ -87,7 +87,7 @@ function NavigationLink({
 }) {
   const content = (
     <>
-      <span className={cn('p-2.5', active ? 'text-sky-200' : 'text-slate-400')}>
+      <span className={cn('p-2', active ? 'text-sky-200' : 'text-slate-400')}>
         <item.icon className="size-4" />
       </span>
       {!collapsed && <span className="flex-1 text-left text-sm font-semibold">{item.label}</span>}
@@ -97,7 +97,7 @@ function NavigationLink({
 
   const className = cn(
     'group relative flex items-center transition',
-    collapsed ? 'justify-center p-2.5' : 'gap-2 px-3 py-2.5',
+    collapsed ? 'justify-center p-2' : 'gap-1.5 px-2.5 py-2',
     active ? 'text-white' : 'text-slate-200 hover:text-white'
   )
 
@@ -225,7 +225,7 @@ export default function AdminEventSidebar({
   }
 
   return (
-    <div className="mt-5 space-y-3">
+    <div className="mt-5 space-y-2.5">
       <section>
         <div className="mb-2 flex items-center justify-between px-1">
           <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-sky-200/70">Evento seleccionado</p>
@@ -299,7 +299,7 @@ export default function AdminEventSidebar({
       {eventNav.length > 0 && (
         <section>
           <p className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-500">Operar este evento</p>
-          <nav className="space-y-0.5" aria-label="Secciones del evento">
+          <nav className="space-y-0" aria-label="Secciones del evento">
             {eventNav.map((item) => (
               <NavigationLink
                 key={item.href}
