@@ -36,28 +36,36 @@ export function formatEventDate(value: string, options: Intl.DateTimeFormatOptio
 
 /**
  * Formats an instant consistently in SSR and the browser. `Intl.format()` can
- * emit different whitespace characters across runtimes, which is enough to
- * break hydration when this value is rendered in a Client Component.
+  * emit different whitespace characters across runtimes, which is enough to
+  * break hydration when this value is rendered in a Client Component.
  */
-export function formatArgentinaDateTime(value: string) {
+export function formatArgentinaDateTime(
+  value: string,
+  options: { dateStyle?: 'short' | 'medium'; timeStyle?: 'short' } = {
+    dateStyle: 'short',
+    timeStyle: 'short',
+  }
+) {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return 'Fecha inválida'
 
-  const parts = new Intl.DateTimeFormat('en-US', {
+  const parts = new Intl.DateTimeFormat('es-AR', {
     timeZone: ARGENTINA_TIME_ZONE,
-    year: '2-digit',
-    month: 'numeric',
+    year: options.dateStyle === 'medium' ? 'numeric' : '2-digit',
+    month: options.dateStyle === 'medium' ? 'short' : 'numeric',
     day: 'numeric',
-    hour: '2-digit',
+    hour: 'numeric',
     minute: '2-digit',
-    hourCycle: 'h23',
+    hour12: true,
   }).formatToParts(date)
   const valueFor = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value ?? ''
-  const hour24 = Number(valueFor('hour'))
-  const hour12 = hour24 % 12 || 12
-  const period = hour24 < 12 ? 'a. m.' : 'p. m.'
+  const period = valueFor('dayPeriod').replace(/\u00a0/g, ' ')
 
-  return `${valueFor('day')}/${valueFor('month')}/${valueFor('year')}, ${hour12}:${valueFor('minute')} ${period}`
+  if (options.dateStyle === 'medium') {
+    return `${valueFor('day')} ${valueFor('month')} ${valueFor('year')}, ${valueFor('hour')}:${valueFor('minute')} ${period}`
+  }
+
+  return `${valueFor('day')}/${valueFor('month')}/${valueFor('year')}, ${valueFor('hour')}:${valueFor('minute')} ${period}`
 }
 
 const TIME_ONLY_PATTERN = /^(\d{2}):(\d{2})/

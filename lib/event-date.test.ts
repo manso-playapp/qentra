@@ -38,6 +38,10 @@ describe('formatArgentinaDateTime', () => {
     expect(formatArgentinaDateTime('2026-08-28T17:08:00.000Z')).toBe('28/8/26, 2:08 p. m.')
   })
 
+  it('keeps the medium date style stable too', () => {
+    expect(formatArgentinaDateTime('2026-08-28T17:08:00.000Z', { dateStyle: 'medium', timeStyle: 'short' })).toBe('28 ago 2026, 2:08 p. m.')
+  })
+
   it('formats midnight without locale-dependent whitespace', () => {
     expect(formatArgentinaDateTime('2026-08-28T03:05:00.000Z')).toBe('28/8/26, 12:05 a. m.')
   })

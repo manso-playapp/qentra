@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { getErrorMessage } from '@/lib/errors'
 import { formatAlistaServicePrice, type ActivationPaymentStatus } from '@/lib/alista-service-payment'
 import { buildActivationRequestHref, type ActivationSource, type ActivationState } from '@/lib/event-activation'
+import { formatArgentinaDateTime } from '@/lib/event-date'
 
 type EventActivationCardProps = {
   event: { id: string; name: string; event_date?: string | null }
@@ -22,9 +23,7 @@ type EventActivationCardProps = {
 
 function formatDate(value?: string | null) {
   if (!value) return null
-  return new Intl.DateTimeFormat('es-AR', { dateStyle: 'medium', timeStyle: 'short' }).format(
-    new Date(value)
-  )
+  return formatArgentinaDateTime(value, { dateStyle: 'medium', timeStyle: 'short' })
 }
 
 const SOURCE_LABEL: Record<ActivationSource, string> = {
