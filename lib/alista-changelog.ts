@@ -20,6 +20,15 @@ export type AlistaChange = {
 
 export const ALISTA_CHANGELOG: AlistaChange[] = [
   {
+    commit: '774caa5',
+    date: '2026-08-29',
+    dateLabel: '29 ago 2026',
+    kind: 'experiencia',
+    area: 'Invitados',
+    title: 'La ficha del invitado cuenta una sola historia',
+    summary: 'El mismo estado aparecía tres veces y ninguna decía qué hacer. Ahora se lee de arriba abajo: dónde está el invitado y la acción que sigue, después sus datos y lo que le toca en la fiesta, y el detalle técnico queda plegado. El pago solo aparece si ese invitado paga algo.',
+  },
+  {
     commit: '638c107',
     date: '2026-08-29',
     dateLabel: '29 ago 2026',
