@@ -20,6 +20,24 @@ export type AlistaChange = {
 
 export const ALISTA_CHANGELOG: AlistaChange[] = [
   {
+    commit: '638c107',
+    date: '2026-08-29',
+    dateLabel: '29 ago 2026',
+    kind: 'estabilidad',
+    area: 'Soporte',
+    title: 'Ver como una cuenta alcanza también a los listados',
+    summary: 'La vista de soporte cambiaba las páginas pero no las respuestas de la API, así que las listas seguían mostrando el alcance del equipo. Mirar como alguien ahora es serlo, y se sale con la barra de siempre.',
+  },
+  {
+    commit: 'd1d0a00',
+    date: '2026-08-29',
+    dateLabel: '29 ago 2026',
+    kind: 'estabilidad',
+    area: 'Privacidad',
+    title: 'La vista transversal de invitados acota por evento propio',
+    summary: 'Consultaba los invitados de todos los eventos y confiaba solo en el guard de la sección. Ahora restringe por los eventos de quien pregunta, de modo que ninguna relajación futura del guard entregue datos de otras fiestas.',
+  },
+  {
     commit: 'd35ae66',
     date: '2026-08-29',
     dateLabel: '29 ago 2026',
