@@ -212,14 +212,16 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               </button>
             </div>
 
-            <nav className="mt-6 flex-1 overflow-y-auto pr-1" aria-label="Navegación principal">
+            <div className="mt-5 min-h-0 flex-1 overflow-y-auto pr-1">
               <AdminEventSidebar collapsed={collapsed} isStaff={isGlobalAdmin} />
+            </div>
 
-              <div className={cn('my-6 border-t border-white/10', collapsed ? 'mx-2' : 'mx-1')} />
+            <div className={cn('my-4 border-t border-white/10', collapsed ? 'mx-2' : 'mx-1')} />
 
-              <section className="space-y-1.5">
+            <nav className="shrink-0" aria-label="Navegación principal">
+              <section className="space-y-0.5">
                 {!collapsed && (
-                  <p className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                  <p className="mb-1.5 px-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-500">
                     Alista
                   </p>
                 )}
@@ -235,20 +237,27 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                       href={item.href}
                       title={collapsed ? item.label : undefined}
                       className={cn(
-                        'group flex items-center rounded-[22px] border transition',
-                        collapsed ? 'justify-center p-3' : 'gap-3 px-4 py-3',
-                        active
-                          ? 'border-sky-400/30 bg-sky-400/15 text-white shadow-[0_12px_32px_rgba(0,156,221,0.18)]'
-                          : 'border-white/8 bg-white/[0.03] text-slate-200 hover:border-white/12 hover:bg-white/[0.06]'
+                        'group relative flex items-center transition',
+                        collapsed ? 'justify-center p-2.5' : 'gap-2 px-3 py-2.5',
+                        active ? 'text-white' : 'text-slate-200 hover:text-white'
                       )}
                     >
-                      <span className={cn('rounded-2xl border p-2.5', active ? 'border-white/10 bg-white/10' : 'border-white/8 bg-black/10')}>
+                      {active && (
+                        <span
+                          aria-hidden="true"
+                          className={cn(
+                            'absolute left-0 w-1 rounded-full bg-sky-300 shadow-[0_0_14px_rgba(125,211,252,0.8)]',
+                            collapsed ? 'inset-y-2' : 'inset-y-1.5'
+                          )}
+                        />
+                      )}
+                      <span className={cn('p-2.5', active ? 'text-sky-200' : 'text-slate-400')}>
                         <Icon className="size-4" />
                       </span>
                       {!collapsed && (
                         <span className="min-w-0">
                           <span className="block text-sm font-semibold">{item.href === '/admin/events' && !isGlobalAdmin ? 'Mis eventos' : item.label}</span>
-                          <span className={cn('mt-1 block text-xs', active ? 'text-sky-200/80' : 'text-slate-400')}>
+                          <span className={cn('mt-0.5 block text-xs', active ? 'text-sky-200/80' : 'text-slate-400')}>
                             {item.description}
                           </span>
                         </span>

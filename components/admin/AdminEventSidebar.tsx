@@ -87,7 +87,7 @@ function NavigationLink({
 }) {
   const content = (
     <>
-      <span className={cn('rounded-2xl border p-2.5', active ? 'border-white/10 bg-white/10' : 'border-white/8 bg-black/10')}>
+      <span className={cn('p-2.5', active ? 'text-sky-200' : 'text-slate-400')}>
         <item.icon className="size-4" />
       </span>
       {!collapsed && <span className="flex-1 text-left text-sm font-semibold">{item.label}</span>}
@@ -96,11 +96,9 @@ function NavigationLink({
   )
 
   const className = cn(
-    'group flex items-center rounded-[22px] border transition',
-    collapsed ? 'justify-center p-3' : 'gap-3 px-4 py-3',
-    active
-      ? 'border-sky-400/30 bg-sky-400/15 text-white shadow-[0_12px_32px_rgba(0,156,221,0.18)]'
-      : 'border-white/8 bg-white/[0.03] text-slate-200 hover:border-white/12 hover:bg-white/[0.06]'
+    'group relative flex items-center transition',
+    collapsed ? 'justify-center p-2.5' : 'gap-2 px-3 py-2.5',
+    active ? 'text-white' : 'text-slate-200 hover:text-white'
   )
 
   return (
@@ -113,6 +111,15 @@ function NavigationLink({
       onClick={onClick}
       className={className}
     >
+      {active && (
+        <span
+          aria-hidden="true"
+          className={cn(
+            'absolute left-0 w-1 rounded-full bg-sky-300 shadow-[0_0_14px_rgba(125,211,252,0.8)]',
+            collapsed ? 'inset-y-2' : 'inset-y-1.5'
+          )}
+        />
+      )}
       {content}
     </Link>
   )
@@ -218,7 +225,7 @@ export default function AdminEventSidebar({
   }
 
   return (
-    <div className="mt-6 space-y-5">
+    <div className="mt-5 space-y-3">
       <section>
         <div className="mb-2 flex items-center justify-between px-1">
           <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-sky-200/70">Evento seleccionado</p>
@@ -292,7 +299,7 @@ export default function AdminEventSidebar({
       {eventNav.length > 0 && (
         <section>
           <p className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-500">Operar este evento</p>
-          <nav className="space-y-1.5" aria-label="Secciones del evento">
+          <nav className="space-y-0.5" aria-label="Secciones del evento">
             {eventNav.map((item) => (
               <NavigationLink
                 key={item.href}
