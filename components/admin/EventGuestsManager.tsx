@@ -101,32 +101,25 @@ const GUEST_STATUS_STYLES: Record<Guest['status'], string> = {
 type StatusAction = {
   label: string
   target: Guest['status']
-  tone: 'confirm' | 'checkin' | 'cancel' | 'revert'
 }
 
-const STATUS_ACTION_STYLES: Record<StatusAction['tone'], string> = {
-  confirm: 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100',
-  checkin: 'border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100',
-  cancel: 'border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100',
-  revert: 'border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100',
-}
 
 function statusActionsFor(status: Guest['status']): StatusAction[] {
   switch (status) {
     case 'pending':
       return [
-        { label: 'Confirmar a mano', target: 'confirmed', tone: 'confirm' },
-        { label: 'Cancelar', target: 'cancelled', tone: 'cancel' },
+        { label: 'Confirmar a mano', target: 'confirmed' },
+        { label: 'Cancelar', target: 'cancelled' },
       ]
     case 'confirmed':
       return [
-        { label: 'Marcar ingreso', target: 'checked_in', tone: 'checkin' },
-        { label: 'Cancelar', target: 'cancelled', tone: 'cancel' },
+        { label: 'Marcar ingreso', target: 'checked_in' },
+        { label: 'Cancelar', target: 'cancelled' },
       ]
     case 'checked_in':
-      return [{ label: 'Revertir ingreso', target: 'confirmed', tone: 'revert' }]
+      return [{ label: 'Revertir ingreso', target: 'confirmed' }]
     case 'cancelled':
-      return [{ label: 'Reactivar', target: 'pending', tone: 'confirm' }]
+      return [{ label: 'Reactivar', target: 'pending' }]
     default:
       return []
   }
@@ -488,6 +481,12 @@ export default function EventGuestsManager({
   const selectedGuests = visibleGuests.filter((guest) => selectedGuestIds.has(guest.id))
   // Quien todavia no tiene link emitido. Un invitado cancelado no cuenta: no
   // hay nada que mandarle.
+  const guestTypePriceById = useMemo(() => {
+    const map = new Map<string, number>()
+    for (const guestType of visibleGuestTypes) map.set(guestType.id, guestType.payment_amount_cents ?? 0)
+    return map
+  }, [visibleGuestTypes])
+
   const guestsWithoutInvitation = useMemo(
     () =>
       visibleGuests.filter(
@@ -2398,6 +2397,44 @@ export default function EventGuestsManager({
                               : null
                           const isExpanded = expandedGuestIds.has(guest.id)
 
+                          // El pago solo es un tema si este invitado paga algo: su
+                          // tipo tiene precio, o ya arrastra un estado de pago real.
+                          const guestPaymentStatus = guest.payment_status ?? 'not_required'
+                          const paymentIsRelevant =
+                            (guestTypePriceById.get(guest.guest_type_id) ?? 0) > 0 ||
+                            guestPaymentStatus !== 'not_required'
+
+                          const missingContactFields = [
+                            guest.phone ? null : 'teléfono',
+                            guest.email ? null : 'email',
+                            guest.document_number ? null : 'DNI',
+                          ].filter(Boolean) as string[]
+
+                          // Un unico relato del estado, con el paso siguiente adentro.
+                          const stageCopy =
+                            guest.status === 'checked_in'
+                              ? { title: 'Ya ingresó a la fiesta', detail: 'Su acceso quedó consumido en la puerta.' }
+                              : invitationWasUsed
+                              ? { title: 'Su acceso ya fue usado', detail: 'Si necesita entrar otra vez, regenerá la invitación.' }
+                              : invitationExpired
+                              ? { title: 'Su invitación venció', detail: 'Regenerala para volver a dejarla disponible.' }
+                              : !latestToken
+                              ? {
+                                  title: 'Todavía no tiene invitación',
+                                  detail: 'Sin link generado no hay nada para mandarle.',
+                                }
+                              : accessReady
+                              ? { title: 'Listo para ingresar', detail: 'Confirmó y su QR está habilitado para la puerta.' }
+                              : paymentIsRelevant && guestPaymentStatus !== 'approved'
+                              ? {
+                                  title: 'Invitación generada, falta acreditar su pago',
+                                  detail: 'Su QR se habilita cuando el pago quede confirmado.',
+                                }
+                              : {
+                                  title: 'Invitación generada, sin respuesta',
+                                  detail: 'Mandale el link. Su QR aparece cuando confirme la asistencia.',
+                                }
+
                           return (
                             <>
                         {/* Fila colapsada: lo minimo para escanear la lista de un vistazo. */}
@@ -2461,129 +2498,155 @@ export default function EventGuestsManager({
                         </div>
 
                         {isExpanded && (
-                          <div className="mt-4 border-t border-gray-100 pt-4">
-                        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                          <div className="grid gap-1 text-sm text-gray-600">
-                            <p>Tipo: {guest.guest_types?.name || 'Sin tipo asociado'}</p>
-                            <p>Destino: {guest.table_assignment || 'No asignado'}</p>
-                            <p>Email: {guest.email || 'No cargado'}</p>
-                            <p>Telefono: {guest.phone || 'No cargado'}</p>
-                            <p>DNI: {guest.document_number || 'No cargado'}</p>
-                            <p>Acceso: {formatGuestTypeAccessPolicy(guest.guest_types, event.start_time)}</p>
-                          </div>
+                          <div className="mt-4 space-y-4 border-t border-gray-100 pt-4">
+                        {/* 1. Donde esta y que sigue. Un solo relato: antes el mismo
+                            dato se repetia como badge, como "Acceso digital" y como
+                            "QR pendiente", y ninguno de los tres decia que hacer. */}
+                        <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                          <div className="flex flex-wrap items-start justify-between gap-4">
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-semibold text-gray-900">{stageCopy.title}</p>
+                              <p className="mt-1 text-sm leading-6 text-gray-600">{stageCopy.detail}</p>
 
-                          <div className="grid grid-cols-2 gap-3 text-sm text-gray-600 lg:min-w-67.5">
-                            <div className="rounded-lg bg-gray-50 px-3 py-2">
-                              <p className="text-xs uppercase tracking-wide text-gray-500">Acompanantes</p>
-                              <p className="mt-1 font-medium text-gray-900">
-                                {guest.plus_ones_confirmed}/{guest.plus_ones_allowed}
-                              </p>
+                              <div className="mt-3 flex flex-wrap items-center gap-2">
+                                {latestToken ? (
+                                  <details className="relative">
+                                    <summary className="inline-flex cursor-pointer list-none items-center gap-1 whitespace-nowrap rounded-md border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-100 [&::-webkit-details-marker]:hidden">
+                                      Enviar invitación
+                                      <span aria-hidden="true">▾</span>
+                                    </summary>
+                                    <div className="absolute left-0 z-10 mt-1 w-64 rounded-lg border border-gray-200 bg-white p-1 shadow-lg">
+                                      <p className="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
+                                        Email (lo manda Alista)
+                                      </p>
+                                      <button
+                                        type="button"
+                                        onClick={() => sendGuestAccessThroughProvider(guest, latestToken, 'email')}
+                                        disabled={deliveryLoadingKey === `${guest.id}:email` || !guest.email}
+                                        className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:text-gray-300"
+                                      >
+                                        {deliveryLoadingKey === `${guest.id}:email`
+                                          ? 'Enviando email...'
+                                          : guest.email
+                                          ? 'Enviar por email'
+                                          : 'Enviar por email (falta email)'}
+                                      </button>
+                                      <div className="my-1 border-t border-gray-100" />
+                                      <p className="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
+                                        WhatsApp (desde tu teléfono)
+                                      </p>
+                                      <button
+                                        type="button"
+                                        onClick={() => openWhatsAppShare(guest, latestToken)}
+                                        disabled={!guest.phone}
+                                        className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:text-gray-300"
+                                      >
+                                        {guest.phone ? 'Enviar por WhatsApp' : 'Enviar por WhatsApp (falta teléfono)'}
+                                      </button>
+                                      <div className="my-1 border-t border-gray-100" />
+                                      <p className="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
+                                        Otras opciones
+                                      </p>
+                                      <button
+                                        type="button"
+                                        onClick={() => copyInvitationLink(guest, latestToken)}
+                                        className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+                                      >
+                                        {copiedInvitationGuestId === guest.id ? 'Enlace copiado' : 'Copiar enlace'}
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => openEmailShare(guest, latestToken)}
+                                        className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+                                      >
+                                        Mandar desde mi mail
+                                      </button>
+                                      <Link
+                                        href={buildInvitationPath(latestToken.token, `${guest.first_name} ${guest.last_name}`)}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+                                      >
+                                        Ver invitación
+                                      </Link>
+                                      <div className="my-1 border-t border-gray-100" />
+                                      <button
+                                        type="button"
+                                        onClick={() => issueGuestAccess(guest)}
+                                        disabled={guestAccessActionLoadingId === guest.id}
+                                        className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-gray-500 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+                                      >
+                                        {guestAccessActionLoadingId === guest.id ? 'Generando...' : 'Regenerar invitación/QR'}
+                                      </button>
+                                    </div>
+                                  </details>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => issueGuestAccess(guest)}
+                                    disabled={guestAccessActionLoadingId === guest.id}
+                                    className="inline-flex items-center whitespace-nowrap rounded-md bg-violet-600 px-3 py-2 text-sm font-semibold text-white hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-60"
+                                  >
+                                    {guestAccessActionLoadingId === guest.id ? 'Generando...' : 'Generar invitación'}
+                                  </button>
+                                )}
+
+                                {/* Correcciones a mano: existen, pero no compiten con lo de arriba. */}
+                                {statusActionsFor(guest.status).map((action) => (
+                                  <button
+                                    key={action.target}
+                                    type="button"
+                                    onClick={() => runQuickStatusUpdate(guest, action.target)}
+                                    disabled={guestRowActionLoadingId === guest.id}
+                                    className="inline-flex items-center whitespace-nowrap rounded-md px-2 py-2 text-sm font-medium text-gray-500 underline-offset-2 hover:text-gray-900 hover:underline disabled:cursor-not-allowed disabled:opacity-60"
+                                  >
+                                    {action.label}
+                                  </button>
+                                ))}
+                              </div>
                             </div>
-                            <div className="rounded-lg bg-gray-50 px-3 py-2">
-                              <p className="text-xs uppercase tracking-wide text-gray-500">Creado</p>
-                              <p className="mt-1 font-medium text-gray-900">{formatDate(guest.created_at)}</p>
-                            </div>
+
+                            {/* El QR solo ocupa lugar cuando existe. */}
+                            {renderableQrImageUrl && (
+                              <Image
+                                src={renderableQrImageUrl}
+                                alt={`QR de acceso para ${guest.first_name} ${guest.last_name}`}
+                                width={132}
+                                height={132}
+                                unoptimized
+                                className="size-33 flex-none rounded-lg border border-gray-200 bg-white p-1.5"
+                              />
+                            )}
                           </div>
                         </div>
 
-                        <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_180px]">
-                          <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                            <div className="flex flex-wrap items-center justify-between gap-3">
-                              <div>
-                                <p className="text-xs uppercase tracking-wide text-gray-500">Acceso digital</p>
-                                <p className="mt-1 text-sm font-medium text-gray-900">
-                                  {guest.status === 'checked_in'
-                                    ? 'Ingreso registrado'
-                                    : invitationWasUsed
-                                    ? 'Acceso ya utilizado'
-                                    : invitationExpired
-                                    ? 'Acceso vencido'
-                                    : accessReady
-                                    ? 'QR final habilitado'
-                                    : latestToken
-                                    ? 'Link de gestion emitido'
-                                    : 'Sin invitacion emitida'}
-                                </p>
-                              </div>
-                              <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                                guest.status === 'checked_in'
-                                  ? 'bg-blue-100 text-blue-800'
-                                  : invitationWasUsed
-                                  ? 'bg-amber-100 text-amber-800'
-                                  : invitationExpired
-                                  ? 'bg-rose-100 text-rose-800'
-                                  : accessReady
-                                  ? 'bg-emerald-100 text-emerald-800'
-                                  : 'bg-gray-100 text-gray-700'
-                              }`}>
-                                {guest.status === 'checked_in'
-                                  ? 'Ingresado'
-                                  : invitationWasUsed
-                                  ? 'Usado'
-                                  : invitationExpired
-                                  ? 'Vencido'
-                                  : accessReady
-                                  ? 'Habilitado'
-                                  : 'Pendiente'}
-                              </span>
-                            </div>
-
-                            <div className="mt-3 space-y-1 text-sm text-gray-600">
-                              <p>
-                                Token:{' '}
-                                <span className="font-mono text-xs text-gray-800">
-                                  {latestToken ? latestToken.token.slice(0, 18) : 'No generado'}
-                                  {latestToken ? '...' : ''}
-                                </span>
-                              </p>
-                              <p>
-                                Vence:{' '}
-                                {latestToken ? formatDateTime(latestToken.expires_at) : 'No disponible'}
-                              </p>
-                              <p>
-                                Uso:{' '}
-                                {latestToken?.last_used_at
-                                  ? `Utilizado ${formatDateTime(latestToken.last_used_at)}`
-                                  : 'Sin registrar'}
-                              </p>
-                              <p>
-                                Invitacion:{' '}
-                                {latestToken ? (
-                                  <Link
-                                    href={buildInvitationPath(latestToken.token, `${guest.first_name} ${guest.last_name}`)}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="font-medium text-blue-700 hover:text-blue-900"
-                                  >
-                                    Abrir pagina publica
-                                  </Link>
-                                ) : (
-                                  'No disponible'
-                                )}
-                              </p>
-                              {!accessReady && !invitationExpired && guest.status !== 'checked_in' && latestToken && (
-                                <p className="text-amber-700">
-                                  El QR final se habilita cuando el invitado confirma asistencia y queda listo para ingresar.
-                                </p>
+                        {/* 2. Los datos, en dos columnas con sentido: con que se lo
+                            contacta y que le toca en la fiesta. Lo que falta se dice
+                            una vez, no una linea por ausencia. */}
+                        <div className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
+                          <div>
+                            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Contacto</p>
+                            <div className="mt-2 space-y-1 text-sm text-gray-700">
+                              {guest.phone && <p>{guest.phone}</p>}
+                              {guest.email && <p className="break-all">{guest.email}</p>}
+                              {guest.document_number && <p>DNI {guest.document_number}</p>}
+                              {missingContactFields.length > 0 && (
+                                <p className="text-gray-400">Falta cargar: {missingContactFields.join(' · ')}</p>
                               )}
                             </div>
                           </div>
 
-                          <div className="flex aspect-square w-full max-w-45 items-center justify-center justify-self-center rounded-lg border border-gray-200 bg-white p-2">
-                            {renderableQrImageUrl ? (
-                              <Image
-                                src={renderableQrImageUrl}
-                                alt={`QR de acceso para ${guest.first_name} ${guest.last_name}`}
-                                width={180}
-                                height={180}
-                                unoptimized
-                                className="size-full object-contain"
-                              />
-                            ) : (
-                              <div className="text-center text-xs text-gray-500">
-                                QR pendiente
-                              </div>
-                            )}
+                          <div>
+                            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">En la fiesta</p>
+                            <div className="mt-2 space-y-1 text-sm text-gray-700">
+                              <p>{formatGuestTypeAccessPolicy(guest.guest_types, event.start_time)}</p>
+                              <p>
+                                Destino: {guest.table_assignment || <span className="text-gray-400">sin asignar</span>}
+                              </p>
+                              {guest.plus_ones_allowed > 0 && (
+                                <p>Acompañantes: {guest.plus_ones_confirmed}/{guest.plus_ones_allowed}</p>
+                              )}
+                            </div>
                           </div>
                         </div>
 
@@ -2593,9 +2656,9 @@ export default function EventGuestsManager({
                           // para mostrarlos de forma estructurada en lugar de un blob.
                           const details = parseInvitationDetails(guest.special_requests)
                           const extras = [
-                            { label: 'Menu', value: details.dietaryRequirements },
-                            { label: 'Acompanantes', value: details.companionNames },
-                            { label: 'Cancion', value: details.song },
+                            { label: 'Menú', value: details.dietaryRequirements },
+                            { label: 'Acompañantes', value: details.companionNames },
+                            { label: 'Canción', value: details.song },
                             { label: 'Saludo', value: details.greeting },
                             { label: 'Observaciones', value: details.observations },
                           ].filter((item) => item.value.trim().length > 0)
@@ -2605,19 +2668,17 @@ export default function EventGuestsManager({
                           }
 
                           return (
-                            <div className="mt-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
-                              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                                Datos del invitado
+                            <div>
+                              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                                Lo que respondió
                               </p>
-                              <dl className="mt-2 grid gap-x-4 gap-y-2 text-sm sm:grid-cols-2">
+                              <dl className="mt-2 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
                                 {extras.map((item) => (
                                   <div key={item.label} className="flex flex-col">
                                     <dt className="text-xs font-medium uppercase tracking-wide text-gray-400">
                                       {item.label}
                                     </dt>
-                                    <dd className="text-gray-700 whitespace-pre-line">
-                                      {item.value}
-                                    </dd>
+                                    <dd className="whitespace-pre-line text-gray-700">{item.value}</dd>
                                   </div>
                                 ))}
                               </dl>
@@ -2625,114 +2686,13 @@ export default function EventGuestsManager({
                           )
                         })()}
 
-                        <div className="mt-4 space-y-3">
-                          {/* Enviar: un solo boton con menu. Si no hay token todavia, primero emitir. */}
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="w-20 text-xs font-semibold uppercase tracking-wide text-gray-400">Invitacion</span>
-                            {latestToken ? (
-                              <details className="relative">
-                                <summary className="inline-flex cursor-pointer list-none items-center gap-1 whitespace-nowrap rounded-md border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-100 [&::-webkit-details-marker]:hidden">
-                                  Enviar invitacion
-                                  <span aria-hidden="true">▾</span>
-                                </summary>
-                                <div className="absolute left-0 z-10 mt-1 w-64 rounded-lg border border-gray-200 bg-white p-1 shadow-lg">
-                                  <p className="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
-                                    Email (lo manda Alista)
-                                  </p>
-                                  <button
-                                    type="button"
-                                    onClick={() => sendGuestAccessThroughProvider(guest, latestToken, 'email')}
-                                    disabled={deliveryLoadingKey === `${guest.id}:email` || !guest.email}
-                                    className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:text-gray-300"
-                                  >
-                                    {deliveryLoadingKey === `${guest.id}:email`
-                                      ? 'Enviando email...'
-                                      : guest.email
-                                      ? 'Enviar por email'
-                                      : 'Enviar por email (falta email)'}
-                                  </button>
-                                  <div className="my-1 border-t border-gray-100" />
-                                  <p className="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
-                                    WhatsApp (desde tu telefono)
-                                  </p>
-                                  <button
-                                    type="button"
-                                    onClick={() => openWhatsAppShare(guest, latestToken)}
-                                    disabled={!guest.phone}
-                                    className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:text-gray-300"
-                                  >
-                                    {guest.phone ? 'Enviar por WhatsApp' : 'Enviar por WhatsApp (falta telefono)'}
-                                  </button>
-                                  <div className="my-1 border-t border-gray-100" />
-                                  <p className="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
-                                    Otras opciones
-                                  </p>
-                                  <button
-                                    type="button"
-                                    onClick={() => copyInvitationLink(guest, latestToken)}
-                                    className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
-                                  >
-                                    {copiedInvitationGuestId === guest.id ? 'Enlace copiado' : 'Copiar enlace'}
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => openEmailShare(guest, latestToken)}
-                                    className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
-                                  >
-                                    Mandar desde mi mail
-                                  </button>
-                                  <Link
-                                    href={buildInvitationPath(latestToken.token, `${guest.first_name} ${guest.last_name}`)}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
-                                  >
-                                    Ver invitacion
-                                  </Link>
-                                  <div className="my-1 border-t border-gray-100" />
-                                  <button
-                                    type="button"
-                                    onClick={() => issueGuestAccess(guest)}
-                                    disabled={guestAccessActionLoadingId === guest.id}
-                                    className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-gray-500 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
-                                  >
-                                    {guestAccessActionLoadingId === guest.id ? 'Generando...' : 'Regenerar invitacion/QR'}
-                                  </button>
-                                </div>
-                              </details>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={() => issueGuestAccess(guest)}
-                                disabled={guestAccessActionLoadingId === guest.id}
-                                className="inline-flex items-center whitespace-nowrap rounded-md border border-violet-200 bg-violet-50 px-3 py-2 text-sm font-medium text-violet-700 hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-60"
-                              >
-                                {guestAccessActionLoadingId === guest.id ? 'Generando acceso...' : 'Emitir invitacion/QR'}
-                              </button>
-                            )}
-                          </div>
-
-                          {/* Estado: solo las transiciones que aplican al estado actual. */}
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="w-20 text-xs font-semibold uppercase tracking-wide text-gray-400">Estado</span>
-                            {statusActionsFor(guest.status).map((action) => (
-                              <button
-                                key={action.target}
-                                type="button"
-                                onClick={() => runQuickStatusUpdate(guest, action.target)}
-                                disabled={guestRowActionLoadingId === guest.id}
-                                className={`inline-flex items-center whitespace-nowrap rounded-md border px-3 py-2 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-60 ${STATUS_ACTION_STYLES[action.tone]}`}
-                              >
-                                {action.label}
-                              </button>
-                            ))}
-                          </div>
-
-                          {/* Pago: conciliacion. El actual queda marcado; confirmar destraba el acceso. */}
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="w-20 text-xs font-semibold uppercase tracking-wide text-gray-400">Pago</span>
-                            {(['not_required', 'pending', 'approved'] as GuestPaymentStatus[]).map(
-                              (option) => {
+                        {/* 3. Pago: solo si este invitado paga algo. En una fiesta sin
+                            cobro, tres botones para elegir "Sin cobro" son ruido. */}
+                        {paymentIsRelevant && (
+                          <div>
+                            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Pago</p>
+                            <div className="mt-2 flex flex-wrap items-center gap-2">
+                              {(['not_required', 'pending', 'approved'] as GuestPaymentStatus[]).map((option) => {
                                 const active = (guest.payment_status ?? 'not_required') === option
                                 return (
                                   <button
@@ -2749,29 +2709,65 @@ export default function EventGuestsManager({
                                     {GUEST_PAYMENT_LABELS[option]}
                                   </button>
                                 )
-                              }
+                              })}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 4. Diagnostico. Interesa cuando algo no funciona, no antes. */}
+                        <details className="group">
+                          <summary className="w-fit cursor-pointer list-none text-xs font-semibold text-gray-400 transition hover:text-gray-700 [&::-webkit-details-marker]:hidden">
+                            <span className="group-open:hidden">Detalle técnico del acceso</span>
+                            <span className="hidden group-open:inline">Ocultar detalle técnico</span>
+                          </summary>
+                          <div className="mt-2 space-y-1 border-l border-gray-200 pl-4 text-sm text-gray-600">
+                            <p>
+                              Token:{' '}
+                              <span className="font-mono text-xs text-gray-800">
+                                {latestToken ? `${latestToken.token.slice(0, 18)}...` : 'No generado'}
+                              </span>
+                            </p>
+                            <p>Vence: {latestToken ? formatDateTime(latestToken.expires_at) : 'No disponible'}</p>
+                            <p>
+                              Uso:{' '}
+                              {latestToken?.last_used_at
+                                ? `Utilizado ${formatDateTime(latestToken.last_used_at)}`
+                                : 'Sin registrar'}
+                            </p>
+                            <p>Creado: {formatDate(guest.created_at)}</p>
+                            {latestToken && (
+                              <p>
+                                <Link
+                                  href={buildInvitationPath(latestToken.token, `${guest.first_name} ${guest.last_name}`)}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="font-medium text-blue-700 hover:text-blue-900"
+                                >
+                                  Abrir la invitación como la ve el invitado
+                                </Link>
+                              </p>
                             )}
                           </div>
+                        </details>
 
-                          {/* Ficha del invitado. */}
-                          <div className="flex flex-wrap items-center gap-2 border-t border-gray-100 pt-3">
-                            <button
-                              type="button"
-                              onClick={() => startEditingGuest(guest)}
-                              disabled={guestRowActionLoadingId === guest.id}
-                              className="inline-flex items-center rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
-                            >
-                              Editar
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => removeGuest(guest)}
-                              disabled={guestRowActionLoadingId === guest.id}
-                              className="inline-flex items-center rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
-                            >
-                              Borrar
-                            </button>
-                          </div>
+                        {/* 5. Ficha del invitado. */}
+                        <div className="flex flex-wrap items-center gap-3 border-t border-gray-100 pt-3">
+                          <button
+                            type="button"
+                            onClick={() => startEditingGuest(guest)}
+                            disabled={guestRowActionLoadingId === guest.id}
+                            className="inline-flex items-center rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            Editar
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => removeGuest(guest)}
+                            disabled={guestRowActionLoadingId === guest.id}
+                            className="ml-auto inline-flex items-center rounded-md px-2 py-2 text-sm font-medium text-rose-600 underline-offset-2 hover:underline disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            Borrar
+                          </button>
                         </div>
                           </div>
                         )}
