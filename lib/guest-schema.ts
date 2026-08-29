@@ -10,6 +10,16 @@ export type DbGuestStatus =
   | 'rejected'
   | 'duplicate'
 
+export const DB_GUEST_STATUSES: readonly DbGuestStatus[] = [
+  'preinvited',
+  'link_sent',
+  'registered',
+  'enabled',
+  'checked_in',
+  'rejected',
+  'duplicate',
+]
+
 type GuestTypeSubset = GuestWithType['guest_types']
 
 type DbGuestRow = {
@@ -64,6 +74,34 @@ export function mapGuestStatusToDb(status: Guest['status']): DbGuestStatus {
     default:
       return 'preinvited'
   }
+}
+
+/**
+ * Que estado guardar cuando llega el vocabulario corto de 4 estados.
+ *
+ * El panel edita en 4 estados y la base tiene 7, asi que el viaje de ida y
+ * vuelta pierde informacion: abrir a un invitado con `link_sent`, que se muestra
+ * como "Pendiente", y guardar cualquier otro campo lo devolvia a `preinvited`
+ * —o sea, editarle el telefono le borraba el hecho de tener su invitacion
+ * emitida—.
+ *
+ * La regla: si el estado corto NO cambio, el estado fino no se toca. Solo se
+ * escribe cuando la persona efectivamente eligio otro estado.
+ */
+export function resolveNextDbStatus(
+  currentDbStatus: string | null | undefined,
+  nextCollapsedStatus: Guest['status']
+): DbGuestStatus {
+  // Solo se conserva un estado que la base reconoce: `normalizeGuestStatus`
+  // colapsa a "pending" cualquier cosa que no entienda, y conservar por esa vía
+  // escribiría de vuelta un valor inventado.
+  const current = DB_GUEST_STATUSES.find((status) => status === currentDbStatus)
+
+  if (current && normalizeGuestStatus(current) === nextCollapsedStatus) {
+    return current
+  }
+
+  return mapGuestStatusToDb(nextCollapsedStatus)
 }
 
 export function buildGuestFullName(firstName: string, lastName: string) {

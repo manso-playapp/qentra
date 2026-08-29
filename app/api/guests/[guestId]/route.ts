@@ -2,8 +2,8 @@ import { getSupabaseAdminClient } from '@/lib/supabase-admin'
 import { ensureAuthorizedEventApiAccess } from '@/lib/operator-auth'
 import {
   buildGuestFullName,
-  mapGuestStatusToDb,
   normalizeGuestRecord,
+  resolveNextDbStatus,
 } from '@/lib/guest-schema'
 import {
   isTableAssignmentColumnMissingError,
@@ -114,7 +114,7 @@ export async function PATCH(request: Request, context: GuestRouteContext) {
       }
       payload.plus_ones_confirmed = confirmed
     }
-    if (body.status !== undefined) payload.status = mapGuestStatusToDb(body.status)
+    if (body.status !== undefined) payload.status = resolveNextDbStatus(currentGuest.status, body.status)
     if (
       body.payment_status !== undefined &&
       ['not_required', 'pending', 'approved'].includes(body.payment_status)
