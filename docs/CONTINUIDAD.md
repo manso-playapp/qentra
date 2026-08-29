@@ -235,11 +235,19 @@ Los eventos reales (DRM 287 tokens, Alfonsina 2) no se vieron afectados, gracias
    —teléfonos de menores— de cuentas que quizá nunca paguen. Ver decisiones §5.
 3. **Revisar qué ve una clienta en `/admin`.** El panel funciona, pero su copy y jerarquía
    fueron escritos para el equipo operativo, no para una madre organizando su fiesta.
-4. **Revisión editorial del panel para clientas.** El panel funciona, pero todavía hay que
+4. **Consumir la activación con el check-in.** Decidido el 29/08/2026, todavía sin
+   implementar: hoy una activación habilita para siempre y todo lo que identifica la
+   fiesta es editable, así que se puede reutilizar el evento para una segunda fiesta sin
+   pagar. Falta `event_activations.consumed_at` escrito por `register_guest_checkin`, la
+   lectura en `resolveActivation()` y la oferta de duplicar en vez de bloquear. Ver
+   decisiones §4 bis.
+5. **Revisión editorial del panel para clientas.** El panel funciona, pero todavía hay que
    detectar y simplificar copy escrito para el equipo operativo cuando no aporta valor a una
    madre organizando su fiesta.
 
 ### Hilos sueltos anotados
+- **Fiesta sin puerta:** si nadie escanea nada no hay check-ins y la activación nunca se
+  consume. Propuesta anotada (fecha vencida hace +30 días, con salida por soporte), sin decidir.
 - **Retención de datos del demo:** cargar invitados sin pagar guarda datos reales de menores.
   Necesita política explícita (ver `ALISTA_DECISIONES_PROPIEDAD_Y_PAGOS.md` §5).
 - **Operadores de puerta y Realtime:** desde la migración, un rol `door` que no esté en
@@ -260,6 +268,9 @@ Los eventos reales (DRM 287 tokens, Alfonsina 2) no se vieron afectados, gracias
 - **Soporte de Alista: acceso total, permanente y sin registro.** Deliberado. `is_alista_staff()`
   es el único lugar a tocar si algún día se acota.
 - **MP sólo en eventos con entrada paga.** Una fiesta privada nunca toca MP.
+- **Un evento es una fiesta que ocurrió, y el check-in es la marca** (29/08/2026). Postergar
+  es gratis mientras no haya ingresos; con el primer check-in la activación queda consumida y
+  la próxima fiesta es un evento nuevo. Decidido, pendiente de implementar. Ver §4 bis.
 - Todo el detalle y el porqué: `docs/Product/ALISTA_DECISIONES_PROPIEDAD_Y_PAGOS.md`.
 
 ---

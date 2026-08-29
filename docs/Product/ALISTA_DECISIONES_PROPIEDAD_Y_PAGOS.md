@@ -202,6 +202,70 @@ Tres razones:
 
 ---
 
+## 4 bis. Qué cuenta como un evento: la activación se consume
+
+### DECISIÓN — 29/08/2026
+
+**Un evento es una fiesta que ocurrió, y el check-in es la marca.**
+
+Hasta hoy la activación era permanente (`expires_at` en `null` en las tres filas
+existentes) y todo lo que identifica *qué fiesta es* —nombre, fecha, salón, lista de
+invitados— es editable desde el panel. La consecuencia: después de la fiesta se puede
+cambiar la fecha, borrar la lista, cargar otra, re-emitir los links y correr una
+segunda fiesta sin volver a pagar. Los tokens nuevos se emiten con vencimiento
+calculado sobre la fecha nueva, así que ni siquiera hace falta forzar nada.
+
+Lo grave no es que sea posible: es que **no se siente como una trampa**. El panel dice
+"este es tu evento, editalo", y eso es exactamente lo que la responsable hace.
+
+Las reglas:
+
+1. **Mientras no haya ningún check-in registrado, mover la fecha es libre y gratis.**
+   Eso es postergar, y una fiesta de 15 se posterga por lluvia, por una internación o
+   por lo que sea. Cobrar de nuevo ahí sería abusivo, y es el peor momento posible
+   para pedirle plata a esa familia.
+2. **Con al menos un ingreso registrado, la activación queda consumida.** La fiesta
+   ocurrió; esa activación ya hizo su trabajo.
+3. **Consumida, la activación deja de habilitar la emisión de nuevos
+   `invitation_tokens`**, igual que un evento nunca activado. No se bloquea editar
+   nada: sigue siendo estado, no permiso (§4). La dueña llega a todos sus datos, ve
+   su fiesta anterior entera y puede corregir lo que quiera.
+4. **En ese momento el panel ofrece duplicar, no bloquear**: diseño, tipos de invitado
+   y textos se copian a un evento nuevo sin activar. La familia que organiza los 15 de
+   la segunda hija es el mejor cliente recurrente que Alista puede tener; hoy el
+   producto la empuja a pisar el recuerdo de la primera.
+
+### Por qué el check-in y no la fecha
+
+La fecha sola no distingue postergar de reutilizar, y las dos cosas se parecen
+demasiado como para arriesgarse a cobrarle a quien postergó. El check-in sí:
+
+- **no se puede falsear hacia atrás** —es un hecho registrado en la puerta—;
+- **una fiesta postergada nunca tuvo ingresos**, por definición;
+- y es la única prueba que Alista tiene de que la fiesta efectivamente sucedió.
+
+### Forma técnica propuesta (todavía NO implementada)
+
+`event_activations.consumed_at`, escrito por la misma transacción que registra el
+primer check-in (`register_guest_checkin`). `resolveActivation()` pasa a devolver
+`{ activated: false, reason: 'consumed' }` cuando hay `consumed_at` y la fecha del
+evento cambió después de esa marca.
+
+### Caso borde sin resolver
+
+**Una fiesta que ocurrió sin usar la puerta.** Si nadie escaneó nada, no hay check-ins
+y la activación nunca se consume. Opción propuesta: considerar la fiesta ocurrida
+cuando la fecha pasó hace más de 30 días, con salida por soporte para el caso legítimo.
+Queda anotado, no decidido.
+
+### El disuasivo real no es técnico
+
+Si Alista conserva la fiesta anterior viva y útil —quiénes vinieron, cómo llegaron, las
+fotos— borrarla para ahorrarse una activación deja de ser gratis emocionalmente. Esa
+reja la construye el producto, no una validación.
+
+---
+
 ## 5. El evento demo
 
 ### DECISIÓN CERRADA
