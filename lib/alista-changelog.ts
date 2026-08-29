@@ -20,6 +20,15 @@ export type AlistaChange = {
 
 export const ALISTA_CHANGELOG: AlistaChange[] = [
   {
+    commit: '384fabe',
+    date: '2026-08-29',
+    dateLabel: '29 ago 2026',
+    kind: 'estabilidad',
+    area: 'Invitados',
+    title: 'La responsable puede editar y borrar sus propios invitados',
+    summary: 'Editar o borrar un invitado exigía perfil de operador antes de mirar el evento, así que la dueña de la fiesta —que por decisión no tiene ese perfil— recibía un error sobre su propio invitado. Ahora autoriza el acceso al evento, que ya contemplaba a la responsable, al equipo y a los colaboradores invitados.',
+  },
+  {
     commit: '5e576ca',
     date: '2026-08-29',
     dateLabel: '29 ago 2026',
