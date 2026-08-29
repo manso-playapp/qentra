@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import RoleAccessDeniedNotice from '@/components/auth/RoleAccessDeniedNotice'
 import { AdminAccessProvider } from '@/components/admin/AdminAccessContext'
+import ViewAsBanner from '@/components/admin/ViewAsBanner'
 import { requireAuthenticatedPageAccess } from '@/lib/operator-auth'
 import { isAlistaStaff } from '@/lib/event-access'
 
@@ -37,6 +38,12 @@ export default async function AdminProtectedLayout({
         isStaff: isAlistaStaff(access.account.access),
       }}
     >
+      {access.viewingAs ? (
+        <ViewAsBanner
+          targetEmail={access.viewingAs.targetEmail}
+          realEmail={access.viewingAs.realEmail}
+        />
+      ) : null}
       {children}
     </AdminAccessProvider>
   )

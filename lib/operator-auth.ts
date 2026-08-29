@@ -10,11 +10,21 @@ import { createServerSupabaseClient } from '@/lib/supabase-server'
 import {
   canManageEvent,
   hasGlobalOperationalAccess,
+  isAlistaStaff,
   isBlockedOperator,
   normalizeRoles,
   type AccountAccess,
   type AppRole,
 } from '@/lib/event-access'
+import { getSupabaseAdminClient } from '@/lib/supabase-admin'
+import { readViewAsUserId } from '@/lib/impersonation'
+
+/** Quién mira y a quién, cuando el equipo de Alista activó "ver como". */
+export type ViewingAs = {
+  targetUserId: string
+  targetEmail: string | null
+  realEmail: string | null
+} | null
 
 export type { AppRole } from '@/lib/event-access'
 
@@ -58,6 +68,7 @@ type AuthorizedEventPageAccessResult =
       ok: true
       user: User
       account: Account
+      viewingAs: ViewingAs
     }
   | {
       ok: false
@@ -249,8 +260,79 @@ export function verifySecuritySupervisorPin(candidate: string) {
   return safeCompareStrings(candidate, expectedPin)
 }
 
+/**
+ * La identidad con la que se RENDERIZA el panel.
+ *
+ * Normalmente es la sesión real. Cuando el equipo de Alista activó "ver como",
+ * devuelve el estado de la cuenta mirada: sus eventos, su perfil (o la ausencia
+ * de perfil, que es lo normal en una clienta) y, por lo tanto, exactamente las
+ * secciones que esa persona ve.
+ *
+ * La lente solo se aplica si la sesión REAL es staff. Las APIs siguen
+ * autorizando con `getCurrentAuthState`, así que mirar no degrada la capacidad
+ * de soporte: cambia el punto de vista, no los permisos.
+ */
+export async function getViewerAuthState() {
+  const real = await getCurrentAuthState()
+
+  if (!real.user || !isAlistaStaff(real.access)) {
+    return { ...real, viewingAs: null }
+  }
+
+  const targetUserId = await readViewAsUserId()
+  if (!targetUserId || targetUserId === real.user.id) {
+    return { ...real, viewingAs: null }
+  }
+
+  const adminClient = getSupabaseAdminClient()
+  if (!adminClient) {
+    return { ...real, viewingAs: null }
+  }
+
+  const { data: targetUserData, error: targetUserError } = await adminClient.auth.admin.getUserById(
+    targetUserId
+  )
+  const targetUser = targetUserError ? null : targetUserData?.user ?? null
+
+  // La cuenta mirada dejó de existir: se sigue de largo con la sesión real en
+  // lugar de dejar el panel en un estado que no corresponde a nadie.
+  if (!targetUser) {
+    return { ...real, viewingAs: null }
+  }
+
+  const [{ data: profileData }, { data: assignmentsData }, { data: ownedData }] = await Promise.all([
+    adminClient.from('operator_profiles').select('*').eq('user_id', targetUser.id).maybeSingle(),
+    adminClient.from('event_admin_assignments').select('event_id').eq('user_id', targetUser.id),
+    adminClient.from('events').select('id').eq('owner_user_id', targetUser.id),
+  ])
+
+  const assignedEventIds = (assignmentsData ?? []).map((assignment) => assignment.event_id as string)
+  const ownedEventIds = (ownedData ?? []).map((event) => event.id as string)
+  const manageableEventIds = Array.from(new Set([...ownedEventIds, ...assignedEventIds]))
+
+  const operatorProfile: OperatorProfile | null = profileData
+    ? ({
+        ...(profileData as Omit<OperatorProfile, 'roles'> & { roles: unknown }),
+        roles: normalizeRoles((profileData as { roles: unknown }).roles),
+        event_ids: assignedEventIds,
+      } satisfies OperatorProfile)
+    : null
+
+  return {
+    user: targetUser,
+    operatorProfile,
+    manageableEventIds,
+    access: toAccountAccess(operatorProfile, manageableEventIds),
+    viewingAs: {
+      targetUserId: targetUser.id,
+      targetEmail: targetUser.email ?? null,
+      realEmail: real.user.email ?? null,
+    },
+  }
+}
+
 export async function getCurrentOperatorProfile() {
-  return getCurrentAuthState()
+  return getViewerAuthState()
 }
 
 export async function requireAuthorizedPageAccess(
@@ -334,10 +416,10 @@ export function isGlobalAdmin(profile: OperatorProfile) {
 export async function requireAuthenticatedPageAccess(
   nextPath: string
 ): Promise<
-  | { ok: true; user: User; account: Account }
+  | { ok: true; user: User; account: Account; viewingAs: ViewingAs }
   | { ok: false; reason: 'inactive_profile' }
 > {
-  const authState = await getCurrentAuthState()
+  const authState = await getViewerAuthState()
 
   if (!authState.user) {
     redirect(`/acceso?next=${encodeURIComponent(nextPath)}`)
@@ -347,7 +429,12 @@ export async function requireAuthenticatedPageAccess(
     return { ok: false, reason: 'inactive_profile' }
   }
 
-  return { ok: true, user: authState.user, account: toAccount({ ...authState, user: authState.user }) }
+  return {
+    ok: true,
+    user: authState.user,
+    account: toAccount({ ...authState, user: authState.user }),
+    viewingAs: authState.viewingAs,
+  }
 }
 
 /**
@@ -400,7 +487,9 @@ export async function requireAuthorizedEventPageAccess(
   nextPath: string,
   eventId: string
 ): Promise<AuthorizedEventPageAccessResult> {
-  const authState = await getCurrentAuthState()
+  // Página: mira con la lente. Si el staff está viendo como una clienta, un
+  // evento ajeno a ella queda fuera, igual que le pasaría a ella.
+  const authState = await getViewerAuthState()
 
   if (!authState.user) {
     redirect(`/acceso?next=${encodeURIComponent(nextPath)}`)
@@ -414,7 +503,12 @@ export async function requireAuthorizedEventPageAccess(
     return { ok: false, reason: 'missing_event_access' }
   }
 
-  return { ok: true, user: authState.user, account: toAccount({ ...authState, user: authState.user }) }
+  return {
+    ok: true,
+    user: authState.user,
+    account: toAccount({ ...authState, user: authState.user }),
+    viewingAs: authState.viewingAs,
+  }
 }
 
 /**

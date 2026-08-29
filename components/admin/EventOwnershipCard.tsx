@@ -1,9 +1,11 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import {
   ArrowRightLeft,
   CreditCard,
+  Eye,
   Link2,
   LoaderCircle,
   ShieldCheck,
@@ -18,6 +20,8 @@ type EventOwnershipCardProps = {
   event: { id: string; name: string }
   currentOwnerEmail?: string | null
   canTransferOwnership: boolean
+  /** Id de la cuenta responsable, para que el staff pueda mirar con sus ojos. */
+  ownerUserId?: string | null
   showPaymentAccount: boolean
   paymentAccount: {
     connected: boolean
@@ -37,15 +41,18 @@ export default function EventOwnershipCard({
   event,
   currentOwnerEmail,
   canTransferOwnership,
+  ownerUserId,
   showPaymentAccount,
   paymentAccount,
 }: EventOwnershipCardProps) {
+  const router = useRouter()
   const [email, setEmail] = useState('')
   const [ownerEmail, setOwnerEmail] = useState(currentOwnerEmail ?? 'Cuenta responsable asignada')
   const [connected, setConnected] = useState(paymentAccount.connected)
   const [confirming, setConfirming] = useState(false)
   const [busy, setBusy] = useState(false)
   const [paymentBusy, setPaymentBusy] = useState(false)
+  const [viewAsBusy, setViewAsBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [paymentError, setPaymentError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -61,6 +68,27 @@ export default function EventOwnershipCard({
       : 'No disponible'
 
   const canManage = canTransferOwnership || showPaymentAccount
+
+  const startViewAs = async () => {
+    if (!ownerUserId) return
+    setViewAsBusy(true)
+    setError(null)
+
+    try {
+      const response = await fetch('/api/admin/view-as', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: ownerUserId }),
+      })
+      const payload = (await response.json().catch(() => null)) as { error?: string } | null
+      if (!response.ok) throw new Error(payload?.error || 'No se pudo abrir la vista.')
+      router.replace('/admin')
+      router.refresh()
+    } catch (viewAsError) {
+      setError(getErrorMessage(viewAsError))
+      setViewAsBusy(false)
+    }
+  }
 
   const submitTransfer = async () => {
     setBusy(true)
@@ -161,6 +189,26 @@ export default function EventOwnershipCard({
           </summary>
 
           <div className="space-y-5 pb-2 pt-4">
+            {canTransferOwnership && ownerUserId && (
+              <div>
+                <h4 className="text-sm font-semibold text-foreground">Ver el panel como ella</h4>
+                <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                  Abre Alista con sus ojos: sus eventos, sin las herramientas del equipo. Sirve para
+                  entender qué está viendo cuando pide ayuda.
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="mt-3"
+                  disabled={viewAsBusy}
+                  onClick={() => void startViewAs()}
+                >
+                  {viewAsBusy ? <LoaderCircle className="size-4 animate-spin" /> : <Eye className="size-4" />}
+                  Ver como {ownerEmail}
+                </Button>
+              </div>
+            )}
+
             {canTransferOwnership && (
               <div>
                 <h4 className="text-sm font-semibold text-foreground">Transferir responsabilidad</h4>

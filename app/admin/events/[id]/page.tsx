@@ -270,6 +270,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
             event={event}
             currentOwnerEmail={currentOwnerEmail}
             canTransferOwnership={staffAccess}
+            ownerUserId={event.owner_user_id}
             showPaymentAccount={hasPaidAccess}
             paymentAccount={{
               connected: Boolean(paymentAccount),
