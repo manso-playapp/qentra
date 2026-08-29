@@ -343,6 +343,10 @@ export default function EventGuestsManager({
   const [bulkGuestTypeId, setBulkGuestTypeId] = useState('')
   const [bulkActionLoading, setBulkActionLoading] = useState(false)
   const [bulkIssueProgress, setBulkIssueProgress] = useState<{ done: number; total: number } | null>(null)
+  // Cargar invitados y emitir sus invitaciones son dos actos distintos a
+  // proposito (el muro de activacion vive en la emision), pero el segundo no
+  // deberia haber que ir a buscarlo: el alta lo ofrece como cierre.
+  const [showIssuePrompt, setShowIssuePrompt] = useState(false)
   const selectedGuestTypeId = guestForm.guest_type_id || visibleGuestTypes[0]?.id || ''
   const latestInvitationTokenByGuestId = useMemo(() => {
     const map = new Map<string, InvitationToken>()
@@ -480,6 +484,15 @@ export default function EventGuestsManager({
     currentGuestPage * effectiveGuestsPerPage + effectiveGuestsPerPage
   )
   const selectedGuests = visibleGuests.filter((guest) => selectedGuestIds.has(guest.id))
+  // Quien todavia no tiene link emitido. Un invitado cancelado no cuenta: no
+  // hay nada que mandarle.
+  const guestsWithoutInvitation = useMemo(
+    () =>
+      visibleGuests.filter(
+        (guest) => guest.status !== 'cancelled' && !latestInvitationTokenByGuestId.has(guest.id)
+      ),
+    [latestInvitationTokenByGuestId, visibleGuests]
+  )
   const allPageGuestsSelected = pagedGuests.length > 0 && pagedGuests.every((guest) => selectedGuestIds.has(guest.id))
 
   const handleGuestInputChange = (
@@ -683,6 +696,7 @@ export default function EventGuestsManager({
         ...INITIAL_GUEST_FORM,
         guest_type_id: current.guest_type_id,
       }))
+      setShowIssuePrompt(true)
     }
 
     setGuestSubmitting(false)
@@ -800,14 +814,14 @@ export default function EventGuestsManager({
 
   // La seleccion masiva no confirma: confirmar es un acto del invitado, no del
   // organizador. Lo que se hace en lote es emitir los links de invitacion.
-  const runBulkIssueAccess = async () => {
-    if (selectedGuests.length === 0) return
+  const issueAccessForGuests = async (guests: GuestWithType[]) => {
+    if (guests.length === 0) return
 
     setBulkActionLoading(true)
     setGuestRowActionError(null)
     setGuestRowActionNotice(null)
     setActivationBlocked(null)
-    setBulkIssueProgress({ done: 0, total: selectedGuests.length })
+    setBulkIssueProgress({ done: 0, total: guests.length })
 
     let issued = 0
     let failed = 0
@@ -818,8 +832,8 @@ export default function EventGuestsManager({
     // emitirse tampoco.
     const BATCH_SIZE = 5
 
-    for (let index = 0; index < selectedGuests.length; index += BATCH_SIZE) {
-      const batch = selectedGuests.slice(index, index + BATCH_SIZE)
+    for (let index = 0; index < guests.length; index += BATCH_SIZE) {
+      const batch = guests.slice(index, index + BATCH_SIZE)
       const results = await Promise.all(
         batch.map((guest) =>
           createGuestAccess(guest, {
@@ -836,7 +850,7 @@ export default function EventGuestsManager({
         else issued += 1
       }
 
-      setBulkIssueProgress({ done: Math.min(index + BATCH_SIZE, selectedGuests.length), total: selectedGuests.length })
+      setBulkIssueProgress({ done: Math.min(index + BATCH_SIZE, guests.length), total: guests.length })
       if (blocked) break
     }
 
@@ -851,11 +865,14 @@ export default function EventGuestsManager({
         `${issued} ${issued === 1 ? 'invitación generada' : 'invitaciones generadas'}. Ya podés enviarlas desde cada invitado.`
       )
       setSelectedGuestIds(new Set())
+      setShowIssuePrompt(false)
     }
 
     setBulkIssueProgress(null)
     setBulkActionLoading(false)
   }
+
+  const runBulkIssueAccess = () => issueAccessForGuests(selectedGuests)
 
   const runBulkCancel = async () => {
     if (selectedGuests.length === 0) return
@@ -1030,6 +1047,7 @@ export default function EventGuestsManager({
     setShowImport(false)
     setGuestRowActionError(null)
     setGuestRowActionNotice(`Se importaron ${importedCount} invitados.`)
+    setShowIssuePrompt(true)
   }
 
   const issueGuestAccess = async (guest: GuestWithType) => {
@@ -2112,6 +2130,40 @@ export default function EventGuestsManager({
                         className="inline-flex items-center rounded-full border border-amber-300 px-4 py-2 text-sm font-semibold text-amber-900 transition hover:bg-amber-100"
                       >
                         Seguir cargando invitados
+                      </button>
+                    </div>
+                  </div>
+                )}
+                {showIssuePrompt && !activationBlocked && guestsWithoutInvitation.length > 0 && (
+                  <div className="rounded-xl border border-violet-200 bg-violet-50 p-5">
+                    <p className="text-sm font-semibold text-violet-950">
+                      {guestsWithoutInvitation.length === 1
+                        ? 'Queda 1 invitado sin invitación emitida'
+                        : `Quedan ${guestsWithoutInvitation.length} invitados sin invitación emitida`}
+                    </p>
+                    <p className="mt-1 text-sm leading-6 text-violet-900/80">
+                      Cargarlos no les genera el link. Hasta emitirlo no hay nada para mandar por WhatsApp.
+                    </p>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => void issueAccessForGuests(guestsWithoutInvitation)}
+                        disabled={bulkActionLoading}
+                        className="inline-flex items-center rounded-full bg-violet-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {bulkIssueProgress
+                          ? `Generando ${bulkIssueProgress.done}/${bulkIssueProgress.total}...`
+                          : guestsWithoutInvitation.length === 1
+                          ? 'Generar la invitación'
+                          : `Generar las ${guestsWithoutInvitation.length} invitaciones`}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowIssuePrompt(false)}
+                        disabled={bulkActionLoading}
+                        className="inline-flex items-center rounded-full border border-violet-300 px-4 py-2 text-sm font-semibold text-violet-900 transition hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        Todavía estoy cargando
                       </button>
                     </div>
                   </div>
