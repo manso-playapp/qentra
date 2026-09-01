@@ -261,6 +261,8 @@ type InvitationViewProps = {
   calendarUrl?: string | null
   template?: InvitationTemplateKey
   config?: InvitationConfigInfo
+  /** Configuración específica del tipo de invitado para el bloque de regalo. */
+  showGiftInfo?: boolean
   isPreview?: boolean
   children?: ReactNode
 }
@@ -293,6 +295,13 @@ function InvitationLogo({
       />
     </span>
   )
+}
+
+export function shouldShowInvitationGift(
+  showGiftInfo: boolean | undefined,
+  blocks?: InvitationBlocks
+) {
+  return (showGiftInfo ?? true) && isInvitationBlockVisible(blocks, 'gift')
 }
 
 function BoardingPassBarcode({ value }: { value: string }) {
@@ -333,6 +342,7 @@ function TravelInvitationView({
   schedule,
   calendarUrl,
   config,
+  showGiftInfo,
   isPreview = false,
   children,
 }: InvitationViewProps) {
@@ -345,7 +355,7 @@ function TravelInvitationView({
   const hasParticles = config?.widgets ? config.widgets.particles !== false : true
   const showEventDetails = isInvitationBlockVisible(config?.blocks, 'eventDetails')
   const showDresscode = isInvitationBlockVisible(config?.blocks, 'dresscode')
-  const showGift = isInvitationBlockVisible(config?.blocks, 'gift')
+  const showGift = shouldShowInvitationGift(showGiftInfo, config?.blocks)
   const showActions = isInvitationBlockVisible(config?.blocks, 'actions')
   const showAudio = isInvitationBlockVisible(config?.blocks, 'audio')
   const showGuestData = isInvitationBlockVisible(config?.blocks, 'guestData')
@@ -508,6 +518,7 @@ function MidnightInvitationView({
   schedule,
   calendarUrl,
   config,
+  showGiftInfo,
   isPreview = false,
   children,
 }: InvitationViewProps) {
@@ -526,7 +537,7 @@ function MidnightInvitationView({
   const showEventDetails = isInvitationBlockVisible(config?.blocks, 'eventDetails')
   const showCountdown = isInvitationBlockVisible(config?.blocks, 'countdown', config?.widgets?.countdown ?? false)
   const showDresscode = isInvitationBlockVisible(config?.blocks, 'dresscode')
-  const showGift = isInvitationBlockVisible(config?.blocks, 'gift')
+  const showGift = shouldShowInvitationGift(showGiftInfo, config?.blocks)
   const showActions = isInvitationBlockVisible(config?.blocks, 'actions')
   const showAudio = isInvitationBlockVisible(config?.blocks, 'audio')
   const showGuestData = isInvitationBlockVisible(config?.blocks, 'guestData')

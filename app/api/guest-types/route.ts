@@ -11,6 +11,7 @@ type CreateGuestTypeRequestBody = {
   access_start_day_offset?: number
   access_end_day_offset?: number
   payment_amount_cents?: number
+  show_gift_info?: boolean
 }
 
 export const runtime = 'nodejs'
@@ -79,6 +80,7 @@ export async function POST(request: Request) {
     access_start_day_offset: body.access_start_day_offset ?? 0,
     access_end_day_offset: body.access_end_day_offset ?? 0,
     payment_amount_cents: Math.max(0, Math.trunc(body.payment_amount_cents ?? 0)),
+    show_gift_info: body.show_gift_info ?? true,
   }
 
   const { data, error } = await adminClient.from('guest_types').insert(payload).select().single()

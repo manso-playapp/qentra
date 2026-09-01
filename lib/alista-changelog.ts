@@ -20,6 +20,15 @@ export type AlistaChange = {
 
 export const ALISTA_CHANGELOG: AlistaChange[] = [
   {
+    commit: '1b27982',
+    date: '2026-09-01',
+    dateLabel: '1 sep 2026',
+    kind: 'producto',
+    area: 'Invitaciones',
+    title: 'Cada tipo de invitado decide si muestra el regalo',
+    summary: 'Los tipos con entrada paga ahora tienen una opción explícita para mostrar u ocultar el campo de regalo (alias/CBU), sin reglas implícitas basadas en el precio. La configuración se conserva al duplicar un evento.',
+  },
+  {
     commit: '384fabe',
     date: '2026-08-29',
     dateLabel: '29 ago 2026',

@@ -226,6 +226,14 @@ Los eventos reales (DRM 287 tokens, Alfonsina 2) no se vieron afectados, gracias
 > 🧹 **XV Peteca es un evento de prueba en la base de producción.** Borrarlo cuando ya no
 > haga falta (arrastra en cascada su invitado, token y activación).
 
+### Registro de cambios cerrado (01/09/2026)
+
+- **Regalo por tipo de invitado.** `guest_types.show_gift_info` permite decidir por tipo si la
+  invitacion muestra el bloque de regalo/alias/CBU. El checkbox aparece debajo del importe cuando
+  es mayor que cero, queda activado por defecto y se conserva al duplicar eventos. La migracion
+  `20260901090000_add_guest_type_gift_visibility.sql` fue aplicada en Supabase; los tipos
+  existentes conservan el comportamiento anterior.
+
 ### Frentes abiertos, en orden de dependencia
 1. **Cobro de los $89.000 a Alista.** **CERRADO (29/08/2026).** La migración
    `20260829010000_add_event_activation_payments.sql` fue aplicada en Supabase y el flujo está

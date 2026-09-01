@@ -161,6 +161,8 @@ export interface GuestType {
   access_end_day_offset?: number
   /** Importe fijo del tipo en centavos ARS. Cero significa que no requiere pago. */
   payment_amount_cents?: number
+  /** Define si las invitaciones de este tipo muestran el bloque de regalo del evento. */
+  show_gift_info?: boolean
   created_at: string
   updated_at: string
 }
@@ -230,6 +232,7 @@ export interface GuestWithType extends Guest {
     | 'access_end_time'
     | 'access_start_day_offset'
     | 'access_end_day_offset'
+    | 'show_gift_info'
   > | null
 }
 
@@ -353,6 +356,7 @@ export interface CreateGuestTypeForm {
   access_start_day_offset?: number
   access_end_day_offset?: number
   payment_amount_cents?: number
+  show_gift_info?: boolean
 }
 
 export interface UpdateGuestTypeForm {
@@ -365,6 +369,7 @@ export interface UpdateGuestTypeForm {
   access_start_day_offset?: number
   access_end_day_offset?: number
   payment_amount_cents?: number
+  show_gift_info?: boolean
 }
 
 export interface CreateOperatorForm {

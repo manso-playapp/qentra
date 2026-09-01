@@ -64,6 +64,7 @@ type GuestTypeFormState = {
   access_start_day_offset: string
   access_end_day_offset: string
   payment_amount_ars: string
+  show_gift_info: boolean
 }
 
 type GuestTypeEditFormState = GuestTypeFormState
@@ -145,6 +146,7 @@ const INITIAL_GUEST_TYPE_FORM: GuestTypeFormState = {
   access_start_day_offset: '0',
   access_end_day_offset: '0',
   payment_amount_ars: '0',
+  show_gift_info: true,
 }
 
 function formatDate(date: string) {
@@ -544,6 +546,9 @@ export default function EventGuestsManager({
     eventInput: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = eventInput.target
+    const nextValue = eventInput.target instanceof HTMLInputElement && eventInput.target.type === 'checkbox'
+      ? eventInput.target.checked
+      : value
 
     setEditGuestTypeForm((current) => {
       if (!current) {
@@ -552,7 +557,7 @@ export default function EventGuestsManager({
 
       return {
         ...current,
-        [name]: value,
+        [name]: nextValue,
       }
     })
   }
@@ -572,6 +577,7 @@ export default function EventGuestsManager({
       access_start_day_offset: parseOptionalInteger(guestTypeForm.access_start_day_offset),
       access_end_day_offset: parseOptionalInteger(guestTypeForm.access_end_day_offset),
       payment_amount_cents: pesosToCents(guestTypeForm.payment_amount_ars),
+      show_gift_info: guestTypeForm.show_gift_info,
     }
 
     const result = await createGuestType(payload)
@@ -603,6 +609,7 @@ export default function EventGuestsManager({
     access_start_day_offset: String(guestType.access_start_day_offset ?? 0),
     access_end_day_offset: String(guestType.access_end_day_offset ?? 0),
     payment_amount_ars: String((guestType.payment_amount_cents ?? 0) / 100),
+    show_gift_info: guestType.show_gift_info ?? true,
   })
 
   const startEditingGuestType = (guestType: GuestType) => {
@@ -637,6 +644,7 @@ export default function EventGuestsManager({
       access_start_day_offset: parseOptionalInteger(editGuestTypeForm.access_start_day_offset),
       access_end_day_offset: parseOptionalInteger(editGuestTypeForm.access_end_day_offset),
       payment_amount_cents: pesosToCents(editGuestTypeForm.payment_amount_ars),
+      show_gift_info: editGuestTypeForm.show_gift_info,
     }
 
     const result = await updateGuestType(guestTypeId, payload)
@@ -1512,6 +1520,18 @@ export default function EventGuestsManager({
                               onChange={handleEditGuestTypeInputChange}
                               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                             />
+                            {Number(editGuestTypeForm.payment_amount_ars) > 0 && (
+                              <label className="mt-3 flex items-center gap-2 text-sm text-gray-700">
+                                <input
+                                  name="show_gift_info"
+                                  type="checkbox"
+                                  checked={editGuestTypeForm.show_gift_info}
+                                  onChange={handleEditGuestTypeInputChange}
+                                  className="size-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                />
+                                <span>Mostrar el campo de regalo en la invitación</span>
+                              </label>
+                            )}
                           </div>
                           <div>
                             <label className="block text-sm font-medium text-gray-700">Hora desde</label>
@@ -1729,6 +1749,18 @@ export default function EventGuestsManager({
                       className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                     />
                     <p className="mt-1 text-xs text-gray-500">0 significa que este tipo no requiere pago.</p>
+                    {Number(guestTypeForm.payment_amount_ars) > 0 && (
+                      <label className="mt-3 flex items-center gap-2 text-sm text-gray-700">
+                        <input
+                          name="show_gift_info"
+                          type="checkbox"
+                          checked={guestTypeForm.show_gift_info}
+                          onChange={handleGuestTypeInputChange}
+                          className="size-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span>Mostrar el campo de regalo en la invitación</span>
+                      </label>
+                    )}
                   </div>
 
                   <div className="rounded-lg border border-gray-200 bg-white p-4">
@@ -3068,6 +3100,18 @@ export default function EventGuestsManager({
                 <div>
                   <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">Importe por invitado (ARS)</label>
                   <input name="payment_amount_ars" type="number" min="0" step="1" value={guestTypeForm.payment_amount_ars} onChange={handleGuestTypeInputChange} className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                  {Number(guestTypeForm.payment_amount_ars) > 0 && (
+                    <label className="mt-3 flex items-center gap-2 text-xs text-gray-700">
+                      <input
+                        name="show_gift_info"
+                        type="checkbox"
+                        checked={guestTypeForm.show_gift_info}
+                        onChange={handleGuestTypeInputChange}
+                        className="size-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span>Mostrar el campo de regalo en la invitación</span>
+                    </label>
+                  )}
                 </div>
                 {guestTypeSubmitError && <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{guestTypeSubmitError}</p>}
                 <button
@@ -3149,6 +3193,18 @@ export default function EventGuestsManager({
                         <div>
                           <label className="text-xs font-semibold text-gray-600">Importe por invitado (ARS)</label>
                           <input name="payment_amount_ars" type="number" min="0" step="1" value={editGuestTypeForm.payment_amount_ars} onChange={handleEditGuestTypeInputChange} className="mt-1 block w-full rounded-md border border-gray-300 px-2.5 py-2 text-sm" />
+                          {Number(editGuestTypeForm.payment_amount_ars) > 0 && (
+                            <label className="mt-3 flex items-center gap-2 text-xs text-gray-700">
+                              <input
+                                name="show_gift_info"
+                                type="checkbox"
+                                checked={editGuestTypeForm.show_gift_info}
+                                onChange={handleEditGuestTypeInputChange}
+                                className="size-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                              />
+                              <span>Mostrar el campo de regalo en la invitación</span>
+                            </label>
+                          )}
                         </div>
                         <div className="flex gap-2">
                           <button

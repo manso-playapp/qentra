@@ -83,6 +83,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       access_start_day_offset: guestType.access_start_day_offset ?? 0,
       access_end_day_offset: guestType.access_end_day_offset ?? 0,
       payment_amount_cents: guestType.payment_amount_cents ?? 0,
+      show_gift_info: guestType.show_gift_info ?? true,
       is_active: guestType.is_active ?? true,
     }))
 
