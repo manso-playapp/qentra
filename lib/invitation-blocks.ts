@@ -17,7 +17,12 @@ export type InvitationBlock = {
   body: string
 }
 
-export type InvitationBlocks = Partial<Record<InvitationBlockKey, Partial<InvitationBlock>>>
+export type InvitationBlocks = Partial<Record<InvitationBlockKey, Partial<InvitationBlock>>> & {
+  /** Orden editorial elegido por la responsable. */
+  order?: InvitationBlockKey[]
+}
+
+export const DEFAULT_INVITATION_BLOCK_ORDER: InvitationBlockKey[] = [...INVITATION_BLOCK_KEYS]
 
 export const DEFAULT_INVITATION_BLOCKS: Record<InvitationBlockKey, InvitationBlock> = {
   personal: {
@@ -50,6 +55,45 @@ export function isInvitationBlockVisible(
 }
 
 /**
+ * Returns a stable, complete order. Old configurations without `order` keep
+ * the canonical order, while new blocks are appended instead of disappearing.
+ */
+export function getInvitationBlockOrder(
+  blocks: InvitationBlocks | undefined,
+  supportedKeys: readonly InvitationBlockKey[] = INVITATION_BLOCK_KEYS,
+  defaultOrder: readonly InvitationBlockKey[] = supportedKeys,
+) {
+  const supported = new Set(supportedKeys)
+  const configured = Array.isArray(blocks?.order) ? blocks.order : []
+  const seen = new Set<InvitationBlockKey>()
+  const order: InvitationBlockKey[] = []
+
+  for (const key of configured) {
+    if (supported.has(key) && !seen.has(key)) {
+      seen.add(key)
+      order.push(key)
+    }
+  }
+
+  for (const key of defaultOrder) {
+    if (!supported.has(key)) continue
+    if (!seen.has(key)) {
+      seen.add(key)
+      order.push(key)
+    }
+  }
+
+  for (const key of supportedKeys) {
+    if (!seen.has(key)) {
+      seen.add(key)
+      order.push(key)
+    }
+  }
+
+  return order
+}
+
+/**
  * Keeps persisted block settings small and predictable. Unknown block keys
  * and non-object values are ignored so an old or manually edited config
  * cannot break the public invitation.
@@ -59,6 +103,13 @@ export function normalizeInvitationBlocks(raw: unknown): InvitationBlocks {
 
   const source = raw as Record<string, unknown>
   const result: InvitationBlocks = {}
+
+  if (Array.isArray(source.order)) {
+    const order = source.order.filter((value): value is InvitationBlockKey =>
+      typeof value === 'string' && INVITATION_BLOCK_KEYS.includes(value as InvitationBlockKey)
+    )
+    result.order = [...new Set(order)]
+  }
 
   for (const key of INVITATION_BLOCK_KEYS) {
     const value = source[key]

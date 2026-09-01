@@ -1,6 +1,7 @@
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
 import { ensureAuthorizedEventApiAccess } from '@/lib/operator-auth'
 import { normalizeInvitationBlocks } from '@/lib/invitation-blocks'
+import { normalizeInvitationLogo } from '@/lib/invitation-logo'
 import { buildInvitationConfigEnvelope, getInvitationConfigHistory, getInvitationConfigState, type InvitationConfigHistoryEntry } from '@/lib/invitation-config-state'
 
 export const runtime = 'nodejs'
@@ -78,6 +79,7 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
       ? {
           ...(rawConfig as Record<string, unknown>),
           blocks: normalizeInvitationBlocks((rawConfig as Record<string, unknown>).blocks),
+          logo: normalizeInvitationLogo((rawConfig as Record<string, unknown>).logo),
         }
       : { blocks: {} }
     const currentConfig = existing && 'config' in existing ? existing.config : null

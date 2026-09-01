@@ -175,7 +175,7 @@ body {
 
 .invitation-wind-particles {
   pointer-events: none;
-  position: fixed;
+  position: absolute;
   inset: 0;
   z-index: 10;
   overflow: hidden;
@@ -453,18 +453,6 @@ body {
 
 .invitation-template-midnight .invitation-surface-card dd.invitation-data {
   color: var(--invitation-data, #ffffff) !important;
-}
-
-/* El primer bloque queda más cerca del logo; el resto conserva el ritmo
-   vertical amplio de la invitación. */
-.invitation-template-midnight .invitation-personal {
-  margin-top: -2.5rem;
-}
-
-/* Compatibilidad con el copy anterior mientras los eventos existentes
-   migran al bloque editable de la template. */
-.invitation-template-midnight .invitation-personal > p:last-of-type:not(.invitation-personal-copy) {
-  display: none;
 }
 
 .invitation-template-midnight .uppercase,

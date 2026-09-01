@@ -11,6 +11,7 @@ import InvitationEditor, {
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
 import { DEFAULT_INVITATION_BLOCKS } from '@/lib/invitation-blocks'
 import { getInvitationConfigHistory, getDraftInvitationConfig } from '@/lib/invitation-config-state'
+import { DEFAULT_INVITATION_LOGO } from '@/lib/invitation-logo'
 
 export const metadata = { title: 'Personalizar invitación' }
 
@@ -29,6 +30,7 @@ function mergeConfig(raw: unknown): InvitationConfig {
     widgets: { ...DEFAULT_INVITATION_CONFIG.widgets, ...(cleanValue.widgets ?? {}) },
     fields: { ...DEFAULT_INVITATION_CONFIG.fields, ...(cleanValue.fields ?? {}) },
     blocks: { ...DEFAULT_INVITATION_BLOCKS, ...(cleanValue.blocks ?? {}) },
+    logo: { ...DEFAULT_INVITATION_LOGO, ...(cleanValue.logo ?? {}) },
   }
 }
 

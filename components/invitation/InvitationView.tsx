@@ -9,7 +9,8 @@ import InvitationScrollReveal from '@/components/invitation/InvitationScrollReve
 import InvitationWindParticles from '@/components/invitation/InvitationWindParticles'
 import type { InvitationTemplateKey } from '@/lib/invitation-templates'
 import { getInvitationFonts, INVITATION_FONT_STACKS, type InvitationFontConfig } from '@/lib/invitation-fonts'
-import { getInvitationBlock, isInvitationBlockVisible, type InvitationBlocks } from '@/lib/invitation-blocks'
+import { getInvitationBlock, getInvitationBlockOrder, isInvitationBlockVisible, type InvitationBlocks } from '@/lib/invitation-blocks'
+import { DEFAULT_INVITATION_LOGO, normalizeInvitationLogo, type InvitationLogoConfig } from '@/lib/invitation-logo'
 
 export type { InvitationTemplateKey } from '@/lib/invitation-templates'
 
@@ -41,6 +42,7 @@ export type InvitationConfigInfo = {
   widgets?: { countdown?: boolean; particles?: boolean }
   fields?: { rsvp?: boolean; dni?: boolean; menu?: boolean; companions?: boolean }
   blocks?: InvitationBlocks
+  logo?: Partial<InvitationLogoConfig>
 }
 
 const HEX_COLOR = /^#[0-9a-fA-F]{6}$/
@@ -299,6 +301,46 @@ function InvitationLogo({
   )
 }
 
+function InvitationBrandMark({
+  branding,
+  config,
+  eventName,
+  template,
+}: {
+  branding: SurfaceBranding | null
+  config?: InvitationConfigInfo
+  eventName?: string
+  template: InvitationTemplateKey
+}) {
+  if (branding?.logo_url) {
+    return (
+      <InvitationLogo
+        src={branding.logo_url}
+        alt={`Logo de ${eventName || 'evento'}`}
+        stageClassName={template === 'midnight' ? 'mx-auto max-w-full' : 'mx-auto max-w-[70%]'}
+        imageClassName={template === 'midnight' ? 'h-auto w-[760px] max-w-full object-contain drop-shadow-lg' : 'h-20 w-auto max-w-full object-contain drop-shadow-lg'}
+      />
+    )
+  }
+
+  const logo = { ...DEFAULT_INVITATION_LOGO, ...normalizeInvitationLogo(config?.logo) }
+  if (!logo.text) return null
+
+  return (
+    <span
+      className="invitation-text-logo mx-auto block max-w-full truncate px-3 text-center leading-none"
+      style={{
+        color: logo.color,
+        fontFamily: INVITATION_FONT_STACKS[logo.font],
+        fontSize: `clamp(1.25rem, ${Math.min(10, Math.max(4, logo.size / 8))}vw, ${logo.size}px)`,
+        letterSpacing: `${logo.letterSpacing}em`,
+      }}
+    >
+      {logo.text}
+    </span>
+  )
+}
+
 export function shouldShowInvitationGift(
   showGiftInfo: boolean | undefined,
   blocks?: InvitationBlocks
@@ -379,6 +421,8 @@ function TravelInvitationView({
   const showGuestData = isInvitationBlockVisible(config?.blocks, 'guestData')
   const dresscode = event.dresscode?.trim() || ''
   const invitationMessageText = normalizeInvitationMessage(invitationMessage)
+  const blockOrder = getInvitationBlockOrder(config?.blocks, ['eventDetails', 'dresscode', 'gift', 'actions', 'audio', 'guestData'])
+  const blockStyle = (key: string) => ({ order: blockOrder.indexOf(key as (typeof blockOrder)[number]) + 1 })
 
   return (
     <main
@@ -410,16 +454,7 @@ function TravelInvitationView({
       {invitationMessageText ? <InvitationContextBanner message={invitationMessageText} preview={isPreview} /> : null}
 
       <div className="relative mx-auto max-w-xl space-y-5" style={{ paddingTop: 'min(177.78vw, 680px)' }}>
-        {branding?.logo_url ? (
-          <InvitationLogo
-            src={branding.logo_url}
-            alt={`Logo de ${event.name || 'evento'}`}
-            stageClassName="mx-auto max-w-[70%]"
-            imageClassName="h-20 w-auto max-w-full object-contain drop-shadow-lg"
-          />
-        ) : (
-          <p className="pt-4 text-center text-[11px] font-semibold uppercase tracking-[0.32em] text-white/60">Acceso digital</p>
-        )}
+        <InvitationBrandMark branding={branding} config={config} eventName={event.name} template="travel" />
 
         {showEventDetails ? <section className="relative overflow-hidden rounded-[28px] bg-[#eed8d2] p-5 text-slate-950 shadow-2xl sm:p-6">
           <div className="absolute inset-x-0 top-0 h-1.5 bg-[#fcb39e]" />
@@ -480,15 +515,15 @@ function TravelInvitationView({
             </div>
           </dl>
 
-          <div className="mt-6 border-t-2 border-dashed border-slate-300 pt-5">
+          <div className="mt-6 flex flex-col border-t-2 border-dashed border-slate-300 pt-5">
             {showDresscode && dresscode ? (
-              <>
+              <div style={blockStyle('dresscode')}>
                 <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Dress code</p>
                 <p className="invitation-travel-data mt-1 whitespace-pre-line text-sm font-semibold uppercase leading-5 tracking-[0.03em]">{dresscode}</p>
-              </>
+              </div>
             ) : null}
             {showGift && event.gift_info?.trim() ? (
-              <div className="mt-5 border-t-2 border-dashed border-slate-300 pt-5">
+              <div className="mt-5 border-t-2 border-dashed border-slate-300 pt-5" style={blockStyle('gift')}>
                 <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Regalo</p>
                 <p className="invitation-travel-data mt-2 whitespace-pre-line text-sm font-semibold uppercase leading-6 tracking-[0.03em]">
                   {event.gift_info.trim()}
@@ -496,12 +531,12 @@ function TravelInvitationView({
               </div>
             ) : null}
             {showAudio && config?.audio_url ? (
-              <div className="mt-5 border-t-2 border-dashed border-slate-300 pt-5">
+              <div className="mt-5 border-t-2 border-dashed border-slate-300 pt-5" style={blockStyle('audio')}>
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Canción de abordaje</p>
               <InvitationMusicPlayer audioUrl={config.audio_url} />
               </div>
             ) : null}
-            {showActions && <div className="mt-5 flex flex-wrap gap-2">
+            {showActions && <div className="mt-5 flex flex-wrap gap-2" style={blockStyle('actions')}>
               {directionsUrl ? <a href={directionsUrl} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center rounded-full bg-(--invitation-accent) px-4 py-2 text-xs font-semibold text-slate-950 transition hover:brightness-110">
                 Ver ubicación
               </a> : null}
@@ -564,6 +599,8 @@ function MidnightInvitationView({
   const showAudio = isInvitationBlockVisible(config?.blocks, 'audio')
   const showGuestData = isInvitationBlockVisible(config?.blocks, 'guestData')
   const invitationMessageText = normalizeInvitationMessage(invitationMessage)
+  const blockOrder = getInvitationBlockOrder(config?.blocks)
+  const blockStyle = (key: string) => ({ order: blockOrder.indexOf(key as (typeof blockOrder)[number]) + 1 })
 
   return (
     <main
@@ -602,17 +639,10 @@ function MidnightInvitationView({
       {invitationMessageText ? <InvitationContextBanner message={invitationMessageText} preview={isPreview} /> : null}
 
       <div className="relative mx-auto flex max-w-xl flex-col space-y-20 pt-[80px] text-center sm:pt-[80px]">
-        {branding?.logo_url ? (
-          <InvitationLogo
-            src={branding.logo_url}
-            alt={`Logo de ${event.name || 'evento'}`}
-            stageClassName="mx-auto max-w-full"
-            imageClassName="h-auto w-[760px] max-w-full object-contain drop-shadow-lg"
-          />
-        ) : null}
+        <InvitationBrandMark branding={branding} config={config} eventName={event.name} template="midnight" />
 
-        <header className="invitation-event-details invitation-section order-3">
-          {showEventDetails ? <section className="invitation-block" data-invitation-block>
+        <div className="invitation-event-details invitation-section flex flex-col">
+          {showEventDetails ? <section className="invitation-block" style={blockStyle('eventDetails')} data-invitation-block>
             <h2 className="invitation-section-title">{eventDetailsBlock.title}</h2>
             <dl className="mt-8 flex flex-col items-center gap-10">
               <div>
@@ -646,22 +676,22 @@ function MidnightInvitationView({
             </dl>
           </section> : null}
 
-          {showCountdown && config?.widgets?.countdown && event.event_date && (
-            <section className="invitation-block mt-10 border-t border-white/18 pt-10" data-invitation-block>
+          {showCountdown && event.event_date && (
+              <section className="invitation-block mt-10 border-t border-white/18 pt-10" style={blockStyle('countdown')} data-invitation-block>
               <h2 className="invitation-section-title mb-5 text-white">{countdownBlock.title}</h2>
               <InvitationCountdown eventDate={event.event_date} startTime={startTime} />
             </section>
           )}
 
           {showDresscode && dresscode ? (
-            <section className="invitation-block invitation-section mt-10 border-t border-white/18 pt-10 text-center" data-invitation-block>
+            <section className="invitation-block invitation-section mt-10 border-t border-white/18 pt-10 text-center" style={blockStyle('dresscode')} data-invitation-block>
               <h2 className="invitation-section-title text-white">{dresscodeBlock.title}</h2>
               <p className="invitation-section-body invitation-data mt-3 text-(--invitation-accent)">{dresscode}</p>
             </section>
           ) : null}
 
           {showGift && event.gift_info?.trim() ? (
-            <section className="invitation-block invitation-section mt-10 border-t border-white/18 pt-10 text-center" data-invitation-block>
+            <section className="invitation-block invitation-section mt-10 border-t border-white/18 pt-10 text-center" style={blockStyle('gift')} data-invitation-block>
               <h2 className="invitation-section-title text-white">{giftBlock.title}</h2>
               <p className="invitation-section-body invitation-data mt-3 whitespace-pre-line text-(--invitation-accent)">
                 {event.gift_info.trim()}
@@ -670,7 +700,7 @@ function MidnightInvitationView({
           ) : null}
 
           {showActions && (directionsUrl || calendarUrl || contactHref) && (
-            <section className="invitation-block invitation-section mt-10 border-t border-white/18 pt-10" data-invitation-block>
+            <section className="invitation-block invitation-section mt-10 border-t border-white/18 pt-10" style={blockStyle('actions')} data-invitation-block>
               <div className="flex flex-wrap justify-center gap-x-4 gap-y-3">
               {directionsUrl ? (
                 <a href={directionsUrl} target="_blank" rel="noreferrer" className="invitation-label inline-flex min-h-11 items-center justify-center rounded-full border border-white/25 bg-white/8 px-5 py-2 text-xs font-semibold text-white transition hover:border-(--invitation-accent) hover:bg-white/12 hover:text-(--invitation-accent) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--invitation-accent)">
@@ -692,25 +722,20 @@ function MidnightInvitationView({
           )}
 
           {showAudio && config?.audio_url ? (
-            <section className="invitation-block invitation-section mt-10 border-t border-white/18 pt-10" data-invitation-block>
+            <section className="invitation-block invitation-section mt-10 border-t border-white/18 pt-10" style={blockStyle('audio')} data-invitation-block>
               <InvitationMusicPlayer audioUrl={config.audio_url} />
             </section>
           ) : null}
-        </header>
+          {showPersonal ? <section className="invitation-personal invitation-section mt-10 border-t border-(--invitation-accent)/45 pt-8 text-white" style={blockStyle('personal')} data-invitation-block>
+            <h2 className="invitation-section-title">{personalBlock.title}</h2>
+            <p className="invitation-data mt-4 text-3xl font-extralight leading-tight text-white sm:text-4xl">
+              {guestDisplayName || 'Invitado/a'}
+            </p>
+            <p className="invitation-data invitation-personal-copy mt-3 text-sm leading-6 text-white/65">{personalBlock.body}</p>
+          </section> : null}
 
-        {showPersonal ? <section className="invitation-personal invitation-section order-2 border-t border-(--invitation-accent)/45 pt-8 text-white" data-invitation-block>
-          <h2 className="invitation-section-title">{personalBlock.title}</h2>
-          <h2 className="hidden" aria-hidden="true">
-            Invitación especial para
-          </h2>
-          <p className="invitation-data mt-4 text-3xl font-extralight leading-tight text-white sm:text-4xl">
-            {guestDisplayName || 'Invitado/a'}
-          </p>
-          <p className="invitation-data invitation-personal-copy mt-3 text-sm leading-6 text-white/65">{personalBlock.body}</p>
-          <p className="invitation-data mt-3 text-sm leading-6 text-white/65">Confirmá tu asistencia para que todo esté listo cuando llegues.</p>
-        </section> : null}
-
-        <div className="invitation-content-flow order-4">{showGuestData ? children : null}</div>
+          <div className="invitation-content-flow mt-10" style={blockStyle('guestData')}>{showGuestData ? children : null}</div>
+        </div>
 
         <footer className="invitation-footer order-5 pb-2 pt-2 text-center text-xs uppercase tracking-[0.28em] text-white/48">
           {isPreview ? 'Vista previa · ' : ''}
