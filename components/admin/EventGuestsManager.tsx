@@ -65,6 +65,7 @@ type GuestTypeFormState = {
   access_end_day_offset: string
   payment_amount_ars: string
   show_gift_info: boolean
+  invitation_message: string
 }
 
 type GuestTypeEditFormState = GuestTypeFormState
@@ -147,6 +148,7 @@ const INITIAL_GUEST_TYPE_FORM: GuestTypeFormState = {
   access_end_day_offset: '0',
   payment_amount_ars: '0',
   show_gift_info: true,
+  invitation_message: '',
 }
 
 function formatDate(date: string) {
@@ -578,6 +580,7 @@ export default function EventGuestsManager({
       access_end_day_offset: parseOptionalInteger(guestTypeForm.access_end_day_offset),
       payment_amount_cents: pesosToCents(guestTypeForm.payment_amount_ars),
       show_gift_info: guestTypeForm.show_gift_info,
+      invitation_message: trimOptionalValue(guestTypeForm.invitation_message),
     }
 
     const result = await createGuestType(payload)
@@ -610,6 +613,7 @@ export default function EventGuestsManager({
     access_end_day_offset: String(guestType.access_end_day_offset ?? 0),
     payment_amount_ars: String((guestType.payment_amount_cents ?? 0) / 100),
     show_gift_info: guestType.show_gift_info ?? true,
+    invitation_message: guestType.invitation_message ?? '',
   })
 
   const startEditingGuestType = (guestType: GuestType) => {
@@ -645,6 +649,7 @@ export default function EventGuestsManager({
       access_end_day_offset: parseOptionalInteger(editGuestTypeForm.access_end_day_offset),
       payment_amount_cents: pesosToCents(editGuestTypeForm.payment_amount_ars),
       show_gift_info: editGuestTypeForm.show_gift_info,
+      invitation_message: trimOptionalValue(editGuestTypeForm.invitation_message),
     }
 
     const result = await updateGuestType(guestTypeId, payload)
@@ -1586,6 +1591,20 @@ export default function EventGuestsManager({
                           />
                         </div>
 
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">Leyenda en la invitacion</label>
+                          <textarea
+                            name="invitation_message"
+                            rows={2}
+                            maxLength={160}
+                            value={editGuestTypeForm.invitation_message}
+                            onChange={handleEditGuestTypeInputChange}
+                            placeholder="Ej: Estas invitado/a al trasnoche"
+                            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                          />
+                          <p className="mt-1 text-xs text-gray-500">Se muestra una sola vez en la invitacion de este tipo.</p>
+                        </div>
+
                         <div className="flex flex-wrap gap-3">
                           <button
                             type="button"
@@ -1732,6 +1751,23 @@ export default function EventGuestsManager({
                       className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                       placeholder="Notas internas para el equipo"
                     />
+                  </div>
+
+                  <div>
+                    <label htmlFor="guest-type-invitation-message" className="block text-sm font-medium text-gray-700">
+                      Leyenda en la invitacion
+                    </label>
+                    <textarea
+                      id="guest-type-invitation-message"
+                      name="invitation_message"
+                      rows={2}
+                      maxLength={160}
+                      value={guestTypeForm.invitation_message}
+                      onChange={handleGuestTypeInputChange}
+                      placeholder="Ej: Estas invitado/a al trasnoche"
+                      className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    />
+                    <p className="mt-1 text-xs text-gray-500">Se muestra una sola vez en la invitacion de este tipo.</p>
                   </div>
 
                   <div>
@@ -3076,6 +3112,20 @@ export default function EventGuestsManager({
                   />
                 </div>
                 <div>
+                  <label htmlFor="sidebar-guest-type-invitation-message" className="text-xs font-semibold uppercase tracking-wide text-gray-500">Leyenda en la invitacion</label>
+                  <textarea
+                    id="sidebar-guest-type-invitation-message"
+                    name="invitation_message"
+                    rows={2}
+                    maxLength={160}
+                    value={guestTypeForm.invitation_message}
+                    onChange={handleGuestTypeInputChange}
+                    placeholder="Ej: Estas invitado/a al trasnoche"
+                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">Se muestra una sola vez en la invitacion de este tipo.</p>
+                </div>
+                <div>
                   <label htmlFor="sidebar-guest-type-policy" className="text-xs font-semibold uppercase tracking-wide text-gray-500">Etiqueta de acceso</label>
                   <input id="sidebar-guest-type-policy" name="access_policy_label" value={guestTypeForm.access_policy_label} onChange={handleGuestTypeInputChange} placeholder="Ej: Desde medianoche" className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" />
                 </div>
@@ -3171,6 +3221,19 @@ export default function EventGuestsManager({
                             onChange={handleEditGuestTypeInputChange}
                             className="mt-1 block w-full rounded-md border border-gray-300 px-2.5 py-2 text-sm"
                           />
+                        </div>
+                        <div>
+                          <label className="text-xs font-semibold text-gray-600">Leyenda en la invitacion</label>
+                          <textarea
+                            name="invitation_message"
+                            rows={2}
+                            maxLength={160}
+                            value={editGuestTypeForm.invitation_message}
+                            onChange={handleEditGuestTypeInputChange}
+                            placeholder="Ej: Estas invitado/a al trasnoche"
+                            className="mt-1 block w-full rounded-md border border-gray-300 px-2.5 py-2 text-sm"
+                          />
+                          <p className="mt-1 text-xs text-gray-500">Se muestra una sola vez en la invitacion de este tipo.</p>
                         </div>
                         <div className="grid gap-2 sm:grid-cols-2">
                           <div>

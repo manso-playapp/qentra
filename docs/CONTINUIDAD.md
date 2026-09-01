@@ -234,6 +234,13 @@ Los eventos reales (DRM 287 tokens, Alfonsina 2) no se vieron afectados, gracias
   `20260901090000_add_guest_type_gift_visibility.sql` fue aplicada en Supabase; los tipos
   existentes conservan el comportamiento anterior.
 
+### Registro de cambios cerrado (01/09/2026)
+
+- **Leyenda editorial por tipo de acceso.** `guest_types.invitation_message` permite escribir una
+  frase contextual propia para cada tipo (por ejemplo, el trasnoche). Se muestra una sola vez en
+  la invitación pública y no se mezcla con la etiqueta operativa del horario. La migración
+  `20260901120000_add_guest_type_invitation_message.sql` fue aplicada en Supabase.
+
 ### Frentes abiertos, en orden de dependencia
 1. **Cobro de los $89.000 a Alista.** **CERRADO (29/08/2026).** La migración
    `20260829010000_add_event_activation_payments.sql` fue aplicada en Supabase y el flujo está

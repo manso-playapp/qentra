@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { shouldShowInvitationGift } from '@/components/invitation/InvitationView'
+import { normalizeInvitationMessage, shouldShowInvitationGift } from '@/components/invitation/InvitationView'
 
 describe('shouldShowInvitationGift', () => {
   it('muestra el regalo cuando el tipo lo permite y el bloque global está visible', () => {
@@ -16,5 +16,13 @@ describe('shouldShowInvitationGift', () => {
 
   it('conserva la compatibilidad para tipos sin configuración guardada', () => {
     expect(shouldShowInvitationGift(undefined, { gift: { visible: true } })).toBe(true)
+  })
+})
+
+describe('normalizeInvitationMessage', () => {
+  it('recorta espacios y deja vacío el campo sin contenido', () => {
+    expect(normalizeInvitationMessage('  Estas invitado/a al trasnoche  ')).toBe('Estas invitado/a al trasnoche')
+    expect(normalizeInvitationMessage('   ')).toBe('')
+    expect(normalizeInvitationMessage(null)).toBe('')
   })
 })

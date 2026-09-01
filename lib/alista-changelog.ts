@@ -20,6 +20,15 @@ export type AlistaChange = {
 
 export const ALISTA_CHANGELOG: AlistaChange[] = [
   {
+    commit: 'f9e0fd9',
+    date: '2026-09-01',
+    dateLabel: '1 sep 2026',
+    kind: 'experiencia',
+    area: 'Invitaciones',
+    title: 'Cada tipo de acceso puede explicar su invitación',
+    summary: 'La responsable puede escribir una leyenda propia para cada tipo de acceso —por ejemplo, una invitación al trasnoche— y verla una sola vez en el link, sin mezclarla con la etiqueta operativa del horario.',
+  },
+  {
     commit: '1b27982',
     date: '2026-09-01',
     dateLabel: '1 sep 2026',

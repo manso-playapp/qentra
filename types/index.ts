@@ -163,6 +163,8 @@ export interface GuestType {
   payment_amount_cents?: number
   /** Define si las invitaciones de este tipo muestran el bloque de regalo del evento. */
   show_gift_info?: boolean
+  /** Leyenda editorial opcional que se muestra en la invitación de este tipo. */
+  invitation_message?: string | null
   created_at: string
   updated_at: string
 }
@@ -233,6 +235,7 @@ export interface GuestWithType extends Guest {
     | 'access_start_day_offset'
     | 'access_end_day_offset'
     | 'show_gift_info'
+    | 'invitation_message'
   > | null
 }
 
@@ -357,6 +360,7 @@ export interface CreateGuestTypeForm {
   access_end_day_offset?: number
   payment_amount_cents?: number
   show_gift_info?: boolean
+  invitation_message?: string
 }
 
 export interface UpdateGuestTypeForm {
@@ -370,6 +374,7 @@ export interface UpdateGuestTypeForm {
   access_end_day_offset?: number
   payment_amount_cents?: number
   show_gift_info?: boolean
+  invitation_message?: string
 }
 
 export interface CreateOperatorForm {

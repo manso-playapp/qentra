@@ -263,6 +263,8 @@ type InvitationViewProps = {
   config?: InvitationConfigInfo
   /** Configuración específica del tipo de invitado para el bloque de regalo. */
   showGiftInfo?: boolean
+  /** Leyenda editorial específica del tipo de invitado. */
+  invitationMessage?: string | null
   isPreview?: boolean
   children?: ReactNode
 }
@@ -304,6 +306,10 @@ export function shouldShowInvitationGift(
   return (showGiftInfo ?? true) && isInvitationBlockVisible(blocks, 'gift')
 }
 
+export function normalizeInvitationMessage(value?: string | null) {
+  return value?.trim() || ''
+}
+
 function BoardingPassBarcode({ value }: { value: string }) {
   const source = value.replace(/[^A-Z0-9]/gi, '').toUpperCase() || 'ALISTA15'
   const bars = Array.from({ length: 52 }, (_, index) => {
@@ -343,6 +349,7 @@ function TravelInvitationView({
   calendarUrl,
   config,
   showGiftInfo,
+  invitationMessage,
   isPreview = false,
   children,
 }: InvitationViewProps) {
@@ -360,6 +367,7 @@ function TravelInvitationView({
   const showAudio = isInvitationBlockVisible(config?.blocks, 'audio')
   const showGuestData = isInvitationBlockVisible(config?.blocks, 'guestData')
   const dresscode = event.dresscode?.trim() || ''
+  const invitationMessageText = normalizeInvitationMessage(invitationMessage)
 
   return (
     <main
@@ -437,6 +445,7 @@ function TravelInvitationView({
             <div className="col-span-2">
               <dt className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Pasajero</dt>
               <dd className="mt-1 text-lg font-bold uppercase tracking-[0.1em] sm:text-xl">{guestDisplayName || 'Invitado/a'}</dd>
+              {invitationMessageText ? <p className="mt-2 text-sm font-semibold leading-5 text-slate-700">{invitationMessageText}</p> : null}
             </div>
             <div>
               <dt className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500"><CalendarDays className="size-3" aria-hidden="true" /> Fecha</dt>
@@ -519,6 +528,7 @@ function MidnightInvitationView({
   calendarUrl,
   config,
   showGiftInfo,
+  invitationMessage,
   isPreview = false,
   children,
 }: InvitationViewProps) {
@@ -541,6 +551,7 @@ function MidnightInvitationView({
   const showActions = isInvitationBlockVisible(config?.blocks, 'actions')
   const showAudio = isInvitationBlockVisible(config?.blocks, 'audio')
   const showGuestData = isInvitationBlockVisible(config?.blocks, 'guestData')
+  const invitationMessageText = normalizeInvitationMessage(invitationMessage)
 
   return (
     <main
@@ -681,6 +692,7 @@ function MidnightInvitationView({
           <p className="invitation-data mt-4 text-3xl font-extralight leading-tight text-white sm:text-4xl">
             {guestDisplayName || 'Invitado/a'}
           </p>
+          {invitationMessageText ? <p className="invitation-data mt-4 text-base font-semibold leading-6 text-(--invitation-accent)">{invitationMessageText}</p> : null}
           <p className="invitation-data invitation-personal-copy mt-3 text-sm leading-6 text-white/65">{personalBlock.body}</p>
           <p className="invitation-data mt-3 text-sm leading-6 text-white/65">Confirmá tu asistencia para que todo esté listo cuando llegues.</p>
         </section> : null}

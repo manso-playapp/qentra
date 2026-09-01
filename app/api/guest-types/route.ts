@@ -12,6 +12,7 @@ type CreateGuestTypeRequestBody = {
   access_end_day_offset?: number
   payment_amount_cents?: number
   show_gift_info?: boolean
+  invitation_message?: string
 }
 
 export const runtime = 'nodejs'
@@ -70,6 +71,11 @@ export async function POST(request: Request) {
     )
   }
 
+  const invitationMessage = body.invitation_message?.trim() || null
+  if (invitationMessage && invitationMessage.length > 160) {
+    return Response.json({ error: 'La leyenda de la invitación no puede superar los 160 caracteres.' }, { status: 400 })
+  }
+
   const payload = {
     event_id: eventId,
     name,
@@ -81,6 +87,7 @@ export async function POST(request: Request) {
     access_end_day_offset: body.access_end_day_offset ?? 0,
     payment_amount_cents: Math.max(0, Math.trunc(body.payment_amount_cents ?? 0)),
     show_gift_info: body.show_gift_info ?? true,
+    invitation_message: invitationMessage,
   }
 
   const { data, error } = await adminClient.from('guest_types').insert(payload).select().single()

@@ -139,7 +139,7 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
     .select(`
       id, event_id, guest_type_id, first_name, last_name, email, phone, status, notes, payment_status, photo_url,
       plus_ones_allowed, plus_ones_confirmed, companion_names,
-      guest_types (name, payment_amount_cents, show_gift_info, access_start_time, access_start_day_offset)
+      guest_types (name, payment_amount_cents, show_gift_info, invitation_message, access_start_time, access_start_day_offset)
     `)
     .eq('id', invitationToken.guest_id)
     .maybeSingle()
@@ -249,6 +249,7 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
       template={invitationTemplate}
       config={invitationConfig}
       showGiftInfo={guestType?.show_gift_info ?? true}
+      invitationMessage={guestType?.invitation_message}
     >
       {invitationExpired ? (
         <section className="invitation-section invitation-surface-card relative overflow-hidden rounded-[28px] border border-rose-300 bg-[#eed8d2] p-6 pt-7 text-slate-950 shadow-2xl before:absolute before:inset-x-0 before:top-0 before:h-1.5 before:bg-rose-500" data-invitation-block>

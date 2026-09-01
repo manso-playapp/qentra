@@ -18,6 +18,7 @@ type UpdateGuestTypeRequestBody = {
   access_end_day_offset?: number
   payment_amount_cents?: number
   show_gift_info?: boolean
+  invitation_message?: string
 }
 
 export const runtime = 'nodejs'
@@ -105,6 +106,13 @@ export async function PATCH(request: Request, context: GuestTypeRouteContext) {
     }
     if (body.show_gift_info !== undefined) {
       payload.show_gift_info = body.show_gift_info
+    }
+    if (body.invitation_message !== undefined) {
+      const invitationMessage = trimOptionalString(body.invitation_message)
+      if (invitationMessage && invitationMessage.length > 160) {
+        return Response.json({ error: 'La leyenda de la invitación no puede superar los 160 caracteres.' }, { status: 400 })
+      }
+      payload.invitation_message = invitationMessage
     }
 
     const { data, error } = await adminClient
