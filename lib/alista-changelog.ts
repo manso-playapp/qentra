@@ -20,6 +20,15 @@ export type AlistaChange = {
 
 export const ALISTA_CHANGELOG: AlistaChange[] = [
   {
+    commit: '0d0adfe',
+    date: '2026-09-01',
+    dateLabel: '1 sep 2026',
+    kind: 'experiencia',
+    area: 'Invitaciones',
+    title: 'Personalizar invitaciones ahora tiene una estructura clara',
+    summary: 'La responsable encuentra plantilla, identidad, contenido, orden e interacción en bloques separados. Los módulos se pueden reordenar, la cuenta regresiva tiene un único control y una invitación sin logo puede usar una marca de texto configurable.',
+  },
+  {
     commit: '5a0704e',
     date: '2026-09-01',
     dateLabel: '1 sep 2026',

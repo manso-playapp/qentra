@@ -105,7 +105,7 @@ usuario permanecen en el código o en esta continuidad; no se copian al panel.
 
 ## 6. Estado HOY
 
-**Fecha de este estado:** 2026-08-29.
+**Fecha de este estado:** 2026-09-01.
 **Rama de trabajo:** `main`.
 
 ### En producción, funcionando
@@ -117,7 +117,10 @@ usuario permanecen en el código o en esta continuidad; no se copian al panel.
 - Propiedad transferible y sidebar contextual con selector de eventos.
 - Envío por email y WhatsApp manual desde el teléfono propio.
 
-### Cerrado en esta sesión (28/08/2026)
+### Cerrado en esta sesión (01/09/2026)
+- **Editor de personalización de invitaciones reorganizado.** Plantilla, identidad, contenido y orden, interacción y publicación quedan separados. El orden de módulos se guarda en `event_branding.config`, la cuenta regresiva tiene un único control, se eliminó el copy duplicado de invitación especial y se agregó una marca textual configurable como alternativa al logo. Compatible con configuraciones existentes; sin migración SQL nueva.
+
+### Cerrado anteriormente (28/08/2026)
 - **Migración `20260828120000_add_event_admin_assignments.sql` APLICADA.** Propiedad del evento
   como primitiva de autorización. Verificado contra la base: columna `owner_user_id` creada, los
   2 eventos existentes (DRM, Alfonsina) asignados al Superadmin, tabla
