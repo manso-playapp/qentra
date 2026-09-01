@@ -310,6 +310,17 @@ export function normalizeInvitationMessage(value?: string | null) {
   return value?.trim() || ''
 }
 
+function InvitationContextBanner({ message, preview = false }: { message: string; preview?: boolean }) {
+  return (
+    <div
+      className={`relative z-20 -mx-4 w-auto bg-(--invitation-accent) px-4 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.2em] text-slate-950 sm:-mx-6 sm:text-[11px] ${preview ? 'mt-8' : ''}`}
+      role="note"
+    >
+      {message.toLocaleUpperCase('es-AR')}
+    </div>
+  )
+}
+
 function BoardingPassBarcode({ value }: { value: string }) {
   const source = value.replace(/[^A-Z0-9]/gi, '').toUpperCase() || 'ALISTA15'
   const bars = Array.from({ length: 52 }, (_, index) => {
@@ -396,6 +407,8 @@ function TravelInvitationView({
         </div>
       )}
 
+      {invitationMessageText ? <InvitationContextBanner message={invitationMessageText} preview={isPreview} /> : null}
+
       <div className="relative mx-auto max-w-xl space-y-5" style={{ paddingTop: 'min(177.78vw, 680px)' }}>
         {branding?.logo_url ? (
           <InvitationLogo
@@ -445,7 +458,6 @@ function TravelInvitationView({
             <div className="col-span-2">
               <dt className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Pasajero</dt>
               <dd className="mt-1 text-lg font-bold uppercase tracking-[0.1em] sm:text-xl">{guestDisplayName || 'Invitado/a'}</dd>
-              {invitationMessageText ? <p className="mt-2 text-sm font-semibold leading-5 text-slate-700">{invitationMessageText}</p> : null}
             </div>
             <div>
               <dt className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500"><CalendarDays className="size-3" aria-hidden="true" /> Fecha</dt>
@@ -587,6 +599,8 @@ function MidnightInvitationView({
         </div>
       )}
 
+      {invitationMessageText ? <InvitationContextBanner message={invitationMessageText} preview={isPreview} /> : null}
+
       <div className="relative mx-auto flex max-w-xl flex-col space-y-20 pt-[80px] text-center sm:pt-[80px]">
         {branding?.logo_url ? (
           <InvitationLogo
@@ -692,7 +706,6 @@ function MidnightInvitationView({
           <p className="invitation-data mt-4 text-3xl font-extralight leading-tight text-white sm:text-4xl">
             {guestDisplayName || 'Invitado/a'}
           </p>
-          {invitationMessageText ? <p className="invitation-data mt-4 text-base font-semibold leading-6 text-(--invitation-accent)">{invitationMessageText}</p> : null}
           <p className="invitation-data invitation-personal-copy mt-3 text-sm leading-6 text-white/65">{personalBlock.body}</p>
           <p className="invitation-data mt-3 text-sm leading-6 text-white/65">Confirmá tu asistencia para que todo esté listo cuando llegues.</p>
         </section> : null}

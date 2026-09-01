@@ -20,6 +20,15 @@ export type AlistaChange = {
 
 export const ALISTA_CHANGELOG: AlistaChange[] = [
   {
+    commit: '5a0704e',
+    date: '2026-09-01',
+    dateLabel: '1 sep 2026',
+    kind: 'experiencia',
+    area: 'Invitaciones',
+    title: 'La leyenda del acceso ocupa todo el ancho',
+    summary: 'La aclaración del tipo de acceso ahora aparece en una franja superior de ancho completo, antes de los datos de la invitación, para evitar confusiones entre cena y trasnoche.',
+  },
+  {
     commit: 'f9e0fd9',
     date: '2026-09-01',
     dateLabel: '1 sep 2026',

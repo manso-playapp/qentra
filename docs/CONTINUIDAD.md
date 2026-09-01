@@ -241,6 +241,12 @@ Los eventos reales (DRM 287 tokens, Alfonsina 2) no se vieron afectados, gracias
   la invitación pública y no se mezcla con la etiqueta operativa del horario. La migración
   `20260901120000_add_guest_type_invitation_message.sql` fue aplicada en Supabase.
 
+### Registro de cambios cerrado (01/09/2026)
+
+- **Franja superior de acceso.** La leyenda editorial del tipo de acceso ahora aparece antes del
+  resto de la invitación en una banda de ancho completo, sin repetirse debajo del nombre. La
+  aclaración queda visible tanto para accesos normales como pagos.
+
 ### Frentes abiertos, en orden de dependencia
 1. **Cobro de los $89.000 a Alista.** **CERRADO (29/08/2026).** La migración
    `20260829010000_add_event_activation_payments.sql` fue aplicada en Supabase y el flujo está
