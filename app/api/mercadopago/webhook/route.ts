@@ -241,6 +241,7 @@ export async function POST(request: Request) {
     guest_id: string
     amount_cents: number
     currency_id: string
+    status: string
     provider_preference_id: string | null
     external_reference: string
   } | null = null
@@ -249,13 +250,14 @@ export async function POST(request: Request) {
   if (transactionId) {
     const { data, error } = await adminClient
       .from('payment_transactions')
-      .select('id, event_id, guest_id, amount_cents, currency_id, provider_preference_id, external_reference')
+      .select('id, event_id, guest_id, amount_cents, currency_id, status, provider_preference_id, external_reference')
       .eq('id', transactionId)
       .maybeSingle()
     if (error) throw error
     if (!data) return Response.json({ ok: true })
 
     transaction = data
+    if (transaction.status === 'cancelled') return Response.json({ ok: true })
     const recipientAccount = await getEventPaymentAccessToken(adminClient, transaction.event_id)
     if (!recipientAccount.ok) {
       // Mercado Pago retries a 5xx notification, which is safer than marking a
@@ -290,12 +292,13 @@ export async function POST(request: Request) {
   if (!transaction) {
     const { data, error } = await adminClient
       .from('payment_transactions')
-      .select('id, event_id, guest_id, amount_cents, currency_id, provider_preference_id, external_reference')
+      .select('id, event_id, guest_id, amount_cents, currency_id, status, provider_preference_id, external_reference')
       .eq('external_reference', payment.external_reference)
       .maybeSingle()
     if (error) throw error
     if (!data) return Response.json({ ok: true })
     transaction = data
+    if (transaction.status === 'cancelled') return Response.json({ ok: true })
   }
 
   const amountCents = Math.round((payment.transaction_amount ?? 0) * 100)

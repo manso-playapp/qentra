@@ -176,10 +176,8 @@ export interface GuestType {
  * payment_status, table_assignment, created_manually, created_by_user_id,
  * created_at, updated_at.
  *
- * Campos VIRTUALES (no consultar por nombre en un select/insert, romperia):
+ * Campos de compatibilidad:
  * - `special_requests`: alias de la columna `notes` (mapeado en la capa de API).
- * - `plus_ones_allowed` / `plus_ones_confirmed`: NO se persisten (hoy 0 fijo);
- *   los acompañantes viven serializados dentro de `notes`.
  * - `user_id`: no existe; la columna real es `created_by_user_id`.
  */
 export interface Guest {
@@ -219,6 +217,8 @@ export interface Guest {
   plus_ones_allowed: number
   plus_ones_confirmed: number
   companion_names?: string[]
+  /** Grupo operativo que se ocupa de enviar esta invitación. */
+  invitation_sender_group_id?: string | null
   special_requests?: string
   created_at: string
   updated_at: string
@@ -254,6 +254,34 @@ export interface InvitationToken {
   is_active?: boolean
   last_used_at?: string
   created_at: string
+}
+
+export type InvitationDeliveryChannel = 'whatsapp' | 'email'
+export type InvitationDeliveryStatus = 'pending' | 'marked_sent'
+
+export interface InvitationSenderGroup {
+  id: string
+  event_id: string
+  label: string
+  sort_order: number
+  created_at: string
+  updated_at: string
+}
+
+export interface InvitationDeliveryTracking {
+  id: string
+  event_id: string
+  guest_id: string
+  invitation_token_id: string
+  channel?: InvitationDeliveryChannel | null
+  status: InvitationDeliveryStatus
+  sender_group_id?: string | null
+  first_opened_at?: string | null
+  last_opened_at?: string | null
+  marked_sent_at?: string | null
+  marked_sent_by?: string | null
+  created_at: string
+  updated_at: string
 }
 
 export interface GuestQrCode {

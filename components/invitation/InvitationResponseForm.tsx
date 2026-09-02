@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { calculateGuestPaymentAmountCents, formatGuestPaymentAmount } from '@/lib/guest-payment'
 
 type InvitationResponseFormProps = {
   token: string
@@ -26,6 +27,7 @@ type InvitationResponseFormProps = {
     dni: string
     plusOnesAllowed: number
     plusOnesConfirmed: number
+    paymentAmountCents: number
     companionNames: string
     dietaryRequirements: string
     song: string
@@ -64,6 +66,11 @@ export default function InvitationResponseForm({ token, initialData, fields }: I
   const isCompanionsEnabled = fields?.companions !== false
   const isConfirming = attendanceResponse === 'confirmed'
   const companionLimit = isCompanionsEnabled ? initialData.plusOnesAllowed : 0
+  const confirmedCompanionCount = companionNames.filter((name) => name.trim()).length
+  const estimatedPaymentAmountCents = calculateGuestPaymentAmountCents(
+    initialData.paymentAmountCents,
+    confirmedCompanionCount
+  )
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
@@ -247,7 +254,18 @@ export default function InvitationResponseForm({ token, initialData, fields }: I
           {companionLimit > 0 && (
             <div>
               <Label>Nombres de acompanantes</Label>
-              <p className="invitation-form-hint mt-1 text-xs text-slate-500">Opcional. No genera un QR individual.</p>
+              <div className="mt-2 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-amber-950">
+                <p className="text-xs font-semibold">Completá sólo los nombres de quienes realmente vienen.</p>
+                <p className="mt-1 text-xs leading-5 text-amber-900/75">
+                  Cada nombre completo suma una entrada al total. Los campos vacíos no se cobran y los acompañantes comparten tu QR.
+                </p>
+                {initialData.paymentAmountCents > 0 && (
+                  <p className="mt-2 text-xs font-semibold">
+                    Total estimado ahora: {formatGuestPaymentAmount(estimatedPaymentAmountCents)}
+                  </p>
+                )}
+              </div>
+              <p className="invitation-form-hint mt-2 text-xs text-slate-500">Opcional. Podés dejar todos los campos vacíos si venís solo/a.</p>
               <div className="mt-2 grid gap-3 sm:grid-cols-2">
                 {companionNames.map((name, index) => (
                   <Input

@@ -2,6 +2,7 @@ import { getPaymentAppUrl } from '@/lib/public-url'
 import { getEventPaymentAccessToken } from '@/lib/event-payment-account'
 import { getCheckoutUrl, isMercadoPagoPreviewEnvironment, resolveMercadoPagoMode } from '@/lib/mercadopago'
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
+import { calculateGuestPaymentAmountCents, MAX_GUEST_PAYMENT_AMOUNT_CENTS } from '@/lib/guest-payment'
 
 export const runtime = 'nodejs'
 
@@ -31,7 +32,7 @@ export async function POST(_request: Request, context: RouteContext) {
 
   const { data: guest, error: guestError } = await adminClient
     .from('guests')
-    .select('id, event_id, guest_type_id, first_name, last_name, email, status, payment_status')
+    .select('id, event_id, guest_type_id, first_name, last_name, email, status, payment_status, plus_ones_allowed, plus_ones_confirmed, companion_names')
     .eq('id', invitation.guest_id)
     .maybeSingle()
 
@@ -43,14 +44,45 @@ export async function POST(_request: Request, context: RouteContext) {
     adminClient.from('guest_types').select('name, payment_amount_cents').eq('id', guest.guest_type_id).maybeSingle(),
     adminClient.from('events').select('name, slug').eq('id', guest.event_id).maybeSingle(),
   ])
-  const amountCents = guestType?.payment_amount_cents ?? 0
-  if (!event || amountCents <= 0) {
+  const unitAmountCents = guestType?.payment_amount_cents ?? 0
+  const plusOnesAllowed = Math.max(0, guest.plus_ones_allowed ?? 0)
+  const companionNames = Array.isArray(guest.companion_names)
+    ? guest.companion_names.map((name) => name.trim()).filter(Boolean)
+    : []
+  const companionCount = companionNames.length
+
+  if (companionCount > plusOnesAllowed) {
+    return Response.json(
+      { error: 'La cantidad de acompañantes declarados supera el límite de la invitación.' },
+      { status: 409 }
+    )
+  }
+
+  const amountCents = calculateGuestPaymentAmountCents(unitAmountCents, companionCount)
+  if (!event || unitAmountCents <= 0 || amountCents <= 0 || amountCents > MAX_GUEST_PAYMENT_AMOUNT_CENTS) {
     return Response.json({ error: 'Este tipo de invitado no tiene un importe de pago válido.' }, { status: 409 })
   }
 
   const recipientAccount = await getEventPaymentAccessToken(adminClient, guest.event_id)
   if (!recipientAccount.ok) {
     return Response.json({ error: recipientAccount.error }, { status: 409 })
+  }
+
+  // Si la persona volvió a editar acompañantes, cualquier checkout anterior
+  // puede tener un importe desactualizado. Sólo se cancelan intentos abiertos;
+  // los pagos aprobados quedan intactos y auditables.
+  const { error: cancelOpenTransactionsError } = await adminClient
+    .from('payment_transactions')
+    .update({
+      status: 'cancelled',
+      status_detail: 'Reemplazado por un nuevo total de personas.',
+      updated_at: new Date().toISOString(),
+    })
+    .eq('guest_id', guest.id)
+    .in('status', ['created', 'pending'])
+
+  if (cancelOpenTransactionsError) {
+    return Response.json({ error: 'No se pudo actualizar el intento de pago anterior.' }, { status: 500 })
   }
 
   const externalReference = `alista_${crypto.randomUUID()}`
@@ -80,7 +112,7 @@ export async function POST(_request: Request, context: RouteContext) {
     body: JSON.stringify({
       items: [{
         id: transaction.id,
-        title: `${event.name} · ${guestType?.name ?? 'Acceso'}`,
+        title: `${event.name} · ${guestType?.name ?? 'Acceso'} · ${1 + companionCount} persona(s)`,
         quantity: 1,
         currency_id: 'ARS',
         unit_price: amountCents / 100,

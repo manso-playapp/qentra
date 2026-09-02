@@ -34,6 +34,9 @@ import type {
   GuestWithType,
   InvitationToken,
   GuestQrCode,
+  InvitationDeliveryChannel,
+  InvitationDeliveryTracking,
+  InvitationSenderGroup,
   UpdateGuestForm,
   UpdateGuestTypeForm,
 } from '@/types'
@@ -174,6 +177,30 @@ function formatDateTime(date: string) {
   }).format(new Date(date))
 }
 
+function invitationHasGuestResponse(guest: GuestWithType) {
+  return guest.status === 'confirmed' || guest.status === 'checked_in'
+}
+
+function getInvitationDeliveryLabel(
+  guest: GuestWithType,
+  tracking?: InvitationDeliveryTracking
+) {
+  if (guest.db_status === 'rejected') return 'Enviado → No asistirá'
+
+  if (invitationHasGuestResponse(guest)) {
+    const companionCount = Math.max(0, guest.plus_ones_confirmed)
+    return companionCount > 0
+      ? `Enviado → Confirmado + ${companionCount} acompañantes`
+      : 'Enviado → Confirmado'
+  }
+
+  if (tracking?.status === 'marked_sent' || tracking?.first_opened_at) {
+    return 'Enviado → Sin respuesta'
+  }
+
+  return 'Pendiente de envío'
+}
+
 // Reporte del evento: CSV con los invitados y su estado real, pago y contacto.
 // Comillas dobladas y BOM para que Excel lo abra bien en UTF-8.
 function buildGuestsCsv(guests: GuestWithType[]): string {
@@ -262,6 +289,7 @@ export default function EventGuestsManager({
     updateGuest,
     deleteGuest,
     createGuestAccess,
+    fetchGuests,
   } = useGuests(event.id, initialGuests)
   const visibleGuestTypes = guestTypes
   const visibleGuests = guests
@@ -325,6 +353,13 @@ export default function EventGuestsManager({
   const [guestAccessActionLoadingId, setGuestAccessActionLoadingId] = useState<string | null>(null)
   const [copiedInvitationGuestId, setCopiedInvitationGuestId] = useState<string | null>(null)
   const [deliveryLoadingKey, setDeliveryLoadingKey] = useState<string | null>(null)
+  const [invitationDeliveryGroups, setInvitationDeliveryGroups] = useState<InvitationSenderGroup[]>([])
+  const [invitationDeliveryTracking, setInvitationDeliveryTracking] = useState<InvitationDeliveryTracking[]>([])
+  const [invitationDeliveryAvailable, setInvitationDeliveryAvailable] = useState(false)
+  const [invitationDeliveryLoading, setInvitationDeliveryLoading] = useState(true)
+  const [invitationDeliveryError, setInvitationDeliveryError] = useState<string | null>(null)
+  const [invitationDeliveryActionKey, setInvitationDeliveryActionKey] = useState<string | null>(null)
+  const [newSenderGroupLabel, setNewSenderGroupLabel] = useState('')
   const [destinationDrafts, setDestinationDrafts] = useState<Record<string, string>>({})
   const [destinationSavingGuestId, setDestinationSavingGuestId] = useState<string | null>(null)
   const [destinationError, setDestinationError] = useState<string | null>(null)
@@ -333,6 +368,7 @@ export default function EventGuestsManager({
   const [guestQuery, setGuestQuery] = useState('')
   const [guestStatusFilter, setGuestStatusFilter] = useState<'all' | Guest['status']>('all')
   const [guestTypeFilter, setGuestTypeFilter] = useState('all')
+  const [senderGroupFilter, setSenderGroupFilter] = useState('all')
   const [csvGuestTypeId, setCsvGuestTypeId] = useState('all')
   const [guestPage, setGuestPage] = useState(0)
   // La lista abre completa: el organizador busca a una persona concreta, y
@@ -370,6 +406,79 @@ export default function EventGuestsManager({
 
     return map
   }, [guestQrCodes])
+
+  useEffect(() => {
+    let cancelled = false
+
+    const fetchInvitationDelivery = async () => {
+      setInvitationDeliveryLoading(true)
+      setInvitationDeliveryError(null)
+
+      try {
+        const response = await fetch(`/api/events/${event.id}/invitation-delivery`, { cache: 'no-store' })
+        const payload = (await response.json().catch(() => null)) as {
+          data?: {
+            available?: boolean
+            groups?: InvitationSenderGroup[]
+            tracking?: InvitationDeliveryTracking[]
+          }
+          error?: string
+        } | null
+
+        if (!response.ok) {
+          throw new Error(payload?.error || 'No se pudo cargar el seguimiento de invitaciones.')
+        }
+
+        if (!cancelled) {
+          setInvitationDeliveryAvailable(payload?.data?.available === true)
+          setInvitationDeliveryGroups(payload?.data?.groups ?? [])
+          setInvitationDeliveryTracking(payload?.data?.tracking ?? [])
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setInvitationDeliveryError(error instanceof Error ? error.message : 'No se pudo cargar el seguimiento de invitaciones.')
+        }
+      } finally {
+        if (!cancelled) setInvitationDeliveryLoading(false)
+      }
+    }
+
+    void fetchInvitationDelivery()
+
+    return () => {
+      cancelled = true
+    }
+  }, [event.id])
+
+  const invitationDeliveryByTokenId = useMemo(
+    () => new Map(invitationDeliveryTracking.map((tracking) => [tracking.invitation_token_id, tracking])),
+    [invitationDeliveryTracking]
+  )
+
+  const invitationDeliverySummary = useMemo(() => {
+    const eligibleGuests = visibleGuests.filter(
+      (guest) => guest.status !== 'cancelled' && latestInvitationTokenByGuestId.has(guest.id)
+    )
+    const getTracking = (guest: GuestWithType) => {
+      const token = latestInvitationTokenByGuestId.get(guest.id)
+      return token ? invitationDeliveryByTokenId.get(token.id) : undefined
+    }
+
+    return {
+      pending: eligibleGuests.filter(
+        (guest) => !invitationHasGuestResponse(guest) && getTracking(guest)?.status !== 'marked_sent'
+      ).length,
+      markedSent: eligibleGuests.filter(
+        (guest) => invitationHasGuestResponse(guest) || getTracking(guest)?.status === 'marked_sent'
+      ).length,
+      visited: eligibleGuests.filter(
+        (guest) => invitationHasGuestResponse(guest) || Boolean(getTracking(guest)?.first_opened_at)
+      ).length,
+      unassigned: eligibleGuests.filter(
+        (guest) => !invitationHasGuestResponse(guest) && !guest.invitation_sender_group_id
+      ).length,
+    }
+  }, [invitationDeliveryByTokenId, latestInvitationTokenByGuestId, visibleGuests])
 
   const totals = useMemo(() => {
     const pending = visibleGuests.filter((guest) => guest.status === 'pending').length
@@ -456,6 +565,12 @@ export default function EventGuestsManager({
       .filter((guest) => {
         if (guestStatusFilter !== 'all' && guest.status !== guestStatusFilter) return false
         if (guestTypeFilter !== 'all' && guest.guest_type_id !== guestTypeFilter) return false
+        if (senderGroupFilter === 'unassigned' && guest.invitation_sender_group_id) return false
+        if (
+          senderGroupFilter !== 'all' &&
+          senderGroupFilter !== 'unassigned' &&
+          guest.invitation_sender_group_id !== senderGroupFilter
+        ) return false
         if (!query) return true
 
         return `${guest.first_name} ${guest.last_name} ${guest.email ?? ''} ${guest.phone ?? ''} ${guest.table_assignment ?? ''}`
@@ -465,7 +580,7 @@ export default function EventGuestsManager({
       .sort((a, b) =>
         `${a.last_name} ${a.first_name}`.localeCompare(`${b.last_name} ${b.first_name}`, 'es-AR')
       )
-  }, [guestQuery, guestStatusFilter, guestTypeFilter, visibleGuests])
+  }, [guestQuery, guestStatusFilter, guestTypeFilter, senderGroupFilter, visibleGuests])
 
   const guestsForCsv = useMemo(
     () =>
@@ -1244,6 +1359,130 @@ export default function EventGuestsManager({
     window.location.href = `mailto:${guest.email ?? ''}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`
   }
 
+  const updateInvitationDelivery = async (
+    guest: GuestWithType,
+    token: InvitationToken,
+    channel: InvitationDeliveryChannel,
+    action: 'mark_sent' | 'unmark_sent'
+  ) => {
+    if (!invitationDeliveryAvailable) return
+
+    const actionKey = `${guest.id}:${channel}`
+    setInvitationDeliveryActionKey(actionKey)
+    setGuestRowActionError(null)
+    setGuestRowActionNotice(null)
+
+    try {
+      const response = await fetch(`/api/events/${event.id}/invitation-delivery`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action,
+          guestId: guest.id,
+          invitationTokenId: token.id,
+          channel,
+          senderGroupId: guest.invitation_sender_group_id ?? null,
+        }),
+      })
+      const payload = (await response.json().catch(() => null)) as {
+        data?: InvitationDeliveryTracking
+        error?: string
+      } | null
+
+      if (!response.ok || !payload?.data) {
+        throw new Error(payload?.error || 'No se pudo actualizar el seguimiento.')
+      }
+
+      setInvitationDeliveryTracking((current) => [
+        payload.data as InvitationDeliveryTracking,
+        ...current.filter((item) => item.invitation_token_id !== token.id),
+      ])
+      setGuestRowActionNotice(
+        action === 'mark_sent'
+          ? `Invitación de ${guest.first_name} ${guest.last_name} marcada como enviada.`
+          : `Invitación de ${guest.first_name} ${guest.last_name} volvió a quedar pendiente.`
+      )
+    } catch (error) {
+      setGuestRowActionError(error instanceof Error ? error.message : 'No se pudo actualizar el seguimiento.')
+    } finally {
+      setInvitationDeliveryActionKey(null)
+    }
+  }
+
+  const openWhatsAppAndConfirmDelivery = (guest: GuestWithType, token: InvitationToken) => {
+    openWhatsAppShare(guest, token)
+
+    if (!invitationDeliveryAvailable) return
+
+    window.setTimeout(() => {
+      const wasSent = window.confirm(
+        `¿Enviaste la invitación de ${guest.first_name} ${guest.last_name} por WhatsApp?`
+      )
+      if (wasSent) void updateInvitationDelivery(guest, token, 'whatsapp', 'mark_sent')
+    }, 700)
+  }
+
+  const createSenderGroup = async () => {
+    const label = newSenderGroupLabel.trim()
+    if (!label || !invitationDeliveryAvailable) return
+
+    setInvitationDeliveryActionKey('create-group')
+    setInvitationDeliveryError(null)
+
+    try {
+      const response = await fetch(`/api/events/${event.id}/invitation-delivery`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'create_group', label }),
+      })
+      const payload = (await response.json().catch(() => null)) as {
+        data?: InvitationSenderGroup
+        error?: string
+      } | null
+
+      if (!response.ok || !payload?.data) {
+        throw new Error(payload?.error || 'No se pudo crear el grupo de envio.')
+      }
+
+      setInvitationDeliveryGroups((current) => [...current, payload.data as InvitationSenderGroup])
+      setNewSenderGroupLabel('')
+    } catch (error) {
+      setInvitationDeliveryError(error instanceof Error ? error.message : 'No se pudo crear el grupo de envio.')
+    } finally {
+      setInvitationDeliveryActionKey(null)
+    }
+  }
+
+  const assignSenderGroup = async (guest: GuestWithType, senderGroupId: string | null) => {
+    if (!invitationDeliveryAvailable) return
+
+    setInvitationDeliveryActionKey(`${guest.id}:group`)
+    setGuestRowActionError(null)
+    setGuestRowActionNotice(null)
+
+    try {
+      const response = await fetch(`/api/events/${event.id}/invitation-delivery`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'assign_group', guestId: guest.id, senderGroupId }),
+      })
+      const payload = (await response.json().catch(() => null)) as {
+        data?: { id: string; invitation_sender_group_id: string | null }
+        error?: string
+      } | null
+
+      if (!response.ok || !payload?.data) {
+        throw new Error(payload?.error || 'No se pudo asignar el grupo de envio.')
+      }
+
+      await fetchGuests(event.id)
+    } catch (error) {
+      setGuestRowActionError(error instanceof Error ? error.message : 'No se pudo asignar el grupo de envio.')
+    } finally {
+      setInvitationDeliveryActionKey(null)
+    }
+  }
+
   const saveGuestDestination = async (guest: GuestWithType) => {
     const destination = (destinationDrafts[guest.id] ?? guest.table_assignment ?? '').trim()
     setDestinationSavingGuestId(guest.id)
@@ -1308,6 +1547,78 @@ export default function EventGuestsManager({
           <p className="mt-1 text-sm text-gray-600">Sobre {event.max_capacity} plazas totales</p>
         </div>
       </div>
+
+      <section aria-labelledby="invitation-delivery-heading" className="mb-8 rounded-xl border border-sky-100 bg-sky-50/60 p-5 shadow-sm">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <h2 id="invitation-delivery-heading" className="text-lg font-semibold text-sky-950">Seguimiento de envíos</h2>
+            <p className="mt-1 max-w-3xl text-sm leading-6 text-sky-900/75">
+              Una invitación generada todavía no significa que haya sido enviada. Mamá y Alfonsina pueden compartir esta lista y marcar cada envío.
+            </p>
+          </div>
+          {invitationDeliveryAvailable && (
+            <div className="grid grid-cols-2 gap-2 text-center sm:grid-cols-4">
+              <div className="rounded-lg bg-white px-3 py-2">
+                <p className="text-xl font-semibold text-amber-700">{invitationDeliverySummary.pending}</p>
+                <p className="text-[11px] text-gray-500">pendientes</p>
+              </div>
+              <div className="rounded-lg bg-white px-3 py-2">
+                <p className="text-xl font-semibold text-indigo-700">{invitationDeliverySummary.markedSent}</p>
+                <p className="text-[11px] text-gray-500">envíos resueltos</p>
+              </div>
+              <div className="rounded-lg bg-white px-3 py-2">
+                <p className="text-xl font-semibold text-emerald-700">{invitationDeliverySummary.visited}</p>
+                <p className="text-[11px] text-gray-500">visitadas</p>
+              </div>
+              <div className="rounded-lg bg-white px-3 py-2">
+                <p className="text-xl font-semibold text-slate-700">{invitationDeliverySummary.unassigned}</p>
+                <p className="text-[11px] text-gray-500">sin asignar</p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {invitationDeliveryLoading ? (
+          <p className="mt-4 text-sm text-sky-900/70">Cargando seguimiento...</p>
+        ) : invitationDeliveryError ? (
+          <p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">{invitationDeliveryError}</p>
+        ) : !invitationDeliveryAvailable ? (
+          <p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+            El seguimiento queda pendiente de aplicar la migración de base. La gestión de invitados y el evento siguen funcionando normalmente.
+          </p>
+        ) : (
+          <div className="mt-5 flex flex-col gap-3 border-t border-sky-200/70 pt-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-sky-900/65">Grupos de envío</p>
+              <p className="mt-1 text-xs text-sky-900/70">Organizá quién se ocupa de cada contacto sin crear usuarios nuevos.</p>
+            </div>
+            <div className="flex w-full gap-2 sm:max-w-sm">
+              <input
+                value={newSenderGroupLabel}
+                onChange={(eventInput) => setNewSenderGroupLabel(eventInput.target.value)}
+                onKeyDown={(eventInput) => {
+                  if (eventInput.key === 'Enter') {
+                    eventInput.preventDefault()
+                    void createSenderGroup()
+                  }
+                }}
+                placeholder="Ej.: Mamá, la quinceañera o familia"
+                maxLength={80}
+                className="min-w-0 flex-1 rounded-md border border-sky-200 bg-white px-3 py-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                aria-label="Nombre del nuevo grupo de envío"
+              />
+              <button
+                type="button"
+                onClick={() => void createSenderGroup()}
+                disabled={!newSenderGroupLabel.trim() || invitationDeliveryActionKey === 'create-group'}
+                className="rounded-md bg-sky-700 px-3 py-2 text-sm font-medium text-white hover:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {invitationDeliveryActionKey === 'create-group' ? 'Guardando...' : 'Agregar grupo'}
+              </button>
+            </div>
+          </div>
+        )}
+      </section>
 
       <section aria-labelledby="destinations-heading" className="hidden">
         <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
@@ -2062,8 +2373,8 @@ export default function EventGuestsManager({
               </div>
             )}
 
-            <div className="mt-5 grid gap-3 border-y border-gray-100 py-4 lg:grid-cols-[minmax(0,1fr)_170px_190px_120px_auto] lg:items-end">
-              <div>
+            <div className="mt-5 flex flex-wrap items-end gap-2 border-y border-gray-100 py-3">
+              <div className="w-full min-w-0 flex-1 lg:min-w-80">
                 <label htmlFor="guest-search" className="sr-only">Buscar invitados</label>
                 <input
                   id="guest-search"
@@ -2073,10 +2384,10 @@ export default function EventGuestsManager({
                     setGuestPage(0)
                   }}
                   placeholder="Buscar por nombre, teléfono, email o destino..."
-                  className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  className="block w-full rounded-md border border-gray-300 bg-white px-2.5 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                 />
               </div>
-              <div>
+              <div className="w-full sm:w-40 lg:w-36">
                 <label htmlFor="guest-status-filter" className="sr-only">Filtrar por estado</label>
                 <select
                   id="guest-status-filter"
@@ -2085,7 +2396,7 @@ export default function EventGuestsManager({
                     setGuestStatusFilter(eventInput.target.value as 'all' | Guest['status'])
                     setGuestPage(0)
                   }}
-                  className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  className="block w-full rounded-md border border-gray-300 bg-white px-2.5 py-2 text-xs text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                 >
                   <option value="all">Todos los estados</option>
                   {Object.entries(GUEST_STATUS_LABELS).map(([status, label]) => (
@@ -2093,7 +2404,7 @@ export default function EventGuestsManager({
                   ))}
                 </select>
               </div>
-              <div>
+              <div className="w-full sm:w-40 lg:w-40">
                 <label htmlFor="guest-type-filter" className="sr-only">Filtrar por tipo</label>
                 <select
                   id="guest-type-filter"
@@ -2102,7 +2413,7 @@ export default function EventGuestsManager({
                     setGuestTypeFilter(eventInput.target.value)
                     setGuestPage(0)
                   }}
-                  className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  className="block w-full rounded-md border border-gray-300 bg-white px-2.5 py-2 text-xs text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                 >
                   <option value="all">Todos los tipos</option>
                   {visibleGuestTypes.map((guestType) => (
@@ -2110,7 +2421,27 @@ export default function EventGuestsManager({
                   ))}
                 </select>
               </div>
-              <div>
+              {invitationDeliveryAvailable && (
+                <div className="w-full sm:w-48 lg:w-44">
+                  <label htmlFor="guest-sender-group-filter" className="sr-only">Filtrar por responsable de envío</label>
+                  <select
+                    id="guest-sender-group-filter"
+                    value={senderGroupFilter}
+                    onChange={(eventInput) => {
+                      setSenderGroupFilter(eventInput.target.value)
+                      setGuestPage(0)
+                    }}
+                    className="block w-full rounded-md border border-gray-300 bg-white px-2.5 py-2 text-xs text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  >
+                    <option value="all">Invitados de: Todos</option>
+                    <option value="unassigned">Invitados de: Sin asignar</option>
+                    {invitationDeliveryGroups.map((group) => (
+                      <option key={group.id} value={group.id}>Invitados de: {group.label}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              <div className="w-full sm:w-32 lg:w-28">
                 <label htmlFor="guests-per-page" className="sr-only">Invitados por página</label>
                 <select
                   id="guests-per-page"
@@ -2120,14 +2451,14 @@ export default function EventGuestsManager({
                     setGuestsPerPage(value === 'all' ? 'all' : Number(value) as 25 | 50)
                     setGuestPage(0)
                   }}
-                  className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  className="block w-full rounded-md border border-gray-300 bg-white px-2.5 py-2 text-xs text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                 >
                   <option value="25">25 por página</option>
                   <option value="50">50 por página</option>
                   <option value="all">Mostrar todos</option>
                 </select>
               </div>
-              <p className="text-sm font-medium text-gray-500">
+              <p className="text-xs font-medium text-gray-500">
                 {filteredGuests.length} de {visibleGuests.length}
               </p>
             </div>
@@ -2467,6 +2798,9 @@ export default function EventGuestsManager({
                         {(() => {
                           const latestToken = latestInvitationTokenByGuestId.get(guest.id)
                           const latestQrCode = latestGuestQrByGuestId.get(guest.id)
+                          const deliveryTracking = latestToken
+                            ? invitationDeliveryByTokenId.get(latestToken.id)
+                            : undefined
                           const dbStatus: DbGuestStatus =
                             guest.db_status ?? mapGuestStatusToDb(guest.status)
                           const invitationWasUsed = Boolean(
@@ -2575,6 +2909,14 @@ export default function EventGuestsManager({
                               {guest.guest_types?.name || 'Sin tipo asociado'}
                               {guest.email ? ` · ${guest.email}` : ''}
                             </p>
+                            {invitationDeliveryAvailable && latestToken && (
+                              <p className="mt-1 truncate text-xs text-gray-500">
+                                {getInvitationDeliveryLabel(guest, deliveryTracking)}
+                                {guest.invitation_sender_group_id
+                                  ? ` · ${invitationDeliveryGroups.find((group) => group.id === guest.invitation_sender_group_id)?.label ?? 'Grupo asignado'}`
+                                  : ''}
+                              </p>
+                            )}
                           </div>
                           <svg
                             className={`size-5 flex-none text-gray-400 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
@@ -2633,12 +2975,31 @@ export default function EventGuestsManager({
                                       </p>
                                       <button
                                         type="button"
-                                        onClick={() => openWhatsAppShare(guest, latestToken)}
+                                        onClick={() => openWhatsAppAndConfirmDelivery(guest, latestToken)}
                                         disabled={!guest.phone}
                                         className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:text-gray-300"
                                       >
                                         {guest.phone ? 'Enviar por WhatsApp' : 'Enviar por WhatsApp (falta teléfono)'}
                                       </button>
+                                      {invitationDeliveryAvailable && guest.status === 'pending' && (
+                                        <button
+                                          type="button"
+                                          onClick={() => void updateInvitationDelivery(
+                                            guest,
+                                            latestToken,
+                                            'whatsapp',
+                                            deliveryTracking?.status === 'marked_sent' ? 'unmark_sent' : 'mark_sent'
+                                          )}
+                                          disabled={invitationDeliveryActionKey === `${guest.id}:whatsapp`}
+                                          className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:text-gray-300"
+                                        >
+                                          {invitationDeliveryActionKey === `${guest.id}:whatsapp`
+                                            ? 'Guardando...'
+                                            : deliveryTracking?.status === 'marked_sent'
+                                            ? 'Desmarcar como enviada'
+                                            : 'Marcar como enviada'}
+                                        </button>
+                                      )}
                                       <div className="my-1 border-t border-gray-100" />
                                       <p className="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
                                         Otras opciones
@@ -2806,6 +3167,38 @@ export default function EventGuestsManager({
                                   </button>
                                 )
                               })}
+                            </div>
+                          </div>
+                        )}
+
+                        {invitationDeliveryAvailable && latestToken && (
+                          <div className="grid gap-4 border-t border-gray-100 pt-4 sm:grid-cols-2">
+                            <div>
+                              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Quién la envía</p>
+                              <select
+                                value={guest.invitation_sender_group_id ?? ''}
+                                onChange={(eventInput) => void assignSenderGroup(guest, eventInput.target.value || null)}
+                                disabled={invitationDeliveryActionKey === `${guest.id}:group`}
+                                className="mt-2 w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20 disabled:cursor-not-allowed disabled:bg-gray-50"
+                                aria-label={`Quién envía la invitación de ${guest.first_name} ${guest.last_name}`}
+                              >
+                                <option value="">Sin asignar</option>
+                                {invitationDeliveryGroups.map((group) => (
+                                  <option key={group.id} value={group.id}>{group.label}</option>
+                                ))}
+                              </select>
+                              <p className="mt-1 text-xs text-gray-500">Es una organización interna, no un usuario nuevo.</p>
+                            </div>
+                            <div>
+                              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Seguimiento del envío</p>
+                              <p className="mt-2 text-sm font-medium text-gray-800">
+                                {getInvitationDeliveryLabel(guest, deliveryTracking)}
+                              </p>
+                              <p className="mt-1 text-xs leading-5 text-gray-500">
+                                {deliveryTracking?.first_opened_at
+                                  ? 'La visita no confirma quién lo abrió ni que haya leído la invitación.'
+                                  : 'Generar el link no significa que ya haya sido enviado.'}
+                              </p>
                             </div>
                           </div>
                         )}

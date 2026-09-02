@@ -14,7 +14,7 @@ export const GUEST_DB_STATUS_LABELS: Record<DbGuestStatus, string> = {
   registered: 'Registrado',
   enabled: 'Habilitado',
   checked_in: 'Ingreso',
-  rejected: 'Rechazado',
+  rejected: 'No habilitado',
   duplicate: 'Duplicado',
 }
 

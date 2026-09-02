@@ -7,6 +7,7 @@ import InvitationPaymentButton from '@/components/invitation/InvitationPaymentBu
 import InvitationPaymentStatusSyncButton from '@/components/invitation/InvitationPaymentStatusSyncButton'
 import InvitationQrDownloadButton from '@/components/invitation/InvitationQrDownloadButton'
 import InvitationResponseForm from '@/components/invitation/InvitationResponseForm'
+import InvitationVisitTracker from '@/components/invitation/InvitationVisitTracker'
 import InvitationView, {
   buildAccessState,
   buildCalendarUrl,
@@ -17,7 +18,7 @@ import InvitationView, {
 import { buildGuestAccessQrPayload } from '@/lib/guest-access'
 import { normalizeGuestStatus } from '@/lib/guest-schema'
 import { isInvitationExpired } from '@/lib/invitation-expiry'
-import { isInvitationAccessReady, parseInvitationDetails } from '@/lib/invitation-response'
+import { isInvitationAccessReady, parseCompanionNames, parseInvitationDetails } from '@/lib/invitation-response'
 import { getInvitationTemplate } from '@/lib/invitation-templates'
 import { buildAbsoluteAppUrl } from '@/lib/public-url'
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
@@ -174,6 +175,7 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
   const paymentStatus = (guest?.payment_status ?? 'not_required') as 'not_required' | 'pending' | 'approved'
   const guestType = Array.isArray(guest?.guest_types) ? guest.guest_types[0] : guest?.guest_types
   const paymentAmountCents = guestType?.payment_amount_cents ?? 0
+  const paymentCompanionCount = parseCompanionNames(companionNames).length
   const invitationSchedule = {
     startTime: guestType?.access_start_time,
     startDayOffset: guestType?.access_start_day_offset,
@@ -251,6 +253,7 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
       showGiftInfo={guestType?.show_gift_info ?? true}
       invitationMessage={guestType?.invitation_message}
     >
+      <InvitationVisitTracker token={token} />
       {invitationExpired ? (
         <section className="invitation-section invitation-surface-card relative overflow-hidden rounded-[28px] border border-rose-300 bg-[#eed8d2] p-6 pt-7 text-slate-950 shadow-2xl before:absolute before:inset-x-0 before:top-0 before:h-1.5 before:bg-rose-500" data-invitation-block>
           {isMidnight ? (
@@ -298,6 +301,7 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
                 dni: invitationDetails.dni,
                 plusOnesAllowed: Math.max(0, guest?.plus_ones_allowed ?? 0),
                 plusOnesConfirmed: Math.max(0, guest?.plus_ones_confirmed ?? 0),
+                paymentAmountCents,
                 companionNames,
                 dietaryRequirements: invitationDetails.dietaryRequirements,
                 song: invitationDetails.song,
@@ -309,7 +313,7 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
           </div>
           {invitationResponse === 'confirmed' && paymentStatus === 'pending' && paymentAmountCents > 0 && (
             <>
-              <InvitationPaymentButton token={token} amountCents={paymentAmountCents} />
+              <InvitationPaymentButton token={token} amountCents={paymentAmountCents} companionCount={paymentCompanionCount} />
               <InvitationPaymentStatusSyncButton token={token} />
             </>
           )}

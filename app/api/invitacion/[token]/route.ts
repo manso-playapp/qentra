@@ -156,6 +156,25 @@ export async function POST(request: Request, context: RouteContext) {
       tableAssignment: currentTableAssignment,
     })
 
+    // Un cambio en la respuesta puede dejar obsoleto un checkout pendiente
+    // (por ejemplo, si se agregan o quitan acompañantes). Los intentos ya
+    // aprobados no se tocan.
+    if (guest.payment_status === 'pending') {
+      const { error: cancelOpenTransactionsError } = await adminClient
+        .from('payment_transactions')
+        .update({
+          status: 'cancelled',
+          status_detail: 'La respuesta del invitado cambió antes del pago.',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('guest_id', guest.id)
+        .in('status', ['created', 'pending'])
+
+      if (cancelOpenTransactionsError) {
+        throw cancelOpenTransactionsError
+      }
+    }
+
     const nextGuestStatus =
       effectiveAttendanceResponse === 'declined'
         ? 'rejected'
