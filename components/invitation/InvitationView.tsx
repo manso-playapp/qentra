@@ -641,7 +641,7 @@ function MidnightInvitationView({
       <div className="relative mx-auto flex max-w-xl flex-col space-y-20 pt-[80px] text-center sm:pt-[80px]">
         <InvitationBrandMark branding={branding} config={config} eventName={event.name} template="midnight" />
 
-        <div className="invitation-event-details invitation-section flex flex-col">
+          <div className="invitation-event-details invitation-section flex flex-col gap-y-14">
           {showEventDetails ? <section className="invitation-block" style={blockStyle('eventDetails')} data-invitation-block>
             <h2 className="invitation-section-title">{eventDetailsBlock.title}</h2>
             <dl className="mt-8 flex flex-col items-center gap-10">
@@ -677,21 +677,21 @@ function MidnightInvitationView({
           </section> : null}
 
           {showCountdown && event.event_date && (
-              <section className="invitation-block mt-14 border-t border-white/18 pt-14" style={blockStyle('countdown')} data-invitation-block>
+              <section className="invitation-block mt-0 border-t border-white/18 pt-14" style={blockStyle('countdown')} data-invitation-block>
               <h2 className="invitation-section-title mb-5 text-white">{countdownBlock.title}</h2>
               <InvitationCountdown eventDate={event.event_date} startTime={startTime} />
             </section>
           )}
 
           {showDresscode && dresscode ? (
-            <section className="invitation-block invitation-section mt-14 border-t border-white/18 pt-14 text-center" style={blockStyle('dresscode')} data-invitation-block>
+            <section className="invitation-block invitation-section mt-0 border-t border-white/18 pt-14 text-center" style={blockStyle('dresscode')} data-invitation-block>
               <h2 className="invitation-section-title text-white">{dresscodeBlock.title}</h2>
               <p className="invitation-section-body invitation-data mt-3 text-(--invitation-accent)">{dresscode}</p>
             </section>
           ) : null}
 
           {showGift && event.gift_info?.trim() ? (
-            <section className="invitation-block invitation-section mt-14 border-t border-white/18 pt-14 text-center" style={blockStyle('gift')} data-invitation-block>
+            <section className="invitation-block invitation-section mt-0 border-t border-white/18 pt-14 text-center" style={blockStyle('gift')} data-invitation-block>
               <h2 className="invitation-section-title text-white">{giftBlock.title}</h2>
               <p className="invitation-section-body invitation-data mt-3 whitespace-pre-line text-(--invitation-accent)">
                 {event.gift_info.trim()}
@@ -700,7 +700,7 @@ function MidnightInvitationView({
           ) : null}
 
           {showActions && (directionsUrl || calendarUrl || contactHref) && (
-            <section className="invitation-block invitation-section mt-14 border-t border-white/18 pt-14" style={blockStyle('actions')} data-invitation-block>
+            <section className="invitation-block invitation-section mt-0 border-t border-white/18 pt-14" style={blockStyle('actions')} data-invitation-block>
               <div className="flex flex-wrap justify-center gap-x-4 gap-y-3">
               {directionsUrl ? (
                 <a href={directionsUrl} target="_blank" rel="noreferrer" className="invitation-label inline-flex min-h-11 items-center justify-center rounded-full border border-white/25 bg-white/8 px-5 py-2 text-xs font-semibold text-white transition hover:border-(--invitation-accent) hover:bg-white/12 hover:text-(--invitation-accent) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--invitation-accent)">
@@ -722,11 +722,11 @@ function MidnightInvitationView({
           )}
 
           {showAudio && config?.audio_url ? (
-            <section className="invitation-block invitation-section mt-14 border-t border-white/18 pt-14" style={blockStyle('audio')} data-invitation-block>
+            <section className="invitation-block invitation-section mt-0 border-t border-white/18 pt-14" style={blockStyle('audio')} data-invitation-block>
               <InvitationMusicPlayer audioUrl={config.audio_url} />
             </section>
           ) : null}
-          {showPersonal ? <section className="invitation-personal invitation-section mt-14 border-t border-(--invitation-accent)/45 pt-12 text-white" style={blockStyle('personal')} data-invitation-block>
+          {showPersonal ? <section className="invitation-personal invitation-section mt-0 border-t border-(--invitation-accent)/45 pt-12 text-white" style={blockStyle('personal')} data-invitation-block>
             <h2 className="invitation-section-title">{personalBlock.title}</h2>
             <p className="invitation-data mt-4 text-3xl font-extralight leading-tight text-white sm:text-4xl">
               {guestDisplayName || 'Invitado/a'}
@@ -734,7 +734,7 @@ function MidnightInvitationView({
             <p className="invitation-data invitation-personal-copy mt-3 text-sm leading-6 text-white/65">{personalBlock.body}</p>
           </section> : null}
 
-          <div className="invitation-content-flow mt-14" style={blockStyle('guestData')}>{showGuestData ? children : null}</div>
+          <div className="invitation-content-flow mt-0" style={blockStyle('guestData')}>{showGuestData ? children : null}</div>
         </div>
 
         <footer className="invitation-footer order-5 pb-2 pt-2 text-center text-xs uppercase tracking-[0.28em] text-white/48">
