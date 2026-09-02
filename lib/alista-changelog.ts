@@ -20,6 +20,15 @@ export type AlistaChange = {
 
 export const ALISTA_CHANGELOG: AlistaChange[] = [
   {
+    commit: '6c0e806',
+    date: '2026-09-02',
+    dateLabel: '2 sep 2026',
+    kind: 'experiencia',
+    area: 'Invitaciones',
+    title: 'La invitación respira mejor entre módulos',
+    summary: 'Se amplió de forma consistente la separación vertical entre bloques en los templates Viaje y Noche, sin alterar el espaciado interno de formularios y tarjetas.',
+  },
+  {
     commit: '0d0adfe',
     date: '2026-09-01',
     dateLabel: '1 sep 2026',

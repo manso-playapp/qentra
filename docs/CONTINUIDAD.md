@@ -105,7 +105,7 @@ usuario permanecen en el código o en esta continuidad; no se copian al panel.
 
 ## 6. Estado HOY
 
-**Fecha de este estado:** 2026-09-01.
+**Fecha de este estado:** 2026-09-02.
 **Rama de trabajo:** `main`.
 
 ### En producción, funcionando
@@ -119,6 +119,9 @@ usuario permanecen en el código o en esta continuidad; no se copian al panel.
 
 ### Cerrado en esta sesión (01/09/2026)
 - **Editor de personalización de invitaciones reorganizado.** Plantilla, identidad, contenido y orden, interacción y publicación quedan separados. El orden de módulos se guarda en `event_branding.config`, la cuenta regresiva tiene un único control, se eliminó el copy duplicado de invitación especial y se agregó una marca textual configurable como alternativa al logo. Compatible con configuraciones existentes; sin migración SQL nueva.
+
+### Cerrado en esta sesión (02/09/2026)
+- **Ritmo vertical de la invitación ajustado.** Se amplió la separación entre módulos en los templates Viaje y Noche, manteniendo sin cambios el espacio interno de formularios y tarjetas.
 
 ### Cerrado anteriormente (28/08/2026)
 - **Migración `20260828120000_add_event_admin_assignments.sql` APLICADA.** Propiedad del evento
