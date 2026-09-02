@@ -20,6 +20,15 @@ export type AlistaChange = {
 
 export const ALISTA_CHANGELOG: AlistaChange[] = [
   {
+    commit: '324ab75',
+    date: '2026-09-02',
+    dateLabel: '2 sep 2026',
+    kind: 'experiencia',
+    area: 'Invitaciones',
+    title: 'La invitación mantiene la misma distancia entre bloques',
+    summary: 'La separación entre Invitación especial, Fecha y los demás módulos ahora se calcula desde un único ritmo común, evitando que el primer salto quede más apretado.',
+  },
+  {
     commit: '6c0e806',
     date: '2026-09-02',
     dateLabel: '2 sep 2026',

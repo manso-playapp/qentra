@@ -122,6 +122,7 @@ usuario permanecen en el código o en esta continuidad; no se copian al panel.
 
 ### Cerrado en esta sesión (02/09/2026)
 - **Ritmo vertical de la invitación ajustado.** Se amplió la separación entre módulos en los templates Viaje y Noche, manteniendo sin cambios el espacio interno de formularios y tarjetas.
+- **Separación uniforme entre bloques.** La transición de Invitación especial a Fecha, hora y lugar ahora usa el mismo ritmo que los demás módulos mediante un gap común en el contenedor.
 
 ### Cerrado anteriormente (28/08/2026)
 - **Migración `20260828120000_add_event_admin_assignments.sql` APLICADA.** Propiedad del evento
