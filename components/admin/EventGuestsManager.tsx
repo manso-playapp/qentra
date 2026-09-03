@@ -21,10 +21,12 @@ import { buildAbsoluteAppUrl } from '@/lib/public-url'
 import { toE164 } from '@/lib/phone'
 import { buildInvitationWhatsAppMessage } from '@/lib/invitation-message'
 import {
+  buildGuestImportTemplateSheetCopyUrl,
   normalizeGuestTypeName,
   parseGuestImportRows,
   type GuestImportRow,
 } from '@/lib/guest-import'
+import type { BulkGuestPreview } from '@/lib/guest-bulk-merge'
 import type {
   CreateGuestForm,
   CreateGuestTypeForm,
@@ -230,7 +232,10 @@ function pesosToCents(value: string) {
 // Plantilla vacia lista para completar en Excel o Google Sheets. Los nombres
 // de columna coinciden exactamente con el orden que entiende la importacion.
 function buildGuestImportTemplateCsv(): string {
-  return ['Nombre', 'Apellido', 'Email', 'Telefono', 'Destino'].join(',') + '\r\n'
+  return (
+    ['Nombre', 'Apellido', 'Telefono', 'Email', 'Tipo', 'Invitado de', 'Acompañantes', 'DNI', 'Destino'].join(',') +
+    '\r\n'
+  )
 }
 
 function buildInvitationPath(token: string, guestName?: string) {
@@ -285,6 +290,7 @@ export default function EventGuestsManager({
     error: guestsError,
     accessError,
     createGuest,
+    previewBulkGuests,
     bulkCreateGuests,
     updateGuest,
     deleteGuest,
@@ -306,6 +312,14 @@ export default function EventGuestsManager({
   const [importGuestTypeIdsBySource, setImportGuestTypeIdsBySource] = useState<Record<string, string>>({})
   const [importLoading, setImportLoading] = useState(false)
   const [importError, setImportError] = useState<string | null>(null)
+  // Reimportar no debe pisar a nadie que ya fue tocado por el evento: antes
+  // de escribir se arma un resumen (altas / actualizaciones seguras /
+  // protegidos) y se pide confirmacion explicita. Ver lib/guest-bulk-merge.ts.
+  const [importPreview, setImportPreview] = useState<BulkGuestPreview | null>(null)
+  const [importPreviewBatches, setImportPreviewBatches] = useState<
+    { guestTypeId: string; rows: GuestImportRow[] }[] | null
+  >(null)
+  const [importPreviewLoading, setImportPreviewLoading] = useState(false)
   const [guestSubmitError, setGuestSubmitError] = useState<string | null>(null)
   const [guestTypeSubmitError, setGuestTypeSubmitError] = useState<string | null>(null)
   const [guestSubmitting, setGuestSubmitting] = useState(false)
@@ -1122,6 +1136,8 @@ export default function EventGuestsManager({
     if (!file) return
 
     setImportError(null)
+    setImportPreview(null)
+    setImportPreviewBatches(null)
     try {
       const bytes = await file.arrayBuffer()
       const utf8 = new TextDecoder('utf-8').decode(bytes)
@@ -1134,18 +1150,17 @@ export default function EventGuestsManager({
     }
   }
 
-  const handleBulkImport = async () => {
-    setImportError(null)
+  const buildImportBatches = (): { batches: { guestTypeId: string; rows: GuestImportRow[] }[] } | null => {
     const rows = parsedImportRows
     const guestTypeId = importGuestTypeId || visibleGuestTypes[0]?.id
 
     if (!guestTypeId) {
       setImportError('Primero crea un tipo de invitado para asignar el lote.')
-      return
+      return null
     }
     if (rows.length === 0) {
       setImportError('No se detectaron invitados. Poné al menos un nombre por linea.')
-      return
+      return null
     }
 
     const guestTypeIdForRow = (row: GuestImportRow) => {
@@ -1158,36 +1173,106 @@ export default function EventGuestsManager({
 
     if (unmappedTypes.length > 0) {
       setImportError(`Asigná un tipo de invitado para: ${unmappedTypes.join(', ')}.`)
+      return null
+    }
+
+    const batchesByType = new Map<string, GuestImportRow[]>()
+    for (const row of rows) {
+      const typeId = guestTypeIdForRow(row)
+      const batch = batchesByType.get(typeId) ?? []
+      batch.push(row)
+      batchesByType.set(typeId, batch)
+    }
+
+    return {
+      batches: [...batchesByType.entries()].map(([guestTypeId, rows]) => ({ guestTypeId, rows })),
+    }
+  }
+
+  // Paso 1: nunca se escribe directo. Se arma un resumen por lote (altas,
+  // actualizaciones seguras, protegidos) para que la persona confirme antes
+  // de que se toque la base — reimportar una lista vieja no debe sorprender
+  // pisando a alguien que ya pago o ya respondio.
+  const handlePreviewImport = async () => {
+    setImportError(null)
+    setImportPreview(null)
+    setImportPreviewBatches(null)
+
+    const built = buildImportBatches()
+    if (!built) return
+
+    setImportPreviewLoading(true)
+    const previews: BulkGuestPreview[] = []
+    let previewFailure: string | undefined
+
+    for (const batch of built.batches) {
+      const result = await previewBulkGuests(batch.guestTypeId, batch.rows)
+      if (result.error) {
+        previewFailure = result.error
+        break
+      }
+      if (result.data) previews.push(result.data)
+    }
+
+    setImportPreviewLoading(false)
+
+    if (previewFailure) {
+      setImportError(previewFailure)
       return
     }
 
-    const batches = new Map<string, GuestImportRow[]>()
-    for (const row of rows) {
-      const typeId = guestTypeIdForRow(row)
-      const batch = batches.get(typeId) ?? []
-      batch.push(row)
-      batches.set(typeId, batch)
-    }
+    const combined = previews.reduce<BulkGuestPreview>(
+      (total, preview) => ({
+        newCount: total.newCount + preview.newCount,
+        updateCount: total.updateCount + preview.updateCount,
+        protectedCount: total.protectedCount + preview.protectedCount,
+        missingCount: total.missingCount + preview.missingCount,
+        protectedSample: [...total.protectedSample, ...preview.protectedSample].slice(0, 20),
+        missingSample: [...total.missingSample, ...preview.missingSample].slice(0, 20),
+      }),
+      { newCount: 0, updateCount: 0, protectedCount: 0, missingCount: 0, protectedSample: [], missingSample: [] }
+    )
 
+    setImportPreview(combined)
+    setImportPreviewBatches(built.batches)
+  }
+
+  const handleCancelImportPreview = () => {
+    setImportPreview(null)
+    setImportPreviewBatches(null)
+    setImportError(null)
+  }
+
+  // Paso 2: recien acá se escribe, y con exactamente lo que se mostró en el
+  // resumen (los mismos lotes armados en el preview, no se vuelven a leer del
+  // texto por si la persona lo edito mientras miraba el resumen).
+  const handleConfirmImport = async () => {
+    if (!importPreviewBatches) return
+
+    setImportError(null)
     setImportLoading(true)
-    let importedCount = 0
+    let createdCount = 0
+    let updatedCount = 0
+    let skippedCount = 0
     let importFailure: string | undefined
 
-    for (const [typeId, batch] of batches) {
-      const result = await bulkCreateGuests(typeId, batch)
+    for (const batch of importPreviewBatches) {
+      const result = await bulkCreateGuests(batch.guestTypeId, batch.rows)
       if (result.error) {
         importFailure = result.error
         break
       }
-      importedCount += result.data?.count ?? batch.length
+      createdCount += result.data?.created ?? 0
+      updatedCount += result.data?.updated ?? 0
+      skippedCount += result.data?.skippedProtected ?? 0
     }
 
     setImportLoading(false)
 
     if (importFailure) {
       setImportError(
-        importedCount > 0
-          ? `${importFailure} Ya se importaron ${importedCount} invitados de los lotes anteriores.`
+        createdCount + updatedCount > 0
+          ? `${importFailure} Ya se procesaron ${createdCount + updatedCount} invitados de los lotes anteriores.`
           : importFailure
       )
       return
@@ -1195,9 +1280,14 @@ export default function EventGuestsManager({
 
     setImportText('')
     setImportGuestTypeIdsBySource({})
+    setImportPreview(null)
+    setImportPreviewBatches(null)
     setShowImport(false)
     setGuestRowActionError(null)
-    setGuestRowActionNotice(`Se importaron ${importedCount} invitados.`)
+    const skippedNote = skippedCount > 0 ? ` ${skippedCount} ya estaban invitados o pagados y no se tocaron.` : ''
+    setGuestRowActionNotice(
+      `Se importaron ${createdCount} invitados nuevos y se actualizaron ${updatedCount}.${skippedNote}`
+    )
     setShowIssuePrompt(true)
   }
 
@@ -2223,18 +2313,30 @@ export default function EventGuestsManager({
                 </span>
                 <button
                   type="button"
-                  onClick={() => setShowImport((current) => !current)}
+                  onClick={() => {
+                    setShowImport((current) => !current)
+                    setImportPreview(null)
+                    setImportPreviewBatches(null)
+                  }}
                   aria-expanded={showImport}
                   className="inline-flex flex-none items-center whitespace-nowrap rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
                 >
                   {showImport ? 'Cerrar' : 'Importar'}
                 </button>
+                <a
+                  href={buildGuestImportTemplateSheetCopyUrl()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex flex-none items-center whitespace-nowrap rounded-md border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-sm font-medium text-emerald-800 hover:bg-emerald-100"
+                >
+                  Usar plantilla en Google Sheets
+                </a>
                 <button
                   type="button"
                   onClick={downloadGuestImportTemplate}
                   className="inline-flex flex-none items-center whitespace-nowrap rounded-md border border-sky-200 bg-sky-50 px-3 py-1.5 text-sm font-medium text-sky-800 hover:bg-sky-100"
                 >
-                  Descargar plantilla
+                  Descargar CSV
                 </button>
                 <label htmlFor="csv-guest-type" className="sr-only">
                   Tipo de invitados a exportar
@@ -2269,8 +2371,12 @@ export default function EventGuestsManager({
                 <h3 className="text-sm font-semibold text-gray-900">Importar invitados</h3>
                 <p className="mt-1 text-sm text-gray-600">
                   Pegá una fila por invitado. Columnas separadas por coma o tab:{' '}
-                  <span className="font-mono text-xs">Nombre, Apellido, Email, Telefono, Destino</span>. Solo el
-                  nombre es obligatorio.
+                  <span className="font-mono text-xs">
+                    Nombre, Apellido, Telefono, Email, Tipo, Invitado de, Acompañantes, DNI, Destino
+                  </span>
+                  . Solo el nombre es obligatorio; el resto se detecta por el nombre de columna, en cualquier orden.
+                  &quot;Invitado de&quot; es quién se ocupa de ese contacto (Mamá, la quinceañera...) y &quot;Acompañantes&quot;
+                  admite varios nombres separados por punto y coma.
                 </p>
 
                 <div className="mt-4">
@@ -2280,7 +2386,11 @@ export default function EventGuestsManager({
                   <select
                     id="import-guest-type"
                     value={importGuestTypeId || visibleGuestTypes[0]?.id || ''}
-                    onChange={(event) => setImportGuestTypeId(event.target.value)}
+                    onChange={(event) => {
+                      setImportGuestTypeId(event.target.value)
+                      setImportPreview(null)
+                      setImportPreviewBatches(null)
+                    }}
                     disabled={visibleGuestTypes.length === 0}
                     className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 sm:w-64"
                   >
@@ -2311,7 +2421,11 @@ export default function EventGuestsManager({
 
                 <textarea
                   value={importText}
-                  onChange={(event) => setImportText(event.target.value)}
+                  onChange={(event) => {
+                    setImportText(event.target.value)
+                    setImportPreview(null)
+                    setImportPreviewBatches(null)
+                  }}
                   rows={6}
                   placeholder={'Sofia, Gimenez, sofia@mail.com, 3415551234, Mesa 4\nMateo, Ledesma\n...'}
                   className="mt-4 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 font-mono text-xs focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
@@ -2328,12 +2442,14 @@ export default function EventGuestsManager({
                         <select
                           aria-label={`Tipo para ${sourceType}`}
                           value={importGuestTypeIdsBySource[sourceType] || matchingGuestTypeId(sourceType) || ''}
-                          onChange={(event) =>
+                          onChange={(event) => {
                             setImportGuestTypeIdsBySource((current) => ({
                               ...current,
                               [sourceType]: event.target.value,
                             }))
-                          }
+                            setImportPreview(null)
+                            setImportPreviewBatches(null)
+                          }}
                           disabled={visibleGuestTypes.length === 0}
                           className="block rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                         >
@@ -2355,21 +2471,93 @@ export default function EventGuestsManager({
                   </div>
                 )}
 
-                <div className="mt-4 flex flex-wrap items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={handleBulkImport}
-                    disabled={importLoading || parsedImportRows.length === 0}
-                    className="inline-flex items-center rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {importLoading
-                      ? 'Importando...'
-                      : `Importar ${parsedImportRows.length} invitados`}
-                  </button>
-                  <span className="text-sm text-gray-500">
-                    {parsedImportRows.length} filas detectadas
-                  </span>
-                </div>
+                {!importPreview && (
+                  <div className="mt-4 flex flex-wrap items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => void handlePreviewImport()}
+                      disabled={importPreviewLoading || parsedImportRows.length === 0}
+                      className="inline-flex items-center rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {importPreviewLoading
+                        ? 'Revisando...'
+                        : `Revisar ${parsedImportRows.length} invitados`}
+                    </button>
+                    <span className="text-sm text-gray-500">
+                      {parsedImportRows.length} filas detectadas
+                    </span>
+                  </div>
+                )}
+
+                {/* Nada se escribe hasta confirmar acá. Quien ya fue invitado,
+                    respondió o pagó queda protegido y no aparece para actualizar. */}
+                {importPreview && (
+                  <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50/60 p-4">
+                    <p className="text-sm font-semibold text-gray-900">Antes de importar, revisá esto:</p>
+                    <ul className="mt-2 space-y-1 text-sm text-gray-700">
+                      <li>✅ {importPreview.newCount} invitados nuevos se van a crear.</li>
+                      <li>✏️ {importPreview.updateCount} ya estaban cargados (sin invitación enviada) y se van a actualizar con estos datos.</li>
+                      {importPreview.protectedCount > 0 && (
+                        <li>
+                          🔒 {importPreview.protectedCount} coinciden con invitados que ya fueron invitados, respondieron o pagaron —{' '}
+                          <strong>no se van a tocar</strong>.
+                        </li>
+                      )}
+                      {importPreview.missingCount > 0 && (
+                        <li>
+                          ℹ️ {importPreview.missingCount} invitados de este tipo ya cargados en Alista no aparecen en esta planilla — quedan tal cual, nadie se borra solo.
+                        </li>
+                      )}
+                    </ul>
+
+                    {importPreview.protectedSample.length > 0 && (
+                      <details className="mt-3 text-xs text-gray-600">
+                        <summary className="cursor-pointer font-medium text-gray-700">
+                          Ver protegidos ({importPreview.protectedSample.length}{importPreview.protectedCount > importPreview.protectedSample.length ? '+' : ''})
+                        </summary>
+                        <ul className="mt-1 space-y-0.5">
+                          {importPreview.protectedSample.map((item, index) => (
+                            <li key={index}>
+                              {item.name} — {item.detail}
+                            </li>
+                          ))}
+                        </ul>
+                      </details>
+                    )}
+
+                    {importPreview.missingSample.length > 0 && (
+                      <details className="mt-3 text-xs text-gray-600">
+                        <summary className="cursor-pointer font-medium text-gray-700">
+                          Ver quiénes no aparecen ({importPreview.missingSample.length}{importPreview.missingCount > importPreview.missingSample.length ? '+' : ''})
+                        </summary>
+                        <ul className="mt-1 space-y-0.5">
+                          {importPreview.missingSample.map((item, index) => (
+                            <li key={index}>{item.name}</li>
+                          ))}
+                        </ul>
+                      </details>
+                    )}
+
+                    <div className="mt-4 flex flex-wrap items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => void handleConfirmImport()}
+                        disabled={importLoading}
+                        className="inline-flex items-center rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {importLoading ? 'Importando...' : 'Confirmar importación'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleCancelImportPreview}
+                        disabled={importLoading}
+                        className="inline-flex items-center rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        Volver a editar
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 

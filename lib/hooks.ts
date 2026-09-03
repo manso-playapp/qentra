@@ -19,6 +19,7 @@ import type {
   UpdateGuestTypeForm,
   UpdateOperatorForm,
 } from '@/types'
+import type { BulkGuestPreview } from '@/lib/guest-bulk-merge'
 
 /* eslint-disable react-hooks/set-state-in-effect -- These hooks start external data loads from effects and expose their loading state. */
 
@@ -566,16 +567,52 @@ export function useGuests(eventId?: string, initialGuests: GuestWithType[] = [])
 
   // Alta masiva: un solo insert en el servidor (mucho mas rapido que N requests)
   // y un refetch para reflejar la lista completa.
+  type BulkImportGuestRow = {
+    first_name: string
+    last_name: string
+    email?: string
+    phone?: string
+    table_assignment?: string
+    source_type?: string
+    sender_group?: string
+    document_number?: string
+    companion_names?: string[]
+  }
+
+  const previewBulkGuests = async (
+    guestTypeId: string,
+    rows: BulkImportGuestRow[]
+  ): Promise<ApiResponse<BulkGuestPreview>> => {
+    try {
+      const response = await fetch('/api/guests/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event_id: eventId,
+          guest_type_id: guestTypeId,
+          guests: rows,
+          dry_run: true,
+        }),
+      })
+
+      const payload = (await response.json().catch(() => null)) as
+        | { preview?: BulkGuestPreview; error?: string }
+        | null
+
+      if (!response.ok || !payload?.preview) {
+        throw new Error(payload?.error || 'No se pudo previsualizar la importación.')
+      }
+
+      return { data: payload.preview }
+    } catch (error) {
+      return { error: getErrorMessage(error) }
+    }
+  }
+
   const bulkCreateGuests = async (
     guestTypeId: string,
-    rows: {
-      first_name: string
-      last_name: string
-      email?: string
-      phone?: string
-      table_assignment?: string
-    }[]
-  ): Promise<ApiResponse<{ count: number }>> => {
+    rows: BulkImportGuestRow[]
+  ): Promise<ApiResponse<{ created: number; updated: number; skippedProtected: number }>> => {
     try {
       const response = await fetch('/api/guests/bulk', {
         method: 'POST',
@@ -584,7 +621,7 @@ export function useGuests(eventId?: string, initialGuests: GuestWithType[] = [])
       })
 
       const payload = (await response.json().catch(() => null)) as
-        | { count?: number; error?: string }
+        | { created?: number; updated?: number; skippedProtected?: number; error?: string }
         | null
 
       if (!response.ok) {
@@ -592,7 +629,13 @@ export function useGuests(eventId?: string, initialGuests: GuestWithType[] = [])
       }
 
       await fetchGuests(eventId)
-      return { data: { count: payload?.count ?? rows.length } }
+      return {
+        data: {
+          created: payload?.created ?? 0,
+          updated: payload?.updated ?? 0,
+          skippedProtected: payload?.skippedProtected ?? 0,
+        },
+      }
     } catch (error) {
       return { error: getErrorMessage(error) }
     }
@@ -741,6 +784,7 @@ export function useGuests(eventId?: string, initialGuests: GuestWithType[] = [])
     fetchGuests,
     fetchGuestAccess,
     createGuest,
+    previewBulkGuests,
     bulkCreateGuests,
     updateGuest,
     deleteGuest,
