@@ -21,12 +21,12 @@ import { buildAbsoluteAppUrl } from '@/lib/public-url'
 import { toE164 } from '@/lib/phone'
 import { buildInvitationWhatsAppMessage } from '@/lib/invitation-message'
 import {
-  buildGuestImportTemplateCsv,
   buildGuestImportTemplateSheetCopyUrl,
   normalizeGuestTypeName,
   parseGuestImportRows,
   type GuestImportRow,
 } from '@/lib/guest-import'
+import { buildGuestImportWorkbookBlob, readGuestImportWorkbookAsText } from '@/lib/guest-import-workbook'
 import type { BulkGuestPreview } from '@/lib/guest-bulk-merge'
 import type {
   CreateGuestForm,
@@ -1112,20 +1112,26 @@ export default function EventGuestsManager({
     URL.revokeObjectURL(url)
   }
 
-  const downloadGuestImportTemplate = () => {
-    const templateCsv = buildGuestImportTemplateCsv({
-      name: event.name,
-      dateLabel: event.event_date ? formatEventDate(event.event_date, { dateStyle: 'long' }) : undefined,
-    })
-    const blob = new Blob(['ï»¿' + templateCsv], {
-      type: 'text/csv;charset=utf-8;',
-    })
-    const url = URL.createObjectURL(blob)
-    const anchor = document.createElement('a')
-    anchor.href = url
-    anchor.download = `plantilla-invitados-${event.slug}.csv`
-    anchor.click()
-    URL.revokeObjectURL(url)
+  const [templateDownloading, setTemplateDownloading] = useState(false)
+
+  const downloadGuestImportTemplate = async () => {
+    setTemplateDownloading(true)
+    try {
+      const blob = await buildGuestImportWorkbookBlob({
+        name: event.name,
+        dateLabel: event.event_date ? formatEventDate(event.event_date, { dateStyle: 'long' }) : undefined,
+      })
+      const url = URL.createObjectURL(blob)
+      const anchor = document.createElement('a')
+      anchor.href = url
+      anchor.download = `plantilla-invitados-${event.slug}.xlsx`
+      anchor.click()
+      URL.revokeObjectURL(url)
+    } catch {
+      setImportError('No se pudo generar la plantilla. Probá de nuevo.')
+    } finally {
+      setTemplateDownloading(false)
+    }
   }
 
   const handleImportFile = async (file?: File) => {
@@ -1135,6 +1141,15 @@ export default function EventGuestsManager({
     setImportPreview(null)
     setImportPreviewBatches(null)
     try {
+      const isXlsx =
+        file.name.toLocaleLowerCase('es-AR').endsWith('.xlsx') ||
+        file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+
+      if (isXlsx) {
+        setImportText(await readGuestImportWorkbookAsText(file))
+        return
+      }
+
       const bytes = await file.arrayBuffer()
       const utf8 = new TextDecoder('utf-8').decode(bytes)
       // Muchas listas exportadas por Excel en Windows usan ANSI/Windows-1252.
@@ -1142,7 +1157,7 @@ export default function EventGuestsManager({
       const text = /\uFFFD|\u00C3/.test(utf8) ? new TextDecoder('windows-1252').decode(bytes) : utf8
       setImportText(text)
     } catch {
-      setImportError('No se pudo leer el archivo. Probá exportarlo como CSV UTF-8 o pegá su contenido.')
+      setImportError('No se pudo leer el archivo. Probá exportarlo como CSV/Excel UTF-8 o pegá su contenido.')
     }
   }
 
@@ -2329,10 +2344,11 @@ export default function EventGuestsManager({
                 </a>
                 <button
                   type="button"
-                  onClick={downloadGuestImportTemplate}
-                  className="inline-flex flex-none items-center whitespace-nowrap rounded-md border border-sky-200 bg-sky-50 px-3 py-1.5 text-sm font-medium text-sky-800 hover:bg-sky-100"
+                  onClick={() => void downloadGuestImportTemplate()}
+                  disabled={templateDownloading}
+                  className="inline-flex flex-none items-center whitespace-nowrap rounded-md border border-sky-200 bg-sky-50 px-3 py-1.5 text-sm font-medium text-sky-800 hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  Descargar CSV
+                  {templateDownloading ? 'Generando...' : 'Descargar plantilla (Excel)'}
                 </button>
                 <label htmlFor="csv-guest-type" className="sr-only">
                   Tipo de invitados a exportar
@@ -2408,12 +2424,12 @@ export default function EventGuestsManager({
 
                 <div className="mt-4">
                   <label htmlFor="guest-import-file" className="block text-sm font-medium text-gray-700">
-                    Archivo CSV
+                    Archivo (Excel o CSV)
                   </label>
                   <input
                     id="guest-import-file"
                     type="file"
-                    accept=".csv,text/csv,text/plain"
+                    accept=".csv,text/csv,text/plain,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                     onChange={(event) => void handleImportFile(event.target.files?.[0])}
                     className="mt-1 block w-full text-sm text-gray-600 file:mr-3 file:rounded-md file:border-0 file:bg-white file:px-3 file:py-2 file:text-sm file:font-medium file:text-gray-700 hover:file:bg-gray-100"
                   />
