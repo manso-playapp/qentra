@@ -21,6 +21,7 @@ import { buildAbsoluteAppUrl } from '@/lib/public-url'
 import { toE164 } from '@/lib/phone'
 import { buildInvitationWhatsAppMessage } from '@/lib/invitation-message'
 import {
+  buildGuestImportTemplateCsv,
   buildGuestImportTemplateSheetCopyUrl,
   normalizeGuestTypeName,
   parseGuestImportRows,
@@ -227,15 +228,6 @@ function buildGuestsCsv(guests: GuestWithType[]): string {
 function pesosToCents(value: string) {
   const pesos = Number.parseInt(value.trim() || '0', 10)
   return Number.isFinite(pesos) && pesos > 0 ? pesos * 100 : 0
-}
-
-// Plantilla vacia lista para completar en Excel o Google Sheets. Los nombres
-// de columna coinciden exactamente con el orden que entiende la importacion.
-function buildGuestImportTemplateCsv(): string {
-  return (
-    ['Nombre', 'Apellido', 'Telefono', 'Email', 'Tipo', 'Invitado de', 'Acompañantes', 'DNI', 'Destino'].join(',') +
-    '\r\n'
-  )
 }
 
 function buildInvitationPath(token: string, guestName?: string) {
@@ -1121,13 +1113,17 @@ export default function EventGuestsManager({
   }
 
   const downloadGuestImportTemplate = () => {
-    const blob = new Blob(['ï»¿' + buildGuestImportTemplateCsv()], {
+    const templateCsv = buildGuestImportTemplateCsv({
+      name: event.name,
+      dateLabel: event.event_date ? formatEventDate(event.event_date, { dateStyle: 'long' }) : undefined,
+    })
+    const blob = new Blob(['ï»¿' + templateCsv], {
       type: 'text/csv;charset=utf-8;',
     })
     const url = URL.createObjectURL(blob)
     const anchor = document.createElement('a')
     anchor.href = url
-    anchor.download = 'plantilla-carga-invitados.csv'
+    anchor.download = `plantilla-invitados-${event.slug}.csv`
     anchor.click()
     URL.revokeObjectURL(url)
   }
@@ -2369,6 +2365,10 @@ export default function EventGuestsManager({
             {showImport && (
               <div className="mt-4 rounded-lg border border-gray-200 bg-gray-50/60 p-5">
                 <h3 className="text-sm font-semibold text-gray-900">Importar invitados</h3>
+                <p className="mt-0.5 text-xs font-medium uppercase tracking-wide text-gray-500">
+                  {event.name}
+                  {event.event_date ? ` · ${formatEventDate(event.event_date, { dateStyle: 'long' })}` : ''}
+                </p>
                 <p className="mt-1 text-sm text-gray-600">
                   Pegá una fila por invitado. Columnas separadas por coma o tab:{' '}
                   <span className="font-mono text-xs">

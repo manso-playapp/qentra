@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { parseGuestImportRows } from '@/lib/guest-import'
+import { buildGuestImportTemplateCsv, parseGuestImportRows } from '@/lib/guest-import'
 
 describe('parseGuestImportRows', () => {
   it('interpreta nombre completo, tipo y destino de una planilla de invitados', () => {
@@ -95,5 +95,29 @@ describe('parseGuestImportRows', () => {
     const rows = parseGuestImportRows('Nombre,DNI\nSofia,')
     expect(rows[0].document_number).toBe('')
     expect(rows[0].email).toBeUndefined()
+  })
+
+  it('salta las lineas de marca/instrucciones de la plantilla personalizada y encuentra el encabezado real', () => {
+    const rows = parseGuestImportRows(buildGuestImportTemplateCsv({ name: 'Fiesta de Sofía', dateLabel: '12 de diciembre de 2026' }) + 'Sofia,Gimenez,342-4496166,,,,,,')
+
+    expect(rows).toEqual([
+      {
+        first_name: 'Sofia',
+        last_name: 'Gimenez',
+        email: '',
+        phone: '+5493424496166',
+        table_assignment: '',
+        source_type: '',
+        sender_group: '',
+        document_number: '',
+        companion_names: [],
+      },
+    ])
+  })
+
+  it('la plantilla generica (sin evento) tambien se reimporta sin romperse', () => {
+    const rows = parseGuestImportRows(buildGuestImportTemplateCsv() + 'Juan,Perez,,,,,,,')
+    expect(rows).toHaveLength(1)
+    expect(rows[0].first_name).toBe('Juan')
   })
 })

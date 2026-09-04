@@ -53,12 +53,31 @@ function parseDelimitedLine(line: string, delimiter: string) {
   return cells
 }
 
-function detectDelimiter(line: string) {
+// Se mide sobre una muestra de varias lineas (no solo la primera) para que
+// una linea decorativa suelta al principio ("Alista - Planilla de...") no
+// haga elegir mal el separador.
+function detectDelimiter(lines: string[]) {
+  const sample = lines.slice(0, 15).join('\n')
   return ['\t', ';', ','].reduce(
     (selected, candidate) =>
-      line.split(candidate).length > line.split(selected).length ? candidate : selected,
+      sample.split(candidate).length > sample.split(selected).length ? candidate : selected,
     ','
   )
+}
+
+// La plantilla personalizada trae lineas de marca/instrucciones antes de la
+// fila de encabezados real. Se busca esa fila en las primeras lineas en vez
+// de asumir que es la primera: asi la plantilla se puede reimportar tal cual
+// se descarga, sin que la persona tenga que borrar nada a mano.
+function findHeaderLineIndex(lines: string[], delimiter: string) {
+  const searchWindow = Math.min(lines.length, 15)
+  for (let index = 0; index < searchWindow; index += 1) {
+    const cells = parseDelimitedLine(lines[index], delimiter)
+    if (columnIndex(cells, HEADER_ALIASES.name) >= 0 || columnIndex(cells, HEADER_ALIASES.phone) >= 0) {
+      return index
+    }
+  }
+  return -1
 }
 
 function splitFullName(fullName: string) {
@@ -111,12 +130,12 @@ export function parseGuestImportRows(text: string): GuestImportRow[] {
 
   if (lines.length === 0) return []
 
-  const delimiter = detectDelimiter(lines[0])
-  const firstLine = parseDelimitedLine(lines[0], delimiter)
-  const nameIndex = columnIndex(firstLine, HEADER_ALIASES.name)
-  const isHeader = nameIndex >= 0 || columnIndex(firstLine, HEADER_ALIASES.phone) >= 0
-  const headers = isHeader ? firstLine : []
-  const startIndex = isHeader ? 1 : 0
+  const delimiter = detectDelimiter(lines)
+  const headerLineIndex = findHeaderLineIndex(lines, delimiter)
+  const isHeader = headerLineIndex >= 0
+  const headers = isHeader ? parseDelimitedLine(lines[headerLineIndex], delimiter) : []
+  const nameIndex = columnIndex(headers, HEADER_ALIASES.name)
+  const startIndex = isHeader ? headerLineIndex + 1 : 0
 
   const lastNameIndex = columnIndex(headers, HEADER_ALIASES.lastName)
   const emailIndex = columnIndex(headers, HEADER_ALIASES.email)
@@ -168,11 +187,56 @@ export function normalizeGuestTypeName(value: string) {
   return normalized(value)
 }
 
+const TEMPLATE_HEADER_ROW = [
+  'Nombre',
+  'Apellido',
+  'Telefono',
+  'Email',
+  'Tipo',
+  'Invitado de',
+  'Acompañantes',
+  'DNI',
+  'Destino',
+]
+
+export type GuestImportTemplateEventInfo = {
+  name?: string
+  dateLabel?: string
+}
+
+// Plantilla con encabezado de marca e instrucciones antes de la fila de
+// columnas real. Esas lineas decorativas se saltean solas al reimportar
+// (ver findHeaderLineIndex): la persona puede descargar, completar y volver
+// a subir el mismo archivo sin tocar nada.
+//
+// Ojo al redactar estas lineas: si el separador detectado es coma, una lista
+// de nombres de columna separados por coma en la prosa generaria una celda
+// exactamente igual a un alias ("Nombre") y el parser confundiria esa linea
+// con el encabezado real. Por eso los nombres de columna van separados por
+// "/" en el texto, nunca por coma.
+export function buildGuestImportTemplateCsv(event?: GuestImportTemplateEventInfo): string {
+  const lines = ['ALISTA · Planilla de invitados']
+  if (event?.name) lines.push(`Evento: ${event.name}`)
+  if (event?.dateLabel) lines.push(`Fecha: ${event.dateLabel}`)
+  lines.push(
+    'Completá una fila por invitado. Alista reconoce cada columna por su título, no importa el orden en que las pongas.'
+  )
+  lines.push(
+    'No borres ni cambies los títulos de columna (Nombre / Apellido / Telefono / Email / Tipo / Invitado de / Acompañantes / DNI / Destino).'
+  )
+  lines.push(
+    'Solo el Nombre es obligatorio. Invitado de = quién se ocupa de esa invitación (Mamá / la quinceañera / etc). Acompañantes = nombres separados por punto y coma.'
+  )
+  lines.push('')
+  lines.push(TEMPLATE_HEADER_ROW.join(','))
+  return lines.join('\r\n') + '\r\n'
+}
+
 // Planilla maestra en el Drive de Alista, con las mismas columnas que el CSV.
 // El sufijo /copy fuerza "Hacer una copia" en el Drive de quien abre el
 // link: no hace falta pedirle a nadie que tenga Excel instalado, ni integrar
 // la API de Google Sheets.
-export const GUEST_IMPORT_TEMPLATE_SHEET_ID = '1WeGndwW0lnnZ5hT2x-rMq5Pvd4Nm5EC5I_CUnr9gkeA'
+export const GUEST_IMPORT_TEMPLATE_SHEET_ID = '1z1f1flhu94AlHkZN047wtMyeyKWwEkQpcwS8IIgPbhE'
 
 export function buildGuestImportTemplateSheetCopyUrl() {
   return `https://docs.google.com/spreadsheets/d/${GUEST_IMPORT_TEMPLATE_SHEET_ID}/copy`
