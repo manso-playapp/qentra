@@ -23,3 +23,5 @@
 - Verificación final móvil: 379 tests/35 archivos; tsc, ESLint de archivos modificados y build PASS. QA 320/390/1440: filtros, abrir WhatsApp sin marcar automáticamente, fallo/reintento de marcado y edición, restauración tras reload, regreso a gestión avanzada. Todos los GET/POST/PATCH interceptados con datos ficticios; ningún mensaje/dato real. Sin errores/desbordes; se ocultó sólo el indicador dev de Next en QA porque tapa Hoy en local. Evidencia `/private/tmp/alista-admin-mobile-qa/results.json`; fixture retirada antes del build. No commit/push/publicación ni nueva migración.
 
 - Owner autoriza el material Dharma para la web (05/09/2026). Repositorio público: se excluyen protocolo/PDF específicos del cliente y cachés; plantilla genérica y código completos incluidos.
+
+- Entrega funcional versionada: `49137b5`; registro Estado ALISTA enlazado a ese commit. Integración y push a main autorizados; siguiente acción comprobar despliegue Vercel del SHA remoto. Proyecto `prj_KaOovgivCZyg73yiTwcuA9f0w0CX`, equipo `team_JD4PZ9an6iQgjlb9WOm3ApPT`, dominio alista.com.ar.

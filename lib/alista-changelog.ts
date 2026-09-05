@@ -20,13 +20,13 @@ export type AlistaChange = {
 
 export const ALISTA_CHANGELOG: AlistaChange[] = [
   {
-    commit: 'Sin commit',
+    commit: '49137b5',
     date: '2026-09-05',
     dateLabel: '5 sep 2026',
     kind: 'producto',
     area: 'Servicio y recepción',
-    title: 'Preparación acompañada y recepción con fechas claras',
-    summary: 'La web presenta personalización y acompañamiento por fiesta, con autogestión separada. Formularios e invitaciones distinguen la noche y la madrugada con fechas concretas y horas de 24 h; recepción comparte controles de pago y cupo y confirma en el celular sin esperar al recibidor. Avisa desde los últimos 3 lugares y señala cupo completo al llegar al límite. En celular, Invitados organiza seguimiento, edición breve y mensajes personales de WhatsApp con marcado manual. Versión en revisión local.',
+    title: 'Servicio acompañado, recepción segura y admin móvil',
+    summary: 'La web presenta personalización y acompañamiento por fiesta, con autogestión separada. Formularios e invitaciones distinguen la noche y la madrugada con fechas concretas y horas de 24 h; recepción comparte controles de pago y cupo y confirma en el celular sin esperar al recibidor. Avisa desde los últimos 3 lugares y señala cupo completo al llegar al límite. En celular, Invitados organiza seguimiento, edición breve y mensajes personales de WhatsApp con marcado manual.',
   },
   {
     commit: '324ab75',

@@ -110,6 +110,12 @@ usuario permanecen en el código o en esta continuidad; no se copian al panel.
 
 ### Versión autorizada para Git y publicación (05/09/2026)
 
+Entrega funcional: commit `49137b5`. Se integra en main y se sube a GitHub por
+pedido explícito del owner. La comprobación del despliegue es el siguiente paso;
+no confundir commit con versión efectivamente publicada. Verificación previa:
+379 tests / 35 archivos, tsc, lint completo y build correctos. Migración ya aplicada.
+Dharma autorizado para la web; conservar respaldo y no extender a pauta/prensa.
+
 - Admin móvil aprobado e implementado en Invitados (<768 px): Hoy / Invitados /
   Invitaciones / Más, menú de cuenta plegado, búsqueda por titular/acompañante,
   respuestas y pagos separados, edición breve de contacto/mesa. Invitaciones:
