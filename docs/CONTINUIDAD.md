@@ -111,6 +111,8 @@ usuario permanecen en el código o en esta continuidad; no se copian al panel.
 
 ### Dominio SEO unificado (publicación autorizada, 05/09/2026)
 
+Commit funcional: `54b0082`. Entrega por integración GitHub → Vercel en main.
+
 La web publicada redirige de alista.com.ar a www.alista.com.ar, pero su canonical,
 sitemap y datos estructurados señalaban el origen sin www. Por pedido del owner,
 `lib/site-url.ts` centraliza https://www.alista.com.ar para metadataBase, robots,
