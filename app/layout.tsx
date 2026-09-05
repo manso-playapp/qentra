@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import localFont from 'next/font/local'
-import { getPublicAppUrl } from '@/lib/public-url'
+import { ALISTA_SITE_URL } from '@/lib/site-url'
 import './globals.css'
 
 const nunito = localFont({
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
   verification: process.env.GOOGLE_SITE_VERIFICATION
     ? { google: process.env.GOOGLE_SITE_VERIFICATION }
     : undefined,
-  ...(getPublicAppUrl() ? { metadataBase: new URL(getPublicAppUrl()) } : {}),
+  metadataBase: new URL(ALISTA_SITE_URL),
   title: {
     default: 'Alista | Sus 15, con su estilo y tu tranquilidad',
     template: '%s | Alista',

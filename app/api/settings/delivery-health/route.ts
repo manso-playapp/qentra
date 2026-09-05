@@ -36,6 +36,11 @@ export async function GET() {
 
   return Response.json({
     data: {
+      environment: process.env.VERCEL_ENV === 'production'
+        ? 'production'
+        : process.env.VERCEL_ENV === 'preview'
+          ? 'preview'
+          : process.env.NODE_ENV === 'development' ? 'local' : 'server',
       serviceRoleConfigured,
       alistaMercadoPago: {
         ready: Boolean(alistaMercadoPago),

@@ -3,6 +3,12 @@ import robots from '@/app/robots'
 import sitemap from '@/app/sitemap'
 
 describe('public marketing indexing', () => {
+  it('points discovery URLs at the final www host rather than a redirect or local server', () => {
+    expect(robots().host).toBe('https://www.alista.com.ar')
+    expect(robots().sitemap).toBe('https://www.alista.com.ar/sitemap.xml')
+    expect(sitemap().every((entry) => new URL(entry.url).origin === 'https://www.alista.com.ar')).toBe(true)
+  })
+
   it('keeps operational route roots out of crawlers', () => {
     const rules = robots().rules
 

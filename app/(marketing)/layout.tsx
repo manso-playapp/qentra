@@ -4,7 +4,7 @@ import { MarketingAnalytics } from '@/components/marketing/MarketingAnalytics'
 import { MarketingSectionTracker } from '@/components/marketing/MarketingSectionTracker'
 import { SiteHeader } from '@/components/marketing/SiteHeader'
 import { SiteFooter } from '@/components/marketing/SiteFooter'
-import { getPublicAppUrl } from '@/lib/public-url'
+import { ALISTA_SITE_URL } from '@/lib/site-url'
 
 export const metadata: Metadata = {
   openGraph: {
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   },
 }
 
-const siteUrl = getPublicAppUrl() || 'https://alista.com.ar'
+const siteUrl = ALISTA_SITE_URL
 
 const structuredData = {
   '@context': 'https://schema.org',

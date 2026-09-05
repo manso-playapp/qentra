@@ -20,6 +20,24 @@ export type AlistaChange = {
 
 export const ALISTA_CHANGELOG: AlistaChange[] = [
   {
+    commit: 'Sin commit',
+    date: '2026-09-05',
+    dateLabel: '5 sep 2026',
+    kind: 'estabilidad',
+    area: 'Web pública',
+    title: 'Una sola dirección para los buscadores',
+    summary: 'Las direcciones principales, el mapa del sitio y los datos de marca apuntan a www.alista.com.ar, el dominio final de la web. Favicons SVG, ICO y Apple derivados del símbolo oficial alista-mark.svg.',
+  },
+  {
+    commit: 'Sin commit',
+    date: '2026-09-05',
+    dateLabel: '5 sep 2026',
+    kind: 'experiencia',
+    area: 'Configuración',
+    title: 'Estado de cobros con contexto claro',
+    summary: 'La cuenta del servicio de Alista indica si está configurada y en qué entorno. Los cobros de invitaciones se identifican como una conexión independiente; una credencial ausente ya no aparece como una aprobación pendiente.',
+  },
+  {
     commit: 'aef0741',
     date: '2026-09-05',
     dateLabel: '5 sep 2026',

@@ -109,6 +109,29 @@ usuario permanecen en el código o en esta continuidad; no se copian al panel.
 **Rama de trabajo:** `main`.
 **Entrega admin aprobada para Git:** `aef0741` (dashboard, Check-In y pantallas PC/móvil).
 
+### Dominio SEO unificado (publicación autorizada, 05/09/2026)
+
+La web publicada redirige de alista.com.ar a www.alista.com.ar, pero su canonical,
+sitemap y datos estructurados señalaban el origen sin www. Por pedido del owner,
+`lib/site-url.ts` centraliza https://www.alista.com.ar para metadataBase, robots,
+sitemap y marca. Es independiente de los enlaces operativos y retornos de checkout.
+Entrega autorizada para producción por el owner («publicá todo»). Verificación
+previa: 384 tests / 36 archivos, tsc, lint completo y build de 47 páginas OK.
+Favicon: el owner identificó `public/alista-mark.svg` como fuente correcta.
+Contiene el mismo dibujo que el SVG anterior. Se derivaron de ese archivo el SVG
+cuadrado 512, favicon.ico (16/32/48/256) y Apple 180. Se conserva la identidad;
+el ICO agrega compatibilidad para clientes que buscan /favicon.ico.
+
+### Diagnóstico de cobros del servicio (publicación autorizada, 05/09/2026)
+
+El aviso «Pendiente» confundía ausencia de configuración con una aprobación pendiente.
+Para el staff, Salud operativa ahora identifica el entorno y muestra «Sin configurar»
+o «Configurado», aclarando que sólo comprueba presencia de credencial y que los cobros
+de invitaciones son independientes. El entorno local no tiene credencial propia de
+Alista; no se copiaron secretos ni se verificó la configuración de producción.
+No cambian cobros, permisos ni activaciones. Aceptación: identificar entorno y alcance
+sin presentar ausencia de configuración como fallo del proveedor. Tsc y 383 tests OK.
+
 ### Resto del admin PC/móvil (aprobado para Git el 05/09/2026)
 
 Pedido: «hace lo mismo con todas las otras (excepto puerta)». Se interpreta como

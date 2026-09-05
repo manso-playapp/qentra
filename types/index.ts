@@ -133,6 +133,7 @@ export interface DeliveryLog {
 }
 
 export interface DeliveryHealthStatus {
+  environment: 'local' | 'preview' | 'production' | 'server'
   serviceRoleConfigured: boolean
   alistaMercadoPago: {
     ready: boolean

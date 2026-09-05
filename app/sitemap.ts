@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next'
-import { getPublicAppUrl } from '@/lib/public-url'
+import { ALISTA_SITE_URL } from '@/lib/site-url'
 
-const siteUrl = getPublicAppUrl() || 'https://alista.com.ar'
+const siteUrl = ALISTA_SITE_URL
 
 const pages: Array<{
   path: string

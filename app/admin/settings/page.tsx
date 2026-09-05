@@ -810,13 +810,13 @@ export default function SettingsPage() {
             <Card id="settings-email" className="scroll-mt-5 bg-admin-panel">
               <CardHeader className="flex-wrap items-start justify-between gap-4 sm:flex-row">
                 <div>
-                  <CardDescription>Servicio de email</CardDescription>
+                  <CardDescription>Servicios conectados</CardDescription>
                   <CardTitle className="flex items-center gap-2">
                     <Activity className="size-4 text-primary" />
                     Salud operativa
                   </CardTitle>
                   <CardDescription>
-                    Estado real de variables para envio por email y alta operativa.
+                    Configuración de cobros y email en este entorno.
                   </CardDescription>
                 </div>
                 <Button type="button" variant="outline" size="sm" onClick={() => fetchDeliveryHealth()}>
@@ -835,14 +835,30 @@ export default function SettingsPage() {
                   <div className="space-y-3">
                     <div className="grid gap-3">
                       <div className="rounded-[24px] border border-border/70 bg-white/75 p-4">
-                        <div className="flex items-center justify-between gap-3">
-                          <p className="font-medium text-foreground">Mercado Pago · servicio Alista</p>
-                          <HealthBadge ready={deliveryHealth.alistaMercadoPago.ready} />
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                          <div>
+                            <p className="font-medium text-foreground">Mercado Pago · servicio Alista</p>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              {deliveryHealth.environment === 'local' ? 'Entorno local'
+                                : deliveryHealth.environment === 'production' ? 'Sitio en producción'
+                                  : deliveryHealth.environment === 'preview' ? 'Vista previa de Vercel'
+                                    : 'Este servidor'}
+                            </p>
+                          </div>
+                          <Badge variant={deliveryHealth.alistaMercadoPago.ready ? 'success' : 'warning'}>
+                            {deliveryHealth.alistaMercadoPago.ready
+                              ? deliveryHealth.alistaMercadoPago.mode === 'test' ? 'Configurado · pruebas' : 'Configurado'
+                              : 'Sin configurar'}
+                          </Badge>
                         </div>
                         <p className="mt-2 text-sm text-muted-foreground">
                           {deliveryHealth.alistaMercadoPago.ready
-                            ? `Cuenta propia configurada (${deliveryHealth.alistaMercadoPago.mode === 'test' ? 'pruebas' : 'producción'}). Se usa solo para el servicio de Alista.`
-                            : 'La cuenta propia de Alista necesita atención antes de activar nuevos eventos.'}
+                            ? 'Credencial disponible para cobrar el servicio de Alista. Este indicador no verifica la conexión con Mercado Pago.'
+                            : 'Falta configurar la credencial de la cuenta de Alista en este entorno. El cobro online del servicio no está disponible aquí.'}
+                        </p>
+                        <p className="mt-2 text-sm text-muted-foreground">
+                          Los cobros de invitaciones a la cuenta responsable se configuran por separado en cada evento.
+                          {deliveryHealth.environment === 'local' && ' Esta pantalla no comprueba la configuración del sitio en producción.'}
                         </p>
                       </div>
                       <div className="rounded-[24px] border border-border/70 bg-white/75 p-4">
