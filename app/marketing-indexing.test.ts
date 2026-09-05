@@ -34,6 +34,7 @@ describe('public marketing indexing', () => {
       '/casos',
       '/profesionales',
       '/precios',
+      '/autogestion',
       '/seguridad',
       '/demo',
       '/contacto',

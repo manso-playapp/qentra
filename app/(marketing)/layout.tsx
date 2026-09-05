@@ -42,6 +42,14 @@ const structuredData = {
       publisher: { '@id': `${siteUrl}/#organization` },
     },
     {
+      '@type': 'Service',
+      name: 'Personalización y acompañamiento para cumpleaños de 15',
+      serviceType: 'Diseño de invitaciones y preparación de invitados y recepción',
+      url: `${siteUrl}/precios`,
+      provider: { '@id': `${siteUrl}/#organization` },
+      description: 'Diseño, configuración, revisión de pendientes y capacitación de recepción por propuesta acordada con la familia.',
+    },
+    {
       '@type': 'SoftwareApplication',
       name: 'Alista',
       applicationCategory: 'BusinessApplication',
@@ -49,7 +57,7 @@ const structuredData = {
       url: siteUrl,
       inLanguage: 'es-AR',
       description:
-        'Alista prepara invitaciones, confirmaciones, grupos, entradas y accesos para cumpleaños de 15.',
+        'Plataforma para invitaciones, invitados y recepción de cumpleaños de 15, disponible por cuenta propia o como parte del servicio de personalización y acompañamiento.',
       provider: { '@id': `${siteUrl}/#organization` },
     },
   ],

@@ -25,6 +25,7 @@ function InvitationMock() {
         <p className="mt-2 font-display text-sm font-semibold text-foreground">Sofía cumple 15</p>
         <div className="mt-3 flex flex-wrap gap-1.5">
           <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+            Dónde y cuándo
           </span>
           <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
             Tu canción
@@ -61,13 +62,13 @@ function DoorMock() {
       </div>
       <div className="mt-3 grid grid-cols-3 gap-1.5">
         <span className="rounded-md bg-emerald-50 py-1 text-center text-[9px] font-semibold text-emerald-700">
-          Habilitar
+          Ingresar
         </span>
         <span className="rounded-md bg-secondary py-1 text-center text-[9px] font-semibold text-muted-foreground">
           Buscar
         </span>
         <span className="rounded-md bg-amber-50 py-1 text-center text-[9px] font-semibold text-amber-700">
-          Excepción
+          Consultar
         </span>
       </div>
     </div>
@@ -93,22 +94,22 @@ const SURFACES = [
   {
     icon: Sparkles,
     eyebrow: 'La invitación',
-    title: 'Una experiencia, no un formulario.',
-    body: 'El invitado abre una invitación personal desde WhatsApp: confirma, deja su saludo y elige su canción. Se siente esperado antes de llegar.',
+    title: 'El estilo de sus 15, desde el primer mensaje.',
+    body: 'Preparamos el diseño y los textos con ustedes. Madre e hija comparten los enlaces desde su propio WhatsApp; cada invitado encuentra cómo confirmar y prepararse para la fiesta.',
     mock: <InvitationMock />,
   },
   {
     icon: DoorOpen,
     eyebrow: 'El panel y la puerta',
-    title: 'Delegá el estrés de la puerta.',
-    body: 'El equipo valida en segundos, reconoce duplicados y resuelve excepciones sin llamarte. Vos ves el cupo y los pagos en tiempo real, sin tocar la puerta.',
+    title: 'Un equipo que sabe cómo recibir.',
+    body: 'Capacitamos al personal de la organización con los celulares asignados para la fiesta. Acordamos quién consulta y resuelve cada situación antes de abrir la recepción.',
     mock: <DoorMock />,
   },
   {
     icon: PartyPopper,
-    eyebrow: 'El totem',
+    eyebrow: 'El recibidor opcional',
     title: 'Una bienvenida que emociona.',
-    body: 'Al entrar, una pantalla recibe a cada invitado con su nombre y su foto. La acreditación deja de ser un trámite y se vuelve parte de la fiesta.',
+    body: 'Una pantalla puede sumar una bienvenida después del control. Recepción confirma el ingreso desde su celular. Los equipos y su instalación se presupuestan aparte con terceros.',
     mock: <TotemMock />,
   },
 ]
@@ -118,12 +119,14 @@ export function ProductSurfaces() {
     <section className="mx-auto w-full max-w-6xl px-6 py-20">
       <div className="max-w-2xl">
         <p className="text-sm font-semibold uppercase tracking-[0.16em] text-primary">
-          Una plataforma, tres momentos
+          Diseño, preparación y llegada
         </p>
         <h2 className="mt-3 text-balance font-display text-2xl font-semibold tracking-[-0.01em] text-foreground sm:text-3xl">
-          Cuida la experiencia de punta a punta.
+          Preparamos lo que cada momento necesita.
         </h2>
       </div>
+
+      <p className="mt-6 text-xs leading-5 text-muted-foreground">Pantallas ilustrativas con datos ficticios. El alcance y los adicionales se acuerdan en la propuesta.</p>
 
       <div className="mt-12 grid gap-6 lg:grid-cols-3">
         {SURFACES.map((surface) => {

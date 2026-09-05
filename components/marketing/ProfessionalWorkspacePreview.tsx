@@ -31,8 +31,8 @@ export function ProfessionalWorkspacePreview() {
     <div className="overflow-hidden rounded-[2.5rem] bg-[#f0eee8] text-[#171714] shadow-[0_35px_90px_rgba(0,0,0,0.22)]">
       <div className="flex flex-col gap-4 border-b border-black/10 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-7">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-black/65">Espacio profesional · escenario demo</p>
-          <p className="marketing-display mt-2 text-3xl font-black tracking-[-0.01em]">Temporada de 15</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-black/65">Colaboración · escenario ilustrativo</p>
+          <p className="marketing-display mt-2 text-3xl font-black tracking-[-0.01em]">Cada familia, su fiesta</p>
         </div>
         <span className="inline-flex w-fit items-center gap-2 rounded-full bg-[#173b36] px-4 py-2 text-xs font-bold text-white">
           <CalendarDays className="size-4" aria-hidden="true" />
@@ -43,8 +43,8 @@ export function ProfessionalWorkspacePreview() {
       <div className="grid lg:grid-cols-[1.2fr_0.8fr]">
         <div className="border-b border-black/10 p-5 sm:p-7 lg:border-b-0 lg:border-r">
           <div className="flex items-center justify-between gap-4">
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-black/65">Tus eventos</p>
-            <span className="text-xs font-bold text-black/65">Una sola vista</span>
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-black/65">Eventos en los que colaborás</p>
+            <span className="text-xs font-bold text-black/65">Por invitación</span>
           </div>
           <div className="mt-5 space-y-2">
             {events.map((event) => (
@@ -68,13 +68,13 @@ export function ProfessionalWorkspacePreview() {
         <div className="flex flex-col p-5 sm:p-7">
           <p className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.18em] text-black/65">
             <Layers3 className="size-4 text-[#c65035]" aria-hidden="true" />
-            Base reutilizable
+            Preparación compartida
           </p>
           <div className="mt-5 rounded-2xl bg-[#171714] p-5 text-white">
-            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/65">Plantilla del evento</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/65">Configuración acordada</p>
             <p className="marketing-display mt-2 text-3xl font-black tracking-[-0.01em]">Cena + trasnoche</p>
             <ul className="mt-5 space-y-3">
-              {['Invitación y confirmación', 'Tipos de acceso', 'Equipo de recepción'].map((item) => (
+              {['Invitación y confirmación', 'Tipos de acceso', 'Referente de recepción'].map((item) => (
                 <li key={item} className="flex items-center gap-3 text-xs font-bold text-white/65">
                   <span className="grid size-5 place-items-center rounded-full bg-[#d9ee73] text-[#171714]">
                     <Check className="size-3" strokeWidth={3} aria-hidden="true" />
@@ -88,7 +88,7 @@ export function ProfessionalWorkspacePreview() {
           <div className="mt-4 rounded-2xl border border-black/10 bg-white/55 p-4">
             <p className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.16em] text-black/65">
               <Users className="size-4 text-[#213480]" aria-hidden="true" />
-              Equipo
+              Equipo de la organización
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
               {roles.map((role) => (
@@ -98,6 +98,7 @@ export function ProfessionalWorkspacePreview() {
               ))}
             </div>
           </div>
+          <p className="mt-4 text-xs leading-5 text-black/65">La responsable de cada fiesta conserva la propiedad del evento. Alista acompaña la preparación y capacita al equipo acordado.</p>
         </div>
       </div>
     </div>

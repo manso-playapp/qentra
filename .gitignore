@@ -50,3 +50,10 @@ next-env.d.ts
 
 # supabase local CLI artifacts
 supabase/.temp/
+
+# Local document previews, render logs and font caches
+/tmp/
+
+# Client-specific operational records (public repository)
+/docs/operacion/PROTOCOLO_EVENTO_Y_EVIDENCIA.md
+/output/pdf/alista-protocolo-alfonsina.pdf

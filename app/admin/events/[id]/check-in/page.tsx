@@ -18,7 +18,7 @@ export default async function EventCheckinPage({ params }: EventCheckinPageProps
   const supabase = await createServerSupabaseClient()
   const { data, error } = await supabase
     .from('events')
-    .select('id, name, slug, event_date, start_time, max_capacity')
+    .select('id, name, slug, event_date, start_time, max_capacity, guest_types(is_active, access_start_time, access_end_time, access_start_day_offset, access_end_day_offset)')
     .eq('id', id)
     .maybeSingle()
 
@@ -38,8 +38,20 @@ export default async function EventCheckinPage({ params }: EventCheckinPageProps
 
   return (
     <AdminLayout>
+      <details className="mb-5 rounded-2xl border border-sky-200 bg-sky-50 p-5 text-slate-800">
+        <summary className="cursor-pointer text-base font-semibold">Preparar al equipo de recepción</summary>
+        <p className="mt-3 text-sm leading-6">Repasá estos puntos con el equipo antes de abrir. Esta guía no reemplaza el ensayo con los equipos y la conexión del lugar.</p>
+        <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm leading-6">
+          <li>Designar a una persona de la organización para resolver dudas de lista, pagos y horarios.</li>
+          <li>Asignar celulares cargados, cargadores y conexión. Confirmar quién los aporta y tener un equipo de reemplazo.</li>
+          <li>Iniciar sesión en cada puesto y ensayar con invitaciones de prueba: acceso habilitado, pago pendiente, código repetido y grupo con acompañantes.</li>
+          <li>Ante una excepción, apartar la consulta de la fila y avisar al referente. Un comprobante reenviado no habilita el acceso.</li>
+          <li>Cuando el celular confirma el registro, dejar pasar. Si hay recibidor digital, ubicarlo después del control sin esperar su animación.</li>
+        </ol>
+        <p className="mt-3 text-sm font-medium">El personal de recepción lo aporta la organización. Acordá previamente el alcance y horario del soporte de Alista.</p>
+      </details>
       <EventCheckinManager
-        event={data as Pick<Event, 'id' | 'name' | 'slug' | 'event_date' | 'start_time' | 'max_capacity'>}
+        event={data as Pick<Event, 'id' | 'name' | 'slug' | 'event_date' | 'start_time' | 'max_capacity' | 'guest_types'>}
         sidebarSlot={<DoorScannerLink eventId={id} />}
       />
     </AdminLayout>

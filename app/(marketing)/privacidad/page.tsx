@@ -3,39 +3,18 @@ import { createMarketingMetadata } from '@/lib/marketing-seo'
 export const metadata = createMarketingMetadata({
   title: 'Política de privacidad',
   description:
-    'Cómo Alista trata los datos personales: con proporcionalidad, consentimiento y control.',
+    'Qué información se utiliza para preparar la fiesta, quién puede consultarla y cómo solicitar acceso o cambios.',
   path: '/privacidad',
 })
 
 const SECTIONS = [
-  {
-    title: '1. Qué datos tratamos',
-    body: 'Tratamos únicamente los datos personales necesarios para vincular a una persona con su pago y su acceso: datos de contacto, confirmaciones de asistencia, acompañantes, información de pago o aporte y datos de acceso. Pedimos solo la información que tiene un uso concreto.',
-  },
-  {
-    title: '2. Para qué los usamos',
-    body: 'Usamos los datos para ordenar la apertura de una fiesta: vincular pago y persona, organizar invitados, respetar el cupo y gestionar el ingreso. No los usamos para vigilancia ni para elaborar perfiles que excedan esa finalidad.',
-  },
-  {
-    title: '3. Menores de edad',
-    body: 'Muchas de estas celebraciones involucran a adolescentes. Cuando se tratan datos de menores, lo hacemos con especial cuidado y bajo la responsabilidad del organizador y de las familias, limitando la información a la estrictamente necesaria para el acceso.',
-  },
-  {
-    title: '4. Consentimiento y control',
-    body: 'El tratamiento se realiza sobre la base del consentimiento y de la relación con el organizador de la fiesta. Las personas pueden solicitar acceder, rectificar, actualizar o suprimir sus datos.',
-  },
-  {
-    title: '5. Conservación y seguridad',
-    body: 'Conservamos los datos por el tiempo necesario para la finalidad de la fiesta y aplicamos medidas técnicas y organizativas razonables. La lógica sensible y las validaciones se resuelven del lado del servidor.',
-  },
-  {
-    title: '6. Terceros',
-    body: 'Podemos apoyarnos en proveedores de infraestructura y de envío de comunicaciones para prestar el servicio, sujetos a obligaciones de confidencialidad y seguridad. No vendemos datos personales.',
-  },
-  {
-    title: '7. Derechos y contacto',
-    body: 'De acuerdo con la Ley 25.326 de Protección de Datos Personales de Argentina, podés ejercer tus derechos escribiendo a hola@alista.com.ar. La autoridad de control es la Agencia de Acceso a la Información Pública.',
-  },
+  { title: '1. Información de la fiesta', body: 'Alista trata los datos que la organización y los invitados aportan para preparar la celebración: nombres, contactos, confirmaciones, acompañantes y condiciones de acceso. Según la configuración, la invitación puede pedir una foto, documento, menú u observaciones. La responsable debe revisar qué información necesita para su fiesta.' },
+  { title: '2. Uso de la información', body: 'La información se usa para configurar y personalizar invitaciones, reunir respuestas, revisar pendientes y preparar la recepción. Cuando hay entradas pagas, se vincula el estado del pago con la invitación. Las preferencias o restricciones aportadas por invitados deben compartirse sólo con quienes las necesitan para la organización.' },
+  { title: '3. Personas con acceso', body: 'La responsable y quienes están autorizados en el evento pueden consultar la información de su organización. El equipo de soporte de Alista tiene acceso para configurar y asistir. La responsable debe cuidar las credenciales y revisar quién participa en su equipo.' },
+  { title: '4. Adolescentes e imágenes', body: 'La organización debe contar con las autorizaciones que correspondan para aportar datos e imágenes de menores. El uso de una foto o video en la fiesta no equivale a autorizar su publicación en la comunicación de Alista. Los casos y testimonios requieren autorización específica.' },
+  { title: '5. Pagos y proveedores', body: 'Mercado Pago procesa las entradas pagas en la cuenta receptora de la responsable. Alista registra la información necesaria para relacionar el pago y la invitación. La prestación también utiliza proveedores de infraestructura. Los envíos personales por WhatsApp ocurren desde la cuenta de cada remitente. No vendemos datos personales.' },
+  { title: '6. Conservación y solicitudes', body: 'Los datos cargados permanecen asociados al evento para su gestión y consulta. La activación comercial no elimina los datos de un evento sin activar. Podés solicitar información sobre su conservación, acceso, actualización o supresión escribiendo a hola@alista.com.ar.' },
+  { title: '7. Tus derechos', body: 'La Ley 25.326 reconoce derechos sobre tus datos personales, incluidos acceso, rectificación y, cuando corresponda, supresión. Para ejercerlos o consultar por información de un menor a tu cargo, escribí a hola@alista.com.ar. La autoridad de control en Argentina es la Agencia de Acceso a la Información Pública.' },
 ]
 
 export default function PrivacidadPage() {
@@ -47,8 +26,8 @@ export default function PrivacidadPage() {
         Política de privacidad
       </h1>
       <p className="mt-7 max-w-2xl text-sm leading-6 text-black/58">
-        Este documento describe el enfoque de Alista sobre el tratamiento de datos personales. Es
-        una versión base y debe revisarse con asesoría legal antes de su publicación definitiva.
+        Información sobre los datos que se usan al organizar una fiesta con Alista. Esta versión
+        está en revisión antes de su publicación definitiva.
       </p>
 
       <div className="mt-14 border-t border-black/15">
@@ -59,6 +38,7 @@ export default function PrivacidadPage() {
           </div>
         ))}
       </div>
+      <p className="mt-8 text-sm leading-6 text-black/65">Podés consultar también la <a href="https://www.argentina.gob.ar/aaip/datospersonales/derechos" className="font-bold underline underline-offset-4">guía de derechos de la AAIP</a>.</p>
       </div>
     </section>
   )

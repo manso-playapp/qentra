@@ -20,6 +20,35 @@ o pagos**, manda este.
 
 ## 1. Comprador y dueño: la responsable del evento
 
+### Modalidad acompañada aprobada el 05/09/2026
+
+El owner aprobó priorizar comercialmente personalización y acompañamiento para
+fiestas de 15 con trasnoche, acompañantes y pagos. Convive con la plataforma
+autogestiva por evento; no cambia propiedad, permisos ni cuenta receptora.
+
+- La familia contrata un alcance escrito de diseño, configuración, seguimiento,
+  capacitación y soporte en horarios acordados. La activación se incluye en el
+  servicio acompañado y no se factura dos veces.
+- La referencia cercana a USD 1.000 es una hipótesis comercial para validar con
+  nuevas contrataciones y costos; no reemplaza automáticamente el precio de
+  activación autogestiva ni constituye una tarifa pública cerrada.
+- Personal de recepción y referente operativo provistos por la organización.
+  Equipos y recibidor digital pueden cotizarse aparte con terceros. Alista
+  prepara y acompaña; no incorpora personal propio de recepción.
+- El celular confirma el ingreso. El recibidor es una bienvenida opcional
+  posterior al control y no debe condicionar el paso a una animación.
+- Desarrollo de funciones nuevas no forma parte automática de personalización.
+  Se acuerdan entregas y revisiones antes de contratar.
+- La web presenta el servicio acompañado como oferta principal. `/precios`
+  conserva su URL y se presenta como «Cómo contratar», con presupuesto por fiesta.
+  La autogestión se explica en `/autogestion`, alternativa secundaria con ARS
+  89.000 visibles antes de crear la cuenta. El checkout conserva su importe;
+  esa tarifa no representa el servicio personalizado.
+
+Evidencia: relato del owner sobre un primer evento Dharma exitoso y una próxima
+contratación cercana a USD 1.000. No se asume demanda regional validada ni margen
+demostrado. Plan comercial de 90 días aprobado en la conversación del 05/09/2026.
+
 ### DECISIÓN CERRADA
 
 El producto es **personal y autogestivo**. La dueña de la cuenta y del evento es la

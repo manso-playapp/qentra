@@ -22,49 +22,46 @@ const attentionItems = [
     icon: Users,
     eyebrow: 'Confirmaciones',
     title: '17 grupos todavía no confirmaron.',
-    detail: 'Alista los ordena por último contacto para que puedas decidir a quién escribir primero.',
+    detail: 'En la revisión acordamos a quién consultar. Madre e hija escriben a sus contactos desde su propio WhatsApp.',
     action: 'Ver grupos',
-    resolveAction: 'Marcar seguimiento iniciado',
+    resolveAction: 'Revisar este ejemplo',
   },
   {
     id: 'payments',
     icon: CreditCard,
     eyebrow: 'Pagos',
     title: '2 pagos siguen pendientes.',
-    detail: 'Los dos accesos permanecen reservados y todavía no están habilitados para la puerta.',
+    detail: 'Revisamos el estado asociado a cada invitación. Una captura de transferencia reenviada no reemplaza un pago confirmado.',
     action: 'Revisar pagos',
-    resolveAction: 'Marcar pagos revisados',
+    resolveAction: 'Revisar este ejemplo',
   },
   {
     id: 'groups',
     icon: Users,
     eyebrow: 'Grupos',
-    title: 'Un acompañante fue modificado.',
-    detail: 'Familia López cambió a su acompañante. El grupo conserva un único QR y requiere validación.',
-    action: 'Ver cambio',
-    resolveAction: 'Validar modificación',
+    title: 'Falta el nombre de un acompañante.',
+    detail: 'Acordamos quién pide el dato. El importe de una invitación paga contempla los lugares completados con nombre.',
+    action: 'Revisar acompañantes',
+    resolveAction: 'Revisar este ejemplo',
   },
   {
     id: 'restrictions',
     icon: Utensils,
     eyebrow: 'Restricciones',
-    title: 'Martina agregó un menú vegetariano.',
-    detail: 'La novedad ya está asociada a su confirmación y lista para compartir con el salón.',
-    action: 'Revisar cambio',
-    resolveAction: 'Marcar restricción revisada',
+    title: 'Hay un menú vegetariano para informar.',
+    detail: 'Revisamos la información recibida y acordamos quién la comunica al salón antes de la fiesta.',
+    action: 'Revisar información',
+    resolveAction: 'Revisar este ejemplo',
   },
 ] as const
 
 type AttentionId = (typeof attentionItems)[number]['id']
 
 const preparationFactors = [
-  { id: 'confirmations', label: 'Confirmaciones', detail: '163 confirmados', base: 23, max: 25 },
-  { id: 'payments', label: 'Pagos', detail: '2 pendientes', base: 18, max: 20 },
-  { id: 'groups', label: 'Grupos', detail: '3 incompletos', base: 13, max: 15 },
-  { id: 'restrictions', label: 'Restricciones', detail: '1 cambio nuevo', base: 8, max: 10 },
-  { id: 'qr', label: 'Invitaciones y QR', detail: 'Generados', base: 10, max: 10 },
-  { id: 'mercadopago', label: 'Mercado Pago', detail: 'Conectado', base: 10, max: 10 },
-  { id: 'reception', label: 'Recepción', detail: 'Preparada', base: 10, max: 10 },
+  { id: 'confirmations', label: 'Confirmaciones', detail: 'Definir quién consulta a quienes faltan' },
+  { id: 'payments', label: 'Pagos', detail: 'Revisar estados cuando hay entradas pagas' },
+  { id: 'groups', label: 'Acompañantes', detail: 'Completar nombres y revisar cantidades' },
+  { id: 'restrictions', label: 'Necesidades alimentarias', detail: 'Comunicar lo necesario al salón' },
 ] as const
 
 const operationalItems = [
@@ -73,21 +70,21 @@ const operationalItems = [
     icon: WalletCards,
     label: 'Mercado Pago',
     action: 'Ver conexión',
-    detail: 'Cuenta conectada. Los cobros se acreditan directamente en la cuenta del organizador.',
+    detail: 'En fiestas con entrada paga, la responsable conecta su cuenta receptora. La disponibilidad del dinero depende de Mercado Pago.',
   },
   {
     id: 'qr',
     icon: QrCode,
-    label: 'QR generados',
-    action: 'Ver accesos',
-    detail: 'Cada grupo confirmado ya tiene un acceso único y trazable para la recepción.',
+    label: 'Invitaciones y QR',
+    action: 'Qué revisamos',
+    detail: 'Probamos los enlaces, los horarios y un ingreso de grupo completo. Confirmar asistencia y registrar el ingreso son pasos distintos.',
   },
   {
     id: 'reception',
     icon: DoorOpen,
     label: 'Recepción',
     action: 'Ver preparación',
-    detail: 'Equipo asignado, dispositivos listos y listado descargado para contingencias.',
+    detail: 'Acordamos un referente de la organización y ensayamos con celulares asignados, cargadores y conexión. El recibidor es opcional y va después del control.',
   },
 ] as const
 
@@ -105,13 +102,7 @@ export function PreparationCenterDemo() {
   const selectedOperational =
     operationalItems.find((item) => item.id === selectedOperationalId) ?? operationalItems[0]
   const selectedAttentionResolved = resolvedAttentionIds.includes(selectedAttention.id)
-  const preparationScore = preparationFactors.reduce(
-    (total, factor) =>
-      total +
-      factor.base +
-      (resolvedAttentionIds.includes(factor.id as AttentionId) ? factor.max - factor.base : 0),
-    0
-  )
+  const reviewedCount = resolvedAttentionIds.length
 
   function resolveAttentionItem(id: AttentionId) {
     if (resolvedAttentionIds.includes(id)) return
@@ -140,31 +131,30 @@ export function PreparationCenterDemo() {
         <div>
           <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-black/60">
             <span className="size-2 rounded-full bg-[#d75437]" aria-hidden="true" />
-            Escenario demo · no son métricas de Dharma
+            Ejemplos ficticios de una revisión acompañada
           </div>
           <p className="marketing-display mt-5 text-7xl font-black leading-none tracking-[-0.02em] sm:text-8xl">
-            <span aria-live="polite">{preparationScore}%</span>
+            <span aria-live="polite">{reviewedCount}/4</span>
           </p>
-          <p className="mt-2 text-sm font-bold">Preparación del evento</p>
+          <p className="mt-2 text-sm font-bold">Ejemplos recorridos</p>
         </div>
 
         <div>
           <div
             className="h-3 overflow-hidden rounded-full bg-black/10"
             role="progressbar"
-            aria-label="Nivel de preparación del escenario demo"
+            aria-label="Ejemplos de revisión recorridos"
             aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={preparationScore}
+            aria-valuemax={4}
+            aria-valuenow={reviewedCount}
           >
             <div
               className="h-full rounded-full bg-[#d75437] transition-[width] duration-500 motion-reduce:transition-none"
-              style={{ width: `${preparationScore}%` }}
+              style={{ width: `${(reviewedCount / 4) * 100}%` }}
             />
           </div>
           <p className="mt-4 max-w-2xl text-sm leading-6 text-black/65">
-            El porcentaje suma siete factores visibles. Revisá los pendientes para ver cómo cambia, sin
-            puntajes ocultos ni gamificación.
+            Así trabajamos sobre los pendientes en los encuentros acordados. Recorrer estos ejemplos no confirma invitados, acredita pagos ni mide la preparación de una fiesta real.
           </p>
         </div>
       </div>
@@ -173,9 +163,9 @@ export function PreparationCenterDemo() {
         <section className="border-b border-black/10 p-6 sm:p-8 lg:border-b-0 lg:border-r lg:p-10" aria-labelledby="attention-title">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#9d3524]">Inbox operativo</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#9d3524]">Revisión con Alista</p>
               <h3 id="attention-title" className="marketing-display mt-2 text-4xl font-black tracking-[-0.015em]">
-                Necesita tu atención
+                Qué revisamos juntos
               </h3>
             </div>
             {resolvedAttentionIds.length > 0 ? (
@@ -245,7 +235,7 @@ export function PreparationCenterDemo() {
               onClick={() => resolveAttentionItem(selectedAttention.id)}
               className="mt-5 flex min-h-11 w-full items-center justify-between rounded-full bg-[#d9ee73] px-5 text-sm font-black text-[#171714] transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#171714] disabled:cursor-default disabled:bg-white/12 disabled:text-white/45"
             >
-              {selectedAttentionResolved ? 'Acción registrada' : selectedAttention.resolveAction}
+              {selectedAttentionResolved ? 'Ejemplo revisado' : selectedAttention.resolveAction}
               {selectedAttentionResolved ? (
                 <Check className="size-4" strokeWidth={3} aria-hidden="true" />
               ) : (
@@ -256,15 +246,14 @@ export function PreparationCenterDemo() {
         </section>
 
         <section className="p-6 sm:p-8 lg:p-10" aria-labelledby="factors-title">
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-black/60">Cálculo transparente</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-black/60">Seguimiento acordado</p>
           <h3 id="factors-title" className="marketing-display mt-2 text-4xl font-black tracking-[-0.015em]">
-            Los siete factores
+            Cada pendiente, una acción
           </h3>
 
           <dl className="mt-7 divide-y divide-black/10 border-y border-black/10">
             {preparationFactors.map((factor) => {
               const resolved = resolvedAttentionIds.includes(factor.id as AttentionId)
-              const current = resolved ? factor.max : factor.base
 
               return (
                 <div key={factor.id} className="grid grid-cols-[1fr_auto] items-center gap-4 py-3.5">
@@ -273,13 +262,13 @@ export function PreparationCenterDemo() {
                     <span className="mt-0.5 block text-xs text-black/60">{factor.detail}</span>
                   </dt>
                   <dd className="m-0 text-right">
-                    <span className="marketing-display text-xl font-black">
-                      {current}/{factor.max}
+                    <span className="text-xs font-bold">
+                      {resolved ? 'Visto' : 'Por ver'}
                     </span>
                     <div className="mt-1 h-1.5 w-16 overflow-hidden rounded-full bg-black/10" aria-hidden="true">
                       <div
-                        className={`h-full rounded-full ${current === factor.max ? 'bg-[#173b36]' : 'bg-[#d75437]'}`}
-                        style={{ width: `${(current / factor.max) * 100}%` }}
+                        className={`h-full rounded-full ${resolved ? 'bg-[#173b36]' : 'bg-[#d75437]'}`}
+                        style={{ width: resolved ? '100%' : '0%' }}
                       />
                     </div>
                   </dd>
@@ -289,7 +278,7 @@ export function PreparationCenterDemo() {
           </dl>
 
           <div className="mt-8">
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-black/60">Operación preparada</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-black/60">También preparamos</p>
             <div className="mt-3 grid gap-2 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
               {operationalItems.map((item) => {
                 const Icon = item.icon

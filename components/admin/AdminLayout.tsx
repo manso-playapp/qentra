@@ -22,6 +22,7 @@ import AdminEventSidebar from '@/components/admin/AdminEventSidebar'
 
 interface AdminLayoutProps {
   children: ReactNode
+  mobileEventNavigation?: boolean
 }
 
 const ADMIN_NAV_ITEMS = [
@@ -152,9 +153,10 @@ function getPageHeader(pathname: string): PageHeader {
   }
 }
 
-export default function AdminLayout({ children }: AdminLayoutProps) {
+export default function AdminLayout({ children, mobileEventNavigation = false }: AdminLayoutProps) {
   const pathname = usePathname()
   const header = getPageHeader(pathname)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
   const { isGlobalAdmin, identity } = useAdminAccess()
   // Arranca en false para que server y cliente hidraten igual; la preferencia
@@ -181,8 +183,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   return (
     <div className="admin-shell">
       <div className="relative mx-auto flex min-h-screen max-w-[1720px] flex-col px-4 py-4 lg:flex-row lg:gap-6 lg:px-6">
+        {mobileEventNavigation && <div className="mb-3 flex items-center justify-between md:hidden"><Link href="/admin" className="text-sm font-bold tracking-[0.2em] text-slate-800">ALISTA</Link><button type="button" aria-expanded={mobileMenuOpen} aria-controls="admin-event-mobile-menu" onClick={() => setMobileMenuOpen(open => !open)} className="min-h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-800">{mobileMenuOpen ? 'Cerrar menú' : 'Menú de cuenta'}</button></div>}
         <aside
+          id={mobileEventNavigation ? 'admin-event-mobile-menu' : undefined}
           className={cn(
+            mobileEventNavigation && !mobileMenuOpen && 'hidden md:block',
             'lg:sticky lg:top-4 lg:h-[calc(100vh-2rem)] lg:flex-none lg:transition-[width] lg:duration-300',
             collapsed ? 'lg:w-[92px]' : 'lg:w-[312px]'
           )}

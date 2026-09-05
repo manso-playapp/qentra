@@ -6,7 +6,7 @@ import AdminLayout from '@/components/admin/AdminLayout'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { formatEventDate } from '@/lib/event-date'
+import { formatEventSchedule } from '@/lib/event-schedule'
 import { useEvents } from '@/lib/hooks'
 
 const EVENT_TYPE_LABELS: Record<string, string> = {
@@ -57,11 +57,11 @@ export default function EventsPage() {
               </Button>
             </div>
           ) : (
-            <div className="grid gap-4 xl:grid-cols-2">
+            <div className="grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-2">
               {events.map((event) => (
                 <article
                   key={event.id}
-                  className="flex flex-col rounded-[28px] border border-border/70 bg-white/80 p-6 transition hover:border-primary/30 hover:bg-white"
+                  className="flex min-w-0 flex-col rounded-[28px] border border-border/70 bg-white/80 p-6 transition hover:border-primary/30 hover:bg-white"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
@@ -91,7 +91,7 @@ export default function EventsPage() {
                   <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
                     <span className="flex items-center gap-2">
                       <CalendarDays className="size-4 flex-none" />
-                      {formatEventDate(event.event_date)} · {event.start_time}
+                      {formatEventSchedule(event, event.guest_types ?? [], { compact: true })}
                     </span>
                     <span className="flex items-center gap-2">
                       <MapPin className="size-4 flex-none" />

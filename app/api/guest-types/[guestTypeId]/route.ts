@@ -1,5 +1,6 @@
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
 import { ensureAuthorizedEventApiAccess } from '@/lib/operator-auth'
+import { validateAccessSchedule } from '@/lib/event-schedule'
 
 type GuestTypeRouteContext = {
   params: Promise<{
@@ -12,10 +13,10 @@ type UpdateGuestTypeRequestBody = {
   description?: string
   is_active?: boolean
   access_policy_label?: string
-  access_start_time?: string
-  access_end_time?: string
-  access_start_day_offset?: number
-  access_end_day_offset?: number
+  access_start_time?: string | null
+  access_end_time?: string | null
+  access_start_day_offset?: number | null
+  access_end_day_offset?: number | null
   payment_amount_cents?: number
   show_gift_info?: boolean
   invitation_message?: string
@@ -50,6 +51,31 @@ async function getAuthorizedAdminClient() {
 }
 
 export async function PATCH(request: Request, context: GuestTypeRouteContext) {
+  let rawBody: unknown
+  try {
+    rawBody = await request.json()
+  } catch {
+    return Response.json({ error: 'El cuerpo de la solicitud debe ser JSON válido.' }, { status: 400 })
+  }
+  if (!rawBody || typeof rawBody !== 'object' || Array.isArray(rawBody)) {
+    return Response.json({ error: 'Los datos del tipo de invitado deben ser un objeto.' }, { status: 400 })
+  }
+  const fields = rawBody as Record<string, unknown>
+  for (const field of ['name', 'description', 'access_policy_label', 'invitation_message']) {
+    if (fields[field] !== undefined && typeof fields[field] !== 'string') {
+      return Response.json({ error: `El campo ${field} debe ser texto.` }, { status: 400 })
+    }
+  }
+  for (const field of ['access_start_time', 'access_end_time']) {
+    if (fields[field] !== undefined && fields[field] !== null && typeof fields[field] !== 'string') {
+      return Response.json({ error: 'Los horarios deben ser texto con formato de 24 horas.' }, { status: 400 })
+    }
+  }
+  for (const field of ['access_start_day_offset', 'access_end_day_offset']) {
+    if (fields[field] !== undefined && fields[field] !== null && typeof fields[field] !== 'number') {
+      return Response.json({ error: 'El día del acceso debe ser un número entero.' }, { status: 400 })
+    }
+  }
   const { authErrorResponse, adminClient } = await getAuthorizedAdminClient()
 
   if (authErrorResponse || !adminClient) {
@@ -58,10 +84,10 @@ export async function PATCH(request: Request, context: GuestTypeRouteContext) {
 
   try {
     const { guestTypeId } = await context.params
-    const body = (await request.json()) as UpdateGuestTypeRequestBody
+    const body = rawBody as UpdateGuestTypeRequestBody
 
     const { data: guestType, error: guestTypeLookupError } = await adminClient
-      .from('guest_types').select('event_id').eq('id', guestTypeId).maybeSingle()
+      .from('guest_types').select('*').eq('id', guestTypeId).maybeSingle()
     if (guestTypeLookupError) return Response.json({ error: guestTypeLookupError.message }, { status: 500 })
     if (!guestType) return Response.json({ error: 'Tipo de invitado inexistente.' }, { status: 404 })
     const { response: eventAuthError } = await ensureAuthorizedEventApiAccess(guestType.event_id)
@@ -87,16 +113,38 @@ export async function PATCH(request: Request, context: GuestTypeRouteContext) {
       payload.access_policy_label = trimOptionalString(body.access_policy_label)
     }
     if (body.access_start_time !== undefined) {
-      payload.access_start_time = trimOptionalString(body.access_start_time)
+      payload.access_start_time = body.access_start_time === null ? null : trimOptionalString(body.access_start_time)
     }
     if (body.access_end_time !== undefined) {
-      payload.access_end_time = trimOptionalString(body.access_end_time)
+      payload.access_end_time = body.access_end_time === null ? null : trimOptionalString(body.access_end_time)
     }
     if (body.access_start_day_offset !== undefined) {
       payload.access_start_day_offset = body.access_start_day_offset
     }
     if (body.access_end_day_offset !== undefined) {
       payload.access_end_day_offset = body.access_end_day_offset
+    }
+    const scheduleFields = ['access_start_time', 'access_end_time', 'access_start_day_offset', 'access_end_day_offset'] as const
+    if (scheduleFields.some((field) => body[field] !== undefined)) {
+      // Un PATCH puede cambiar un solo extremo. Validar contra el otro extremo
+      // persistido evita guardar una ventana invertida por una edicion parcial.
+      const schedule = {
+        access_start_time: body.access_start_time === undefined ? guestType.access_start_time : payload.access_start_time as string | null,
+        access_end_time: body.access_end_time === undefined ? guestType.access_end_time : payload.access_end_time as string | null,
+        access_start_day_offset: body.access_start_day_offset === undefined ? guestType.access_start_day_offset : body.access_start_day_offset,
+        access_end_day_offset: body.access_end_day_offset === undefined ? guestType.access_end_day_offset : body.access_end_day_offset,
+      }
+      let eventStartTime: string | null = null
+      if ((schedule.access_start_time && schedule.access_start_day_offset == null) ||
+        (schedule.access_end_time && schedule.access_end_day_offset == null)) {
+        const { data: event, error: eventError } = await adminClient
+          .from('events').select('start_time').eq('id', guestType.event_id).maybeSingle()
+        if (eventError) return Response.json({ error: eventError.message }, { status: 500 })
+        if (!event) return Response.json({ error: 'Evento inexistente.' }, { status: 404 })
+        eventStartTime = event.start_time
+      }
+      const scheduleError = validateAccessSchedule(schedule, eventStartTime)
+      if (scheduleError) return Response.json({ error: scheduleError }, { status: 400 })
     }
     if (body.payment_amount_cents !== undefined) {
       if (!Number.isInteger(body.payment_amount_cents) || body.payment_amount_cents < 0) {
@@ -114,6 +162,9 @@ export async function PATCH(request: Request, context: GuestTypeRouteContext) {
       }
       payload.invitation_message = invitationMessage
     }
+
+    // Una solicitud vacia no debe revalidar ni reescribir horarios heredados.
+    if (Object.keys(payload).length === 0) return Response.json({ data: guestType })
 
     const { data, error } = await adminClient
       .from('guest_types')

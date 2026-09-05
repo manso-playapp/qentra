@@ -1,9 +1,8 @@
 import { CheckCircle2, Clock, Users } from 'lucide-react'
 
 /**
- * Visual del hero: no vendemos "el viaje del invitado", sino la gestion seria de
- * la apertura. Este panel muestra lo que ve el organizador: cupo en tiempo real,
- * pago vinculado a cada persona y acceso habilitado, con la puerta resolviendo.
+ * Resumen ilustrativo de la información que se revisa al preparar la fiesta.
+ * Sus cifras son ficticias y no representan un panel conectado a un evento.
  */
 export function EventControlPanel() {
   const cupoTomado = 184
@@ -31,11 +30,11 @@ export function EventControlPanel() {
     <div className="relative rounded-[2rem] border border-border/70 bg-card p-6 shadow-[0_28px_80px_rgba(22,33,90,0.14)] sm:p-8">
       <div className="flex items-center justify-between">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-          Cupo en tiempo real
+          Preparación del trasnoche
         </p>
         <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
           <span className="size-2 rounded-full bg-emerald-500" aria-hidden />
-          En vivo
+          Ejemplo ficticio
         </span>
       </div>
 
@@ -47,11 +46,11 @@ export function EventControlPanel() {
               {cupoTomado}
               <span className="text-lg text-muted-foreground"> / {cupoTotal}</span>
             </p>
-            <p className="mt-1 text-sm text-muted-foreground">Confirmados con pago vinculado</p>
+            <p className="mt-1 text-sm text-muted-foreground">Personas confirmadas / cupo acordado</p>
           </div>
           <span className="inline-flex items-center gap-1.5 rounded-full bg-card px-3 py-1 text-xs font-medium text-foreground ring-1 ring-border/70">
             <Users className="size-3.5 text-primary" strokeWidth={2} />
-            {cupoTotal - cupoTomado} de cupo
+            {cupoTotal - cupoTomado} lugares
           </span>
         </div>
         <div className="mt-4 h-2 overflow-hidden rounded-full bg-border/60">
@@ -95,9 +94,9 @@ export function EventControlPanel() {
       </ul>
 
       <div className="mt-6 flex items-center justify-between rounded-2xl bg-admin-navy px-4 py-3 text-white">
-        <span className="text-sm font-medium">Acceso válido · cuenta en el cupo</span>
+        <span className="text-sm font-medium">Invitados, acompañantes y pagos</span>
         <span className="text-xs font-semibold uppercase tracking-wider text-white/70">
-          En la puerta
+          Revisamos juntos
         </span>
       </div>
     </div>

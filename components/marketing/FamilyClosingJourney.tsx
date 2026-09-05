@@ -5,35 +5,35 @@ const familyMoments = [
     number: '01',
     icon: Sparkles,
     title: 'Tiene identidad',
-    detail: 'La invitación se siente parte de tus 15 desde el primer mensaje.',
+    detail: 'Definimos el estilo con ustedes y revisamos el diseño antes de compartirlo.',
     tone: 'bg-[#213480] text-white',
   },
   {
     number: '02',
     icon: Users,
-    title: 'Sabemos quién viene',
-    detail: 'Cada familia confirma junta y deja la información que necesitás.',
+    title: 'Sabemos quién confirmó',
+    detail: 'Madre e hija invitan desde sus teléfonos. Las respuestas quedan en la misma lista.',
     tone: 'bg-[#ffcfbf] text-[#171714]',
   },
   {
     number: '03',
     icon: HeartHandshake,
     title: 'Vemos qué falta',
-    detail: 'Los pendientes aparecen con tiempo, contexto y una próxima acción.',
+    detail: 'Revisamos confirmaciones, nombres y pagos pendientes en los encuentros acordados.',
     tone: 'bg-[#162c29] text-white',
   },
   {
     number: '04',
     icon: IdCard,
     title: 'El acceso está listo',
-    detail: 'La entrada queda asociada a la persona y preparada para esa noche.',
+    detail: 'Preparamos horarios y tipos de invitado; vinculamos los pagos cuando corresponde.',
     tone: 'bg-[#d9ee73] text-[#171714]',
   },
   {
     number: '05',
     icon: QrCode,
-    title: 'Llegamos tranquilos',
-    detail: 'Recepción encuentra al grupo y lo hace entrar con una sola acción.',
+    title: 'Ensayamos la llegada',
+    detail: 'Capacitamos a recepción con los celulares que la organización usará esa noche.',
     tone: 'bg-[#c65035] text-white',
   },
 ] as const
@@ -46,11 +46,11 @@ export function FamilyClosingJourney() {
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.24em] text-[#9c3926]">Para tu familia</p>
             <p className="mt-5 max-w-md text-base leading-7 text-black/65">
-              La tecnología trabaja por debajo. Ustedes sienten que todo tiene un orden.
+              El acompañamiento tiene entregas concretas, responsables y momentos de revisión acordados.
             </p>
           </div>
           <h2 className="marketing-display text-[clamp(3.1rem,6vw,6rem)] font-black leading-[0.9] tracking-[-0.01em]">
-            Cuando llega la noche, ya no queda nada que perseguir.
+            Lo que preparás antes te deja disfrutar más.
           </h2>
         </div>
 

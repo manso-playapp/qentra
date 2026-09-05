@@ -13,9 +13,9 @@ function InviteScene() {
   return (
     <div className="overflow-hidden rounded-[2.5rem_2.5rem_0.75rem_2.5rem] bg-[#171714] p-5 text-white shadow-[0_28px_70px_rgba(23,23,20,0.16)] sm:p-8">
       <div className="flex items-center gap-3 border-b border-white/10 pb-5">
-        <span className="grid size-10 place-items-center rounded-full bg-[#ff8b70] text-sm font-black text-black">D</span>
+        <span className="grid size-10 place-items-center rounded-full bg-[#ff8b70] text-sm font-black text-black">E</span>
         <div>
-          <p className="text-sm font-bold">Dharma</p>
+          <p className="text-sm font-bold">Emilia</p>
           <p className="text-xs text-white/65">para Martina · Colegio</p>
         </div>
         <MessageCircle className="ml-auto size-4 text-[#d9ee73]" aria-hidden="true" />
@@ -24,7 +24,7 @@ function InviteScene() {
         <p className="text-sm font-semibold leading-6">Martu, te invito a mis 15 ✨</p>
         <div className="mt-3 rounded-2xl bg-[#f0eee8] p-4">
           <p className="text-[10px] font-black uppercase tracking-[0.14em] text-black/65">Invitación personal</p>
-          <p className="marketing-display mt-2 text-2xl font-black tracking-[-0.01em]">Dharma te invita.</p>
+          <p className="marketing-display mt-2 text-2xl font-black tracking-[-0.01em]">Emilia te invita.</p>
         </div>
       </div>
     </div>
@@ -96,8 +96,8 @@ function PrepareScene() {
       </div>
       <div className="mt-7 divide-y divide-white/10 border-y border-white/10">
         {[
-          ['2 pagos pendientes', 'Revisar comprobantes'],
-          ['3 grupos incompletos', 'Pedir confirmación'],
+          ['2 pagos pendientes', 'Revisar estado del pago'],
+          ['3 nombres por completar', 'Consultar a los grupos'],
           ['1 restricción nueva', 'Avisar al salón'],
         ].map(([issue, action]) => (
           <div key={issue} className="grid gap-2 py-4 sm:grid-cols-[1fr_auto] sm:items-center">
@@ -115,9 +115,9 @@ function PrepareScene() {
 
 function ChargeScene() {
   const paymentFlow = [
-    { icon: ReceiptText, label: 'Comprobante recibido', detail: 'Tomás · Trasnoche con entrada' },
-    { icon: Users, label: 'Pago asociado', detail: 'La persona ya está identificada' },
-    { icon: QrCode, label: 'Acceso listo', detail: 'Sin perseguir capturas por chat' },
+    { icon: ReceiptText, label: 'Importe según acompañantes', detail: 'Tomás + Ana · 2 lugares con nombre' },
+    { icon: Users, label: 'Pago confirmado para el grupo', detail: 'Cuenta receptora de la responsable' },
+    { icon: QrCode, label: 'Acceso listo', detail: 'El estado del pago queda asociado' },
   ]
 
   return (
@@ -184,43 +184,43 @@ function ReceiveScene() {
 const journeyStages = [
   {
     number: '01',
-    title: 'Invitá',
-    detail: 'Tu fiesta ya tiene identidad. La invitación sale de una persona conocida y llega con un link personal.',
+    title: 'Diseñamos',
+    detail: 'Definimos el estilo con ustedes y revisamos la invitación antes de compartirla. Madre e hija envían desde sus propios WhatsApp.',
     scene: InviteScene,
     reverse: false,
   },
   {
     number: '02',
-    title: 'Confirmá',
-    detail: 'Cada familia responde quién viene y lo necesario para recibirla bien, sin formularios eternos.',
+    title: 'Configuramos',
+    detail: 'Preparamos los grupos, acompañantes y datos que necesitan pedir. Las respuestas llegan a una misma lista para organizar la fiesta.',
     scene: ConfirmScene,
     reverse: true,
   },
   {
     number: '03',
-    title: 'Conocé',
-    detail: 'Cena, Trasnoche y Trasnoche con entrada dejan de ser listas separadas y empiezan a formar una sola noche.',
+    title: 'Ordenamos',
+    detail: 'Acordamos a quién invitar a la cena o al trasnoche, quién puede llevar acompañantes y qué invitados deben pagar.',
     scene: KnowScene,
     reverse: false,
   },
   {
     number: '04',
-    title: 'Prepará',
-    detail: 'Lo pendiente aparece con tiempo y con una acción concreta: revisar, completar o avisar.',
+    title: 'Revisamos',
+    detail: 'En los encuentros acordados revisamos lo que falta y definimos quién lo resuelve. El acompañamiento también está en esos detalles.',
     scene: PrepareScene,
     reverse: true,
   },
   {
     number: '05',
-    title: 'Cobrá',
-    detail: 'Un comprobante deja de ser una captura suelta cuando queda asociado a una persona y a su acceso.',
+    title: 'Vinculamos',
+    detail: 'Si hay entradas pagas, ayudamos a configurar Mercado Pago a nombre de la responsable. El importe contempla los lugares completados con nombre; la disponibilidad del dinero depende de Mercado Pago.',
     scene: ChargeScene,
     reverse: false,
   },
   {
     number: '06',
-    title: 'Recibí',
-    detail: 'Cuando llega la noche, recepción ya conoce el grupo y puede hacerlo entrar junto.',
+    title: 'Ensayamos',
+    detail: 'Capacitamos a recepción con sus celulares asignados. El grupo completo se registra desde el teléfono; el recibidor opcional acompaña después del control.',
     scene: ReceiveScene,
     reverse: true,
   },
@@ -241,6 +241,7 @@ export function JourneyScenes() {
             </div>
             <div className={stage.reverse ? 'lg:order-1' : undefined}>
               <Scene />
+              <p className="mt-4 text-xs leading-5 text-black/60">Escena ilustrativa con datos ficticios.</p>
             </div>
           </li>
         )

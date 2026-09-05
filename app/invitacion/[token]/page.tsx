@@ -140,7 +140,7 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
     .select(`
       id, event_id, guest_type_id, first_name, last_name, email, phone, status, notes, payment_status, photo_url,
       plus_ones_allowed, plus_ones_confirmed, companion_names,
-      guest_types (name, payment_amount_cents, show_gift_info, invitation_message, access_start_time, access_start_day_offset)
+      guest_types (name, payment_amount_cents, show_gift_info, invitation_message, access_start_time, access_start_day_offset, access_end_time, access_end_day_offset)
     `)
     .eq('id', invitationToken.guest_id)
     .maybeSingle()
@@ -179,6 +179,8 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
   const invitationSchedule = {
     startTime: guestType?.access_start_time,
     startDayOffset: guestType?.access_start_day_offset,
+    endTime: guestType?.access_end_time,
+    endDayOffset: guestType?.access_end_day_offset,
   }
 
   const fallbackGuestName = [guest?.first_name, guest?.last_name].filter(Boolean).join(' ').trim()

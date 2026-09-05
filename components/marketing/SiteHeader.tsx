@@ -5,11 +5,11 @@ import { MobileNavigation } from '@/components/marketing/MobileNavigation'
 import { TrackedLink } from '@/components/marketing/TrackedLink'
 
 const navLinks = [
-  { href: '/#probar', label: 'Probá Alista' },
-  { href: '/#preparacion', label: 'Preparación' },
-  { href: '/#dharma', label: 'Dharma' },
+  { href: '/producto', label: 'Qué preparamos' },
+  { href: '/como-funciona', label: 'Cómo te acompañamos' },
+  { href: '/casos', label: 'Una fiesta real' },
   { href: '/profesionales', label: 'Profesionales' },
-  { href: '/precios', label: 'Precios' },
+  { href: '/precios', label: 'Cómo contratar' },
 ]
 
 export function SiteHeader() {
@@ -39,14 +39,14 @@ export function SiteHeader() {
           <MobileNavigation links={navLinks} />
           <TrackedLink
             href="/demo"
-            aria-label="Quiero Alista"
+            aria-label="Consultar mi fecha"
             analytics={{
               name: 'cta_clicked',
               properties: { placement: 'header', audience: 'family', destination: 'demo' },
             }}
             className="inline-flex size-11 items-center justify-center gap-2 rounded-full bg-[#213480] text-xs font-black text-white transition hover:bg-[#009cdd] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white sm:h-10 sm:w-auto sm:px-4"
           >
-            <span className="hidden sm:inline">Quiero Alista</span>
+            <span className="hidden sm:inline">Consultar mi fecha</span>
             <ArrowUpRight className="size-3.5" aria-hidden="true" />
           </TrackedLink>
         </div>

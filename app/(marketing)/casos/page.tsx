@@ -5,7 +5,7 @@ import { createMarketingMetadata } from '@/lib/marketing-seo'
 export const metadata = createMarketingMetadata({
   title: 'Caso Dharma: Alista en una fiesta de 15',
   description:
-    'Recorré el caso real de Dharma: invitación, preparación y validación de acceso con Alista.',
+    'Conocé la primera fiesta de 15 realizada con Alista: diseño, configuración acompañada y aprendizajes de la recepción.',
   path: '/casos',
 })
 
@@ -14,16 +14,16 @@ export default function CasosPage() {
     <>
       <PageHero
         eyebrow="Caso real · Dharma"
-        title="Una experiencia que empezó"
-        highlight="mucho antes de la fiesta."
-        description="Este caso reúne material real del evento y del producto para mostrar cómo la invitación, la preparación y la llegada pueden formar parte de una misma historia."
-        primaryCta={{ href: '/demo', label: 'Quiero verlo para mis 15' }}
-        secondaryCta={{ href: '/profesionales', label: 'Lo quiero en mi servicio' }}
+        title="Una primera fiesta."
+        highlight="Aprendizajes que acompañan a la próxima."
+        description="Dharma fue nuestra primera experiencia real y funcionó muy bien. Compartimos el diseño, la preparación y lo aprendido en recepción para mostrar de dónde nace nuestro acompañamiento."
+        primaryCta={{ href: '/demo', label: 'Consultar para mi fecha' }}
+        secondaryCta={{ href: '/como-funciona', label: 'Conocer el acompañamiento' }}
       />
       <DharmaCaseStudy />
       <ClosingCta
-        title="La próxima historia puede empezar ahora."
-        description="Primero te mostramos cómo se vería Alista en tu fiesta. Sin iniciar un pago ni crear un evento."
+        title="Contanos cómo imaginan sus 15."
+        description="Revisamos la fecha y lo que necesitan delegar. Recibís una propuesta de diseño y acompañamiento con entregas, tiempos y precio total."
       />
     </>
   )

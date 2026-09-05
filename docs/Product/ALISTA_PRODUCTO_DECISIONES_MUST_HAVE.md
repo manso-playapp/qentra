@@ -199,6 +199,23 @@ No confundir segmento con modalidad de acceso.
 
 # 6. Tipos de acceso
 
+## Fechas y medianoche — corrección autorizada 05/09/2026
+
+- La fecha general es la **fecha de inicio de la fiesta**. Puede continuar al día
+  siguiente; no debe etiquetarse como terminada sólo porque cambió el día.
+- Los formularios de acceso muestran fechas concretas y relojes de 24 horas:
+  por ejemplo, 03/10 a las 20:30 hasta 04/10 a las 04:00. No exponen offsets.
+- 00:00 es medianoche al comenzar la fecha elegida; 12:00 es mediodía. El cierre
+  de ingreso debe ser posterior al inicio, también al guardar por API.
+- La invitación, su cuenta regresiva y Agendar usan la fecha y hora de acceso
+  de ese invitado. Las ventanas se identifican como **horarios de ingreso**, no
+  como hora de finalización de la fiesta. No se inventa una duración al agendar.
+- Persistencia existente: `event_date` + horas y offsets de `guest_types`.
+  Las fechas elegidas se convierten a esos offsets. Valores nulos heredados
+  mantienen la inferencia vigente; no se reescriben eventos automáticamente.
+- El resumen muestra inicio y fechas abarcadas por los tipos activos. No existe
+  un campo global independiente de fin del evento en esta corrección.
+
 ## DECISIÓN CERRADA
 
 Alista tendrá inicialmente tres tipos de acceso plantillados:
@@ -511,6 +528,20 @@ No fingir tracking inexistente.
 
 ---
 
+## Continuación desde el celular — aprobada 05/09/2026
+
+Después de cargar invitados, la gestión móvil prioriza Hoy, Invitados,
+Invitaciones y Más. Una ficha reúne titular y acompañantes; respuesta, envío y
+pago permanecen separados. Generar un enlace no prueba un envío: sin evidencia
+se muestra «Sin registro de envío», nunca se propone reenviar automáticamente.
+Desde la lista de invitaciones: preparar mensaje y abrir WhatsApp, sin obligar
+a agendar el contacto. El marcado manual se guarda sólo tras éxito del servidor.
+La edición breve modifica contacto y mesa, no estados de acceso ni cobro.
+La configuración avanzada sigue accesible. Esta navegación no concede permisos
+nuevos; la vista restringida de la siguiente sección requiere trabajo propio.
+
+---
+
 # 15. Modo “Enviar mis invitaciones”
 
 ## DIFERENCIADOR RECOMENDADO
@@ -765,6 +796,13 @@ Alista debe permitir:
 - estado “agotado”.
 
 Nunca vender por encima de las reglas configuradas.
+
+Recepción: por decisión del owner (05/09/2026), el aviso **Últimos lugares**
+empieza cuando quedan **3 personas** para alcanzar la capacidad total; continúa
+con 2 y 1. Con 0, **Cupo completo**. Cuenta primeras admisiones de titulares y
+acompañantes; no representa ocupación neta después de salidas. Es informativo:
+no pide PIN ni habilita sobrepasar el límite. Un grupo debe caber completo.
+Visible en el celular y en el panel de recepción, no en el recibidor decorativo.
 
 ---
 

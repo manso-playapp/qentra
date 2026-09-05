@@ -2,61 +2,61 @@ import { ClosingCta, PageHero, Section } from '@/components/marketing/sections'
 import { createMarketingMetadata } from '@/lib/marketing-seo'
 
 export const metadata = createMarketingMetadata({
-  title: 'Alista: invitaciones, preparación y acceso para tus 15',
+  title: 'Diseño y acompañamiento para tus 15',
   description:
-    'Conocé cómo Alista conecta invitaciones, confirmaciones, grupos, preparación y llegada en una fiesta de 15.',
+    'Una invitación con identidad y acompañamiento para preparar invitados, trasnoche, pagos y recepción. Conocé qué podés delegar en Alista.',
   path: '/producto',
 })
 
 const MOMENTS = [
   {
     number: '01',
-    eyebrow: 'Invitación',
-    title: 'Cada persona entra al recorrido desde un lugar propio.',
-    body: 'La invitación se abre desde WhatsApp, sin instalar una app. Desde ahí, cada invitado puede confirmar, completar su grupo y responder lo que la fiesta necesita saber.',
-    items: ['Invitación con identidad', 'Confirmaciones y grupos', 'Datos necesarios, sin pasos de más'],
+    eyebrow: 'Diseño propio',
+    title: 'Una invitación que se sienta suya.',
+    body: 'Escuchamos cómo imagina sus 15 y trabajamos la identidad de la invitación: imágenes, colores, mensajes y detalles. Ustedes revisan la propuesta en el celular antes de compartirla.',
+    items: ['Dirección visual acordada', 'Revisiones definidas', 'Madre e hija invitan desde sus WhatsApp'],
     tone: 'bg-[#d9ee73] text-[#171714]',
   },
   {
     number: '02',
-    eyebrow: 'Preparación',
-    title: 'Lo que falta se vuelve visible antes de la fiesta.',
-    body: 'Alista reúne las respuestas y organiza los pendientes para que la familia y el equipo sepan qué necesita atención, sin reconstruir la historia desde mensajes y planillas.',
-    items: ['Pendientes accionables', 'Grupos y restricciones', 'Estados compartidos por el equipo'],
+    eyebrow: 'Preparación acompañada',
+    title: 'Personas, lugares y pagos, relacionados.',
+    body: 'La familia decide a quién invita y cuántos acompañantes habilita. Preparamos esa lista con nombres, horarios y tipos de acceso. Si el trasnoche lleva entrada paga, configuramos los importes y revisamos los pendientes con ustedes.',
+    items: ['Acompañantes autorizados', 'Cobros a la cuenta de la responsable', 'Pendientes con una próxima acción'],
     tone: 'bg-[#162c29] text-white',
   },
   {
     number: '03',
-    eyebrow: 'Llegada',
-    title: 'La recepción recibe contexto, no una lista suelta.',
-    body: 'Los accesos y los grupos llegan preparados para que el equipo pueda buscar, validar y resolver la llegada con un criterio compartido.',
-    items: ['Accesos preparados', 'Ingreso individual o grupal', 'Búsqueda y estados claros'],
+    eyebrow: 'Recepción ensayada',
+    title: 'Un equipo que sabe cómo recibir.',
+    body: 'Antes de la fiesta probamos el circuito con quienes van a recibir y con los celulares asignados. Dejamos acordado quién resuelve cada consulta y en qué horario estará disponible el soporte de Alista.',
+    items: ['Personal de la organización', 'Equipos y conexión probados', 'Referente y soporte acordados'],
     tone: 'bg-[#c65035] text-white',
   },
 ]
 
 const RELATIONSHIPS = [
-  ['Invitación', 'Identidad', 'La experiencia empieza reconociendo a quién fue invitado.'],
-  ['Identidad', 'Grupo', 'Acompañantes y respuestas quedan vinculados a la persona correcta.'],
-  ['Preparación', 'Llegada', 'Lo resuelto antes evita improvisaciones en recepción.'],
-  ['Equipo', 'Criterio', 'Todos trabajan sobre los mismos estados y decisiones.'],
+  ['Su estilo', 'Una propuesta visual', 'Ustedes aprueban el diseño y las revisiones se acuerdan antes de empezar.'],
+  ['Sus invitados', 'Una lista preparada', 'La responsable define los accesos, los lugares para acompañantes y las reglas de su fiesta.'],
+  ['Sus pendientes', 'Seguimiento acordado', 'Revisamos confirmaciones, nombres y pagos en los encuentros incluidos en la propuesta.'],
+  ['Su recepción', 'Un ensayo previo', 'El personal lo aporta la organización. Alista configura, capacita y presta el soporte contratado.'],
 ]
 
 export default function ProductoPage() {
   return (
     <>
       <PageHero
-        eyebrow="El producto"
-        title="Una fiesta no empieza"
-        highlight="cuando se abren las puertas."
-        description="Alista acompaña todo lo que pasa antes: la invitación, las respuestas, los grupos y la preparación que hace posible una llegada más simple."
-        primaryCta={{ href: '/demo', label: 'Verlo para mis 15' }}
+        eyebrow="Qué hacemos por tu fiesta"
+        title="Que sus 15 tengan su estilo."
+        highlight="Y ustedes, con quién prepararlos."
+        description="Diseñamos la invitación y acompañamos las decisiones sobre invitados, acompañantes y recepción. La familia conserva el control y puede delegar tareas concretas antes de esa noche."
+        primaryCta={{ href: '/demo', label: 'Consultar disponibilidad' }}
         secondaryCta={{ href: '/como-funciona', label: 'Recorrer cómo funciona' }}
       />
 
       <section className="bg-[#f0eee8] px-5 py-20 sm:px-8 sm:py-28 lg:px-14">
         <div className="mx-auto max-w-[1320px]">
-          <p className="text-xs font-black uppercase tracking-[0.22em] text-[#9c3926]">Tres momentos, una misma historia</p>
+          <p className="text-xs font-black uppercase tracking-[0.22em] text-[#9c3926]">Tres partes del servicio</p>
           <div className="mt-10 grid gap-5 lg:grid-cols-3">
             {MOMENTS.map((moment) => (
               <article key={moment.number} className={`flex min-h-[500px] flex-col justify-between rounded-[2.25rem] p-7 sm:p-9 ${moment.tone}`}>
@@ -84,9 +84,9 @@ export default function ProductoPage() {
       </section>
 
       <Section
-        eyebrow="Cómo pensamos Alista"
-        title="Cada función tiene que fortalecer una relación."
-        description="No sumamos herramientas para llenar un panel. El núcleo existe para que la información conserve su contexto desde la invitación hasta la recepción."
+        eyebrow="Qué queda en sus manos"
+        title="Ustedes deciden. Nosotros ayudamos a prepararlo."
+        description="La responsable contrata y conserva su evento. Antes de empezar dejamos por escrito el diseño, las tareas, las revisiones y la ventana de soporte incluidos en el presupuesto."
         muted
       >
         <div className="mt-14 divide-y divide-black/12 border-y border-black/12">
@@ -101,9 +101,18 @@ export default function ProductoPage() {
         </div>
       </Section>
 
+      <Section
+        eyebrow="Una bienvenida adicional"
+        title="El recibidor acompaña la llegada."
+        description="Si quieren sumar una pantalla de bienvenida, la cotizamos como adicional. Se ubica después del control: recepción valida desde los celulares y no espera una animación para dejar pasar. El alquiler y la instalación de equipos se detallan en la propuesta."
+        muted
+      />
+
       <ClosingCta
-        title="Primero entendelo. Después decidí."
-        description="La demo muestra cómo se vería Alista en tu fiesta y no inicia un pago ni crea un evento."
+        title="Contanos cómo imaginan esos 15."
+        description="Con la fecha, el lugar y lo que quieren delegar, revisamos disponibilidad y armamos una propuesta para su fiesta."
+        primary={{ href: '/demo', label: 'Consultar disponibilidad' }}
+        secondary={{ href: '/autogestion', label: 'Prefiero prepararlo por mi cuenta' }}
       />
     </>
   )

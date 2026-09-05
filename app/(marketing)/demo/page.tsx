@@ -3,16 +3,16 @@ import { ContactForm } from '@/components/marketing/ContactForm'
 import { createMarketingMetadata } from '@/lib/marketing-seo'
 
 export const metadata = createMarketingMetadata({
-  title: 'Solicitá una demo de Alista',
+  title: 'Conversemos sobre tus 15',
   description:
-    'Conocé cómo Alista prepara invitaciones, confirmaciones, grupos y accesos para tus 15.',
+    'Consultá disponibilidad para tus 15. Te mostramos cómo trabajamos el diseño, los invitados, el trasnoche y la preparación de recepción.',
   path: '/demo',
 })
 
 const EXPECT = [
-  'Cómo se verían la invitación y el recorrido de tus 15.',
-  'Cómo se ordenan confirmaciones, grupos, pagos y restricciones.',
-  'Qué llega preparado a la recepción esa noche.',
+  'Una muestra del diseño y de cómo se adapta a la identidad de la fiesta.',
+  'Cómo reunimos invitados, acompañantes autorizados y pagos en la preparación.',
+  'Qué tareas pueden delegar y cómo se acuerdan revisiones, ensayo y soporte.',
 ]
 
 export default function DemoPage() {
@@ -21,18 +21,18 @@ export default function DemoPage() {
       <div className="mx-auto grid w-full max-w-[1180px] gap-12 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-start">
         <div className="min-w-0">
           <span className="inline-flex items-center rounded-full border border-white/18 bg-white/[0.06] px-4 py-2 text-xs font-bold text-white/65">
-            Demo para tu familia
+            Diseño y acompañamiento para sus 15
           </span>
           <h1 className="marketing-display mt-7 max-w-xl text-[clamp(3rem,5.25vw,5.25rem)] font-black leading-[0.9] tracking-[-0.005em] text-white">
-            Primero entendelo. Después decidí.
+            Veamos cómo preparar la fiesta que quieren.
           </h1>
           <p className="mt-7 max-w-xl text-base leading-7 text-white/65">
-            Te mostramos cómo Alista puede acompañar tus 15 desde la invitación hasta la llegada. Esta solicitud no crea un evento ni inicia un pago.
+            Contanos cuándo y dónde serán los 15, cuántos invitados esperan y qué les gustaría delegar. Revisamos disponibilidad y les mostramos nuestra forma de trabajar antes de armar un presupuesto.
           </p>
 
           <div className="mt-10">
             <p className="text-xs font-black uppercase tracking-[0.18em] text-[#d9ee73]">
-              Qué vas a ver
+              Qué vamos a conversar
             </p>
             <ul className="mt-4 space-y-3">
               {EXPECT.map((item) => (
@@ -49,18 +49,18 @@ export default function DemoPage() {
           <div className="mt-10 grid gap-3 sm:grid-cols-2">
             <div className="rounded-2xl border border-white/12 bg-white/[0.05] p-4 text-white">
               <Eye className="size-4 text-[#ff8b70]" aria-hidden="true" />
-              <p className="mt-3 text-xs font-bold">Sin compromiso de compra</p>
+              <p className="mt-3 text-xs font-bold">Propuesta antes de contratar</p>
             </div>
             <div className="rounded-2xl border border-white/12 bg-white/[0.05] p-4 text-white">
               <Mail className="size-4 text-[#ff8b70]" aria-hidden="true" />
-              <p className="mt-3 text-xs font-bold">Vos confirmás el envío</p>
+              <p className="mt-3 text-xs font-bold">Consulta por correo, sin reserva</p>
             </div>
           </div>
         </div>
 
         <ContactForm
-          subject="Quiero Alista en mis 15"
-          cta="Preparar solicitud de demo"
+          subject="Disponibilidad y acompañamiento para mis 15 — Alista"
+          cta="Preparar consulta de disponibilidad"
           source="familia-demo"
           audience="family"
         />

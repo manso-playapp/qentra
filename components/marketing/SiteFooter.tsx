@@ -5,17 +5,17 @@ const groups = [
   {
     title: 'Conocé Alista',
     links: [
-      { href: '/producto', label: 'Producto' },
-      { href: '/como-funciona', label: 'Cómo funciona' },
-      { href: '/casos', label: 'Caso Dharma' },
-      { href: '/seguridad', label: 'Seguridad' },
+      { href: '/producto', label: 'Qué preparamos' },
+      { href: '/como-funciona', label: 'Cómo te acompañamos' },
+      { href: '/casos', label: 'Los 15 de Dharma' },
+      { href: '/seguridad', label: 'Cuidado de la información' },
     ],
   },
   {
-    title: 'Para quién',
+    title: 'Preparemos la fiesta',
     links: [
-      { href: '/demo', label: 'Estoy organizando mis 15' },
-      { href: '/profesionales', label: 'Organizo fiestas de 15' },
+      { href: '/demo', label: 'Consultar para mi fecha' },
+      { href: '/profesionales', label: 'Soy planner o salón' },
       { href: '/precios', label: 'Cómo contratar Alista' },
     ],
   },
@@ -23,6 +23,7 @@ const groups = [
     title: 'Alista',
     links: [
       { href: '/contacto', label: 'Contacto' },
+      { href: '/autogestion', label: 'Usar Alista por mi cuenta' },
       { href: '/privacidad', label: 'Privacidad' },
       { href: '/admin', label: 'Acceder' },
     ],
@@ -39,7 +40,7 @@ export function SiteFooter() {
               <Image src="/alista-logo-white.svg" alt="Alista" width={1890} height={387} className="h-7 w-auto" />
             </Link>
             <p className="mt-6 text-sm leading-6 text-white/50">
-              La fiesta dura una noche. Alista todo lo que pasa antes.
+              Invitaciones con su estilo. Preparación y acompañamiento para que puedas estar presente en sus 15.
             </p>
           </div>
 

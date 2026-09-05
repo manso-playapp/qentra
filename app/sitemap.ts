@@ -14,6 +14,7 @@ const pages: Array<{
   { path: '/casos', priority: 0.8, changeFrequency: 'weekly' },
   { path: '/profesionales', priority: 0.8, changeFrequency: 'weekly' },
   { path: '/precios', priority: 0.7, changeFrequency: 'weekly' },
+  { path: '/autogestion', priority: 0.4, changeFrequency: 'monthly' },
   { path: '/seguridad', priority: 0.6, changeFrequency: 'weekly' },
   { path: '/demo', priority: 0.7, changeFrequency: 'weekly' },
   { path: '/contacto', priority: 0.6, changeFrequency: 'weekly' },

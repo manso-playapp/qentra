@@ -34,11 +34,11 @@ export const metadata: Metadata = {
     : undefined,
   ...(getPublicAppUrl() ? { metadataBase: new URL(getPublicAppUrl()) } : {}),
   title: {
-    default: 'Alista | Tus 15 empiezan mucho antes',
+    default: 'Alista | Sus 15, con su estilo y tu tranquilidad',
     template: '%s | Alista',
   },
   description:
-    'Invitaciones, confirmaciones, grupos, entradas y accesos. Todo preparado en un solo lugar para tus 15.',
+    'Personalización de invitaciones y acompañamiento en la preparación de invitados, pagos y recepción para cumpleaños de 15.',
   category: 'Cumpleaños de 15',
   referrer: 'origin-when-cross-origin',
   formatDetection: {

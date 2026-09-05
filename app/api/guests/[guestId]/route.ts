@@ -1,5 +1,6 @@
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
 import { ensureAuthorizedEventApiAccess } from '@/lib/operator-auth'
+import { performEventCheckin } from '@/lib/server-checkin'
 import {
   buildGuestFullName,
   normalizeGuestRecord,
@@ -37,6 +38,9 @@ export async function PATCH(request: Request, context: GuestRouteContext) {
   try {
     const { guestId } = await context.params
     const body = (await request.json()) as UpdateGuestForm
+    if (body.restore_invitation_access && body.status === 'checked_in') {
+      return Response.json({ error: 'No se puede restaurar y registrar el ingreso en la misma acción.' }, { status: 400 })
+    }
     const payload: Record<string, string | number | string[] | null> = {}
 
     // Revertir un ingreso es mas que volver el status a "habilitado": el
@@ -65,29 +69,32 @@ export async function PATCH(request: Request, context: GuestRouteContext) {
       (body.status === 'confirmed' && currentGuest.status === 'checked_in')
     const isManualCheckin = body.status === 'checked_in' && currentGuest.status !== 'checked_in'
 
+    // El ingreso es una acción independiente: no registrar primero y descubrir
+    // después que otra edición del formulario era inválida.
+    if (isManualCheckin) {
+      if (Object.keys(body).some((key) => key !== 'status')) {
+        return Response.json({ error: 'Guardá los cambios del invitado y después registrá su ingreso desde Recepción.' }, { status: 400 })
+      }
+      const result = await performEventCheckin(new Request(request.url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ guestId, method: 'manual' }),
+      }), currentGuest.event_id)
+      const outcome = await result.json()
+      if (!result.ok || outcome.data?.outcome !== 'registered') {
+        return Response.json({ error: outcome.error ?? outcome.data?.detail ?? 'No se pudo registrar el ingreso.' }, { status: result.ok ? 409 : result.status })
+      }
+      const { data, error } = await adminClient.from('guests').select('*, guest_types(*)').eq('id', guestId).single()
+      if (error) return Response.json({ error: error.message }, { status: 500 })
+      return Response.json({ data: normalizeGuestRecord(data) })
+    }
+
     if (isCheckinReversal) {
       const { error: reversalError } = await adminClient.rpc('revert_guest_checkin', {
         p_guest_id: guestId,
       })
 
       if (reversalError) return Response.json({ error: reversalError.message }, { status: 500 })
-    }
-
-    // El ingreso manual de la tarjeta tambien pasa por la misma transaccion que
-    // el escaner. El cliente ya no escribe checkins ni QR directamente.
-    if (isManualCheckin) {
-      const { error: manualCheckinError } = await adminClient.rpc('register_guest_checkin', {
-        p_event_id: currentGuest.event_id,
-        p_guest_id: guestId,
-        p_invitation_token_id: null,
-        p_method: 'manual',
-        p_reason: 'Check-in manual desde Alista Admin',
-        p_allow_duplicate: false,
-      })
-
-      if (manualCheckinError) {
-        return Response.json({ error: manualCheckinError.message }, { status: 409 })
-      }
     }
 
     if (body.guest_type_id !== undefined) payload.guest_type_id = body.guest_type_id
@@ -114,7 +121,7 @@ export async function PATCH(request: Request, context: GuestRouteContext) {
       }
       payload.plus_ones_confirmed = confirmed
     }
-    if (body.status !== undefined) payload.status = resolveNextDbStatus(currentGuest.status, body.status)
+    if (body.status !== undefined && body.status !== 'checked_in') payload.status = resolveNextDbStatus(currentGuest.status, body.status)
     if (
       body.payment_status !== undefined &&
       ['not_required', 'pending', 'approved'].includes(body.payment_status)

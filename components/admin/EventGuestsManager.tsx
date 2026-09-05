@@ -1,10 +1,13 @@
 'use client'
 
 import Image from 'next/image'
+import MobileEventCompanion from '@/components/admin/MobileEventCompanion'
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { formatGuestTypeAccessPolicy } from '@/lib/access-policy'
 import { formatEventDate } from '@/lib/event-date'
+import { AccessWindowFields } from '@/components/admin/AccessWindowFields'
+import { resolveAccessDayOffset, validateAccessSchedule, formatEventSchedule } from '@/lib/event-schedule'
 import { buildActivationRequestHref } from '@/lib/event-activation'
 import { mapGuestStatusToDb, type DbGuestStatus } from '@/lib/guest-schema'
 import { isInvitationExpired } from '@/lib/invitation-expiry'
@@ -289,6 +292,8 @@ export default function EventGuestsManager({
     createGuestAccess,
     fetchGuests,
   } = useGuests(event.id, initialGuests)
+  const [mobileAdvanced, setMobileAdvanced] = useState(false)
+  const [deliveryRefreshKey, setDeliveryRefreshKey] = useState(0)
   const visibleGuestTypes = guestTypes
   const visibleGuests = guests
 
@@ -454,7 +459,7 @@ export default function EventGuestsManager({
     return () => {
       cancelled = true
     }
-  }, [event.id])
+  }, [event.id, deliveryRefreshKey])
 
   const invitationDeliveryByTokenId = useMemo(
     () => new Map(invitationDeliveryTracking.map((tracking) => [tracking.invitation_token_id, tracking])),
@@ -695,8 +700,8 @@ export default function EventGuestsManager({
       name: guestTypeForm.name.trim(),
       description: trimOptionalValue(guestTypeForm.description),
       access_policy_label: trimOptionalValue(guestTypeForm.access_policy_label),
-      access_start_time: trimOptionalValue(guestTypeForm.access_start_time),
-      access_end_time: trimOptionalValue(guestTypeForm.access_end_time),
+      access_start_time: guestTypeForm.access_start_time,
+      access_end_time: guestTypeForm.access_end_time,
       access_start_day_offset: parseOptionalInteger(guestTypeForm.access_start_day_offset),
       access_end_day_offset: parseOptionalInteger(guestTypeForm.access_end_day_offset),
       payment_amount_cents: pesosToCents(guestTypeForm.payment_amount_ars),
@@ -704,6 +709,12 @@ export default function EventGuestsManager({
       invitation_message: trimOptionalValue(guestTypeForm.invitation_message),
     }
 
+    const scheduleError = validateAccessSchedule(payload, event.start_time)
+    if (scheduleError) {
+      setGuestTypeSubmitError(scheduleError)
+      setGuestTypeSubmitting(false)
+      return
+    }
     const result = await createGuestType(payload)
 
     if (result.error) {
@@ -730,8 +741,8 @@ export default function EventGuestsManager({
     access_policy_label: guestType.access_policy_label ?? '',
     access_start_time: guestType.access_start_time ?? '',
     access_end_time: guestType.access_end_time ?? '',
-    access_start_day_offset: String(guestType.access_start_day_offset ?? 0),
-    access_end_day_offset: String(guestType.access_end_day_offset ?? 0),
+    access_start_day_offset: String(resolveAccessDayOffset(guestType.access_start_time, event.start_time, guestType.access_start_day_offset)),
+    access_end_day_offset: String(resolveAccessDayOffset(guestType.access_end_time, event.start_time, guestType.access_end_day_offset)),
     payment_amount_ars: String((guestType.payment_amount_cents ?? 0) / 100),
     show_gift_info: guestType.show_gift_info ?? true,
     invitation_message: guestType.invitation_message ?? '',
@@ -764,8 +775,8 @@ export default function EventGuestsManager({
       name: editGuestTypeForm.name.trim(),
       description: trimOptionalValue(editGuestTypeForm.description),
       access_policy_label: trimOptionalValue(editGuestTypeForm.access_policy_label),
-      access_start_time: trimOptionalValue(editGuestTypeForm.access_start_time),
-      access_end_time: trimOptionalValue(editGuestTypeForm.access_end_time),
+      access_start_time: editGuestTypeForm.access_start_time,
+      access_end_time: editGuestTypeForm.access_end_time,
       access_start_day_offset: parseOptionalInteger(editGuestTypeForm.access_start_day_offset),
       access_end_day_offset: parseOptionalInteger(editGuestTypeForm.access_end_day_offset),
       payment_amount_cents: pesosToCents(editGuestTypeForm.payment_amount_ars),
@@ -773,6 +784,12 @@ export default function EventGuestsManager({
       invitation_message: trimOptionalValue(editGuestTypeForm.invitation_message),
     }
 
+    const scheduleError = validateAccessSchedule(payload, event.start_time)
+    if (scheduleError) {
+      setGuestTypeActionError(scheduleError)
+      setGuestTypeActionLoadingId(null)
+      return
+    }
     const result = await updateGuestType(guestTypeId, payload)
 
     if (result.error) {
@@ -933,10 +950,6 @@ export default function EventGuestsManager({
 
     if (status === 'confirmed' && guest.status === 'checked_in') {
       payload.restore_invitation_access = true
-    }
-
-    if (status === 'checked_in' && guest.status === 'pending') {
-      payload.plus_ones_confirmed = guest.plus_ones_allowed
     }
 
     const result = await updateGuest(guest.id, payload)
@@ -1466,7 +1479,7 @@ export default function EventGuestsManager({
     channel: InvitationDeliveryChannel,
     action: 'mark_sent' | 'unmark_sent'
   ) => {
-    if (!invitationDeliveryAvailable) return
+    if (!invitationDeliveryAvailable) return false
 
     const actionKey = `${guest.id}:${channel}`
     setInvitationDeliveryActionKey(actionKey)
@@ -1503,8 +1516,10 @@ export default function EventGuestsManager({
           ? `Invitación de ${guest.first_name} ${guest.last_name} marcada como enviada.`
           : `Invitación de ${guest.first_name} ${guest.last_name} volvió a quedar pendiente.`
       )
+      return true
     } catch (error) {
       setGuestRowActionError(error instanceof Error ? error.message : 'No se pudo actualizar el seguimiento.')
+      return false
     } finally {
       setInvitationDeliveryActionKey(null)
     }
@@ -1609,7 +1624,31 @@ export default function EventGuestsManager({
   }
 
   return (
-    <div className="px-4 py-6 sm:px-0">
+    <>
+      <div className={mobileAdvanced ? 'hidden' : 'md:hidden'}>
+        <MobileEventCompanion
+          event={event}
+          guestTypes={visibleGuestTypes}
+          guests={visibleGuests}
+          tokens={latestInvitationTokenByGuestId}
+          tracking={invitationDeliveryByTokenId}
+          groups={invitationDeliveryGroups}
+          deliveryReady={invitationDeliveryAvailable && !invitationDeliveryLoading && !invitationDeliveryError}
+          loading={guestsLoading || accessLoading || invitationDeliveryLoading}
+          error={guestsError || accessError || invitationDeliveryError}
+          onRefresh={async () => { setDeliveryRefreshKey(key => key + 1); await fetchGuests(event.id) }}
+          onMark={(guest, token) => updateInvitationDelivery(guest, token, 'whatsapp', 'mark_sent')}
+          onSave={updateGuest}
+          shareMessage={buildShareMessage}
+          onAdvanced={(section) => {
+            setMobileAdvanced(true)
+            requestAnimationFrame(() => document.getElementById(section)?.scrollIntoView({ block: 'start' }))
+          }}
+        />
+      </div>
+      {mobileAdvanced && <div className="sticky top-0 z-40 border-b border-slate-200 bg-white p-3 md:hidden"><button type="button" onClick={() => { setMobileAdvanced(false); window.scrollTo({ top: 0 }) }} className="min-h-11 rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white">← Volver a gestión móvil</button></div>}
+    <div className={`${mobileAdvanced ? '' : 'hidden md:block'} px-4 py-6 sm:px-0`}>
+
       <div className="mb-8 flex flex-col gap-4 border-b border-gray-200 pb-6 md:flex-row md:items-end md:justify-between">
         <div>
           <Link href={`/admin/events/${event.id}`} className="text-sm font-medium text-blue-600 hover:text-blue-800">
@@ -1617,7 +1656,7 @@ export default function EventGuestsManager({
           </Link>
           <h1 className="mt-3 text-3xl font-bold text-gray-900">Invitados de {event.name}</h1>
           <p className="mt-2 text-gray-600">
-            {formatEventDate(event.event_date)} · {event.start_time} · slug <span className="font-mono text-sm">{event.slug}</span>
+            {formatEventSchedule(event, guestTypes)} · slug <span className="font-mono text-sm">{event.slug}</span>
           </p>
         </div>
 
@@ -1652,7 +1691,7 @@ export default function EventGuestsManager({
       <section aria-labelledby="invitation-delivery-heading" className="mb-8 rounded-xl border border-sky-100 bg-sky-50/60 p-5 shadow-sm">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <h2 id="invitation-delivery-heading" className="text-lg font-semibold text-sky-950">Seguimiento de envíos</h2>
+            <span id="mobile-guest-senders" /><h2 id="invitation-delivery-heading" className="text-lg font-semibold text-sky-950">Seguimiento de envíos</h2>
             <p className="mt-1 max-w-3xl text-sm leading-6 text-sky-900/75">
               Una invitación generada todavía no significa que haya sido enviada. Mamá y Alfonsina pueden compartir esta lista y marcar cada envío.
             </p>
@@ -1724,7 +1763,7 @@ export default function EventGuestsManager({
       <section aria-labelledby="destinations-heading" className="hidden">
         <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
           <div>
-            <h2 id="destinations-heading" className="text-lg font-semibold text-gray-900">Mesas y destinos</h2>
+            <span id="mobile-guest-tables" /><h2 id="destinations-heading" className="text-lg font-semibold text-gray-900">Mesas y destinos</h2>
             <p className="mt-1 max-w-3xl text-sm text-gray-600">
               Organizá sólo a quienes confirmaron. El destino se aplica al titular y a sus acompañantes, y aparecerá en el Tótem al ingresar.
             </p>
@@ -1835,8 +1874,8 @@ export default function EventGuestsManager({
         )}
       </section>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.7fr)_minmax(360px,1fr)]">
-        <section className="space-y-6">
+      <div className="grid min-w-0 grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.7fr)_minmax(360px,1fr)]">
+        <section className="min-w-0 space-y-6">
           <div id="guest-types" className="hidden">
             <div className="flex items-center justify-between">
               <div>
@@ -1950,45 +1989,8 @@ export default function EventGuestsManager({
                               </label>
                             )}
                           </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700">Hora desde</label>
-                            <input
-                              name="access_start_time"
-                              type="time"
-                              value={editGuestTypeForm.access_start_time}
-                              onChange={handleEditGuestTypeInputChange}
-                              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700">Hora hasta</label>
-                            <input
-                              name="access_end_time"
-                              type="time"
-                              value={editGuestTypeForm.access_end_time}
-                              onChange={handleEditGuestTypeInputChange}
-                              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700">Offset inicio</label>
-                            <input
-                              name="access_start_day_offset"
-                              type="number"
-                              value={editGuestTypeForm.access_start_day_offset}
-                              onChange={handleEditGuestTypeInputChange}
-                              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700">Offset fin</label>
-                            <input
-                              name="access_end_day_offset"
-                              type="number"
-                              value={editGuestTypeForm.access_end_day_offset}
-                              onChange={handleEditGuestTypeInputChange}
-                              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                            />
+                          <div className="md:col-span-2">
+                            <AccessWindowFields value={editGuestTypeForm} eventDate={event.event_date} eventStartTime={event.start_time} onChange={(field, value) => setEditGuestTypeForm((current) => current ? { ...current, [field]: value } : current)} />
                           </div>
                         </div>
 
@@ -2057,7 +2059,7 @@ export default function EventGuestsManager({
                             </div>
                             <p className="mt-1 truncate text-sm text-gray-500">
                               {guestType.description?.trim() ? `${guestType.description.trim()} · ` : ''}
-                              {formatGuestTypeAccessPolicy(guestType, event.start_time)}
+                              {formatGuestTypeAccessPolicy(guestType, event.start_time, event.event_date)}
                             </p>
                           </div>
 
@@ -2231,67 +2233,9 @@ export default function EventGuestsManager({
                       />
                     </div>
 
-                    <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                      <div>
-                        <label htmlFor="guest-type-access-start-time" className="block text-sm font-medium text-gray-700">
-                          Desde
-                        </label>
-                        <input
-                          id="guest-type-access-start-time"
-                          name="access_start_time"
-                          type="time"
-                          value={guestTypeForm.access_start_time}
-                          onChange={handleGuestTypeInputChange}
-                          className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                        />
-                      </div>
-                      <div>
-                        <label htmlFor="guest-type-access-end-time" className="block text-sm font-medium text-gray-700">
-                          Hasta
-                        </label>
-                        <input
-                          id="guest-type-access-end-time"
-                          name="access_end_time"
-                          type="time"
-                          value={guestTypeForm.access_end_time}
-                          onChange={handleGuestTypeInputChange}
-                          className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                        />
-                      </div>
+                    <div className="mt-4">
+                      <AccessWindowFields value={guestTypeForm} eventDate={event.event_date} eventStartTime={event.start_time} onChange={(field, value) => setGuestTypeForm((current) => ({ ...current, [field]: value }))} />
                     </div>
-
-                    <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                      <div>
-                        <label htmlFor="guest-type-access-start-day-offset" className="block text-sm font-medium text-gray-700">
-                          Dia offset desde
-                        </label>
-                        <input
-                          id="guest-type-access-start-day-offset"
-                          name="access_start_day_offset"
-                          type="number"
-                          value={guestTypeForm.access_start_day_offset}
-                          onChange={handleGuestTypeInputChange}
-                          className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                        />
-                      </div>
-                      <div>
-                        <label htmlFor="guest-type-access-end-day-offset" className="block text-sm font-medium text-gray-700">
-                          Dia offset hasta
-                        </label>
-                        <input
-                          id="guest-type-access-end-day-offset"
-                          name="access_end_day_offset"
-                          type="number"
-                          value={guestTypeForm.access_end_day_offset}
-                          onChange={handleGuestTypeInputChange}
-                          className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                        />
-                      </div>
-                    </div>
-
-                    <p className="mt-3 text-xs text-gray-500">
-                      Ejemplo: para un QR valido despues de las 00:00, usa `Desde 00:00` y `Dia offset desde 1`.
-                    </p>
                   </div>
 
                   {guestTypeSubmitError && (
@@ -2315,7 +2259,7 @@ export default function EventGuestsManager({
           <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-semibold text-gray-900">Listado de invitados</h2>
+                <h2 id="mobile-guest-list" className="text-lg font-semibold text-gray-900">Listado de invitados</h2>
                 <p className="mt-1 text-sm text-gray-600">Vista operativa para confirmar, revisar contactos y capacidad.</p>
               </div>
               <div className="flex flex-wrap items-center justify-end gap-2">
@@ -2927,12 +2871,13 @@ export default function EventGuestsManager({
                               onChange={handleEditGuestInputChange}
                               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                             >
-                              {Object.entries(GUEST_STATUS_LABELS).map(([status, label]) => (
+                              {Object.entries(GUEST_STATUS_LABELS).filter(([status]) => status !== 'checked_in' || guest.status === 'checked_in').map(([status, label]) => (
                                 <option key={status} value={status}>
                                   {label}
                                 </option>
                               ))}
                             </select>
+                            {guest.status !== 'checked_in' && <p className="mt-1 text-xs text-gray-500">Para registrar un ingreso, guardá los cambios y usá Marcar ingreso.</p>}
                           </div>
                           <div>
                             <label htmlFor={`edit-plus-ones-${guest.id}`} className="block text-sm font-medium text-gray-700">
@@ -3300,7 +3245,7 @@ export default function EventGuestsManager({
                           <div>
                             <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">En la fiesta</p>
                             <div className="mt-2 space-y-1 text-sm text-gray-700">
-                              <p>{formatGuestTypeAccessPolicy(guest.guest_types, event.start_time)}</p>
+                              <p>{formatGuestTypeAccessPolicy(guest.guest_types, event.start_time, event.event_date)}</p>
                               <p>
                                 Destino: {guest.table_assignment || <span className="text-gray-400">sin asignar</span>}
                               </p>
@@ -3503,9 +3448,9 @@ export default function EventGuestsManager({
           </div>
         </section>
 
-        <aside className="space-y-6">
+        <aside className="min-w-0 space-y-6">
           <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-gray-900">Alta manual de invitado</h2>
+            <h2 id="mobile-guest-new" className="text-lg font-semibold text-gray-900">Alta manual de invitado</h2>
             <p className="mt-1 text-sm text-gray-600">Carga invitados individuales con el tipo correspondiente.</p>
 
             <form onSubmit={handleCreateGuest} className="mt-5 space-y-4">
@@ -3671,7 +3616,7 @@ export default function EventGuestsManager({
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-gray-500">Configuración</p>
-                <h2 id="sidebar-guest-types-heading" className="mt-2 text-lg font-semibold text-gray-900">Tipos de invitados</h2>
+                <span id="mobile-guest-types" /><h2 id="sidebar-guest-types-heading" className="mt-2 text-lg font-semibold text-gray-900">Tipos de invitados</h2>
                 <p className="mt-1 text-sm leading-6 text-gray-600">{activeGuestTypesCount} tipos activos.</p>
               </div>
               <button
@@ -3726,24 +3671,7 @@ export default function EventGuestsManager({
                   <label htmlFor="sidebar-guest-type-policy" className="text-xs font-semibold uppercase tracking-wide text-gray-500">Etiqueta de acceso</label>
                   <input id="sidebar-guest-type-policy" name="access_policy_label" value={guestTypeForm.access_policy_label} onChange={handleGuestTypeInputChange} placeholder="Ej: Desde medianoche" className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" />
                 </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">Desde</label>
-                    <input name="access_start_time" type="time" value={guestTypeForm.access_start_time} onChange={handleGuestTypeInputChange} className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">Hasta</label>
-                    <input name="access_end_time" type="time" value={guestTypeForm.access_end_time} onChange={handleGuestTypeInputChange} className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">Día inicio</label>
-                    <input name="access_start_day_offset" type="number" value={guestTypeForm.access_start_day_offset} onChange={handleGuestTypeInputChange} className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">Día fin</label>
-                    <input name="access_end_day_offset" type="number" value={guestTypeForm.access_end_day_offset} onChange={handleGuestTypeInputChange} className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
-                  </div>
-                </div>
+                <AccessWindowFields value={guestTypeForm} eventDate={event.event_date} eventStartTime={event.start_time} onChange={(field, value) => setGuestTypeForm((current) => ({ ...current, [field]: value }))} />
                 <div>
                   <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">Importe por invitado (ARS)</label>
                   <input name="payment_amount_ars" type="number" min="0" step="1" value={guestTypeForm.payment_amount_ars} onChange={handleGuestTypeInputChange} className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
@@ -3788,68 +3716,7 @@ export default function EventGuestsManager({
                             {guestType.is_active === false ? 'Inactivo' : 'Activo'}
                           </span>
                         </div>
-                        <div className="grid gap-2 sm:grid-cols-2">
-                          <div>
-                            <label className="text-xs font-semibold text-gray-600">Nombre</label>
-                            <input
-                              name="name"
-                              value={editGuestTypeForm.name}
-                              onChange={handleEditGuestTypeInputChange}
-                              className="mt-1 block w-full rounded-md border border-gray-300 px-2.5 py-2 text-sm"
-                            />
-                          </div>
-                          <div>
-                            <label className="text-xs font-semibold text-gray-600">Etiqueta de acceso</label>
-                            <input
-                              name="access_policy_label"
-                              value={editGuestTypeForm.access_policy_label}
-                              onChange={handleEditGuestTypeInputChange}
-                              placeholder="Ej: Desde medianoche"
-                              className="mt-1 block w-full rounded-md border border-gray-300 px-2.5 py-2 text-sm"
-                            />
-                          </div>
-                        </div>
-                        <div>
-                          <label className="text-xs font-semibold text-gray-600">Descripción</label>
-                          <textarea
-                            name="description"
-                            rows={2}
-                            value={editGuestTypeForm.description}
-                            onChange={handleEditGuestTypeInputChange}
-                            className="mt-1 block w-full rounded-md border border-gray-300 px-2.5 py-2 text-sm"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-xs font-semibold text-gray-600">Leyenda en la invitacion</label>
-                          <textarea
-                            name="invitation_message"
-                            rows={2}
-                            maxLength={160}
-                            value={editGuestTypeForm.invitation_message}
-                            onChange={handleEditGuestTypeInputChange}
-                            placeholder="Ej: Estas invitado/a al trasnoche"
-                            className="mt-1 block w-full rounded-md border border-gray-300 px-2.5 py-2 text-sm"
-                          />
-                          <p className="mt-1 text-xs text-gray-500">Se muestra una sola vez en la invitacion de este tipo.</p>
-                        </div>
-                        <div className="grid gap-2 sm:grid-cols-2">
-                          <div>
-                            <label className="text-xs font-semibold text-gray-600">Hora desde</label>
-                            <input name="access_start_time" type="time" value={editGuestTypeForm.access_start_time} onChange={handleEditGuestTypeInputChange} className="mt-1 block w-full rounded-md border border-gray-300 px-2.5 py-2 text-sm" />
-                          </div>
-                          <div>
-                            <label className="text-xs font-semibold text-gray-600">Hora hasta</label>
-                            <input name="access_end_time" type="time" value={editGuestTypeForm.access_end_time} onChange={handleEditGuestTypeInputChange} className="mt-1 block w-full rounded-md border border-gray-300 px-2.5 py-2 text-sm" />
-                          </div>
-                          <div>
-                            <label className="text-xs font-semibold text-gray-600">Día de inicio</label>
-                            <input name="access_start_day_offset" type="number" value={editGuestTypeForm.access_start_day_offset} onChange={handleEditGuestTypeInputChange} className="mt-1 block w-full rounded-md border border-gray-300 px-2.5 py-2 text-sm" />
-                          </div>
-                          <div>
-                            <label className="text-xs font-semibold text-gray-600">Día de fin</label>
-                            <input name="access_end_day_offset" type="number" value={editGuestTypeForm.access_end_day_offset} onChange={handleEditGuestTypeInputChange} className="mt-1 block w-full rounded-md border border-gray-300 px-2.5 py-2 text-sm" />
-                          </div>
-                        </div>
+                        <AccessWindowFields value={editGuestTypeForm} eventDate={event.event_date} eventStartTime={event.start_time} onChange={(field, value) => setEditGuestTypeForm((current) => current ? { ...current, [field]: value } : current)} />
                         <div>
                           <label className="text-xs font-semibold text-gray-600">Importe por invitado (ARS)</label>
                           <input name="payment_amount_ars" type="number" min="0" step="1" value={editGuestTypeForm.payment_amount_ars} onChange={handleEditGuestTypeInputChange} className="mt-1 block w-full rounded-md border border-gray-300 px-2.5 py-2 text-sm" />
@@ -3888,6 +3755,8 @@ export default function EventGuestsManager({
                             </span>
                           </div>
                           <p className="mt-0.5 truncate text-xs text-gray-500">{guestType.description || 'Sin descripción'}</p>
+                          <p className="mt-2 text-xs leading-5 text-gray-600">{formatGuestTypeAccessPolicy(guestType, event.start_time, event.event_date)}</p>
+                          {validateAccessSchedule(guestType, event.start_time) && <p className="mt-2 text-xs leading-5 text-amber-800">Horario a revisar: el cierre debe quedar después del inicio. Revisá fecha y hora antes del ensayo.</p>}
                         </div>
                         <div className="flex flex-none items-center gap-2">
                           <button
@@ -3912,5 +3781,6 @@ export default function EventGuestsManager({
         </aside>
       </div>
     </div>
+    </>
   )
 }

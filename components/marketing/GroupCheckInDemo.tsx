@@ -172,7 +172,7 @@ export function GroupCheckInDemo() {
                   Entraron los 3.
                 </h3>
                 <p className="mx-auto mt-5 max-w-xs text-sm leading-6 text-white/70">
-                  María, Tomás y Juana quedaron registrados juntos, con una sola acción.
+                  El grupo quedó registrado completo. Recepción confirma el paso desde el celular, sin esperar al recibidor.
                 </p>
               </div>
 
@@ -189,7 +189,7 @@ export function GroupCheckInDemo() {
       </div>
 
       <p className="mt-5 text-center text-xs leading-5 text-black/60">
-        Demo interactiva · no registra accesos reales.
+        Ejemplo ficticio de ingreso del grupo completo. No registra accesos reales ni muestra llegadas por separado.
       </p>
     </div>
   )

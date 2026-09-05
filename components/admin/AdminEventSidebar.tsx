@@ -20,7 +20,7 @@ import {
 import { useEffect, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
-import { formatEventDate } from '@/lib/event-date'
+import { formatEventSchedule } from '@/lib/event-schedule'
 import type { Event } from '@/types'
 
 /* eslint-disable react-hooks/set-state-in-effect -- Este componente sincroniza el menu con rutas y APIs externas. */
@@ -246,8 +246,8 @@ export default function AdminEventSidebar({
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-sm font-semibold text-white">{selectedEvent.name}</span>
-                <span className="mt-1 block truncate text-xs text-slate-400">
-                  {formatEventDate(selectedEvent.event_date)} · {selectedEvent.venue_name}
+                <span className="mt-1 block whitespace-normal text-xs leading-4 text-slate-400">
+                  {formatEventSchedule(selectedEvent, selectedEvent.guest_types ?? [], { compact: true })} · {selectedEvent.venue_name}
                 </span>
               </span>
               <ChevronDown className={cn('size-4 flex-none text-slate-300 transition-transform', eventMenuOpen && 'rotate-180')} />
@@ -268,7 +268,7 @@ export default function AdminEventSidebar({
                     <span className="grid size-8 flex-none place-items-center rounded-xl bg-white/10 text-xs font-semibold">{eventInitial(event)}</span>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm font-medium">{event.name}</span>
-                      <span className="mt-0.5 block truncate text-[11px] text-slate-500">{formatEventDate(event.event_date)}</span>
+                      <span className="mt-0.5 block whitespace-normal text-[11px] leading-4 text-slate-500">{formatEventSchedule(event, event.guest_types ?? [], { compact: true })}</span>
                     </span>
                     {event.id === selectedEvent.id && <Badge variant="info" className="px-2 py-0.5 text-[9px]">Actual</Badge>}
                   </Link>

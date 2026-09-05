@@ -70,8 +70,8 @@ export function InvitationStoryDemo() {
     <div className="mx-auto w-full max-w-[390px]">
       <div className="overflow-hidden rounded-[2.25rem] border border-white/15 bg-[#f4efe6] text-[#171714] shadow-[0_32px_90px_rgba(0,0,0,0.35)]">
         <div className="flex items-center justify-between border-b border-black/10 px-5 py-4 text-[10px] font-bold uppercase tracking-[0.22em] text-black/55">
-          <span>Alista</span>
-          <span>Dharma · 15</span>
+          <span>Ejemplo ilustrativo</span>
+          <span>Emilia · 15</span>
         </div>
 
         <div className="min-h-[550px] p-5 sm:p-7">
@@ -86,7 +86,7 @@ export function InvitationStoryDemo() {
                   tabIndex={-1}
                   className="marketing-display mt-8 text-[3.4rem] font-black leading-[0.86] tracking-[-0.025em] focus:outline-none"
                 >
-                  Dharma
+                  Emilia
                   <br />
                   te invita
                   <br />
@@ -254,7 +254,7 @@ export function InvitationStoryDemo() {
       </div>
 
       <p className="mt-5 text-center text-xs leading-5 text-white/50">
-        Demo interactiva · no guarda datos ni modifica un evento real.
+        Invitación ficticia para explorar el recorrido. No guarda datos ni modifica una fiesta real.
       </p>
     </div>
   )

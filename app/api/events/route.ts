@@ -14,7 +14,7 @@ export async function GET() {
     return Response.json({ error: 'SUPABASE_SERVICE_ROLE_KEY no esta configurada en el entorno.' }, { status: 503 })
   }
 
-  let query = adminClient.from('events').select('*').order('created_at', { ascending: false })
+  let query = adminClient.from('events').select('*, guest_types(is_active, access_start_time, access_end_time, access_start_day_offset, access_end_day_offset)').order('created_at', { ascending: false })
   // El staff de Alista ve todo; el resto ve sus eventos propios y los asignados.
   if (!isAlistaStaff(auth.access)) query = query.in('id', auth.manageableEventIds)
 

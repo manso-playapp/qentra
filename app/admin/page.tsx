@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
-import { formatEventDate } from '@/lib/event-date'
+import { formatEventSchedule, getEventScheduleEndDate } from '@/lib/event-schedule'
 import type { Event } from '@/types'
 import { getCurrentOperatorProfile } from '@/lib/operator-auth'
 import { isAlistaStaff } from '@/lib/event-access'
@@ -23,12 +23,12 @@ export const metadata = {
 function pickFocusEvent(events: Event[]): Event | null {
   if (events.length === 0) return null
 
-  const today = new Date().toISOString().slice(0, 10)
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Argentina/Cordoba', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date())
   const active = events.filter((event) => event.status === 'active')
   const pool = active.length > 0 ? active : events
 
   const byDateAsc = [...pool].sort((left, right) => left.event_date.localeCompare(right.event_date))
-  const upcoming = byDateAsc.find((event) => event.event_date >= today)
+  const upcoming = byDateAsc.find((event) => getEventScheduleEndDate(event, event.guest_types ?? []) >= today)
 
   return upcoming ?? byDateAsc[byDateAsc.length - 1]
 }
@@ -77,7 +77,7 @@ export default async function AdminPage() {
 
   let eventsQuery = supabase
     .from('events')
-    .select('*')
+    .select('*, guest_types(is_active, access_start_time, access_end_time, access_start_day_offset, access_end_day_offset)')
     .order('event_date', { ascending: true })
 
   // El staff ve todo; el resto ve sus eventos propios y los asignados.
@@ -125,7 +125,7 @@ export default async function AdminPage() {
     )
   }
 
-  const today = new Date().toISOString().slice(0, 10)
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Argentina/Cordoba', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date())
 
   // Una sola consulta con el estado y el pago de cada invitado del evento en foco;
   // el desglose (que falta hacer, que tan listo esta) se calcula en memoria.
@@ -197,12 +197,12 @@ export default async function AdminPage() {
                 <Badge variant={focusEvent.status === 'active' ? 'success' : 'outline'}>
                   {focusEvent.status === 'active' ? 'Tu próximo evento' : 'Pausado'}
                 </Badge>
-                <Badge variant="outline">{daysUntilLabel(focusEvent.event_date, today)}</Badge>
+                <Badge variant="outline">{focusEvent.event_date < today && getEventScheduleEndDate(focusEvent, focusEvent.guest_types ?? []) >= today ? 'Hoy hay accesos programados' : daysUntilLabel(focusEvent.event_date, today)}</Badge>
               </div>
 
               <h2 className="admin-heading mt-5 text-5xl leading-none text-foreground">{focusEvent.name}</h2>
               <p className="mt-3 text-base capitalize text-muted-foreground">
-                {formatEventDate(focusEvent.event_date, { weekday: 'long', day: 'numeric', month: 'long' })} · {focusEvent.start_time} · {focusEvent.venue_name}
+                {formatEventSchedule(focusEvent, focusEvent.guest_types ?? [])} · {focusEvent.venue_name}
               </p>
 
               <div className="mt-8 grid gap-4 sm:grid-cols-3">
@@ -260,7 +260,7 @@ export default async function AdminPage() {
                 <div className="flex items-start gap-3 rounded-[24px] border border-white/10 bg-white/6 p-5">
                   <CheckCircle2 className="size-5 flex-none text-emerald-400" />
                   <p className="text-sm leading-6 text-slate-300">
-                    Todo al día. No hay invitaciones sin enviar, confirmaciones pendientes ni pagos por
+                    Todo al día. No hay invitaciones por generar, respuestas pendientes ni pagos por
                     revisar.
                   </p>
                 </div>
@@ -307,7 +307,7 @@ export default async function AdminPage() {
                     <div className="min-w-0">
                       <p className="truncate text-lg font-semibold text-foreground">{event.name}</p>
                       <p className="mt-1 text-sm text-muted-foreground">
-                        {formatEventDate(event.event_date)} ·{' '}
+                        {formatEventSchedule(event, event.guest_types ?? [], { compact: true })} ·{' '}
                         {event.venue_name}
                       </p>
                     </div>

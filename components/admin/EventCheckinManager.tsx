@@ -1,9 +1,12 @@
 'use client'
 
 import jsQR from 'jsqr'
+import { getEventCapacity } from '@/lib/event-capacity'
+import { CapacityWarning } from '@/components/door/CapacityWarning'
 import { UserRound } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import Link from 'next/link'
+import { formatEventSchedule } from '@/lib/event-schedule'
 import { formatGuestTypeAccessPolicy } from '@/lib/access-policy'
 import { parseInvitationDetails } from '@/lib/invitation-response'
 import { Badge } from '@/components/ui/badge'
@@ -16,7 +19,7 @@ import { supabase } from '@/lib/supabase'
 import type { Checkin, CheckinMethod, Event, Guest, GuestType, SurfaceBranding } from '@/types'
 
 type EventCheckinManagerProps = {
-  event: Pick<Event, 'id' | 'name' | 'slug' | 'event_date' | 'start_time' | 'max_capacity'>
+  event: Pick<Event, 'id' | 'name' | 'slug' | 'event_date' | 'start_time' | 'max_capacity' | 'guest_types'>
   branding?: SurfaceBranding | null
   mode?: 'admin' | 'door' | 'totem'
   sidebarSlot?: ReactNode
@@ -58,7 +61,7 @@ type TotemSpotlight = {
   tableAssignment?: string | null
 }
 
-type OverrideableAccessCode = 'already_checked_in' | 'outside_window' | 'event_full'
+type OverrideableAccessCode = 'already_checked_in' | 'outside_window'
 
 type OverrideContext = {
   token?: string
@@ -108,6 +111,7 @@ type SearchableGuestRow = Omit<SearchableGuest, 'guest_types'> & {
 // Realtime entrega los check-ins al instante. Este polling solo cubre cortes de
 // Realtime, por eso no debe competir con la operacion normal de la puerta.
 const LIVE_REFRESH_INTERVAL_MS = 30000
+const CAPACITY_REFRESH_INTERVAL_MS = 5000
 const TOTEM_REFRESH_INTERVAL_MS = 15000
 const REALTIME_REFRESH_DEBOUNCE_MS = 300
 
@@ -150,6 +154,8 @@ function formatDateTime(date: string) {
   return new Intl.DateTimeFormat('es-AR', {
     dateStyle: 'medium',
     timeStyle: 'short',
+    timeZone: 'America/Argentina/Cordoba',
+    hourCycle: 'h23',
   }).format(parsedDate)
 }
 
@@ -158,34 +164,9 @@ function formatClock(date: Date) {
   return new Intl.DateTimeFormat('es-AR', {
     hour: '2-digit',
     minute: '2-digit',
-    hour12: false,
+    hourCycle: 'h23',
+    timeZone: 'America/Argentina/Cordoba',
   }).format(date)
-}
-
-function formatEventDate(date: string) {
-  return new Intl.DateTimeFormat('es-AR', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  // event_date es una fecha civil (sin zona horaria). Al pasar solo YYYY-MM-DD
-  // Date la interpreta como UTC y en Argentina retrocede al día anterior.
-  }).format(new Date(`${date}T00:00:00`))
-}
-
-function buildEventDateTime(eventDate: string, startTime: string) {
-  const timeParts = startTime.trim().split(':').filter(Boolean)
-
-  if (timeParts.length === 0) {
-    return `${eventDate}T00:00:00`
-  }
-
-  const normalizedTime = [
-    timeParts[0] ?? '00',
-    timeParts[1] ?? '00',
-    timeParts[2] ?? '00',
-  ].join(':')
-
-  return `${eventDate}T${normalizedTime}`
 }
 
 function parseAccessInput(value: string): AccessPayload {
@@ -292,13 +273,12 @@ export default function EventCheckinManager({
         }
 
         setRecentCheckins(payload?.data ?? [])
-        if (typeof payload?.approvedCount === 'number') {
-          setApprovedCount(payload.approvedCount)
-        }
+        setApprovedCount(typeof payload?.approvedCount === 'number' ? payload.approvedCount : null)
         // Marca que el primer fetch resolvio, para que el spotlight del totem
         // distinga "lista vacia inicial" de "todavia no cargamos".
         initialCheckinLoadDoneRef.current = true
       } catch (error) {
+        setApprovedCount(null)
         setStatus({
           kind: 'error',
           title: 'No se pudo cargar la actividad',
@@ -377,7 +357,7 @@ export default function EventCheckinManager({
   useEffect(() => {
     const refreshTimer = window.setInterval(() => {
       void fetchRecentCheckins()
-    }, isTotemMode ? TOTEM_REFRESH_INTERVAL_MS : LIVE_REFRESH_INTERVAL_MS)
+    }, isTotemMode ? TOTEM_REFRESH_INTERVAL_MS : CAPACITY_REFRESH_INTERVAL_MS)
 
     return () => {
       window.clearInterval(refreshTimer)
@@ -440,7 +420,7 @@ export default function EventCheckinManager({
       window.clearTimeout(initialClockTimer)
       window.clearInterval(clockTimer)
     }
-  }, [isTotemMode])
+  }, [event.id, isTotemMode])
 
   useEffect(() => {
     if (!isTotemMode) {
@@ -507,7 +487,7 @@ export default function EventCheckinManager({
     const fetchOverridePolicy = async () => {
       try {
         setOverridePolicyLoading(true)
-        const response = await fetch('/api/security/override', {
+        const response = await fetch(`/api/security/override?eventId=${encodeURIComponent(event.id)}`, {
           method: 'GET',
         })
 
@@ -545,7 +525,7 @@ export default function EventCheckinManager({
     return () => {
       cancelled = true
     }
-  }, [isTotemMode])
+  }, [event.id, isTotemMode])
 
   const stopScanner = useCallback(() => {
     if (animationFrameRef.current !== null) {
@@ -612,20 +592,7 @@ export default function EventCheckinManager({
   }, [guestDirectory])
 
   // Aforo en vivo: ingresados (check-ins aprobados) contra el cupo del evento.
-  const aforo = useMemo(() => {
-    const capacity = event.max_capacity ?? 0
-    const occupancy = approvedCount ?? 0
-    const hasLimit = capacity > 0
-    return {
-      hasLimit,
-      known: approvedCount !== null,
-      capacity,
-      occupancy,
-      pct: hasLimit ? Math.min(100, Math.round((occupancy / capacity) * 100)) : 0,
-      spotsLeft: hasLimit ? Math.max(capacity - occupancy, 0) : 0,
-      full: hasLimit && occupancy >= capacity,
-    }
-  }, [event.max_capacity, approvedCount])
+  const aforo = getEventCapacity(event.max_capacity, approvedCount)
 
   const statusTone = useMemo(() => {
     if (processingCheckin) {
@@ -682,7 +649,7 @@ export default function EventCheckinManager({
     return {
       kind: 'success' as const,
       title: 'Listo para recibir',
-      detail: 'Escanea o pega un acceso. La puerta valida duplicados, horario y vigencia antes del ingreso.',
+      detail: 'Escanea o pega un acceso. La puerta verifica pago, cupo, duplicados, horario y vigencia. El ingreso no espera al recibidor.',
     }
   }, [isDoorMode, isTotemMode, processingCheckin, scannerActive, status])
 
@@ -692,7 +659,7 @@ export default function EventCheckinManager({
     token?: string
     guestId?: string
     source: CheckinMethod
-    override?: { code: OverrideableAccessCode; reason: string }
+    override?: { code: OverrideableAccessCode; reason: string; pin: string; supervisorPin?: string }
   }) => {
     const response = await fetch(`/api/events/${event.id}/checkin`, {
       method: 'POST',
@@ -895,23 +862,6 @@ export default function EventCheckinManager({
     setOverrideError(null)
 
     try {
-      const response = await fetch('/api/security/override', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          pin: overridePin.trim(),
-          supervisorPin: overrideSupervisorRequired ? overrideSupervisorPin.trim() : undefined,
-        }),
-      })
-
-      const payload = (await response.json().catch(() => null)) as { error?: string } | null
-
-      if (!response.ok) {
-        throw new Error(payload?.error || 'No se pudo validar el override.')
-      }
-
       await submitCheckin({
         token: overrideContext.token,
         guestId: overrideContext.guestId,
@@ -919,6 +869,8 @@ export default function EventCheckinManager({
         override: {
           code: overrideContext.decisionCode,
           reason: overrideReason.trim(),
+          pin: overridePin.trim(),
+          supervisorPin: overrideSupervisorRequired ? overrideSupervisorPin.trim() : undefined,
         },
       })
     } catch (error) {
@@ -948,7 +900,7 @@ export default function EventCheckinManager({
             <header className="grid grid-cols-2 items-start gap-6">
               <div>
                 <p className="text-sm uppercase tracking-[0.34em] text-white/65">Fecha del evento</p>
-                <p className="mt-3 text-4xl font-semibold capitalize text-white">{formatEventDate(event.event_date)}</p>
+                <p className="mt-3 text-4xl font-semibold capitalize text-white">{formatEventSchedule(event, event.guest_types ?? [], { compact: true })}</p>
               </div>
               <div className="text-right">
                 <p className="text-sm uppercase tracking-[0.34em] text-white/65">Hora actual</p>
@@ -1040,7 +992,7 @@ export default function EventCheckinManager({
                 <div className="rounded-[26px] border border-white/10 bg-white/6 px-5 py-4">
                   <p className="text-xs uppercase tracking-[0.28em] text-slate-400">Evento</p>
                   <p className="mt-2 truncate text-2xl font-semibold text-white" title={event.name}>{event.name}</p>
-                  <p className="mt-2 text-sm text-slate-300">{formatEventDate(event.event_date)} · {event.start_time}</p>
+                  <p className="mt-2 text-sm text-slate-300">{formatEventSchedule(event, event.guest_types ?? [], { compact: true })}</p>
                 </div>
                 <div className="rounded-[26px] border border-sky-400/20 bg-sky-400/10 px-5 py-4 text-right">
                   <p className="text-xs uppercase tracking-[0.28em] text-sky-200/80">Hora actual</p>
@@ -1103,6 +1055,7 @@ export default function EventCheckinManager({
 
           <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(360px,0.85fr)]">
             <section className="space-y-6">
+              <CapacityWarning capacity={event.max_capacity} admitted={approvedCount} />
               <div className={`rounded-4xl border p-6 shadow-[0_18px_70px_rgba(15,23,42,0.12)] ${statusTone.shell}`}>
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
@@ -1129,11 +1082,11 @@ export default function EventCheckinManager({
                   {aforo.hasLimit && (
                     <div
                       className={`rounded-3xl px-4 py-3 ${
-                        aforo.full ? 'bg-rose-500/25 text-white ring-1 ring-rose-300/40' : statusTone.badge
+                        aforo.full ? 'bg-rose-100 text-rose-950' : aforo.low ? 'bg-amber-100 text-amber-950' : statusTone.badge
                       }`}
                     >
                       <p className="text-xs uppercase tracking-[0.18em] opacity-80">
-                        {aforo.full ? 'Cupo completo' : 'Aforo'}
+                        {aforo.full ? 'Cupo completo' : aforo.low ? 'Últimos lugares' : 'Aforo'}
                       </p>
                       <p className="mt-2 text-2xl font-semibold">
                         {aforo.known ? aforo.occupancy : '—'}
@@ -1365,7 +1318,7 @@ export default function EventCheckinManager({
                                 <p>{guest.email || 'Sin email'}</p>
                                 <p>{guest.phone || 'Sin teléfono'}</p>
                                 <p>{guest.guest_types?.name || 'Sin tipo asignado'}</p>
-                                <p>{formatGuestTypeAccessPolicy(guest.guest_types, event.start_time)}</p>
+                                <p>{formatGuestTypeAccessPolicy(guest.guest_types, event.start_time, event.event_date)}</p>
                               </div>
                             </div>
                             <Badge
@@ -1425,14 +1378,13 @@ export default function EventCheckinManager({
                         </p>
                         <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
                           <div
-                            className={`h-full ${aforo.full ? 'bg-rose-400' : 'bg-emerald-400'}`}
+                            className={`h-full ${aforo.full ? 'bg-rose-400' : aforo.low ? 'bg-amber-400' : 'bg-emerald-400'}`}
                             style={{ width: `${aforo.pct}%` }}
                           />
                         </div>
                         <p className="mt-2 text-sm leading-6 text-slate-300">
-                          {aforo.full
-                            ? 'Cupo completo. Los ingresos nuevos requieren autorización.'
-                            : `${aforo.spotsLeft} lugares libres.`}
+                          {!aforo.known ? 'Actualizando disponibilidad…'
+                            : aforo.message ?? `${aforo.spotsLeft} lugares libres.`}
                         </p>
                       </div>
                     ) : (
@@ -1541,7 +1493,7 @@ export default function EventCheckinManager({
             {isTotemMode ? `Totem · ${event.name}` : isDoorMode ? `Puerta · ${event.name}` : `Check-In de ${event.name}`}
           </h1>
           <p className={`mt-1 text-xs ${isImmersiveMode ? 'text-slate-300' : 'text-gray-600'}`}>
-            {formatDateTime(buildEventDateTime(event.event_date, event.start_time))} · slug <span className="font-mono text-sm">{event.slug}</span>
+            {formatEventSchedule(event, event.guest_types ?? [])} · slug <span className="font-mono text-sm">{event.slug}</span>
           </p>
         </div>
 
@@ -1600,7 +1552,7 @@ export default function EventCheckinManager({
           <p className="text-sm text-slate-300">Hora de puerta</p>
           <p className="mt-1 text-2xl font-semibold">{now ? formatClock(now) : '--:--'}</p>
           <p className="mt-1 text-sm text-slate-300">
-            Evento {formatDateTime(buildEventDateTime(event.event_date, event.start_time))}
+            Evento {formatEventSchedule(event, event.guest_types ?? [])}
           </p>
         </div>
         <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 shadow-sm">
@@ -1618,8 +1570,8 @@ export default function EventCheckinManager({
           </p>
         </div>
         <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 shadow-sm">
-          <p className="text-sm text-blue-800">Refresh operativo</p>
-          <p className="mt-1 text-2xl font-semibold text-blue-950">15s</p>
+          <p className="text-sm text-blue-800">Actualización de ingresos</p>
+          <p className="mt-1 text-2xl font-semibold text-blue-950">{CAPACITY_REFRESH_INTERVAL_MS / 1000}s</p>
           <p className="mt-1 text-sm text-blue-900">
             {doorMetrics.cancelledGuests} cancelados y {recentCheckins.length} movimientos recientes
           </p>
@@ -1628,6 +1580,7 @@ export default function EventCheckinManager({
 
       <div className={`grid gap-4 ${isTotemMode ? 'xl:grid-cols-1' : isDoorMode ? 'xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.85fr)]' : 'xl:grid-cols-[minmax(0,1.2fr)_minmax(360px,0.8fr)]'}`}>
         <section className="space-y-4">
+          <CapacityWarning capacity={event.max_capacity} admitted={approvedCount} />
           <div className={`hidden rounded-2xl border p-4 shadow-sm ${statusTone.shell}`}>
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>

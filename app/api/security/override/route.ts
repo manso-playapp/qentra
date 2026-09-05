@@ -1,5 +1,6 @@
 import {
   ensureAuthorizedApiAccess,
+  ensureAuthorizedEventApiAccess,
   isSecurityOverrideConfigured,
   isSecuritySupervisorPinConfigured,
   verifySecurityOverridePin,
@@ -13,8 +14,11 @@ type SecurityOverrideRequestBody = {
 
 export const runtime = 'nodejs'
 
-export async function GET() {
-  const { response: authErrorResponse } = await ensureAuthorizedApiAccess(['admin', 'event_admin', 'door', 'security_supervisor'])
+export async function GET(request: Request) {
+  const eventId = new URL(request.url).searchParams.get('eventId')
+  const { response: authErrorResponse } = eventId
+    ? await ensureAuthorizedEventApiAccess(eventId, ['admin', 'door', 'security_supervisor'])
+    : await ensureAuthorizedApiAccess(['admin', 'event_admin', 'door', 'security_supervisor'])
 
   if (authErrorResponse) {
     return authErrorResponse

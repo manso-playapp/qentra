@@ -3,10 +3,8 @@ import { describe, expect, it } from 'vitest'
 import { evaluateGuestAccess } from './access-policy'
 import { isInvitationAccessReady, parseInvitationDetails } from './invitation-response'
 
-// NOTE on timezones: buildLocalDate() in access-policy parses `${date}T${time}`
-// without a timezone suffix, so it resolves in the runtime's LOCAL timezone.
-// Every `now` below is also built from a tz-less ISO string, so both sides of
-// the comparison share the same local offset and the tests stay tz-independent.
+// La agenda es argentina; los instantes explícitos mantienen las pruebas
+// independientes de la zona horaria del servidor.
 
 type AccessInput = Parameters<typeof evaluateGuestAccess>[0]
 
@@ -29,9 +27,9 @@ const NIGHT_GUEST_TYPE: NonNullable<AccessInput['guestType']> = {
 function buildInput(overrides: Partial<AccessInput> = {}): AccessInput {
   return {
     event: EVENT,
-    guest: { first_name: 'Ana', last_name: 'Diaz', status: 'enabled' as never },
+    guest: { first_name: 'Ana', last_name: 'Diaz', status: 'enabled' as never, payment_status: 'not_required' },
     guestType: NIGHT_GUEST_TYPE,
-    now: new Date('2026-08-17T01:00:00'), // inside the window
+    now: new Date('2026-08-17T01:00:00-03:00'), // inside the window
     ...overrides,
   }
 }
@@ -40,7 +38,7 @@ function buildInput(overrides: Partial<AccessInput> = {}): AccessInput {
 // (access-policy handles more runtime statuses than types/index.ts declares).
 function withStatus(status: string, overrides: Partial<AccessInput> = {}): AccessInput {
   return buildInput({
-    guest: { first_name: 'Ana', last_name: 'Diaz', status: status as never },
+    guest: { first_name: 'Ana', last_name: 'Diaz', status: status as never, payment_status: 'not_required' },
     ...overrides,
   })
 }
@@ -83,7 +81,7 @@ describe('evaluateGuestAccess — guest status branches', () => {
 describe('evaluateGuestAccess — time windows with day offset', () => {
   it('allows inside the window that crosses midnight (inferred +1 offset)', () => {
     const result = evaluateGuestAccess(
-      withStatus('enabled', { now: new Date('2026-08-17T01:00:00') })
+      withStatus('enabled', { now: new Date('2026-08-17T01:00:00-03:00') })
     )
     expect(result.decision).toBe('allow')
     expect(result.code).toBe('ok')
@@ -91,7 +89,7 @@ describe('evaluateGuestAccess — time windows with day offset', () => {
 
   it('denies before the window opens', () => {
     const result = evaluateGuestAccess(
-      withStatus('enabled', { now: new Date('2026-08-16T20:00:00') })
+      withStatus('enabled', { now: new Date('2026-08-16T20:00:00-03:00') })
     )
     expect(result.decision).toBe('deny')
     expect(result.code).toBe('outside_window')
@@ -99,7 +97,7 @@ describe('evaluateGuestAccess — time windows with day offset', () => {
 
   it('denies after the window closes (next-day end time)', () => {
     const result = evaluateGuestAccess(
-      withStatus('enabled', { now: new Date('2026-08-17T05:00:00') })
+      withStatus('enabled', { now: new Date('2026-08-17T05:00:00-03:00') })
     )
     expect(result.decision).toBe('deny')
     expect(result.code).toBe('outside_window')
@@ -107,7 +105,7 @@ describe('evaluateGuestAccess — time windows with day offset', () => {
 
   it('allows exactly at the window opening boundary', () => {
     const result = evaluateGuestAccess(
-      withStatus('enabled', { now: new Date('2026-08-16T22:00:00') })
+      withStatus('enabled', { now: new Date('2026-08-16T22:00:00-03:00') })
     )
     expect(result.decision).toBe('allow')
     expect(result.code).toBe('ok')
@@ -125,7 +123,7 @@ describe('evaluateGuestAccess — time windows with day offset', () => {
     const result = evaluateGuestAccess(
       withStatus('enabled', {
         guestType: sameDayType,
-        now: new Date('2026-08-16T12:00:00'),
+        now: new Date('2026-08-16T12:00:00-03:00'),
       })
     )
     expect(result.decision).toBe('allow')
@@ -154,14 +152,14 @@ describe('evaluateGuestAccess — invitation token expiry', () => {
     expect(result.code).toBe('ok')
   })
 
-  it('ignores an unparseable token expiry and falls through to allow', () => {
+  it('blocks a token whose expiry cannot be verified', () => {
     const result = evaluateGuestAccess(
       withStatus('enabled', {
         invitationToken: { expires_at: 'not-a-date' },
       })
     )
-    expect(result.decision).toBe('allow')
-    expect(result.code).toBe('ok')
+    expect(result.decision).toBe('deny')
+    expect(result.code).toBe('expired')
   })
 
   it('prioritizes not_ready status over an expired token', () => {
@@ -202,6 +200,13 @@ describe('evaluateGuestAccess — double check-in', () => {
 })
 
 describe('evaluateGuestAccess — aforo total del evento', () => {
+  it('blocks a titular and companion when only one place remains', () => {
+    expect(evaluateGuestAccess(withStatus('enabled', { eventCapacity: 10, eventOccupancy: 9, incomingPeople: 2 })).code).toBe('event_full')
+  })
+
+  it('allows a group that exactly fills the available places', () => {
+    expect(evaluateGuestAccess(withStatus('enabled', { eventCapacity: 10, eventOccupancy: 8, incomingPeople: 2 })).code).toBe('ok')
+  })
   it('allows when occupancy is below capacity', () => {
     const result = evaluateGuestAccess(
       withStatus('enabled', { eventCapacity: 216, eventOccupancy: 100 })
@@ -252,9 +257,21 @@ describe('evaluateGuestAccess — aforo total del evento', () => {
   })
 })
 
+describe('door payment validation', () => {
+  it.each(['pending', null, 'unknown'])('blocks %s even for an enabled guest', (payment_status) => {
+    const input = withStatus('enabled')
+    input.guest.payment_status = payment_status
+    expect(evaluateGuestAccess(input).code).toBe('payment_pending')
+  })
+  it('blocks a pending payment before offering re-entry', () => {
+    const input = withStatus('checked_in')
+    input.guest.payment_status = 'pending'
+    expect(evaluateGuestAccess(input).code).toBe('payment_pending')
+  })
+})
+
 describe('isInvitationAccessReady — paymentStatus gating', () => {
-  // evaluateGuestAccess does not take paymentStatus directly; payment gates
-  // access upstream by deciding whether a guest reaches the "enabled" status.
+  // La invitación y el registro en puerta verifican el pago por separado.
   it('is ready when enabled and payment is not_required', () => {
     expect(isInvitationAccessReady('enabled', 'not_required')).toBe(true)
   })

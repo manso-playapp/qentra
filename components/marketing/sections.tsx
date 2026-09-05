@@ -99,7 +99,7 @@ export function Section({
 export function ClosingCta({
   title,
   description,
-  primary = { href: '/demo', label: 'Quiero conocer Alista' },
+  primary = { href: '/demo', label: 'Consultar para mi fecha' },
   secondary = { href: '/contacto', label: 'Hablar con el equipo' },
 }: {
   title: string

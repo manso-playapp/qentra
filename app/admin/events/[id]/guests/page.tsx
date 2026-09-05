@@ -44,7 +44,7 @@ export default async function EventGuestsPage({ params }: EventGuestsPageProps) 
 
   if (eventResponse.error) {
     return (
-      <AdminLayout>
+      <AdminLayout mobileEventNavigation>
         <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-red-800">
           No se pudo cargar el modulo de invitados. Verifica la conexion con Supabase y las politicas del proyecto.
         </div>
@@ -60,7 +60,7 @@ export default async function EventGuestsPage({ params }: EventGuestsPageProps) 
   const initialGuests = ((guestsResponse.data ?? []) as GuestWithType[]).map((guest) => normalizeGuestRecord(guest))
 
   return (
-    <AdminLayout>
+    <AdminLayout mobileEventNavigation>
       <EventGuestsManager
         event={eventResponse.data as Pick<Event, 'id' | 'name' | 'slug' | 'max_capacity' | 'event_date' | 'confirmation_deadline' | 'start_time'>}
         initialGuestTypes={initialGuestTypes}

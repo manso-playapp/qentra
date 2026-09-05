@@ -35,6 +35,6 @@ export default async function DoorPage({ params }: DoorPageProps) {
   }
 
   return (
-    <DoorScanner event={data as Pick<Event, 'id' | 'name' | 'event_date' | 'start_time'>} />
+    <DoorScanner event={data as Pick<Event, 'id' | 'name' | 'event_date' | 'start_time' | 'max_capacity'>} />
   )
 }

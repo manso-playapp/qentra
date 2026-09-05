@@ -10,7 +10,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import { formatEventDate } from '@/lib/event-date'
+import { ClockInput } from '@/components/admin/ClockInput'
+import { formatEventSchedule } from '@/lib/event-schedule'
 import { getErrorMessage } from '@/lib/errors'
 import type { Event } from '@/types'
 
@@ -153,7 +154,7 @@ export default function EditEventForm({ event }: EditEventFormProps) {
               Editar {event.name}
             </h1>
             <p className="mt-3 text-sm leading-6 text-muted-foreground">
-              Esta información define la fecha, el lugar y los datos que verán los invitados.
+              Esta información define cuándo empieza la fiesta y dónde será. Los días y horarios de cada acceso se configuran en Invitados.
             </p>
           </div>
 
@@ -202,17 +203,18 @@ export default function EditEventForm({ event }: EditEventFormProps) {
 
                 <div className="grid gap-6 md:grid-cols-2">
                   <div>
-                    <Label htmlFor="event_date">Fecha del evento</Label>
+                    <Label htmlFor="event_date">Fecha de inicio de la fiesta</Label>
                     <Input id="event_date" name="event_date" type="date" required value={formData.event_date} onChange={handleInputChange} className="mt-2" />
                     {formData.event_date && (
                       <p className="mt-2 text-sm text-muted-foreground">
-                        {formatEventDate(formData.event_date, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                        La fecha en que empieza, aunque continúe después de medianoche.
                       </p>
                     )}
                   </div>
                   <div>
-                    <Label htmlFor="start_time">Hora de inicio</Label>
-                    <Input id="start_time" name="start_time" type="time" required value={formData.start_time} onChange={handleInputChange} className="mt-2" />
+                    <Label htmlFor="start_time">Hora de inicio · 24 h</Label>
+                    <ClockInput id="start_time" name="start_time" aria-label="Hora de inicio" required value={formData.start_time} onChange={(value) => setFormData((current) => ({ ...current, start_time: value }))} className="mt-2" />
+                    {formData.event_date && formData.start_time && <p className="mt-2 text-sm font-medium text-foreground">{formatEventSchedule(formData)}</p>}
                   </div>
                   <div>
                     <Label htmlFor="confirmation_deadline">Fecha límite para confirmar</Label>

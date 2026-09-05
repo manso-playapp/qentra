@@ -10,17 +10,17 @@ const moments = [
     id: 'invitation',
     number: '01',
     label: 'Invitación',
-    title: 'La identidad apareció antes que la fecha.',
-    detail: 'Dharma tuvo una invitación propia para abrir el recorrido y llevar a cada persona a su experiencia.',
+    title: 'Una invitación con la identidad de la fiesta.',
+    detail: 'La pieza de Dharma muestra cómo el diseño puede acompañar sus 15 desde el primer contacto con los invitados.',
     product: 'Invitación digital personalizada',
   },
   {
     id: 'preparation',
     number: '02',
     label: 'Preparación',
-    title: 'Cada respuesta preparó lo que venía después.',
-    detail: 'Confirmación, grupo y acceso quedaron conectados antes de que la recepción necesitara usarlos.',
-    product: 'Información organizada para la llegada',
+    title: 'Acompañamos la puesta en marcha.',
+    detail: 'Trabajamos en la configuración y la implementación junto a la organización. Lo aprendido en esa preparación quedó incorporado a Alista.',
+    product: 'Configuración e implementación acompañadas',
   },
   {
     id: 'arrival',
@@ -57,7 +57,7 @@ function MomentProduct({ momentId }: { momentId: MomentId }) {
           <span className="size-2 rounded-full bg-[#173b36]" aria-hidden="true" />
         </div>
         <ul className="divide-y divide-black/10">
-          {['Invitación enviada', 'Grupo confirmado', 'Acceso preparado'].map((item) => (
+          {['Diseño de la invitación', 'Configuración del evento', 'Preparación de los accesos'].map((item) => (
             <li key={item} className="flex items-center justify-between gap-4 py-4 text-sm font-bold">
               {item}
               <span className="grid size-6 place-items-center rounded-full bg-[#173b36] text-white">
@@ -66,7 +66,7 @@ function MomentProduct({ momentId }: { momentId: MomentId }) {
             </li>
           ))}
         </ul>
-        <p className="text-xs leading-5 text-black/60">Vista conceptual del producto · sin cifras atribuidas al evento.</p>
+        <p className="text-xs leading-5 text-black/60">Resumen ilustrativo del trabajo de preparación.</p>
       </div>
     )
   }
@@ -109,11 +109,11 @@ export function DharmaCaseStudy() {
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.24em] text-white">Caso real · Dharma</p>
             <p className="mt-5 max-w-sm text-sm leading-6 text-white">
-              Material real del evento y del producto. Sin testimonios de relleno ni cifras sin fuente.
+              Dharma fue la primera fiesta en la que usamos Alista. Acompañamos la configuración y la puesta en marcha: el evento funcionó muy bien y nos dejó aprendizajes para las siguientes familias.
             </p>
           </div>
           <h2 className="marketing-display text-[clamp(3.4rem,6.75vw,6.75rem)] font-black leading-[0.86] tracking-[-0.01em]">
-            Alista ya está pasando.
+            La primera fiesta con Alista.
           </h2>
         </div>
 
@@ -164,7 +164,7 @@ export function DharmaCaseStudy() {
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-white">La secuencia</p>
             <h3 className="marketing-display mt-4 text-5xl font-black leading-[0.92] tracking-[-0.01em]">
-              Preparar cambió la llegada.
+              Así preparamos la llegada.
             </h3>
             <div className="mt-8 space-y-2" role="group" aria-label="Momentos del caso Dharma">
               {moments.map((moment) => {
@@ -215,10 +215,10 @@ export function DharmaCaseStudy() {
 
         <div className="mt-16 grid gap-4 sm:grid-cols-2">
           <div className="rounded-[2rem] border border-white/18 bg-black/10 p-6 sm:p-8">
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white">Métricas verificadas</p>
-            <p className="marketing-display mt-5 text-4xl font-black tracking-[-0.01em]">Sin cifras publicadas.</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white">Lo que aprendimos en recepción</p>
+            <p className="marketing-display mt-5 text-4xl font-black tracking-[-0.01em]">Los celulares también se preparan.</p>
             <p className="mt-4 max-w-lg text-sm leading-6 text-white">
-              Se incorporarán únicamente cuando exista una fuente, una fecha y una definición verificable para cada dato.
+              El escaneo funcionó con fluidez y sumar otro celular ayudó al ingreso. Esa experiencia nos enseñó a acordar los dispositivos antes de la fiesta y a separar la validación del acceso de la bienvenida en pantalla.
             </p>
           </div>
           <div className="rounded-[2rem] bg-[#f0eee8] p-6 text-[#171714] sm:p-8">

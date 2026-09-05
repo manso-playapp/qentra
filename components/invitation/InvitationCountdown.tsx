@@ -60,7 +60,7 @@ export default function InvitationCountdown({ eventDate, startTime }: Invitation
   ]
 
   return (
-    <div className="flex items-start justify-center gap-0" aria-label="Cuenta regresiva para el evento">
+    <div className="flex items-start justify-center gap-0" aria-label="Cuenta regresiva para tu ingreso">
       {units.map(([value, label]) => (
         <div key={label} className="invitation-countdown-unit relative flex flex-col items-center px-6 sm:px-10">
           <span className="invitation-countdown-value text-5xl font-extralight tabular-nums text-(--invitation-accent) sm:text-6xl">{String(value).padStart(2, '0')}</span>

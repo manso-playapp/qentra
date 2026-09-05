@@ -27,7 +27,7 @@ type MarketingEventMap = {
       | 'professionals_hero'
       | 'pricing'
     audience: MarketingAudience
-    destination: 'demo' | 'professionals' | 'contact' | 'dharma' | 'page_section'
+    destination: 'demo' | 'professionals' | 'contact' | 'dharma' | 'page_section' | 'access'
   }
   contact_form_prepared: {
     source: 'familia-demo' | 'profesionales-page' | 'contacto-page'

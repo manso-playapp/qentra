@@ -32,7 +32,7 @@ describe('invitation schedule', () => {
 
   it('uses the guest type day offset when creating the calendar entry', () => {
     const calendarUrl = buildCalendarUrl(event, { startTime: '00:00', startDayOffset: 1 })
-    expect(calendarUrl).toContain('dates=20260817T000000/20260817T040000')
+    expect(calendarUrl).toContain('dates=20260817T000000/20260817T000000')
   })
 })
 

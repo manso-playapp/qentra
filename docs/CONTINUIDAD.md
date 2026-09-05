@@ -105,8 +105,123 @@ usuario permanecen en el código o en esta continuidad; no se copian al panel.
 
 ## 6. Estado HOY
 
-**Fecha de este estado:** 2026-09-02.
+**Fecha de este estado:** 2026-09-05.
 **Rama de trabajo:** `main`.
+
+### Versión autorizada para Git y publicación (05/09/2026)
+
+- Admin móvil aprobado e implementado en Invitados (<768 px): Hoy / Invitados /
+  Invitaciones / Más, menú de cuenta plegado, búsqueda por titular/acompañante,
+  respuestas y pagos separados, edición breve de contacto/mesa. Invitaciones:
+  preparar mensaje → abrir WhatsApp personal → marcado manual con reintento;
+  sin teléfono permite elegir contacto en WhatsApp. Contexto de ficha/grupo de
+  envío se conserva en la pestaña; no persiste mensajes, teléfonos ni tokens.
+  Importación, tipos y demás gestión avanzada siguen disponibles desde Más.
+  Reutiliza hooks/APIs/permisos actuales. La vista con permisos restringidos de
+  la hija queda fuera de esta etapa. Sin escrituras reales en QA.
+
+- Aviso de cupo autorizado por el owner: amarillo con 3/2/1 lugares restantes,
+  rojo al completar. Visible en puerta móvil y panel; consulta de actividad cada
+  5 segundos sin bloquear escaneo, además del refresco tras una validación en
+  el celular. El límite estricto y los grupos completos no cambian. Sin alertas
+  operativas en el recibidor decorativo. Conteo desconocido no inventa lugares.
+
+El owner aprobó el plan de personalización y acompañamiento y autorizó corregir
+web y plataforma. El 05/09 autorizó subir todos los cambios y confirmó el uso del
+material Dharma en la web. Se versiona esta entrega para publicación desde main.
+No se modificaron datos de eventos reales. El protocolo específico y su PDF
+permanecen locales porque contienen datos operativos privados; el repositorio
+es público. La plantilla genérica y el presupuesto modelo sí se versionan.
+
+- Web: servicio acompañado por presupuesto y autogestión ARS 89.000 separados;
+  entregables visibles, madre/hija con envíos personales, profesionales como
+  colaboradores, recepción de la organización y recibidor opcional. No cambia
+  checkout, imágenes ni autorizaciones del caso Dharma.
+- Reformulación editorial completa: inicio, producto, proceso, contratación,
+  profesionales, caso, consulta, contacto, seguridad, privacidad y términos;
+  también FAQ, navegación, demos y metadatos. `/precios` ahora es «Cómo contratar».
+  Nueva `/autogestion`: única página comercial que muestra ARS 89.000, desde la
+  misma fuente del checkout. Ejemplos ficticios separados del único evento real;
+  preparación sin porcentajes inventados y recepción del grupo completo.
+- Recepción: `lib/server-checkin.ts` unifica escaneo y acción manual de la tarjeta.
+  Verifica la columna `payment_status`, grupo completo, PIN dentro de la petición
+  de ingreso, y agenda en hora argentina. Pago y aforo no admiten excepción. La
+  edición de datos no registra ingresos como efecto secundario.
+- Migración **APLICADA POR EL OWNER Y VERIFICADA EN BASE (05/09/2026)**:
+  `supabase/migrations/20260905162449_guard_guest_checkin_integrity.sql`.
+  Agrega snapshot de personas admitidas y RPC guarded con locks por evento,
+  mantiene reversión/activación y restringe escrituras directas del navegador en
+  invitados, checkins y QR/tokens. SELECT y RLS disponibles. Verificación posterior:
+  tres cuerpos de función idénticos al archivo local; permisos de tablas/columnas
+  correctos; columna, constraint e índice válidos; 104 snapshots sin nulos/negativos.
+  Data API reconoce RPC y deniega al rol público, probado con GET sin mutaciones.
+- **No desplegar la API nueva antes de aplicar y verificar la migración.** No hay
+  fallback al RPC sin controles. El archivo `docs/CHECKIN_INTEGRIDAD_MIGRACION.md`
+  detalla contrato, auditoría aplicada, ensayo y orden de salida. Esquema y grants
+  ya verificados. El owner confirma recepción con dos celulares probada y
+  funcionando, y cobros de Alfonsina llegando a la cuenta de la madre. También
+  confirma que repetir un QR en pruebas preliminares avisaba que el invitado ya
+  estaba registrado como ingresado. No pedir
+  repetir esos circuitos como si faltara evidencia. El ensayo técnico específico
+  de contención por último cupo tras la migración no está documentado; distinguirlo
+  del uso normal con dos celulares. No hay fallo observado. No se publicó la API.
+- El conteo histórico al migrar es una estimación basada en grupos actuales.
+  No acredita métricas comerciales. No se implementaron ingresos parciales de
+  acompañantes, egresos ni modo offline.
+- Validación local: 288 tests pasan en 29 archivos; 137 aserciones SQL sintéticas
+  pasan en PGlite. Tras la reformulación, doce páginas y Open Graph responden 200;
+  páginas verificadas a 390/1440 px sin errores de JS ni desbordes. Demos, formulario
+  sin envío y enlaces pasan; precio sólo en autogestión. Header a 1024 px sin
+  colisiones. `tsc`, lint y build pasan. La compilación se ejecutó fuera del
+  sandbox tras detener la fase compile que no avanzaba dentro de éste.
+  `vitest.config.ts` limita el descubrimiento al checkout para
+  no ejecutar copias de tests de `.kilo`.
+- Vista local: `http://127.0.0.1:3000`. Pendientes de publicación del material
+  Dharma siguen regidos por `docs/DHARMA_CASE_PRIVACY.md`.
+
+### Fechas claras al cruzar medianoche (05/09/2026)
+
+- Pedido explícito del owner: Alfonsina comienza el 03/10 y continúa el 04/10;
+  corregir formularios y representaciones de esa información.
+- Crear/editar evento muestra «Fecha de inicio de la fiesta». `ClockInput`
+  fuerza elección de horas 00-23 y minutos; identifica medianoche y mediodía.
+- Cuatro formularios de tipos reutilizan `AccessWindowFields`: fechas reales,
+  resumen del intervalo y advertencia si el cierre no es posterior. Persisten
+  los offsets existentes; no agrega columnas ni requiere migración nueva.
+- `lib/event-schedule.ts` concentra fechas e inferencia heredada; POST/PATCH de
+  tipos validan orden, relojes y días. PATCH parcial se compara con lo guardado.
+  Cambios de otros campos no quedan bloqueados por horarios antiguos inválidos.
+- Resumen, listado, inicio, sidebar y recepción muestran fechas de accesos. No
+  marcan la fiesta pasada al cambiar de día si aún hay accesos programados.
+- Las dos plantillas de invitación, countdown y Agendar usan la fecha de ingreso
+  del invitado. Calendario ya no inventa duración de cuatro horas. Cierre de
+  ingreso no se presenta como fin de fiesta: no hay un campo global de fin.
+- El panel ya no deduce «falta enviar» a partir de una respuesta pendiente.
+- Verificado: 356 tests / 33 archivos, tsc, lint y build pasan. QA con fixtures,
+  16 escenarios a 390/1440 px, sin errores ni desbordes y sin escrituras reales;
+  fixtures retiradas. Lectura del resumen y edición reales de Alfonsina por UI
+  autenticada confirma inicio03/10 y accesos04/10. Evidencia visual en
+  `/private/tmp/alista-schedule-qa`.
+- **No cambió ningún horario guardado, QR, pago ni invitación enviada.** La hora
+  12:00 de los trasnoches sigue pendiente de confirmación/corrección por el owner.
+  El código sigue local, sin publicación. Después de este frente el owner aplicó
+  la migración previa y se verificó su instalación; ver sección anterior.
+
+### Oferta y operación de Alfonsina (05/09/2026)
+
+- Presupuesto reutilizable: `docs/comercial/PRESUPUESTO_MODELO_ACOMPANAMIENTO.md`
+  y `output/pdf/alista-presupuesto-modelo.pdf`. Cantidades y condiciones son una
+  base propuesta para futuras ventas, no cambios al contrato vigente.
+- Protocolo y evidencia: `docs/operacion/PROTOCOLO_EVENTO_Y_EVIDENCIA.md`
+  y `output/pdf/alista-protocolo-alfonsina.pdf`. Datos consultados en sólo lectura
+  a las 14:10 Argentina; sin cambios de base, código ni publicación en este frente.
+- El owner confirma todas las invitaciones del evento en preparación enviadas.
+  Datos operativos, importes por invitado, conteos y ubicación: consultar el
+  protocolo interno local o Alista con sesión autorizada, no este repositorio público.
+- Pendientes: confirmar la ventana exacta del trasnoche y el referente/equipo.
+  No cambiar horarios ni reenviar invitaciones a partir de una suposición.
+- Conector Supabase no devolvió proyectos; lectura específica realizada con la
+  conexión configurada del repo y después contrastada con el panel autenticado.
 
 ### En producción, funcionando
 - Admin de eventos, invitados y tipos de acceso; carga masiva con plantilla.

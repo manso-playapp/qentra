@@ -9,6 +9,8 @@ export interface Event {
   /** Fecha limite opcional para confirmar asistencia. */
   confirmation_deadline?: string | null
   start_time: string
+  /** Horarios de acceso disponibles para mostrar los días que abarca la fiesta. */
+  guest_types?: Array<Pick<GuestType, 'is_active' | 'access_start_time' | 'access_end_time' | 'access_start_day_offset' | 'access_end_day_offset'>> | null
   venue_name: string
   venue_address: string
   /** Código de vestimenta visible en la invitación. */

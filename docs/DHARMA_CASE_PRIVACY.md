@@ -1,7 +1,7 @@
 # Caso Dharma — registro de uso, privacidad y evidencia
 
-**Última revisión:** 24 de agosto de 2026  
-**Alcance actual:** vista local de la nueva web de Alista
+**Última revisión:** 5 de septiembre de 2026
+**Alcance actual:** publicación en la web de Alista autorizada por el owner
 
 ## Material utilizado
 
@@ -15,9 +15,9 @@
 ## Autorización y consentimiento
 
 - Los assets fueron suministrados al repositorio para construir y revisar localmente esta web.
-- No se encontró un documento firmado que confirme autorización para publicación pública, pauta, prensa o reutilización comercial.
-- La salida a producción del video y de la captura queda bloqueada hasta registrar titular, alcance, vigencia y eventuales restricciones de uso.
-- Antes de publicar debe confirmarse especialmente el tratamiento de imágenes de menores que puedan aparecer en el video.
+- El 05/09/2026, Javier Manso (owner) confirmó en esta conversación: «Sí, autorizado para la web de Alista», en respuesta a la consulta específica sobre el video y la captura de Dharma y su publicación desde main.
+- Esta confirmación habilita el uso de ese material en la web de Alista. Se registra como declaración del owner; no se afirma haber revisado un documento firmado ni consentimientos individuales.
+- No amplía por sí sola el alcance a pauta, prensa u otras reutilizaciones. No se indicó una fecha de vencimiento ni restricciones adicionales en la respuesta.
 
 ## Minimización y privacidad
 
@@ -37,9 +37,9 @@ No hay métricas de Dharma con fuente verificable en el repositorio. La web no p
 4. responsable de validación;
 5. autorización para publicación.
 
-## Pendientes para producción
+## Registro complementario y usos futuros
 
-- documento de consentimiento y derechos de imagen;
+- conservar el respaldo de consentimiento y derechos de imagen que sustenta la autorización declarada por el owner;
 - revisión del QR visible en la captura;
 - inventario de tomas permitidas y restricciones sobre rostros o menores;
 - aprobación editorial del poster y de las variantes web comprimidas;

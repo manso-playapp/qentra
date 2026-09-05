@@ -11,8 +11,12 @@ import type { InvitationTemplateKey } from '@/lib/invitation-templates'
 import { getInvitationFonts, INVITATION_FONT_STACKS, type InvitationFontConfig } from '@/lib/invitation-fonts'
 import { getInvitationBlock, getInvitationBlockOrder, isInvitationBlockVisible, type InvitationBlocks } from '@/lib/invitation-blocks'
 import { DEFAULT_INVITATION_LOGO, normalizeInvitationLogo, type InvitationLogoConfig } from '@/lib/invitation-logo'
+import { formatEventDate, parseEventDate } from '@/lib/event-date'
+import { formatInvitationAccessWindow, getInvitationEndDate, getInvitationStartDate, getInvitationStartTime, type InvitationSchedule } from '@/lib/invitation-schedule'
 
 export type { InvitationTemplateKey } from '@/lib/invitation-templates'
+export { buildCalendarUrl, getInvitationStartTime } from '@/lib/invitation-schedule'
+export type { InvitationSchedule } from '@/lib/invitation-schedule'
 
 export type InvitationEventInfo = {
   name?: string
@@ -47,11 +51,6 @@ export type InvitationConfigInfo = {
 
 const HEX_COLOR = /^#[0-9a-fA-F]{6}$/
 
-export type InvitationSchedule = {
-  startTime?: string | null
-  startDayOffset?: number | null
-}
-
 export type AccessState = {
   label: string
   title: string
@@ -61,19 +60,22 @@ export type AccessState = {
 }
 
 export function formatDate(date: string) {
-  return new Intl.DateTimeFormat('es-AR', { dateStyle: 'full' }).format(new Date(date))
+  return formatEventDate(date, { dateStyle: 'full' })
 }
 
 export function formatEditorialDate(date: string) {
-  return new Intl.DateTimeFormat('es-AR', { day: 'numeric', month: 'long' }).format(new Date(`${date}T12:00:00`))
+  return formatEventDate(date, { day: 'numeric', month: 'long' })
 }
 
 export function formatAirportDate(date: string) {
+  const parsedDate = parseEventDate(date)
+  if (!parsedDate) return date
   const parts = new Intl.DateTimeFormat('es-AR', {
     weekday: 'short',
     day: '2-digit',
     month: 'long',
-  }).formatToParts(new Date(`${date}T12:00:00`))
+    timeZone: 'UTC',
+  }).formatToParts(parsedDate)
   const value = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value || ''
 
   return [value('weekday'), value('day'), value('month')]
@@ -117,36 +119,6 @@ export function buildMapsUrl(address?: string) {
 export function buildPhoneHref(phone?: string) {
   if (!phone) return null
   return `tel:${phone.replace(/\s+/g, '')}`
-}
-
-export function getInvitationStartTime(event: InvitationEventInfo, schedule?: InvitationSchedule) {
-  return schedule?.startTime?.slice(0, 5) || event.start_time?.slice(0, 5) || null
-}
-
-export function buildCalendarUrl(event: InvitationEventInfo, schedule?: InvitationSchedule) {
-  const startTime = getInvitationStartTime(event, schedule)
-  if (!event.event_date || !startTime) return null
-
-  // La fecha y la hora del evento se cargan como hora local argentina. No se
-  // deben serializar con `toISOString()` porque eso las transforma a UTC y
-  // Google Calendar las muestra tres horas antes en Buenos Aires.
-  const [year, month, day] = event.event_date.split('-').map(Number)
-  const [hours, minutes] = startTime.split(':').map(Number)
-  const startDayOffset = schedule?.startTime ? schedule.startDayOffset ?? 0 : 0
-  const start = new Date(Date.UTC(year, month - 1, day + startDayOffset, hours, minutes))
-  const end = new Date(start.getTime() + 4 * 60 * 60 * 1000)
-  const fmt = (value: Date) =>
-    [
-      value.getUTCFullYear(),
-      String(value.getUTCMonth() + 1).padStart(2, '0'),
-      String(value.getUTCDate()).padStart(2, '0'),
-    ].join('') + `T${String(value.getUTCHours()).padStart(2, '0')}${String(value.getUTCMinutes()).padStart(2, '0')}00`
-  const details = [event.description, event.venue_name, event.venue_address].filter(Boolean).join('\n')
-  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(
-    event.name || 'Evento Alista'
-  )}&dates=${fmt(start)}/${fmt(end)}&ctz=America%2FArgentina%2FBuenos_Aires&details=${encodeURIComponent(details)}&location=${encodeURIComponent(
-    event.venue_address || event.venue_name || ''
-  )}`
 }
 
 export function buildAccessState(input: {
@@ -408,6 +380,9 @@ function TravelInvitationView({
 }: InvitationViewProps) {
   const airportCode = (event.name || 'DRM').replace(/[^a-zA-Z0-9]/g, '').slice(0, 3).toUpperCase() || 'DRM'
   const boardingTime = getInvitationStartTime(event, schedule)
+  const accessDate = getInvitationStartDate(event, schedule)
+  const accessWindow = formatInvitationAccessWindow(event, schedule)
+  const hasAccessEnd = Boolean(getInvitationEndDate(event, schedule))
   const directionsUrl = event.directions_url || buildMapsUrl(event.venue_address)
   const contactHref = buildPhoneHref(event.contact_phone)
   const colors = getInvitationColors(branding, config)
@@ -495,8 +470,8 @@ function TravelInvitationView({
               <dd className="mt-1 text-lg font-bold uppercase tracking-[0.1em] sm:text-xl">{guestDisplayName || 'Invitado/a'}</dd>
             </div>
             <div>
-              <dt className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500"><CalendarDays className="size-3" aria-hidden="true" /> Fecha</dt>
-              <dd className="mt-1 font-mono text-base font-bold uppercase tracking-[0.05em] sm:text-lg">{event.event_date ? formatAirportDate(event.event_date) : 'A confirmar'}</dd>
+              <dt className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500"><CalendarDays className="size-3" aria-hidden="true" /> Fecha de tu ingreso</dt>
+              <dd className="mt-1 font-mono text-base font-bold uppercase tracking-[0.05em] sm:text-lg">{accessDate ? formatAirportDate(accessDate) : 'A confirmar'}</dd>
             </div>
             <div>
               <dt className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500"><Clock3 className="size-3" aria-hidden="true" /> Boarding</dt>
@@ -514,6 +489,7 @@ function TravelInvitationView({
               <dd className="mt-1 font-mono text-base font-bold uppercase tracking-[0.05em] sm:text-lg">{event.name || 'Evento'}</dd>
             </div>
           </dl>
+          {hasAccessEnd && accessWindow ? <p className="mt-5 text-sm font-semibold leading-6">{accessWindow}</p> : null}
 
           <div className="mt-9 flex flex-col border-t-2 border-dashed border-slate-300 pt-9">
             {showDresscode && dresscode ? (
@@ -551,7 +527,7 @@ function TravelInvitationView({
             </div>}
           </div>
 
-          <BoardingPassBarcode value={`${event.slug || airportCode}${event.event_date || ''}`} />
+          <BoardingPassBarcode value={`${event.slug || airportCode}${accessDate || ''}`} />
         </section> : null}
 
         {showGuestData ? children : null}
@@ -580,6 +556,9 @@ function MidnightInvitationView({
   children,
 }: InvitationViewProps) {
   const startTime = getInvitationStartTime(event, schedule)
+  const accessDate = getInvitationStartDate(event, schedule)
+  const accessWindow = formatInvitationAccessWindow(event, schedule)
+  const hasAccessEnd = Boolean(getInvitationEndDate(event, schedule))
   const directionsUrl = event.directions_url || buildMapsUrl(event.venue_address)
   const dresscode = event.dresscode?.trim() || ''
   const contactHref = buildPhoneHref(event.contact_phone)
@@ -648,16 +627,16 @@ function MidnightInvitationView({
               <div>
                 <dt className="invitation-subtitle flex flex-col items-center justify-center text-[10px] font-bold uppercase tracking-[0.18em]">
                   <span className="invitation-animated-icon invitation-animated-icon-one" aria-hidden="true"><CalendarDays className="size-8" /></span>
-                  <span className="mt-3">Fecha</span>
+                  <span className="mt-3">Fecha de tu ingreso</span>
                 </dt>
                 <dd className="invitation-data mt-2 text-2xl text-white sm:text-3xl">
-                  {event.event_date ? formatEditorialDate(event.event_date) : 'A confirmar'}
+                  {accessDate ? formatEditorialDate(accessDate) : 'A confirmar'}
                 </dd>
               </div>
               <div>
                 <dt className="invitation-subtitle flex flex-col items-center justify-center text-[10px] font-bold uppercase tracking-[0.18em]">
                   <span className="invitation-animated-icon invitation-animated-icon-two" aria-hidden="true"><Clock3 className="size-8" /></span>
-                  <span className="mt-3">Hora</span>
+                  <span className="mt-3">Tu ingreso, desde las</span>
                 </dt>
                 <dd className="invitation-data mt-2 text-2xl text-white sm:text-3xl">
                   {startTime ? `${startTime} hs` : 'A confirmar'}
@@ -674,12 +653,13 @@ function MidnightInvitationView({
                 {event.venue_address && event.venue_name ? <p className="invitation-subtitle mt-2 text-xs text-white/48">{event.venue_address}</p> : null}
               </div>
             </dl>
+            {hasAccessEnd && accessWindow ? <p className="invitation-data mx-auto mt-8 max-w-lg text-center text-sm leading-6 text-white">{accessWindow}</p> : null}
           </section> : null}
 
-          {showCountdown && event.event_date && (
+          {showCountdown && accessDate && (
               <section className="invitation-block mt-0 border-t border-white/18 pt-14" style={blockStyle('countdown')} data-invitation-block>
               <h2 className="invitation-section-title mb-5 text-white">{countdownBlock.title}</h2>
-              <InvitationCountdown eventDate={event.event_date} startTime={startTime} />
+              <InvitationCountdown eventDate={accessDate} startTime={startTime} />
             </section>
           )}
 

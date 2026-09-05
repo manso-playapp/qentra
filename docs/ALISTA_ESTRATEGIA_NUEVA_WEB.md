@@ -6,6 +6,17 @@
 > Donde este documento contradiga eso, manda `docs/Product/ALISTA_DECISIONES_PROPIEDAD_Y_PAGOS.md`.
 > El resto (arte, tono, estructura) sigue vigente.
 
+> **Actualización aprobada — 05/09/2026.** La web prioriza personalización y
+> acompañamiento por presupuesto, con entregables y disponibilidad acordados;
+> conserva autogestión a ARS 89.000 por evento. La activación está incluida en el
+> servicio acompañado. `/precios` se presenta como «Cómo contratar», orientado
+> a la propuesta por fiesta; `/autogestion` es una alternativa secundaria con
+> precio visible antes del registro. No ofrecer packs para propietarios profesionales ni
+> confundir precio de plataforma con servicio completo. Recepción de la
+> organización, equipos preparados y recibidor opcional posterior al control.
+> Ver la modalidad acompañada en el documento de propiedad y pagos. Esta versión
+> está implementada en local y pendiente de revisión/publicación.
+
 # ALISTA — ESTRATEGIA Y ARQUITECTURA DE LA NUEVA WEB
 ## Documento base para UX/UI, narrativa, contenido y desarrollo
 

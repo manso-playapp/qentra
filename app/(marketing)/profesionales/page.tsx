@@ -17,35 +17,35 @@ import { TrackedLink } from '@/components/marketing/TrackedLink'
 import { createMarketingMetadata } from '@/lib/marketing-seo'
 
 export const metadata = createMarketingMetadata({
-  title: 'Alista para planners, salones y productoras',
+  title: 'Alista junto a planners, salones y productoras',
   description:
-    'Gestioná invitados, confirmaciones, entradas y accesos de todos tus 15 desde una misma plataforma.',
+    'Recomendá diseño y acompañamiento para los 15 de tus clientes. La familia contrata Alista y tu equipo colabora en la preparación y la recepción.',
   path: '/profesionales',
 })
 
 const capabilities = [
   {
     icon: CalendarRange,
-    title: 'Múltiples eventos',
-    detail: 'Una vista para saber qué se está preparando, qué necesita atención y qué ya está listo.',
+    title: 'Una recomendación con contexto',
+    detail: 'Presentanos a las familias que quieren delegar diseño y organización de invitados, especialmente cuando el trasnoche suma acompañantes y pagos.',
     tone: 'bg-[#213480] text-white',
   },
   {
     icon: Layers3,
-    title: 'Plantillas que vuelven a servir',
-    detail: 'Reutilizá tipos de acceso, recorridos y configuraciones sin empezar cada fiesta desde cero.',
+    title: 'Reglas acordadas con la familia',
+    detail: 'Quiénes están invitados, cuántos acompañantes pueden llevar, qué acceso tiene cada grupo y quién decide una excepción: lo trabajamos antes de abrir la puerta.',
     tone: 'bg-[#ffcfbf] text-[#171714]',
   },
   {
     icon: Users,
-    title: 'Un equipo, distintas tareas',
-    detail: 'Coordinación, invitaciones y recepción ven lo que necesitan para hacer bien su parte.',
+    title: 'Recepción con un referente',
+    detail: 'La familia, el salón o la productora aporta el personal. Acordamos el referente, los celulares y la conexión; Alista configura y capacita según la propuesta.',
     tone: 'bg-[#d9ee73] text-[#171714]',
   },
   {
     icon: Palette,
-    title: 'Cada 15 conserva su identidad',
-    detail: 'El sistema se repite. La invitación, el contenido y la atmósfera cambian con cada cliente.',
+    title: 'Diseño pensado para sus 15',
+    detail: 'Trabajamos la invitación con la identidad de la fiesta y la mirada de la quinceañera. La propuesta y sus revisiones quedan acordadas con la familia.',
     tone: 'bg-[#c65035] text-white',
   },
 ] as const
@@ -61,12 +61,12 @@ export default function ProfessionalsPage() {
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.24em] text-[#d9ee73]">Alista para profesionales</p>
               <p className="mt-6 max-w-lg text-base leading-7 text-white/68">
-                Para planners, salones y productoras que quieren sumar una experiencia mejor preparada a su propio servicio.
+                Hay familias que quieren delegar la invitación, la lista y los pendientes del trasnoche. Podés acercarles Alista y colaborar en una preparación que también ayude a tu equipo.
               </p>
             </div>
             <div>
               <h1 className="marketing-display text-[clamp(3.1rem,6.4vw,6.4rem)] font-black leading-[0.88] tracking-[-0.01em]">
-                Hacé que cada fiesta llegue mejor preparada.
+                Preparemos juntos los 15 de tus clientes.
               </h1>
               <div className="mt-9 flex flex-col gap-3 sm:flex-row">
                 <TrackedLink
@@ -77,7 +77,7 @@ export default function ProfessionalsPage() {
                   }}
                   className="inline-flex min-h-13 items-center justify-between gap-6 rounded-full bg-[#d9ee73] px-6 text-sm font-black text-[#171714] transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                 >
-                  Quiero ofrecer Alista
+                  Conversar sobre una colaboración
                   <ArrowDown className="size-4" aria-hidden="true" />
                 </TrackedLink>
                 <TrackedLink
@@ -88,7 +88,7 @@ export default function ProfessionalsPage() {
                   }}
                   className="inline-flex min-h-13 items-center justify-between gap-6 rounded-full border border-white/22 px-6 text-sm font-black text-white transition hover:bg-white hover:text-[#171714] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                 >
-                  Ver cómo funciona
+                  Conocer nuestra forma de trabajo
                   <ArrowRight className="size-4" aria-hidden="true" />
                 </TrackedLink>
               </div>
@@ -104,9 +104,9 @@ export default function ProfessionalsPage() {
       <section id="como-se-incorpora" className="px-5 py-24 sm:px-8 sm:py-32 lg:px-14">
         <div className="mx-auto max-w-[1320px]">
           <div className="grid gap-8 lg:grid-cols-[0.7fr_1.3fr] lg:items-end">
-            <p className="text-xs font-bold uppercase tracking-[0.24em] text-black/60">Un sistema que se reutiliza</p>
+            <p className="text-xs font-bold uppercase tracking-[0.24em] text-black/60">Tu lugar en la preparación</p>
             <h2 className="marketing-display text-[clamp(3rem,5.25vw,5.6rem)] font-black leading-[0.9] tracking-[-0.01em]">
-              Tu proceso mejora. Cada fiesta sigue siendo única.
+              Vos conocés la fiesta. Acordemos cómo acompañarla.
             </h2>
           </div>
           <div className="mt-14 grid gap-4 sm:grid-cols-2">
@@ -133,17 +133,17 @@ export default function ProfessionalsPage() {
       <section className="bg-[#ff8b70] px-5 py-24 sm:px-8 sm:py-32 lg:px-14">
         <div className="mx-auto grid max-w-[1320px] gap-12 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.24em] text-[#171714]">Una promesa para tus clientes</p>
+            <p className="text-xs font-bold uppercase tracking-[0.24em] text-[#171714]">Quién contrata y quién colabora</p>
             <h2 className="marketing-display mt-5 text-[clamp(3.1rem,6vw,6.4rem)] font-black leading-[0.88] tracking-[-0.01em]">
-              “Todos nuestros 15 incluyen Alista.”
+              La responsable decide. El equipo trabaja con ella.
             </h2>
           </div>
           <div>
             <p className="text-base font-bold leading-7 text-black/72">
-              No es una licencia aislada: es una forma de elevar tu servicio desde la invitación hasta la recepción.
+              La responsable contrata Alista y conserva la propiedad de su evento. Puede incorporar al planner como colaborador. Si hay entradas pagas, los cobros se reciben en su cuenta de Mercado Pago, con las condiciones de esa cuenta.
             </p>
             <ul className="mt-7 space-y-3">
-              {['Tu marca acompaña la experiencia.', 'Tu equipo trabaja con un mismo criterio.', 'La familia entiende qué sigue.'].map((item) => (
+              {['Alcance y soporte definidos por evento.', 'Personal de recepción de la organización.', 'Equipos y recibidor cotizados por separado.'].map((item) => (
                 <li key={item} className="flex items-center gap-3 text-sm font-bold">
                   <span className="grid size-6 place-items-center rounded-full bg-[#171714] text-white">
                     <Check className="size-3.5" strokeWidth={3} aria-hidden="true" />
@@ -160,13 +160,13 @@ export default function ProfessionalsPage() {
         <div className="mx-auto max-w-[1320px]">
           <div className="grid gap-8 lg:grid-cols-[0.72fr_1.28fr] lg:items-end">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.24em] text-[#d9ee73]">Producto en acción</p>
+              <p className="text-xs font-bold uppercase tracking-[0.24em] text-[#d9ee73]">Una conversación sobre pendientes</p>
               <h2 className="marketing-display mt-5 text-[clamp(3rem,5.25vw,5.6rem)] font-black leading-[0.9] tracking-[-0.01em]">
-                Lo que falta se vuelve trabajo concreto.
+                Saber qué falta. Saber quién lo resuelve.
               </h2>
             </div>
             <p className="max-w-xl text-base leading-7 text-white/60">
-              El Centro de Preparación ayuda a tu equipo a priorizar confirmaciones, pagos, grupos, restricciones y recepción en cada evento.
+              Las revisiones con la familia ponen nombre a lo pendiente: confirmaciones, acompañantes, pagos y necesidades para el salón. Este ejemplo ilustra la información que usamos para preparar esas conversaciones.
             </p>
           </div>
           <div className="mt-14">
@@ -180,18 +180,18 @@ export default function ProfessionalsPage() {
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.24em] text-[#9c3926]">Conversemos</p>
             <h2 className="marketing-display mt-5 text-[clamp(3rem,4.5vw,4.9rem)] font-black leading-[0.92] tracking-[-0.01em]">
-              Veamos cómo sumarlo a tu servicio.
+              Contanos cómo recibís a tus familias.
             </h2>
             <p className="mt-7 max-w-md text-base leading-7 text-black/65">
-              Contanos cuántos eventos organizás y cómo trabaja hoy tu equipo. La conversación empieza por tu operación, no por un plan genérico.
+              Nos sirve conocer tu ciudad, el tipo de fiestas de 15 que acompañás y cómo se arma el equipo de recepción. Podemos conversar sobre una familia interesada sin compartir datos de la quinceañera ni de sus invitados.
             </p>
             <p className="mt-8 flex items-center gap-3 text-sm font-bold text-[#213480]">
               <RefreshCcw className="size-4" aria-hidden="true" />
-              Condiciones comerciales por volumen, a conversar.
+              Una propuesta para cada fiesta, acordada con su responsable.
             </p>
           </div>
           <ContactForm
-            subject="Consulta profesional — Alista"
+            subject="Colaboración para fiestas de 15 — Alista"
             cta="Preparar consulta profesional"
             source="profesionales-page"
             audience="professional"
@@ -202,13 +202,13 @@ export default function ProfessionalsPage() {
       <section className="bg-[#213480] px-5 py-20 text-white sm:px-8 lg:px-14">
         <div className="mx-auto flex max-w-[1180px] flex-col gap-8 sm:flex-row sm:items-center sm:justify-between">
           <p className="marketing-display max-w-2xl text-4xl font-black leading-none tracking-[-0.01em] sm:text-5xl">
-            Cada fiesta con identidad. Todas mejor preparadas.
+            Una invitación propia. Una recepción preparada.
           </p>
           <Link
-            href="/#dharma"
+            href="/producto"
             className="inline-flex min-h-12 items-center justify-between gap-5 rounded-full border border-white/22 px-5 text-sm font-black transition hover:bg-white hover:text-[#171714] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
           >
-            Ver el caso Dharma
+            Conocer el acompañamiento
             <ArrowUpRight className="size-4" aria-hidden="true" />
           </Link>
         </div>

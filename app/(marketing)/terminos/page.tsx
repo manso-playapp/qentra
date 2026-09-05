@@ -2,39 +2,20 @@ import { createMarketingMetadata } from '@/lib/marketing-seo'
 
 export const metadata = createMarketingMetadata({
   title: 'Términos y condiciones',
-  description: 'Condiciones de uso de la plataforma Alista.',
+  description: 'Alcance del servicio acompañado, uso autogestivo y responsabilidades en la preparación de una fiesta de 15.',
   path: '/terminos',
 })
 
 const SECTIONS = [
-  {
-    title: '1. Objeto',
-    body: 'Estos términos regulan el uso de Alista, una plataforma que vincula invitación, pago y acceso en fiestas privadas con cupo limitado. Al usar el servicio, aceptás estas condiciones.',
-  },
-  {
-    title: '2. Uso del servicio',
-    body: 'Te comprometés a usar la plataforma de forma lícita y a cargar información sobre la que tengas base para tratarla. Sos responsable de la exactitud de los datos que ingresás y del uso que hace tu equipo.',
-  },
-  {
-    title: '3. Cuentas y accesos',
-    body: 'El acceso a las superficies operativas requiere credenciales. Sos responsable de mantener la confidencialidad de tus accesos y de las acciones realizadas desde tu cuenta.',
-  },
-  {
-    title: '4. Responsabilidad',
-    body: 'Trabajamos para que el servicio sea confiable, pero se presta “tal cual” disponible. No respondemos por decisiones operativas tomadas durante un evento ni por el uso indebido de la información por parte de los usuarios.',
-  },
-  {
-    title: '5. Propiedad intelectual',
-    body: 'La marca, el software y los contenidos de Alista pertenecen a sus titulares. No se otorga ningún derecho más allá del uso del servicio conforme a estos términos.',
-  },
-  {
-    title: '6. Cambios',
-    body: 'Podemos actualizar estos términos y el producto. Cuando los cambios sean relevantes, procuraremos comunicarlos con antelación razonable.',
-  },
-  {
-    title: '7. Ley aplicable',
-    body: 'Estos términos se rigen por las leyes de la República Argentina. Ante cualquier consulta, escribinos a hola@alista.com.ar.',
-  },
+  { title: '1. Alcance de Alista', body: 'Alista está especializado en preparar invitaciones, invitados y recepción de cumpleaños de 15. Se puede contratar personalización y acompañamiento o utilizar la plataforma por cuenta propia. La contratación acompañada se define en una propuesta para esa fiesta.' },
+  { title: '2. La responsable del evento', body: 'La responsable contrata y conserva la cuenta del evento. Puede incorporar a personas que colaboren en la organización. Debe aportar información exacta, contar con las autorizaciones necesarias para utilizar datos e imágenes y cuidar los accesos de su equipo.' },
+  { title: '3. Servicio acompañado', body: 'La propuesta acordada define diseño, revisiones, configuración, seguimiento, capacitación, fechas, horarios de soporte y precio total. El uso y la activación de Alista para la fiesta están incluidos en ese servicio. Los cambios fuera del alcance se evalúan y presupuestan antes de realizarlos.' },
+  { title: '4. Uso autogestivo', body: 'La tarifa publicada para autogestión corresponde al uso de la plataforma por evento. La organización se ocupa de configurarla y preparar su recepción. La activación habilita la generación de links de invitación. El diseño realizado por Alista y el acompañamiento durante la preparación y la fiesta se contratan aparte.' },
+  { title: '5. Pagos de invitados', body: 'Si hay entradas pagas, la responsable conecta su cuenta de Mercado Pago. Esos pagos son independientes del precio del servicio de Alista y quedan sujetos a las condiciones de Mercado Pago. La organización define a quién invita, los importes y las condiciones de cada acceso.' },
+  { title: '6. Recepción y adicionales', body: 'La familia, el salón o la productora aporta el personal y el referente de recepción. Se acuerda quién provee celulares, energía y conexión. El alquiler de equipos, instalación y recibidor digital se identifican como adicionales cuando corresponda. El recibidor da la bienvenida después del control y no autoriza el ingreso.' },
+  { title: '7. Invitaciones y conectividad', body: 'Cada remitente comparte la invitación desde su cuenta personal de WhatsApp. El uso de recepción requiere conexión para consultar y registrar ingresos. La organización y Alista acuerdan la preparación y el procedimiento ante incidencias dentro del alcance contratado.' },
+  { title: '8. Diseños y materiales', body: 'La familia debe tener autorización para usar las fotos, imágenes y otros materiales que aporta. El alcance de las piezas personalizadas se acuerda en la propuesta. La marca y el software de Alista permanecen bajo la titularidad de sus respectivos titulares.' },
+  { title: '9. Consultas y condiciones acordadas', body: 'Las condiciones de pago, cambios de fecha y cancelación deben quedar claras en la propuesta antes de contratar. Podés consultar en hola@alista.com.ar. El servicio se rige por la legislación argentina; estas condiciones no limitan los derechos que correspondan a las personas consumidoras.' },
 ]
 
 export default function TerminosPage() {
@@ -46,8 +27,8 @@ export default function TerminosPage() {
         Términos y condiciones
       </h1>
       <p className="mt-7 max-w-2xl text-sm leading-6 text-black/58">
-        Versión base de las condiciones de uso de Alista. Debe revisarse con asesoría legal antes de
-        su publicación definitiva.
+        Alcance y responsabilidades al preparar una fiesta con Alista. Esta versión está en revisión;
+        la propuesta de cada evento debe detallar las condiciones antes de contratar.
       </p>
 
       <div className="mt-14 border-t border-black/15">

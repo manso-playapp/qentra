@@ -4,7 +4,6 @@ import {
   AlertCircle,
   ArrowRight,
   CalendarDays,
-  Clock3,
   ExternalLink,
   Mail,
   MapPin,
@@ -21,7 +20,7 @@ import EventOwnershipCard from '@/components/admin/EventOwnershipCard'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { getSupabaseAdminClient } from '@/lib/supabase-admin'
-import { formatEventDate } from '@/lib/event-date'
+import { formatEventSchedule, getEventScheduleEndDate, type AccessSchedule } from '@/lib/event-schedule'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { getMercadoPagoOAuthConfig } from '@/lib/mercadopago'
 import { isPaymentCredentialEncryptionConfigured } from '@/lib/payment-credentials'
@@ -44,7 +43,7 @@ type GuestStateRow = {
   payment_status: string | null
 }
 
-type GuestTypePaymentRow = {
+type GuestTypePaymentRow = AccessSchedule & {
   payment_amount_cents: number | null
 }
 
@@ -90,7 +89,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
     supabase.from('event_branding').select('*').eq('event_id', id).maybeSingle(),
     supabase
       .from('guest_types')
-      .select('payment_amount_cents')
+      .select('payment_amount_cents, is_active, access_start_time, access_end_time, access_start_day_offset, access_end_day_offset')
       .eq('event_id', id)
       .order('created_at', { ascending: true }),
     supabase.from('guests').select('status, payment_status').eq('event_id', id),
@@ -173,7 +172,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
     awaitingConfirmation > 0
       ? {
           title: `${awaitingConfirmation} ${awaitingConfirmation === 1 ? 'invitación generada sin respuesta' : 'invitaciones generadas sin respuesta'}`,
-          detail: 'El link ya existe: falta mandarlo desde tu WhatsApp y esperar la confirmación.',
+          detail: 'Pendiente de respuesta. La invitación ya tiene link; revisá su confirmación sin asumir que falta enviarla.',
           href: `/admin/events/${event.id}/guests`,
         }
       : null,
@@ -201,10 +200,11 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
   ].filter(Boolean) as { title: string; detail: string; href: string }[]
 
   const today = argentinaTodayIso()
-  const isEventDay = event.event_date === today
-  const eventHasPassed = event.event_date < today
+  const lastAccessDate = getEventScheduleEndDate(event, guestTypes)
+  const isEventDay = event.event_date <= today && today <= lastAccessDate
+  const eventHasPassed = lastAccessDate < today
   const receptionTitle = isEventDay
-    ? 'La recepción está en curso'
+    ? 'Hoy hay accesos programados'
     : eventHasPassed
       ? 'Resumen de la recepción'
       : 'Recepción y check-in'
@@ -234,11 +234,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
               <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
                 <span className="inline-flex items-center gap-2">
                   <CalendarDays className="size-4 text-primary" />
-                  {formatEventDate(event.event_date, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-                </span>
-                <span className="inline-flex items-center gap-2">
-                  <Clock3 className="size-4 text-primary" />
-                  {event.start_time}
+                  {formatEventSchedule(event, guestTypes)}
                 </span>
                 <span className="inline-flex items-center gap-2">
                   <MapPin className="size-4 text-primary" />

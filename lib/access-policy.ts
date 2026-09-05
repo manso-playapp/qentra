@@ -1,6 +1,8 @@
 import type { Event, Guest, GuestType, InvitationToken } from '@/types'
 import type { DbGuestStatus } from '@/lib/guest-schema'
 import { isInvitationExpired } from '@/lib/invitation-expiry'
+import { formatEventDate } from '@/lib/event-date'
+import { dateAtOffset, resolveAccessDayOffset } from '@/lib/event-schedule'
 
 type AccessDecision = 'allow' | 'warn' | 'deny'
 type AccessCode =
@@ -12,6 +14,7 @@ type AccessCode =
   | 'already_checked_in'
   | 'outside_window'
   | 'event_full'
+  | 'payment_pending'
 
 type EvaluatedAccess = {
   decision: AccessDecision
@@ -29,6 +32,7 @@ type EvaluateGuestAccessInput = {
   // Reconciling these vocabularies upstream is tracked as QEN-007.
   guest: Pick<Guest, 'first_name' | 'last_name'> & {
     status: Guest['status'] | DbGuestStatus
+    payment_status: string | null
   }
   guestType?: Pick<
     GuestType,
@@ -45,19 +49,22 @@ type EvaluateGuestAccessInput = {
   eventCapacity?: number | null
   /** Personas ya admitidas al evento (check-ins aprobados) antes de este ingreso. */
   eventOccupancy?: number
+  /** Titular más acompañantes confirmados que se registran juntos. */
+  incomingPeople?: number
   now?: Date
 }
 
 function buildLocalDate(date: string, time: string, dayOffset: number) {
   const normalizedClock = normalizeClockValue(time)
   const normalizedTime = normalizedClock.length === 5 ? `${normalizedClock}:00` : normalizedClock
-  const localDate = new Date(`${date}T${normalizedTime}`)
+  // La agenda se carga en hora argentina, también cuando el servidor usa UTC.
+  const localDate = new Date(`${date}T${normalizedTime}-03:00`)
 
   if (Number.isNaN(localDate.getTime())) {
     return null
   }
 
-  localDate.setDate(localDate.getDate() + dayOffset)
+  localDate.setUTCDate(localDate.getUTCDate() + dayOffset)
   return localDate
 }
 
@@ -69,31 +76,21 @@ function normalizeClockValue(time?: string) {
   return time.slice(0, 5)
 }
 
-function inferDayOffset(time: string | undefined, eventStartTime: string, explicitOffset?: number) {
-  if (typeof explicitOffset === 'number') {
-    return explicitOffset
-  }
-
-  if (!time) {
-    return 0
-  }
-
-  return normalizeClockValue(time) < normalizeClockValue(eventStartTime) ? 1 : 0
-}
+const inferDayOffset = resolveAccessDayOffset
 
 function formatDateTime(date: Date) {
   return new Intl.DateTimeFormat('es-AR', {
     dateStyle: 'medium',
     timeStyle: 'short',
+    timeZone: 'America/Argentina/Buenos_Aires',
   }).format(date)
 }
 
-function formatPolicyBoundary(prefix: string, time?: string, dayOffset?: number) {
-  if (!time) {
-    return null
-  }
-
-  const suffix = dayOffset ? ` del dia ${dayOffset >= 0 ? `+${dayOffset}` : dayOffset}` : ''
+function formatPolicyBoundary(prefix: string, time?: string, dayOffset = 0, eventDate?: string) {
+  if (!time) return null
+  const date = eventDate ? dateAtOffset(eventDate, dayOffset) : ''
+  if (date) return `${prefix} el ${formatEventDate(date, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} a las ${normalizeClockValue(time)}`
+  const suffix = dayOffset === 1 ? ' del día siguiente' : dayOffset === 0 ? ' del día de inicio' : ` (${dayOffset} días después del inicio)`
   return `${prefix} ${normalizeClockValue(time)}${suffix}`
 }
 
@@ -106,7 +103,8 @@ export function formatGuestTypeAccessPolicy(
     | 'access_start_day_offset'
     | 'access_end_day_offset'
   > | null,
-  eventStartTime?: string
+  eventStartTime?: string,
+  eventDate?: string
 ) {
   if (!guestType) {
     return 'Sin restriccion horaria.'
@@ -124,8 +122,8 @@ export function formatGuestTypeAccessPolicy(
     guestType.access_end_day_offset
   )
   const boundaries = [
-    formatPolicyBoundary('Desde', guestType.access_start_time, startOffset),
-    formatPolicyBoundary('Hasta', guestType.access_end_time, endOffset),
+    formatPolicyBoundary('Desde', guestType.access_start_time, startOffset, eventDate),
+    formatPolicyBoundary('Hasta', guestType.access_end_time, endOffset, eventDate),
   ].filter(Boolean)
 
   if (label && boundaries.length > 0) {
@@ -151,6 +149,7 @@ export function evaluateGuestAccess({
   lastCheckinTime,
   eventCapacity,
   eventOccupancy,
+  incomingPeople = 1,
   now = new Date(),
 }: EvaluateGuestAccessInput): EvaluatedAccess {
   const guestFullName = `${guest.first_name} ${guest.last_name}`.trim()
@@ -187,15 +186,25 @@ export function evaluateGuestAccess({
     }
   }
 
+  if (!['enabled', 'confirmed', 'checked_in'].includes(guest.status)) {
+    return { decision: 'deny', code: 'not_ready', title: 'Acceso no habilitado', detail: 'Revisá el estado del invitado antes de registrar su ingreso.' }
+  }
+
+  // Se lee exclusivamente la columna; ni las notas ni una excepción de puerta
+  // pueden convertir un pago pendiente o desconocido en aprobado.
+  if (guest.payment_status !== 'approved' && guest.payment_status !== 'not_required') {
+    return { decision: 'deny', code: 'payment_pending', title: 'Pago pendiente de aprobación', detail: `${guestFullName} todavía no tiene un pago aprobado. Revisá su estado con la responsable del evento.` }
+  }
+
   if (invitationToken) {
     const expiryDate = new Date(invitationToken.expires_at)
 
-    if (isInvitationExpired(invitationToken.expires_at, now)) {
+    if (Number.isNaN(expiryDate.getTime()) || isInvitationExpired(invitationToken.expires_at, now)) {
       return {
         decision: 'deny',
         code: 'expired',
         title: 'Invitacion vencida',
-        detail: `El token vencio el ${formatDateTime(expiryDate)}.`,
+        detail: Number.isNaN(expiryDate.getTime()) ? 'No se pudo verificar la vigencia de la invitación.' : `El token vencio el ${formatDateTime(expiryDate)}.`,
       }
     }
   }
@@ -229,7 +238,7 @@ export function evaluateGuestAccess({
     : null
 
   if ((accessStartDate && now < accessStartDate) || (accessEndDate && now > accessEndDate)) {
-    const policyText = formatGuestTypeAccessPolicy(guestType, event.start_time)
+    const policyText = formatGuestTypeAccessPolicy(guestType, event.start_time, event.event_date)
     const guestTypeLabel = guestType?.name ? ` para ${guestType.name}` : ''
 
     return {
@@ -240,20 +249,18 @@ export function evaluateGuestAccess({
     }
   }
 
-  // Cupo total: ultima compuerta. Un invitado por lo demas valido no entra si el
-  // evento ya llego a su aforo, salvo autorizacion. Cuenta a las personas ya
-  // admitidas (check-ins aprobados); no descuenta acompañantes (no se modelan).
+  // El grupo puede ocupar exactamente los lugares libres, nunca superarlos.
   if (
     typeof eventCapacity === 'number' &&
     eventCapacity > 0 &&
     typeof eventOccupancy === 'number' &&
-    eventOccupancy >= eventCapacity
+    eventOccupancy + Math.max(1, incomingPeople) > eventCapacity
   ) {
     return {
       decision: 'deny',
       code: 'event_full',
       title: 'Cupo completo',
-      detail: `El evento alcanzo su cupo de ${eventCapacity} personas. ${guestFullName} necesita autorizacion para ingresar.`,
+      detail: `El grupo de ${guestFullName} supera los lugares disponibles del cupo de ${eventCapacity} personas. Revisá la lista con la responsable antes de continuar.`,
     }
   }
 

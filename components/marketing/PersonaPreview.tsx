@@ -11,8 +11,8 @@ const personas = [
     name: 'Martina',
     eyebrow: 'Trasnoche',
     title: 'Martina, te esperamos a las 00:30.',
-    detail: 'Tu grupo entra por acceso Norte. La combi sale a las 05:15.',
-    context: 'Alista recuerda que Martina viene con el colegio y muestra sólo lo que necesita.',
+    detail: 'Tu invitación es para el trasnoche. Encontrá el lugar y el horario antes de salir.',
+    context: 'Preparamos el mensaje del tipo de acceso para que Martina sepa a qué momento de la fiesta está invitada.',
   },
   {
     id: 'familia',
@@ -20,8 +20,8 @@ const personas = [
     name: 'Familia Pérez',
     eyebrow: 'Cena',
     title: 'Llegan juntos. Entran juntos.',
-    detail: 'La recepción ya sabe que son 3 y que Juana necesita un menú vegetariano.',
-    context: 'La confirmación anterior modifica la información que ve la familia y prepara al salón.',
+    detail: 'Confirmen quiénes vienen y completen los nombres de sus acompañantes.',
+    context: 'Revisamos los datos del grupo antes de la fiesta y acordamos qué información necesita el salón.',
   },
   {
     id: 'tomas',
@@ -29,8 +29,8 @@ const personas = [
     name: 'Tomás',
     eyebrow: 'Trasnoche con entrada',
     title: 'Tu entrada está lista.',
-    detail: 'Pago revisado. Presentá este acceso cuando llegues.',
-    context: 'El mensaje cambia porque Tomás tiene una entrada asociada y no necesita información de la cena.',
+    detail: 'Pago confirmado. Presentá tu QR al personal de recepción.',
+    context: 'Este ejemplo muestra una invitación con entrada paga. El pago queda asociado al grupo y la responsable recibe el cobro.',
   },
 ] as const
 
@@ -46,7 +46,7 @@ const universes = [
   },
   {
     id: 'soft',
-    label: 'Soft contemporáneo',
+    label: 'Suave y luminoso',
     swatch: 'bg-[#9b4965]',
     background: 'bg-[#f7e9e4] text-[#321820]',
     accent: 'text-[#9b4965]',
@@ -55,7 +55,7 @@ const universes = [
   },
   {
     id: 'pop',
-    label: 'Pop controlado',
+    label: 'Color y energía',
     swatch: 'bg-[#d9ee73]',
     background: 'bg-[#213480] text-white',
     accent: 'text-[#d9ee73]',
@@ -151,7 +151,7 @@ export function PersonaPreview() {
         </fieldset>
 
         <fieldset>
-          <legend className="mb-4 text-xs font-bold uppercase tracking-[0.22em] text-black/65">Universo visual</legend>
+          <legend className="mb-4 text-xs font-bold uppercase tracking-[0.22em] text-black/65">Explorá un estilo</legend>
           <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-1">
             {universes.map((universe) => {
               const active = selectedUniverseId === universe.id
@@ -183,7 +183,7 @@ export function PersonaPreview() {
 
         <div className="relative z-10 flex min-h-[476px] flex-col justify-between">
           <div className="flex items-center justify-between gap-4 text-[10px] font-bold uppercase tracking-[0.2em] opacity-55">
-            <span>Alista · demo conceptual</span>
+            <span>Diseño ilustrativo · datos ficticios</span>
             <span>{selectedPersona.name}</span>
           </div>
 

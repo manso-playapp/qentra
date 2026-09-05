@@ -1,6 +1,7 @@
 'use client'
 
 import jsQR from 'jsqr'
+import { CapacityWarning } from '@/components/door/CapacityWarning'
 import Image from 'next/image'
 import { Camera, Flashlight, FlashlightOff, Keyboard, LoaderCircle, RotateCcw, ScanLine } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -10,7 +11,7 @@ import { getErrorMessage } from '@/lib/errors'
 import type { CheckinMethod, Event } from '@/types'
 
 type DoorScannerProps = {
-  event: Pick<Event, 'id' | 'name' | 'event_date' | 'start_time'>
+  event: Pick<Event, 'id' | 'name' | 'event_date' | 'start_time' | 'max_capacity'>
 }
 
 type GuestAtDoor = {
@@ -53,6 +54,7 @@ function guestName(guest?: GuestAtDoor) {
 }
 
 export default function DoorScanner({ event }: DoorScannerProps) {
+  const [admitted, setAdmitted] = useState<number | null>(null)
   const [scannerActive, setScannerActive] = useState(false)
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<DoorResult | null>(null)
@@ -66,6 +68,36 @@ export default function DoorScanner({ event }: DoorScannerProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const frameRef = useRef<number | null>(null)
+
+  // Consulta compartida entre puestos. Nunca bloquea la lectura ni la aprobación.
+  // Cada resultado del escaneo refresca el conteo; el sondeo recoge otros celulares.
+  useEffect(() => {
+    if (!event.max_capacity || event.max_capacity <= 0) return
+    let disposed = false
+    let timer: ReturnType<typeof setTimeout> | undefined
+    let controller: AbortController | undefined
+    const refresh = async () => {
+      controller = new AbortController()
+      const timeout = setTimeout(() => controller?.abort(), 8000)
+      try {
+        const response = await fetch(`/api/events/${event.id}/checkin-feed`, { signal: controller.signal, cache: 'no-store' })
+        if (!response.ok) throw new Error('Conteo no disponible')
+        const payload = await response.json() as { approvedCount?: number }
+        if (!disposed) setAdmitted(typeof payload.approvedCount === 'number' ? payload.approvedCount : null)
+      } catch {
+        if (!disposed) setAdmitted(null)
+      } finally {
+        clearTimeout(timeout)
+        if (!disposed) timer = setTimeout(() => void refresh(), 5000)
+      }
+    }
+    void refresh()
+    return () => {
+      disposed = true
+      clearTimeout(timer)
+      controller?.abort()
+    }
+  }, [event.id, event.max_capacity, result])
 
   const stopScanner = useCallback(() => {
     if (frameRef.current !== null) {
@@ -268,7 +300,10 @@ export default function DoorScanner({ event }: DoorScannerProps) {
           </div>
         </header>
 
-        <section className="relative mt-6 flex flex-1 flex-col justify-center">
+        <div className="mt-3">
+          <CapacityWarning capacity={event.max_capacity} admitted={admitted} />
+        </div>
+        <section className="relative mt-3 min-h-0 flex-1 overflow-y-auto overscroll-contain touch-pan-y">
           {!result && (
             <div className="rounded-[32px] border border-white/10 bg-white/5 p-4 shadow-2xl">
               <div className="relative aspect-[3/4] overflow-hidden rounded-[24px] bg-black">

@@ -7,46 +7,46 @@ import { createMarketingMetadata } from '@/lib/marketing-seo'
 export const metadata = createMarketingMetadata({
   title: 'Cómo funciona Alista para una fiesta de 15',
   description:
-    'Recorré cómo Alista conecta invitación, confirmaciones, grupos, preparación, aportes y llegada.',
+    'Así preparamos tus 15: propuesta, diseño, invitaciones personales, revisión de invitados y pagos, y ensayo con recepción.',
   path: '/como-funciona',
 })
 
 const STEPS = [
   {
     number: '01',
-    name: 'Invitá',
-    title: 'Una invitación que se reconoce.',
-    body: 'Alista prepara el link personal y el mensaje. La invitación sale desde el WhatsApp de alguien conocido, sin pedir que el invitado instale una app.',
+    name: 'Conversemos',
+    title: 'Empezamos por su fiesta.',
+    body: 'Nos cuentan la fecha, el lugar, cuántas personas esperan y cómo imaginan los 15. Si habrá trasnoche con entrada paga, vemos qué acompañantes podrán sumarse y qué necesita delegar la responsable.',
   },
   {
     number: '02',
-    name: 'Confirmá',
-    title: 'Cada respuesta conserva su contexto.',
-    body: 'La persona confirma, suma acompañantes y completa lo necesario en pocos pasos. El grupo queda unido desde el comienzo.',
+    name: 'Acordemos',
+    title: 'Una propuesta que se puede revisar.',
+    body: 'Confirmamos disponibilidad y presentamos el alcance: diseño, configuración, encuentros de seguimiento, capacitación y ventana de soporte. Revisiones, equipos y adicionales quedan definidos antes de contratar.',
   },
   {
     number: '03',
-    name: 'Conocé',
-    title: 'Preparar también es conocer.',
-    body: 'Restricciones, necesidades y respuestas llegan organizadas para que la fiesta pueda anticiparse sin preguntar lo mismo varias veces.',
+    name: 'Diseñemos',
+    title: 'La invitación empieza a parecerse a ella.',
+    body: 'Trabajamos una propuesta visual a partir de sus ideas y la identidad de la fiesta. La revisan en el celular y acordamos los ajustes incluidos hasta dejarla lista para compartir.',
   },
   {
     number: '04',
-    name: 'Prepará',
-    title: 'Los pendientes se vuelven acciones.',
-    body: 'La familia y el equipo pueden ver qué falta, qué cambió y qué necesita atención antes de que la recepción tenga que resolverlo.',
+    name: 'Inviten',
+    title: 'Cada una, desde sus contactos.',
+    body: 'Madre e hija comparten las invitaciones desde sus propios WhatsApp. Alista prepara el mensaje y el link personal; cada una confirma el envío. Las respuestas quedan reunidas en la lista del evento.',
   },
   {
     number: '05',
-    name: 'Cobrá',
-    title: 'El aporte no queda separado de la persona.',
-    body: 'Cuando la fiesta incluye un aporte, Alista está diseñado para conservar ese vínculo. Cuando hace falta, el equipo acompaña la conciliación.',
+    name: 'Revisemos',
+    title: 'El trasnoche también se prepara.',
+    body: 'Revisamos confirmaciones, nombres de acompañantes y pagos pendientes. La familia define a quién invita y cuántos lugares habilita. En accesos pagos, el importe corresponde al titular y a cada acompañante completado con nombre; el cobro va a la cuenta de Mercado Pago de la responsable.',
   },
   {
     number: '06',
-    name: 'Recibí',
-    title: 'La llegada ya tiene una historia.',
-    body: 'Recepción busca, valida y entiende el grupo con información preparada. Llegan juntos y pueden entrar juntos.',
+    name: 'Ensayemos',
+    title: 'La recepción prueba antes de abrir.',
+    body: 'La organización aporta el personal y designa un referente. Probamos búsqueda y escaneo con los celulares asignados, revisamos la conexión y acordamos cómo resolver consultas. El soporte de Alista queda disponible en la ventana contratada.',
   },
 ]
 
@@ -54,12 +54,12 @@ export default function ComoFuncionaPage() {
   return (
     <>
       <PageHero
-        eyebrow="Cómo funciona"
-        title="Todo lo que pasa antes,"
-        highlight="conectado."
-        description="Alista convierte una serie de mensajes, respuestas y decisiones sueltas en un recorrido que llega preparado hasta la puerta."
-        primaryCta={{ href: '/demo', label: 'Ver una demo' }}
-        secondaryCta={{ href: '/producto', label: 'Conocer el producto' }}
+        eyebrow="Cómo los acompañamos"
+        title="Una fiesta propia."
+        highlight="Un paso a la vez."
+        description="Desde la primera conversación hasta el ensayo de recepción, cada etapa deja algo preparado. Ustedes saben qué decidir, qué vamos a resolver y cuándo volvemos a revisarlo juntos."
+        primaryCta={{ href: '/demo', label: 'Consultar disponibilidad' }}
+        secondaryCta={{ href: '/producto', label: 'Qué incluye el acompañamiento' }}
       />
 
       <section className="bg-[#f0eee8] px-5 py-20 sm:px-8 sm:py-28 lg:px-14">
@@ -86,24 +86,24 @@ export default function ComoFuncionaPage() {
       <section className="bg-[#d9ee73] px-5 py-20 sm:px-8 sm:py-28 lg:px-14">
         <div className="mx-auto grid max-w-[1180px] gap-12 lg:grid-cols-[1fr_0.9fr] lg:items-end">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-black/60">Dos formas de empezar</p>
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-black/60">Antes de esa noche</p>
             <h2 className="marketing-display mt-5 max-w-3xl text-[clamp(2.7rem,4.5vw,4.5rem)] font-black leading-[0.92] tracking-[-0.005em]">
-              La experiencia cambia. La base se mantiene.
+              Que cada tarea tenga a alguien a cargo.
             </h2>
           </div>
           <div className="space-y-3">
             <Link
               href="/demo"
-              className="flex min-h-16 items-center justify-between gap-5 rounded-full border border-black/20 px-6 text-sm font-black transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
+              className="flex min-h-16 items-center justify-between gap-5 rounded-full bg-[#171714] px-6 text-sm font-black text-white transition hover:bg-[#213480] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
             >
-              Estoy organizando mis 15
+              Consultar diseño y acompañamiento
               <ArrowUpRight className="size-4" aria-hidden="true" />
             </Link>
             <Link
-              href="/profesionales"
-              className="flex min-h-16 items-center justify-between gap-5 rounded-full bg-[#171714] px-6 text-sm font-black text-white transition hover:bg-[#213480] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
+              href="/autogestion"
+              className="flex min-h-16 items-center justify-between gap-5 rounded-full border border-black/20 px-6 text-sm font-black transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
             >
-              Organizo fiestas profesionalmente
+              Conocer la opción autogestiva
               <ArrowUpRight className="size-4" aria-hidden="true" />
             </Link>
           </div>
@@ -113,8 +113,10 @@ export default function ComoFuncionaPage() {
       <FaqSection />
 
       <ClosingCta
-        title="La puerta se prepara mucho antes."
-        description="Mostranos cómo organizás hoy tu fiesta y te enseñamos dónde Alista puede ordenar el recorrido."
+        title="Empecemos por la fecha de sus 15."
+        description="Contanos dónde será la fiesta y qué quieren delegar. Revisamos disponibilidad y les mostramos una propuesta con tareas, tiempos y responsabilidades."
+        primary={{ href: '/demo', label: 'Consultar disponibilidad' }}
+        secondary={{ href: '/precios', label: 'Cómo contratar' }}
       />
     </>
   )
