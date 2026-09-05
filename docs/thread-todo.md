@@ -15,7 +15,7 @@
 - [x] Recepción con dos celulares y pagos recibidos por la madre: confirmados por owner.
 - [x] Segundo escaneo de QR avisa invitado ya ingresado: confirmado por owner en pruebas preliminares.
 - [ ] Ensayo técnico específico de contención del último cupo tras migración: sin evidencia documentada; distinguir del circuito con dos celulares ya probado.
-- [ ] Revisión y publicación de web/API coordinada; confirmar alcance de permisos de material Dharma según documento vigente.
+- [x] Publicar web/API en main y Vercel; autorización de material Dharma para web registrada, GET públicos y protección sin sesión verificados.
 
 - [x] Preparar presupuesto reutilizable, protocolo Alfonsina y hoja de evidencia/margen en PDF y Markdown.
 - [x] Consultar datos de Alfonsina en sólo lectura y señalar diferencia entre registros y personas.

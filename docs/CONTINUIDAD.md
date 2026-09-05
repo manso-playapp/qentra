@@ -111,8 +111,11 @@ usuario permanecen en el código o en esta continuidad; no se copian al panel.
 ### Versión autorizada para Git y publicación (05/09/2026)
 
 Entrega funcional: commit `49137b5`. Se integra en main y se sube a GitHub por
-pedido explícito del owner. La comprobación del despliegue es el siguiente paso;
-no confundir commit con versión efectivamente publicada. Verificación previa:
+pedido explícito del owner. La versión `930f9f7` quedó publicada en Vercel (READY,
+`dpl_6g3qYznuTY6mKqwNYBA6znpgENtF`) sobre www.alista.com.ar. GET de seis
+páginas públicas 200; admin redirige al acceso y API events responde 401 sin
+sesión. Consulta inicial de logs sin error/fatal. Esto no reemplaza el ensayo
+autenticado con dispositivos de recepción. Verificación previa:
 379 tests / 35 archivos, tsc, lint completo y build correctos. Migración ya aplicada.
 Dharma autorizado para la web; conservar respaldo y no extender a pauta/prensa.
 
