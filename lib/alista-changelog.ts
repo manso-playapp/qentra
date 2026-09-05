@@ -20,7 +20,7 @@ export type AlistaChange = {
 
 export const ALISTA_CHANGELOG: AlistaChange[] = [
   {
-    commit: 'Sin commit',
+    commit: 'aef0741',
     date: '2026-09-05',
     dateLabel: '5 sep 2026',
     kind: 'experiencia',
@@ -29,7 +29,7 @@ export const ALISTA_CHANGELOG: AlistaChange[] = [
     summary: 'Inicio, eventos, invitados, mesas, datos y configuración comparten jerarquía visual. En celular la cuenta queda plegada; los editores permiten alternar ajustes y vista previa conservando los cambios, con guardado accesible y diseños completos al ancho disponible. La personalización separa los datos para confirmar de la música y los efectos. Puerta conserva su experiencia actual.',
   },
   {
-    commit: 'Sin commit',
+    commit: 'aef0741',
     date: '2026-09-05',
     dateLabel: '5 sep 2026',
     kind: 'experiencia',
@@ -38,7 +38,7 @@ export const ALISTA_CHANGELOG: AlistaChange[] = [
     summary: 'En PC, búsqueda y últimos ingresos se ven en paralelo. En celular, el escáner tiene acceso directo y la cuenta queda plegada. El resultado de cada validación se destaca, el cupo se expresa en personas y la búsqueda incluye acompañantes. Los errores de actualización se muestran sin reemplazar el último resultado.',
   },
   {
-    commit: 'Sin commit',
+    commit: 'aef0741',
     date: '2026-09-05',
     dateLabel: '5 sep 2026',
     kind: 'experiencia',

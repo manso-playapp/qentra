@@ -1,5 +1,7 @@
 # Continuidad de la tarea actual
 
+- Entrega admin: `aef0741`, aprobada para subir a origin/main. Registro de cambios actualizado con el hash real. Despliegue de esta entrega pendiente de verificar.
+
 - Frente actual autorizado: unificar las otras pantallas del admin, excepto Puerta. Cabecera común, cuenta móvil plegada, editores con cambio Editar/Vista previa y guardado accesible, previsualizaciones escaladas a su ancho, ajustes en mesas/agenda/inicio/global/configuración/estado/altas/datos e invitados. Sin cambios a reglas o endpoints. QA de 30 escenarios (10 superficies a 1440/390/320) completo; corregidos recorte de preview y overflow de mesas. /private/tmp/alista-admin-suite contiene script/evidencia; fixture retirada. Inicio real inspeccionado en sólo lectura. 383 tests / 36 archivos, tsc, lint completo y build pasan. Entrega aprobada para commit y subida a Git; publicación pendiente de verificar.
 
 - Frente siguiente autorizado: Check-In PC/mobile. Vista admin de EventCheckinManager reorganizada: personas/cupo, resultado persistente, búsqueda titular/acompañante, lista de grupo, feed en paralelo en PC, herramientas plegadas. Menú móvil de cuenta plegado. APIs, servidor de validación y modos puerta/tótem conservados. Errores de feed/directorio separados del último resultado sólo en admin.

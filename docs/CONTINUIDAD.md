@@ -107,6 +107,7 @@ usuario permanecen en el código o en esta continuidad; no se copian al panel.
 
 **Fecha de este estado:** 2026-09-05.
 **Rama de trabajo:** `main`.
+**Entrega admin aprobada para Git:** `aef0741` (dashboard, Check-In y pantallas PC/móvil).
 
 ### Resto del admin PC/móvil (aprobado para Git el 05/09/2026)
 
