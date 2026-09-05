@@ -1,5 +1,7 @@
 'use client'
 
+import EditorPreviewFrame from './EditorPreviewFrame'
+
 import { useState } from 'react'
 import type { DragEvent } from 'react'
 import { ChevronDown, ChevronUp, GripVertical, Music2, Sparkles, Timer } from 'lucide-react'
@@ -123,6 +125,7 @@ export default function InvitationEditor({
   const [visual, setVisual] = useState<InvitationVisual>(initialVisual)
   const [config, setConfig] = useState<InvitationConfig>(initialConfig)
   const [saving, setSaving] = useState(false)
+  const [editorPane, setEditorPane] = useState<'edit' | 'preview'>('edit')
   const [previewMode, setPreviewMode] = useState<InvitationPreviewMode>('pending')
   const [history, setHistory] = useState<InvitationConfigHistoryEntry[]>(initialHistory)
   const [notice, setNotice] = useState<string | null>(null)
@@ -261,9 +264,21 @@ export default function InvitationEditor({
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(340px,420px)]">
+    <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
+      <div className="sticky top-2 z-30 col-span-full rounded-2xl border border-border/70 bg-white p-3 shadow-sm sm:p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex rounded-xl bg-slate-100 p-1 xl:hidden" aria-label="Vista del editor">
+            <button type="button" aria-pressed={editorPane === 'edit'} onClick={() => setEditorPane('edit')} className={`min-h-10 rounded-lg px-4 text-sm font-semibold ${editorPane === 'edit' ? 'bg-white text-primary shadow-sm' : 'text-muted-foreground'}`}>Editar</button>
+            <button type="button" aria-pressed={editorPane === 'preview'} onClick={() => setEditorPane('preview')} className={`min-h-10 rounded-lg px-4 text-sm font-semibold ${editorPane === 'preview' ? 'bg-white text-primary shadow-sm' : 'text-muted-foreground'}`}>Vista previa</button>
+          </div>
+          <p className="hidden text-xs text-muted-foreground xl:block">Al guardar, los cambios se ven en las invitaciones ya compartidas.</p>
+          <button type="button" onClick={() => void handleSave()} disabled={saving} className="min-h-11 rounded-xl bg-admin-navy px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">{saving ? 'Guardando…' : 'Guardar invitación'}</button>
+        </div>
+        {error ? <p role="alert" className="mt-3 text-sm text-rose-700">{error}</p> : null}
+        {notice ? <p role="status" className="mt-3 text-sm text-emerald-700">{notice}</p> : null}
+      </div>
       {/* Panel de controles */}
-      <div className="space-y-5">
+      <div className={`${editorPane === 'edit' ? '' : 'hidden xl:block'} min-w-0 space-y-4`}>
         <StructuredEditorControls
           eventId={eventId}
           visual={visual}
@@ -422,23 +437,6 @@ export default function InvitationEditor({
           <ToggleRow label="Acompañantes" on={config.fields.companions} onToggle={() => toggleField('companions')} />
         </Section>
 
-        {error && <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
-        {notice && <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">{notice}</div>}
-
-        <div className="flex flex-wrap items-center gap-3">
-          <button
-            type="button"
-            onClick={() => void handleSave()}
-            disabled={saving}
-            className="inline-flex w-full items-center justify-center rounded-md bg-gray-900 px-4 py-3 text-sm font-medium text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
-          >
-            {saving ? 'Guardando...' : 'Guardar invitación'}
-          </button>
-          <span className="text-xs text-gray-500">
-            Lo que guardes se ve al instante en todas las invitaciones ya enviadas.
-          </span>
-        </div>
-
         {history.length > 0 ? (
           <Section title="Versiones guardadas" desc="Volvé a una versión anterior. Se aplica cuando guardás.">
             <div className="space-y-2">
@@ -465,7 +463,7 @@ export default function InvitationEditor({
       </div>
 
       {/* Preview en vivo */}
-      <div className="lg:sticky lg:top-6 lg:self-start">
+      <div className={`${editorPane === 'preview' ? '' : 'hidden xl:block'} min-w-0 rounded-2xl border border-border/70 bg-white p-4 xl:sticky xl:top-28 xl:self-start`}>
         <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-gray-400">Vista previa en vivo</p>
         <label className="mb-3 block text-xs font-medium text-gray-500">
           Ver como
@@ -480,8 +478,7 @@ export default function InvitationEditor({
             <option value="checked_in">Ingreso registrado</option>
           </select>
         </label>
-        <div className="invitation-editor-thumbnail mx-auto h-[680px] w-full max-w-[360px] overflow-x-hidden overflow-y-auto overscroll-contain rounded-[36px] border-4 border-gray-900 bg-black shadow-2xl">
-          <div className="invitation-editor-canvas">
+        <EditorPreviewFrame kind="invitation">
             <InvitationView
               event={previewEvent}
               branding={previewBranding}
@@ -493,8 +490,7 @@ export default function InvitationEditor({
             >
               <EditorPreviewContent config={config} isMidnight={isMidnight} primary={primary} previewMode={previewMode} />
             </InvitationView>
-          </div>
-        </div>
+        </EditorPreviewFrame>
       </div>
     </div>
   )
@@ -727,12 +723,15 @@ function StructuredEditorControls({
         </div>
       </Section>
 
-      <Section title="4. Interacción y ambiente" desc="Configurá los datos que pedís y los efectos opcionales.">
+      <Section title="4. Datos para confirmar" desc="Elegí qué información pedir a tus invitados para organizar la fiesta.">
         <ToggleRow label="Confirmar asistencia (RSVP)" on={config.fields.rsvp} onToggle={() => toggleField('rsvp')} />
         <ToggleRow label="DNI" on={config.fields.dni} onToggle={() => toggleField('dni')} />
         <ToggleRow label="Menú especial" on={config.fields.menu} onToggle={() => toggleField('menu')} />
         <ToggleRow label="Acompañantes" on={config.fields.companions} onToggle={() => toggleField('companions')} />
-        <div className="border-t border-gray-200 pt-3"><ToggleRow icon={Sparkles} label="Partículas animadas" desc="Efecto de luces flotando sobre el fondo." on={config.widgets.particles} onToggle={() => toggleWidget('particles')} /></div>
+      </Section>
+
+      <Section title="5. Música y efectos" desc="Dale ambiente a la invitación con música y detalles animados.">
+        <ToggleRow icon={Sparkles} label="Partículas animadas" desc="Efecto de luces flotando sobre el fondo." on={config.widgets.particles} onToggle={() => toggleWidget('particles')} />
         <AudioUpload label="Música de la invitación" hint="MP3, M4A, WAV, OGG o WEBM (máximo 20 MB)." value={config.audio_url} onChange={(audio_url) => setConfig((current) => ({ ...current, audio_url }))} fields={{ bucket: 'event-assets', folder: eventId, label: 'invitation-audio' }} />
       </Section>
     </>
@@ -797,12 +796,12 @@ function BlockEditorCard({
 
 function Section({ title, desc, children }: { title: string; desc: string; children: React.ReactNode }) {
   const legacyEditorSection = ['Aspecto', 'Widgets opcionales', 'Bloques y contenido', 'Datos que pedimos'].includes(title)
+  if (legacyEditorSection) return null
   return (
-    <div className={`${legacyEditorSection ? 'hidden ' : ''}rounded-xl border border-gray-200 bg-white p-5 shadow-sm`}>
-      <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
-      <p className="mt-1 text-xs text-gray-500">{desc}</p>
-      <div className="mt-4 space-y-3">{children}</div>
-    </div>
+    <details open={title.startsWith('1.')} className="group rounded-2xl border border-border/70 bg-white p-4 sm:p-5">
+      <summary className="cursor-pointer text-base font-semibold text-foreground">{title}<span className="mt-1 block text-xs font-normal leading-5 text-muted-foreground">{desc}</span></summary>
+      <div className="mt-5 space-y-4 border-t border-border/60 pt-4">{children}</div>
+    </details>
   )
 }
 

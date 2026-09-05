@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { ArrowRight, CalendarRange, CheckCircle2, Clock, Mail, Plus, ScanLine, Users2, Wallet } from 'lucide-react'
+import AdminPageHeader from '@/components/admin/AdminPageHeader'
 import AdminLayout from '@/components/admin/AdminLayout'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -64,7 +65,7 @@ export default async function AdminPage() {
       <AdminLayout>
         <div className="px-4 py-6 sm:px-0">
           <Card className="bg-admin-panel">
-            <CardContent className="p-8">
+            <CardContent className="p-5 sm:p-7">
               <p className="text-sm text-rose-700">
                 El panel no está disponible temporalmente. Contactá al equipo de Alista.
               </p>
@@ -92,7 +93,7 @@ export default async function AdminPage() {
       <AdminLayout>
         <div className="px-4 py-6 sm:px-0">
           <Card className="bg-admin-panel">
-            <CardContent className="p-8">
+            <CardContent className="p-5 sm:p-7">
               <p className="text-sm text-rose-700">No se pudieron cargar los eventos: {error.message}</p>
             </CardContent>
           </Card>
@@ -169,9 +170,9 @@ export default async function AdminPage() {
   ].filter(Boolean) as { icon: typeof Mail; count: number; label: string; cta: string }[]
 
   const stats = [
-    { label: 'Invitados', value: total, detail: `${focusEvent.max_capacity} de cupo` },
-    { label: 'Listos para entrar', value: listos, detail: `de ${total} cargados` },
-    { label: 'Ingresaron', value: ingresados, detail: total > 0 ? `${Math.round((ingresados / total) * 100)}% del total` : 'Sin datos' },
+    { label: 'Grupos cargados', value: total, detail: `${focusEvent.max_capacity} personas de capacidad` },
+    { label: 'Habilitados', value: listos, detail: `de ${total} grupos cargados` },
+    { label: 'Grupos ingresados', value: ingresados, detail: total > 0 ? `${Math.round((ingresados / total) * 100)}% del total` : 'Sin datos' },
   ]
 
   const otherEvents = events
@@ -181,18 +182,11 @@ export default async function AdminPage() {
   return (
     <AdminLayout>
       <div className="px-4 py-6 sm:px-0">
-        <div className="mb-6 flex justify-end">
-          <Button asChild>
-            <Link href="/admin/events/new">
-              <Plus className="size-4" />
-              Crear nuevo evento
-            </Link>
-          </Button>
-        </div>
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.6fr)_360px]">
+        <AdminPageHeader title="Tu próxima fiesta" eyebrow="Inicio" description="Retomá la preparación y revisá qué necesita atención." actions={<Button asChild><Link href="/admin/events/new"><Plus className="size-4" />Crear evento</Link></Button>} />
+        <div className="grid gap-6 2xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
           {/* Launchpad: el evento en foco, su estado de preparacion y el salto al taller. */}
           <Card className="overflow-hidden bg-admin-panel">
-            <CardContent className="p-8">
+            <CardContent className="p-5 sm:p-7">
               <div className="flex flex-wrap items-center gap-3">
                 <Badge variant={focusEvent.status === 'active' ? 'success' : 'outline'}>
                   {focusEvent.status === 'active' ? 'Tu próximo evento' : 'Pausado'}
@@ -200,8 +194,8 @@ export default async function AdminPage() {
                 <Badge variant="outline">{focusEvent.event_date < today && getEventScheduleEndDate(focusEvent, focusEvent.guest_types ?? []) >= today ? 'Hoy hay accesos programados' : daysUntilLabel(focusEvent.event_date, today)}</Badge>
               </div>
 
-              <h2 className="admin-heading mt-5 text-5xl leading-none text-foreground">{focusEvent.name}</h2>
-              <p className="mt-3 text-base capitalize text-muted-foreground">
+              <h2 className="admin-heading mt-5 break-words text-3xl leading-tight text-foreground sm:text-4xl">{focusEvent.name}</h2>
+              <p className="mt-3 text-sm leading-6 text-muted-foreground">
                 {formatEventSchedule(focusEvent, focusEvent.guest_types ?? [])} · {focusEvent.venue_name}
               </p>
 
@@ -217,7 +211,7 @@ export default async function AdminPage() {
 
               <div className="mt-6">
                 <div className="flex items-center justify-between text-sm text-muted-foreground">
-                  <span>Listos para entrar</span>
+                  <span>Invitaciones habilitadas para ingresar</span>
                   <span className="font-semibold text-foreground">{readyPct}%</span>
                 </div>
                 <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-200">
@@ -293,7 +287,7 @@ export default async function AdminPage() {
         {otherEvents.length > 0 && (
           <Card className="mt-6 bg-admin-panel">
             <CardHeader>
-              <CardDescription>Después de este</CardDescription>
+              <CardDescription>También en tu agenda</CardDescription>
               <CardTitle className="admin-heading text-3xl">Otros eventos activos</CardTitle>
             </CardHeader>
             <CardContent>

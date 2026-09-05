@@ -3,7 +3,7 @@
 import jsQR from 'jsqr'
 import { getEventCapacity } from '@/lib/event-capacity'
 import { CapacityWarning } from '@/components/door/CapacityWarning'
-import { UserRound } from 'lucide-react'
+import { UserRound, ScanLine, Search, ArrowUpRight, CheckCircle2, AlertTriangle, ShieldCheck, Clock3, RefreshCw, Users2, LoaderCircle } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import { formatEventSchedule } from '@/lib/event-schedule'
@@ -216,6 +216,9 @@ export default function EventCheckinManager({
   const totemSpotlightDurationMs = Math.min(Math.max(branding?.return_to_idle_seconds ?? 6, 2), 30) * 1000
   const [accessInput, setAccessInput] = useState('')
   const [guestSearchQuery, setGuestSearchQuery] = useState('')
+  const [feedError, setFeedError] = useState<string | null>(null)
+  const [directoryError, setDirectoryError] = useState<string | null>(null)
+  const [feedUpdatedAt, setFeedUpdatedAt] = useState<Date | null>(null)
   const [recentCheckins, setRecentCheckins] = useState<CheckinWithGuest[]>([])
   // Aforo en vivo: total de ingresos aprobados del evento (no solo los 10 del feed).
   const [approvedCount, setApprovedCount] = useState<number | null>(null)
@@ -272,6 +275,8 @@ export default function EventCheckinManager({
           throw new Error(payload?.error || 'No se pudo cargar la actividad.')
         }
 
+        setFeedError(null)
+        setFeedUpdatedAt(new Date())
         setRecentCheckins(payload?.data ?? [])
         setApprovedCount(typeof payload?.approvedCount === 'number' ? payload.approvedCount : null)
         // Marca que el primer fetch resolvio, para que el spotlight del totem
@@ -279,7 +284,8 @@ export default function EventCheckinManager({
         initialCheckinLoadDoneRef.current = true
       } catch (error) {
         setApprovedCount(null)
-        setStatus({
+        setFeedError(getErrorMessage(error))
+        if (isImmersiveMode) setStatus({
           kind: 'error',
           title: 'No se pudo cargar la actividad',
           detail: getErrorMessage(error),
@@ -297,7 +303,7 @@ export default function EventCheckinManager({
     })
 
     return request
-  }, [event.id])
+  }, [event.id, isImmersiveMode])
 
   useEffect(() => {
     fetchRecentCheckins()
@@ -324,9 +330,11 @@ export default function EventCheckinManager({
         const sorted = (payload?.data ?? []).sort((a, b) =>
           `${a.last_name} ${a.first_name}`.localeCompare(`${b.last_name} ${b.first_name}`)
         )
+        setDirectoryError(null)
         setGuestDirectory(sorted.map(normalizeSearchableGuest))
       } catch (error) {
-        setStatus({
+        setDirectoryError(getErrorMessage(error))
+        if (isImmersiveMode) setStatus({
           kind: 'error',
           title: 'No se pudo cargar el directorio',
           detail: getErrorMessage(error),
@@ -344,7 +352,7 @@ export default function EventCheckinManager({
     })
 
     return request
-  }, [event.id])
+  }, [event.id, isImmersiveMode])
 
   useEffect(() => {
     // El totem no muestra ni usa el directorio completo de invitados.
@@ -562,13 +570,14 @@ export default function EventCheckinManager({
         guest.last_name,
         guest.email ?? '',
         guest.phone ?? '',
+        ...(!isImmersiveMode ? guest.companion_names ?? [] : []),
       ]
         .join(' ')
         .toLowerCase()
 
       return haystack.includes(normalizedQuery)
     }).slice(0, 12)
-  }, [guestDirectory, guestSearchQuery])
+  }, [guestDirectory, guestSearchQuery, isImmersiveMode])
 
   const doorMetrics = useMemo(() => {
     const activeGuests = guestDirectory.filter((guest) => guest.status !== 'cancelled')
@@ -1476,195 +1485,75 @@ export default function EventCheckinManager({
     )
   }
 
+  const validating = processingCheckin || manualCheckinGuestId !== null || overrideProcessing
+
   return (
-    <div className={isImmersiveMode ? 'min-h-screen bg-[linear-gradient(180deg,#0f172a_0%,#111827_16%,#f8fafc_16%,#f8fafc_100%)] px-4 py-6 sm:px-6' : 'px-4 py-5 sm:px-0'}>
-      <div className={`mb-5 flex flex-col gap-3 ${isImmersiveMode ? 'rounded-[28px] border border-slate-800 bg-slate-950/95 px-6 py-6 text-white shadow-[0_24px_80px_rgba(15,23,42,0.34)] md:flex-row md:items-end md:justify-between' : 'rounded-2xl border border-border/70 bg-admin-panel px-4 py-3 md:flex-row md:items-center md:justify-between'}`}>
-        <div>
-          {isImmersiveMode ? (
-            <p className={`text-sm font-semibold uppercase tracking-[0.28em] ${isTotemMode ? 'text-amber-300' : 'text-sky-300'}`}>
-              {isTotemMode ? 'Vista totem' : 'Vista puerta'}
-            </p>
-          ) : (
-            <Link href={`/admin/events/${event.id}`} className="text-sm font-medium text-blue-600 hover:text-blue-800">
-              ← Volver al evento
-            </Link>
-          )}
-          <h1 className={`mt-1 text-xl font-semibold ${isImmersiveMode ? 'text-white' : 'text-gray-900'}`}>
-            {isTotemMode ? `Totem · ${event.name}` : isDoorMode ? `Puerta · ${event.name}` : `Check-In de ${event.name}`}
-          </h1>
-          <p className={`mt-1 text-xs ${isImmersiveMode ? 'text-slate-300' : 'text-gray-600'}`}>
-            {formatEventSchedule(event, event.guest_types ?? [])} · slug <span className="font-mono text-sm">{event.slug}</span>
-          </p>
+    <div className="px-1 py-3 sm:px-0 lg:py-7" data-testid="checkin-admin">
+      <header className="mb-5">
+        <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
+          <Link href={`/admin/events/${event.id}`} className="font-medium text-primary hover:underline">← Volver al evento</Link>
+          <span className="inline-flex items-center gap-1.5 tabular-nums"><Clock3 className="size-3.5" aria-hidden="true" />{now ? formatClock(now) : '--:--'}</span>
         </div>
+        <div className="mt-4 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+          <div className="min-w-0">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">Recepción del evento</p>
+            <h1 className="admin-heading mt-1 break-words text-3xl text-admin-navy sm:text-4xl">Check-In · {event.name}</h1>
+            <p className="mt-2 hidden text-xs leading-5 text-muted-foreground sm:block">{formatEventSchedule(event, event.guest_types ?? [])}</p>
+          </div>
+          <Button asChild className="min-h-12 shrink-0 sm:min-h-11"><Link href={`/puerta/${event.id}`}><ScanLine className="size-5" /> Abrir escáner QR <ArrowUpRight className="size-4" /></Link></Button>
+        </div>
+      </header>
 
-        <div className="flex flex-wrap gap-3">
-          {isTotemMode ? (
-            <>
-              <Link
-                href={`/puerta/${event.id}`}
-                className="inline-flex items-center rounded-md border border-white/15 bg-white/10 px-4 py-2 text-sm font-medium text-white hover:bg-white/15"
-              >
-                Vista puerta
-              </Link>
-              <Link
-                href={`/admin/events/${event.id}/check-in`}
-                className="inline-flex items-center rounded-md border border-amber-400/30 bg-amber-400/10 px-4 py-2 text-sm font-medium text-amber-100 hover:bg-amber-400/15"
-              >
-                Vista admin
-              </Link>
-            </>
-          ) : isDoorMode ? (
-            <>
-              <Link
-                href={`/admin/events/${event.id}/check-in`}
-                className="inline-flex items-center rounded-md border border-white/15 bg-white/10 px-4 py-2 text-sm font-medium text-white hover:bg-white/15"
-              >
-                Vista admin
-              </Link>
-              <Link
-                href={`/admin/events/${event.id}/guests`}
-                className="inline-flex items-center rounded-md border border-sky-400/30 bg-sky-400/10 px-4 py-2 text-sm font-medium text-sky-100 hover:bg-sky-400/15"
-              >
-                Directorio
-              </Link>
-            </>
-          ) : (
-            <>
-              <Link
-                href={`/puerta/${event.id}`}
-                className="inline-flex items-center rounded-md border border-sky-200 bg-sky-50 px-4 py-2 text-sm font-medium text-sky-700 hover:bg-sky-100"
-              >
-                Abrir vista puerta
-              </Link>
-              <Link
-                href={`/admin/events/${event.id}/guests`}
-                className="inline-flex items-center rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-              >
-                Ver invitados
-              </Link>
-            </>
-          )}
+      <section aria-label="Ingresos y capacidad" className="mb-5 rounded-2xl border border-border/70 bg-white p-4 sm:p-5">
+        <div className="grid grid-cols-2 items-start gap-4 sm:grid-cols-[1fr_1fr_1.3fr]">
+          <div><p className="text-xs text-muted-foreground">Personas ingresadas</p><p className="admin-heading mt-1 text-3xl tabular-nums text-admin-navy">{aforo.known ? aforo.occupancy : '—'}</p><p className="mt-1 text-[11px] text-muted-foreground">Incluye acompañantes</p></div>
+          <div><p className="text-xs text-muted-foreground">Lugares disponibles</p><p className={`admin-heading mt-1 text-3xl tabular-nums ${aforo.full ? 'text-rose-700' : aforo.low ? 'text-amber-700' : 'text-admin-navy'}`}>{aforo.spotsLeft ?? '—'}</p><p className="mt-1 text-[11px] text-muted-foreground">{aforo.hasLimit ? `Capacidad: ${aforo.capacity} personas` : 'Sin límite configurado'}</p></div>
+          <div className="col-span-2 min-w-0 sm:col-span-1">
+            {aforo.hasLimit && aforo.known ? <div role="progressbar" aria-label="Capacidad utilizada" aria-valuenow={aforo.occupancy} aria-valuemax={Math.max(aforo.capacity, aforo.occupancy)} aria-valuemin={0} aria-valuetext={`${aforo.occupancy} personas ingresadas de ${aforo.capacity}`} className="mt-1 h-2 overflow-hidden rounded-full bg-slate-100"><div style={{width:`${aforo.pct}%`}} className={`h-full rounded-full ${aforo.full ? 'bg-rose-500' : aforo.low ? 'bg-amber-500' : 'bg-admin-navy'}`} /></div> : null}
+            <p className="mt-2 flex items-center gap-1.5 text-[11px] leading-5 text-muted-foreground"><RefreshCw className="size-3 shrink-0" aria-hidden="true" />{feedError ? 'Sin actualización de ingresos' : feedUpdatedAt ? `Última consulta ${formatClock(feedUpdatedAt)} · cada 5 s` : 'Consultando ingresos…'}</p>
+            <p className="mt-1 hidden text-[11px] leading-5 text-muted-foreground sm:block">Ingresos acumulados. No se registran salidas.</p>
+          </div>
         </div>
-      </div>
+        <div className="mt-3 empty:hidden"><CapacityWarning capacity={event.max_capacity} admitted={approvedCount} /></div>
+        {feedError ? <p role="alert" className="mt-3 rounded-xl bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900">No se pudieron actualizar los ingresos. El cupo no está disponible; se reintentará automáticamente.</p> : null}
+      </section>
 
-      <div className="mb-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-        <div className="rounded-xl border border-slate-200 bg-slate-950 p-4 text-white shadow-sm">
-          <p className="text-sm text-slate-300">Hora de puerta</p>
-          <p className="mt-1 text-2xl font-semibold">{now ? formatClock(now) : '--:--'}</p>
-          <p className="mt-1 text-sm text-slate-300">
-            Evento {formatEventSchedule(event, event.guest_types ?? [])}
-          </p>
-        </div>
-        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 shadow-sm">
-          <p className="text-sm text-emerald-800">Invitados dentro</p>
-          <p className="mt-1 text-2xl font-semibold text-emerald-950">{doorMetrics.checkedInGuests}</p>
-          <p className="mt-1 text-sm text-emerald-900">
-            {doorMetrics.insidePeople} personas estimadas con acompanantes
-          </p>
-        </div>
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 shadow-sm">
-          <p className="text-sm text-amber-800">Pendientes por validar</p>
-          <p className="mt-1 text-2xl font-semibold text-amber-950">{doorMetrics.pendingGuests + doorMetrics.confirmedGuests}</p>
-          <p className="mt-1 text-sm text-amber-900">
-            {doorMetrics.pendingGuests} pendientes y {doorMetrics.confirmedGuests} confirmados sin ingreso
-          </p>
-        </div>
-        <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 shadow-sm">
-          <p className="text-sm text-blue-800">Actualización de ingresos</p>
-          <p className="mt-1 text-2xl font-semibold text-blue-950">{CAPACITY_REFRESH_INTERVAL_MS / 1000}s</p>
-          <p className="mt-1 text-sm text-blue-900">
-            {doorMetrics.cancelledGuests} cancelados y {recentCheckins.length} movimientos recientes
-          </p>
-        </div>
-      </div>
-
-      <div className={`grid gap-4 ${isTotemMode ? 'xl:grid-cols-1' : isDoorMode ? 'xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.85fr)]' : 'xl:grid-cols-[minmax(0,1.2fr)_minmax(360px,0.8fr)]'}`}>
-        <section className="space-y-4">
-          <CapacityWarning capacity={event.max_capacity} admitted={approvedCount} />
-          <div className={`hidden rounded-2xl border p-4 shadow-sm ${statusTone.shell}`}>
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div>
-                <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] ${statusTone.badge}`}>
-                  {statusTone.eyebrow}
-                </span>
-                <h2 className="mt-2 text-2xl font-semibold">{statusSummary.title}</h2>
-                <p className="mt-2 max-w-3xl text-sm/6 opacity-90">{statusSummary.detail}</p>
-              </div>
-              <div className={`rounded-2xl px-4 py-3 text-sm font-medium ${statusTone.badge}`}>
-                Panel detallado
-              </div>
-            </div>
-
-            <div className="mt-5 hidden grid gap-3 md:grid-cols-3">
-              <div className={`rounded-2xl px-4 py-3 ${statusTone.badge}`}>
-                <p className="text-xs uppercase tracking-[0.18em] opacity-80">Capacidad esperada</p>
-                <p className="mt-2 text-2xl font-semibold">{doorMetrics.expectedPeople}</p>
-              </div>
-              <div className={`rounded-2xl px-4 py-3 ${statusTone.badge}`}>
-                <p className="text-xs uppercase tracking-[0.18em] opacity-80">Por ingresar</p>
-                <p className="mt-2 text-2xl font-semibold">{doorMetrics.remainingExpectedPeople}</p>
-              </div>
-              <div className={`rounded-2xl px-4 py-3 ${statusTone.badge}`}>
-                <p className="text-xs uppercase tracking-[0.18em] opacity-80">Base activa</p>
-                <p className="mt-2 text-2xl font-semibold">{doorMetrics.activeGuests}</p>
-              </div>
+      <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
+        <section className="min-w-0 space-y-4" aria-label="Validar invitados">
+          <div role="status" aria-live="polite" aria-atomic="true" className={`sticky top-2 z-20 rounded-2xl border p-4 shadow-sm sm:p-5 ${validating ? 'border-sky-200 bg-sky-50 text-sky-950' : status?.kind === 'success' ? 'border-emerald-300 bg-emerald-50 text-emerald-950' : status?.kind === 'warning' ? 'border-amber-300 bg-amber-50 text-amber-950' : status?.kind === 'error' ? 'border-rose-300 bg-rose-50 text-rose-950' : 'border-border/70 bg-white text-foreground'}`}>
+            <div className="flex items-start gap-3">
+              <span className="mt-0.5 shrink-0" aria-hidden="true">{validating ? <LoaderCircle className="size-6 animate-spin" /> : status?.kind === 'success' ? <CheckCircle2 className="size-6 text-emerald-600" /> : status ? <AlertTriangle className="size-6" /> : <ShieldCheck className="size-6 text-primary" />}</span>
+              <div className="min-w-0"><p className="text-[10px] font-semibold uppercase tracking-[0.15em] opacity-65">{validating ? 'Esperá el resultado' : status ? 'Última validación en este equipo' : 'Control de ingreso'}</p><h2 className="mt-1 text-lg font-semibold leading-6">{validating ? 'Validando ingreso…' : status?.title ?? 'Buscá y validá al invitado'}</h2><p className="mt-1 text-sm leading-5 opacity-85">{validating ? 'Todavía no habilites el paso.' : status?.detail ?? 'Sin QR, encontrá su grupo en la lista. El sistema verifica si puede ingresar.'}</p></div>
             </div>
           </div>
 
-          <div className={`rounded-xl border border-gray-200 bg-white p-4 shadow-sm ${isTotemMode ? 'max-w-5xl' : ''}`}>
-            <div>
-            <h2 className="text-lg font-semibold text-gray-900">Validación manual y excepciones</h2>
-            <p className="mt-1 text-sm text-gray-600">
-              El escaneo se realiza desde Modo puerta. Acá podés pegar un token o `qr_data` para resolver casos excepcionales.
-            </p>
-            </div>
-
-            <form onSubmit={consumeAccess} className="mt-5 space-y-4">
-            <div>
-              <label htmlFor="access-input" className="block text-sm font-medium text-gray-700">
-                Token o QR data
-              </label>
-              <textarea
-                id="access-input"
-                value={accessInput}
-                onChange={(eventInput) => setAccessInput(eventInput.target.value)}
-                rows={isTotemMode ? 5 : 4}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-3 font-mono text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                placeholder='alista_xxx o {"kind":"alista_guest_access","token":"alista_xxx",...}'
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={processingCheckin}
-              className="inline-flex w-full items-center justify-center rounded-md bg-blue-600 px-4 py-3 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {processingCheckin ? 'Validando acceso...' : 'Registrar check-in'}
-            </button>
-            </form>
-
-            {status && (
-              <div
-                className={`mt-5 rounded-lg border p-4 ${
-                  status.kind === 'success'
-                    ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
-                    : status.kind === 'warning'
-                    ? 'border-amber-200 bg-amber-50 text-amber-800'
-                    : 'border-red-200 bg-red-50 text-red-800'
-                }`}
-              >
-                <h3 className="font-semibold">{status.title}</h3>
-                <p className="mt-1 text-sm">{status.detail}</p>
+          <section className="rounded-2xl border border-border/70 bg-white p-4 sm:p-5" aria-labelledby="guest-search-heading">
+            <div className="flex items-center justify-between gap-3"><h2 id="guest-search-heading" className="admin-heading text-xl text-foreground">Buscar invitado</h2><Button type="button" variant="ghost" size="sm" onClick={fetchGuestDirectory} disabled={loadingGuestDirectory} aria-label="Actualizar lista de invitados"><RefreshCw className={`size-4 ${loadingGuestDirectory ? 'animate-spin' : ''}`} /></Button></div>
+            <label htmlFor="guest-search" className="mt-3 block text-xs text-muted-foreground">Titular, acompañante, teléfono o email</label>
+            <div className="relative mt-2"><Search className="pointer-events-none absolute left-3 top-3.5 size-4 text-muted-foreground" aria-hidden="true" /><Input id="guest-search" type="search" autoComplete="off" value={guestSearchQuery} onChange={(eventInput) => setGuestSearchQuery(eventInput.target.value)} className="min-h-12 pl-9 text-base" placeholder="Escribí un nombre…" /></div>
+            {directoryError ? <p role="alert" className="mt-4 rounded-xl bg-amber-50 p-3 text-sm text-amber-900">No se pudo actualizar la lista. {guestDirectory.length ? 'Se muestran los últimos datos disponibles.' : 'Usá Actualizar lista de invitados para reintentar.'}</p> : null}
+            {loadingGuestDirectory && guestDirectory.length === 0 ? <p role="status" className="py-8 text-center text-sm text-muted-foreground">Cargando invitados…</p> : !guestSearchQuery.trim() ? <div className="py-8 text-center"><Users2 className="mx-auto mb-3 size-7 text-slate-300" aria-hidden="true" /><p className="text-sm text-muted-foreground">Encontrá al invitado sin recorrer toda la lista.</p></div> : filteredGuests.length === 0 ? <p className="mt-4 rounded-xl border border-dashed border-border p-4 text-sm text-muted-foreground">No encontramos coincidencias. Probá con otro nombre o teléfono.</p> : (
+              <div className="mt-4 space-y-3">
+                <p className="text-xs text-muted-foreground">{filteredGuests.length === 12 ? 'Mostrando hasta 12 coincidencias. Afiná la búsqueda si hace falta.' : `${filteredGuests.length} ${filteredGuests.length === 1 ? 'grupo encontrado' : 'grupos encontrados'}`}</p>
+                {filteredGuests.map((guest) => <article key={guest.id} className="rounded-xl border border-border/70 p-3 sm:p-4">
+                  <div className="flex flex-wrap items-start justify-between gap-2"><h3 className="min-w-0 break-words text-base font-semibold text-foreground">{guest.first_name} {guest.last_name}</h3><Badge variant={guest.status === 'checked_in' ? 'info' : guest.status === 'confirmed' ? 'success' : guest.status === 'cancelled' ? 'outline' : 'warning'}>{guest.status === 'checked_in' ? 'Ya ingresó' : guest.status === 'confirmed' ? 'Confirmado' : guest.status === 'cancelled' ? 'No habilitado' : 'Pendiente'}</Badge></div>
+                  <p className="mt-2 text-xs leading-5 text-muted-foreground">{guest.guest_types?.name || 'Sin tipo de acceso'} · {1 + (guest.plus_ones_confirmed ?? 0)} {(guest.plus_ones_confirmed ?? 0) > 0 ? 'personas en el grupo' : 'persona'}</p>
+                  {guest.companion_names?.length ? <p className="mt-1 text-xs leading-5 text-muted-foreground">Acompañantes: {guest.companion_names.join(', ')}</p> : null}
+                  {guest.guest_types ? <p className="mt-1 text-xs leading-5 text-muted-foreground">{formatGuestTypeAccessPolicy(guest.guest_types, event.start_time, event.event_date)}</p> : null}
+                  <div className="mt-3 flex flex-col gap-3 border-t border-border/50 pt-3 sm:flex-row sm:items-center sm:justify-between"><p className="min-w-0 break-words text-xs text-muted-foreground">{guest.phone || guest.email || 'Sin contacto cargado'}</p><Button type="button" variant={guest.status === 'checked_in' || guest.status === 'cancelled' ? 'outline' : 'default'} className="min-h-11 shrink-0" onClick={() => handleManualCheckin(guest)} disabled={validating} aria-label={`Validar ingreso de ${guest.first_name} ${guest.last_name}`}>{manualCheckinGuestId === guest.id ? 'Validando…' : 'Validar ingreso'}</Button></div>
+                </article>)}
+                <p className="text-xs leading-5 text-muted-foreground">Validar registra el ingreso si cumple las condiciones. Confirmado no significa pago aprobado.</p>
               </div>
             )}
+          </section>
 
-            {overrideContext && !isTotemMode && (
+            {overrideContext && (
               <div className="mt-5 rounded-xl border border-fuchsia-200 bg-fuchsia-50 p-5">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <h3 className="text-base font-semibold text-fuchsia-950">Override supervisado</h3>
+                    <h3 className="text-base font-semibold text-fuchsia-950">Excepción supervisada</h3>
                     <p className="mt-1 text-sm text-fuchsia-900">
-                      Usa este flujo solo si seguridad decide permitir el acceso pese a la advertencia o restriccion.
+                      Sólo la persona responsable puede resolver esta excepción con PIN y motivo.
                     </p>
                   </div>
                   <span className="rounded-full bg-fuchsia-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-fuchsia-800">
@@ -1719,7 +1608,7 @@ export default function EventCheckinManager({
 
                 <div className="mt-4 rounded-lg border border-fuchsia-200 bg-white/70 p-4 text-sm text-fuchsia-950">
                   {overridePolicyLoading
-                    ? 'Cargando politica de override...'
+                    ? 'Cargando política de excepción...'
                     : !overridePinConfigured
                           ? 'La excepción de seguridad todavía no está habilitada. Contactá al responsable de Alista.'
                     : overrideSupervisorRequired
@@ -1740,7 +1629,7 @@ export default function EventCheckinManager({
                     disabled={overrideProcessing || overridePolicyLoading || !overridePinConfigured}
                     className="inline-flex items-center rounded-md bg-fuchsia-700 px-4 py-2 text-sm font-medium text-white hover:bg-fuchsia-800 disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    {overrideProcessing ? 'Validando override...' : 'Autorizar excepcion'}
+                    {overrideProcessing ? 'Validando excepción...' : 'Autorizar excepción'}
                   </button>
                   <button
                     type="button"
@@ -1753,199 +1642,36 @@ export default function EventCheckinManager({
                     }}
                     className="inline-flex items-center rounded-md border border-fuchsia-200 bg-white px-4 py-2 text-sm font-medium text-fuchsia-800 hover:bg-fuchsia-100"
                   >
-                    Cancelar override
+                    Cancelar excepción
                   </button>
                 </div>
               </div>
             )}
-          </div>
+
+          <details className="rounded-2xl border border-border/70 bg-white p-4 sm:p-5">
+            <summary className="cursor-pointer text-sm font-semibold text-foreground">Validar un código manualmente</summary>
+            <p className="mt-3 text-xs leading-5 text-muted-foreground">Usá esta alternativa si tenés el código de acceso copiado y no podés escanearlo.</p>
+            <form onSubmit={consumeAccess} className="mt-4 space-y-3"><label htmlFor="access-input" className="block text-xs font-medium text-foreground">Código de acceso</label><Textarea id="access-input" value={accessInput} onChange={(eventInput) => setAccessInput(eventInput.target.value)} rows={3} className="text-base" placeholder="Pegá aquí el código de la invitación" /><Button type="submit" className="min-h-11 w-full" disabled={validating || !accessInput.trim()}>{processingCheckin ? 'Validando…' : 'Validar código'}</Button></form>
+          </details>
         </section>
 
-        {!isTotemMode && (
-        <aside className="flex flex-col gap-4">
-          {sidebarSlot}
-          <div className="hidden rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900">Control de puerta</h2>
-                <p className="mt-1 text-sm text-gray-600">
-                  Monitoreo rapido para seguridad y recepcion.
-                </p>
-              </div>
-              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-700">
-                Auto refresh
-              </span>
-            </div>
-
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-                <p className="text-xs uppercase tracking-wide text-gray-500">Ingresos recientes</p>
-                <p className="mt-2 text-2xl font-semibold text-gray-900">{recentCheckins.length}</p>
-                <p className="mt-1 text-sm text-gray-600">
-                  Ultimo refresh automatico cada {LIVE_REFRESH_INTERVAL_MS / 1000}s
-                </p>
-              </div>
-              <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-                <p className="text-xs uppercase tracking-wide text-gray-500">No habilitados</p>
-                <p className="mt-2 text-2xl font-semibold text-gray-900">{doorMetrics.cancelledGuests}</p>
-                <p className="mt-1 text-sm text-gray-600">
-                  Invitados cancelados en base activa
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900">Busqueda manual</h2>
-                <p className="mt-1 text-sm text-gray-600">
-                  Fallback operativo para recepcion cuando el invitado no presenta token o QR.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={fetchGuestDirectory}
-                className="text-sm font-medium text-blue-600 hover:text-blue-800"
-              >
-                Actualizar
-              </button>
-            </div>
-
-            <div className="mt-4">
-              <label htmlFor="guest-search" className="block text-sm font-medium text-gray-700">
-                Buscar por nombre, email o telefono
-              </label>
-              <input
-                id="guest-search"
-                value={guestSearchQuery}
-                onChange={(eventInput) => setGuestSearchQuery(eventInput.target.value)}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                placeholder="Ej: martina, perez, +54..."
-              />
-            </div>
-
-            {loadingGuestDirectory ? (
-              <div className="mt-4 flex h-24 items-center justify-center">
-                <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-blue-600"></div>
-              </div>
-            ) : !guestSearchQuery.trim() ? (
-              <div className="mt-4 rounded-lg border border-dashed border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">
-                Escribi al menos una parte del nombre o telefono para buscar en la lista completa.
-              </div>
-            ) : filteredGuests.length === 0 ? (
-              <div className="mt-4 rounded-lg border border-dashed border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">
-                No hay invitados que coincidan con la busqueda.
-              </div>
-            ) : (
-              <div className="mt-4 divide-y divide-gray-100 overflow-hidden rounded-xl border border-gray-200 bg-white">
-                {filteredGuests.map((guest) => (
-                  <div key={guest.id} className="flex items-center gap-3 px-4 py-3">
-                    <div className="min-w-0 flex-1">
-                        <p className="font-medium text-gray-900">
-                          {guest.first_name} {guest.last_name}
-                        </p>
-                        <p className="mt-1 truncate text-xs text-gray-500">
-                          {guest.phone || guest.email || 'Sin dato de contacto'} · {guest.guest_types?.name || 'Sin tipo'}
-                        </p>
-                    </div>
-                    <div className="flex shrink-0 items-center gap-2">
-                      <span className={`hidden rounded-full px-2.5 py-1 text-[11px] font-semibold sm:inline-flex ${
-                        guest.status === 'checked_in'
-                          ? 'bg-blue-100 text-blue-800'
-                          : guest.status === 'confirmed'
-                          ? 'bg-emerald-100 text-emerald-800'
-                          : guest.status === 'cancelled'
-                          ? 'bg-gray-100 text-gray-700'
-                          : 'bg-amber-100 text-amber-800'
-                      }`}>
-                        {guest.status === 'checked_in'
-                          ? 'Check-in'
-                          : guest.status === 'confirmed'
-                          ? 'Confirmado'
-                          : guest.status === 'cancelled'
-                          ? 'Cancelado'
-                          : 'Pendiente'}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => handleManualCheckin(guest)}
-                        disabled={manualCheckinGuestId === guest.id}
-                        className="inline-flex items-center rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-60"
-                      >
-                        {manualCheckinGuestId === guest.id ? 'Registrando...' : 'Ingresar'}
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
+        <aside className="min-w-0 space-y-4">
+          <section className="rounded-2xl border border-border/70 bg-white p-4 sm:p-5" aria-labelledby="recent-checkins-heading">
+            <div className="flex items-center justify-between gap-3"><div><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Todos los puestos</p><h2 id="recent-checkins-heading" className="admin-heading mt-1 text-xl text-foreground">Últimos ingresos</h2></div><Button type="button" variant="ghost" size="sm" onClick={fetchRecentCheckins} disabled={loadingRecentCheckins} aria-label="Actualizar últimos ingresos"><RefreshCw className={`size-4 ${loadingRecentCheckins ? 'animate-spin' : ''}`} /></Button></div>
+            <p className="mt-2 text-xs leading-5 text-muted-foreground">Hasta 10 registros aprobados, del más reciente al anterior.</p>
+            {feedError && recentCheckins.length > 0 ? <p className="mt-3 text-xs font-medium text-amber-800">Estos registros pueden estar desactualizados.</p> : null}
+            {loadingRecentCheckins && !feedUpdatedAt ? <p className="py-8 text-center text-sm text-muted-foreground">Cargando actividad…</p> : recentCheckins.length === 0 ? <p className="mt-4 rounded-xl border border-dashed border-border p-4 text-sm text-muted-foreground">{feedError ? 'La actividad no está disponible en este momento.' : 'Todavía no hay ingresos registrados.'}</p> : (
+              <ol className="mt-4 divide-y divide-border/60">
+                {recentCheckins.map((checkin) => <li key={checkin.id} className="flex items-start gap-3 py-3.5">
+                  <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-full bg-emerald-50 text-emerald-600"><CheckCircle2 className="size-4" aria-hidden="true" /></span>
+                  <div className="min-w-0 flex-1"><p className="break-words text-sm font-semibold text-foreground">{checkin.guests ? `${checkin.guests.first_name} ${checkin.guests.last_name}` : 'Invitado registrado'}</p><p className="mt-1 text-[11px] leading-5 text-muted-foreground">{formatDateTime(checkin.checked_in_at)} · {checkin.device_name === 'qr' ? 'QR' : 'Manual'}</p>{checkin.guests?.table_assignment ? <p className="mt-1 text-xs font-medium text-primary">Mesa: {checkin.guests.table_assignment}</p> : null}{checkin.reason ? <p className="mt-1 text-xs text-muted-foreground">{checkin.reason}</p> : null}</div>
+                </li>)}
+              </ol>
             )}
-          </div>
-
-          <details className="hidden rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-            <summary className="cursor-pointer text-lg font-semibold text-gray-900">Reglas actuales</summary>
-            <div className="mt-4 space-y-3 text-sm text-gray-600">
-              <p>Solo se aceptan tokens del evento actual.</p>
-              <p>El flujo principal esta pensado para leer por camara el QR que el invitado muestra en puerta.</p>
-              <p>Si el token esta vencido o el invitado fue cancelado, el acceso se rechaza antes del registro.</p>
-              <p>Si el invitado ya ingreso, el sistema advierte y no habilita un nuevo acceso.</p>
-              <p>Si el tipo o rol tiene ventana horaria, se bloquea el QR fuera de esa franja.</p>
-              <p>Solo `ya ingresado` o `fuera de horario` pueden resolverse por override con PIN y motivo; `cancelado`, `vencido` o `invalido` no.</p>
-              <p>Algunas excepciones requieren un segundo control de supervisor.</p>
-              <p>Al validar, se marca `used_at` y se registra una fila en `checkins`.</p>
-              <p>Tambien se puede operar check-in manual desde la busqueda de invitados.</p>
-            </div>
-          </details>
-
-          <div className="order-first rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">Actividad reciente</h2>
-              <button
-                type="button"
-                onClick={fetchRecentCheckins}
-                className="text-sm font-medium text-blue-600 hover:text-blue-800"
-              >
-                Actualizar
-              </button>
-            </div>
-
-            {loadingRecentCheckins ? (
-              <div className="mt-4 flex h-32 items-center justify-center">
-                <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-blue-600"></div>
-              </div>
-            ) : recentCheckins.length === 0 ? (
-              <div className="mt-4 rounded-lg border border-dashed border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">
-                Todavia no hay ingresos registrados para este evento.
-              </div>
-            ) : (
-              <div className="mt-4 space-y-3">
-                {recentCheckins.map((checkin) => (
-                  <div key={checkin.id} className="rounded-lg border border-gray-200 p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="font-medium text-gray-900">
-                          {checkin.guests?.first_name} {checkin.guests?.last_name}
-                        </p>
-                        <p className="mt-1 text-sm text-gray-600">{formatDateTime(checkin.checked_in_at)}</p>
-                      </div>
-                      <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                        checkin.device_name === 'qr'
-                          ? 'bg-blue-100 text-blue-800'
-                          : 'bg-gray-100 text-gray-700'
-                      }`}>
-                        {checkin.device_name === 'qr' ? 'QR' : 'Manual'}
-                      </span>
-                    </div>
-                    {checkin.reason && (
-                      <p className="mt-3 text-sm text-gray-600">{checkin.reason}</p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          </section>
+          {sidebarSlot ? <details className="rounded-2xl border border-border/70 bg-white p-4 sm:p-5"><summary className="cursor-pointer text-sm font-semibold text-foreground">Conectar otro celular de recepción</summary><div className="mt-4">{sidebarSlot}</div></details> : null}
+          <Link href={`/admin/events/${event.id}/guests`} className="inline-flex min-h-11 items-center gap-2 px-2 text-sm font-semibold text-primary hover:underline">Gestionar lista de invitados <ArrowUpRight className="size-4" /></Link>
         </aside>
-        )}
       </div>
     </div>
   )

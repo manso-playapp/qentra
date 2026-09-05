@@ -2,10 +2,11 @@
 
 import Link from 'next/link'
 import { ArrowRight, CalendarDays, MapPin, Users2 } from 'lucide-react'
+import AdminPageHeader from '@/components/admin/AdminPageHeader'
 import AdminLayout from '@/components/admin/AdminLayout'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card } from '@/components/ui/card'
 import { formatEventSchedule } from '@/lib/event-schedule'
 import { useEvents } from '@/lib/hooks'
 
@@ -40,12 +41,7 @@ export default function EventsPage() {
           </div>
         )}
 
-        <Card className="bg-admin-panel">
-          <CardHeader>
-            <CardDescription>Agenda</CardDescription>
-            <CardTitle className="admin-heading text-3xl">Elegí un evento para operar</CardTitle>
-          </CardHeader>
-          <CardContent>
+        <AdminPageHeader title="Mis eventos" eyebrow="Agenda" description="Elegí la fiesta que querés preparar o seguir durante la recepción." actions={<Button asChild><Link href="/admin/events/new">Crear evento <ArrowRight className="size-4" /></Link></Button>} />
           {events.length === 0 ? (
             <div className="rounded-[24px] border border-dashed border-border bg-white/70 px-6 py-14 text-center">
               <h3 className="admin-heading text-3xl text-foreground">No hay eventos cargados</h3>
@@ -63,12 +59,12 @@ export default function EventsPage() {
                   key={event.id}
                   className="flex min-w-0 flex-col rounded-[28px] border border-border/70 bg-white/80 p-6 transition hover:border-primary/30 hover:bg-white"
                 >
-                  <div className="flex items-start justify-between gap-4">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="text-[11px] uppercase tracking-[0.3em] text-muted-foreground">
                         {EVENT_TYPE_LABELS[event.event_type] ?? event.event_type}
                       </p>
-                      <h3 className="mt-2 truncate text-2xl font-semibold text-foreground">
+                      <h3 className="mt-2 break-words text-2xl font-semibold text-foreground">
                         <Link href={`/admin/events/${event.id}`} className="transition-colors hover:text-primary">
                           {event.name}
                         </Link>
@@ -99,7 +95,7 @@ export default function EventsPage() {
                     </span>
                     <span className="flex items-center gap-2">
                       <Users2 className="size-4 flex-none" />
-                      {event.max_capacity} de cupo
+                      {event.max_capacity} personas de capacidad
                     </span>
                   </div>
 
@@ -124,8 +120,7 @@ export default function EventsPage() {
               ))}
             </div>
           )}
-          </CardContent>
-        </Card>
+
       </div>
     </AdminLayout>
   )

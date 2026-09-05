@@ -1,9 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, CalendarRange, Phone, Sparkles } from 'lucide-react'
+import { CalendarRange, Phone, Sparkles } from 'lucide-react'
+import AdminPageHeader from '@/components/admin/AdminPageHeader'
 import AdminLayout from '@/components/admin/AdminLayout'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -127,39 +127,8 @@ export default function NewEventPage() {
     <AdminLayout>
       <div className="mx-auto max-w-5xl px-4 py-6 sm:px-0">
         <form onSubmit={handleSubmit} className="space-y-6">
-          <Card className="overflow-hidden bg-admin-panel">
-            <CardContent className="p-8">
-              <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-                <div className="max-w-3xl">
-                  <div className="flex flex-wrap gap-2">
-                    <Badge variant="default">Nuevo evento</Badge>
-                    <Badge variant="outline">Base visual comun</Badge>
-                    <Badge variant="outline">Branding acotado por evento</Badge>
-                  </div>
-                  <h1 className="admin-heading mt-5 text-5xl leading-none text-foreground">
-                    Crea un evento sin mezclar operacion e identidad.
-                  </h1>
-                  <p className="mt-4 text-base leading-7 text-muted-foreground">
-                    La estructura del producto queda fija. Lo que personalizaremos por evento despues seran acentos, fondos y branding puntual, no la arquitectura del sistema.
-                  </p>
-                </div>
-
-                <div className="flex flex-wrap gap-3">
-                  <Button asChild variant="outline">
-                    <Link href="/admin/events">
-                      <ArrowLeft className="size-4" />
-                      Volver a agenda
-                    </Link>
-                  </Button>
-                  <Button type="submit" size="lg" disabled={loading}>
-                    {loading ? 'Creando...' : 'Crear evento'}
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_360px]">
+          <AdminPageHeader title="Prepará una nueva fiesta" eyebrow="Nuevo evento" backHref="/admin/events" backLabel="Volver a eventos" description="Empezá por la fecha y el lugar. Después podrás cargar invitados y personalizar su experiencia." actions={<Button type="submit" disabled={loading}>{loading ? 'Creando…' : 'Crear evento'}</Button>} />
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
             <Card className="bg-admin-panel">
               <CardHeader>
                 <CardDescription>Base del evento</CardDescription>
@@ -182,7 +151,7 @@ export default function NewEventPage() {
                   </div>
 
                   <div>
-                    <Label htmlFor="slug">Slug</Label>
+                    <Label htmlFor="slug">Identificador del enlace</Label>
                     <Input
                       type="text"
                       name="slug"
@@ -193,7 +162,7 @@ export default function NewEventPage() {
                       className="mt-2"
                       placeholder="15-martina-demo"
                     />
-                    <p className="mt-2 text-sm text-muted-foreground">URL del evento: /event/{formData.slug || 'slug-del-evento'}</p>
+                    <p className="mt-2 text-sm text-muted-foreground">Enlace del recibidor: /t/{formData.slug || 'slug-del-evento'}</p>
                   </div>
 
                   <div>
@@ -389,7 +358,7 @@ export default function NewEventPage() {
                       placeholder="+54 9 351 ..."
                     />
                     <p className="mt-2 text-sm text-slate-300">
-                      Numero que ve el invitado. No define por si solo la infraestructura real de envio.
+                      Número al que podrán escribir los invitados si necesitan ayuda.
                     </p>
                   </div>
 
@@ -412,7 +381,7 @@ export default function NewEventPage() {
               <Card className="event-theme-surface">
                 <CardHeader>
                   <CardDescription>Personalizacion posterior</CardDescription>
-                  <CardTitle className="admin-heading text-3xl">Elementos editables por evento</CardTitle>
+                  <CardTitle className="admin-heading text-3xl">Después de crear la fiesta</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4 text-sm leading-6 text-muted-foreground">
                   <div className="flex items-center gap-3">
@@ -428,7 +397,7 @@ export default function NewEventPage() {
                     Branding puntual en accesos y superficies públicas
                   </div>
                   <p>
-                    La tipografía, la estructura y los componentes base quedan fijos para no convertir cada evento en un producto aparte.
+                    Podrás ajustar la invitación, organizar los grupos y preparar la pantalla de bienvenida.
                   </p>
                 </CardContent>
               </Card>

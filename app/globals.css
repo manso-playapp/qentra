@@ -781,3 +781,15 @@ body {
     transition: none;
   }
 }
+
+/* Admin controls only: invitation and welcome previews retain their own styles. */
+.admin-workspace :where(input, select, textarea):not(:where(.invitation-editor-canvas *, .totem-editor-canvas *)) {
+  max-width: 100%;
+}
+@media (max-width: 639px) {
+  .admin-workspace > .px-4 { padding-inline: 0; }
+  .admin-workspace :where(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]):not([type="hidden"]), select, textarea):not(:where(.invitation-editor-canvas *, .totem-editor-canvas *)) {
+    font-size: 16px;
+    min-height: 44px;
+  }
+}

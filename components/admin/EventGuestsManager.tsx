@@ -1,5 +1,6 @@
 'use client'
 
+import AdminPageHeader from './AdminPageHeader'
 import Image from 'next/image'
 import MobileEventCompanion from '@/components/admin/MobileEventCompanion'
 import { useEffect, useMemo, useState } from 'react'
@@ -1649,24 +1650,19 @@ export default function EventGuestsManager({
       {mobileAdvanced && <div className="sticky top-0 z-40 border-b border-slate-200 bg-white p-3 md:hidden"><button type="button" onClick={() => { setMobileAdvanced(false); window.scrollTo({ top: 0 }) }} className="min-h-11 rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white">← Volver a gestión móvil</button></div>}
     <div className={`${mobileAdvanced ? '' : 'hidden md:block'} px-4 py-6 sm:px-0`}>
 
-      <div className="mb-8 flex flex-col gap-4 border-b border-gray-200 pb-6 md:flex-row md:items-end md:justify-between">
-        <div>
-          <Link href={`/admin/events/${event.id}`} className="text-sm font-medium text-blue-600 hover:text-blue-800">
-            ← Volver al evento
-          </Link>
-          <h1 className="mt-3 text-3xl font-bold text-gray-900">Invitados de {event.name}</h1>
-          <p className="mt-2 text-gray-600">
-            {formatEventSchedule(event, guestTypes)} · slug <span className="font-mono text-sm">{event.slug}</span>
-          </p>
-        </div>
-
-      </div>
-
-      <div className="mb-8 grid gap-4 md:grid-cols-4">
+      <AdminPageHeader title="Invitados e invitaciones" eyebrow={event.name} backHref={`/admin/events/${event.id}`} description={formatEventSchedule(event, guestTypes)} />
+      <nav aria-label="Secciones de invitados" className="mb-5 flex flex-wrap gap-2 rounded-2xl border border-border/70 bg-white p-3 text-sm font-semibold text-primary">
+        <a href="#mobile-guest-list" className="rounded-xl bg-admin-navy px-3 py-2 text-white">Ver listado</a>
+        <a href="#mobile-guest-new" className="rounded-xl px-3 py-2 hover:bg-slate-50">Agregar invitado</a>
+        <a href="#mobile-guest-senders" className="rounded-xl px-3 py-2 hover:bg-slate-50">Envíos</a>
+        <Link href={`/admin/events/${event.id}/tables`} className="rounded-xl px-3 py-2 hover:bg-slate-50">Mesas</Link>
+        <a href="#mobile-guest-types" className="rounded-xl px-3 py-2 hover:bg-slate-50">Tipos de acceso</a>
+      </nav>
+      <div className="mb-5 grid grid-cols-2 gap-3 xl:grid-cols-4">
         <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-          <p className="text-sm text-gray-500">Invitados cargados</p>
+          <p className="text-sm text-gray-500">Grupos cargados</p>
           <p className="mt-2 text-2xl font-semibold text-gray-900">{visibleGuests.length}</p>
-          <p className="mt-1 text-sm text-gray-600">Registros manuales actuales</p>
+          <p className="mt-1 text-sm text-gray-600">Titulares y sus invitaciones</p>
         </div>
 
         <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
@@ -1682,9 +1678,9 @@ export default function EventGuestsManager({
         </div>
 
         <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-          <p className="text-sm text-gray-500">Capacidad restante</p>
+          <p className="text-sm text-gray-500">Margen de la lista</p>
           <p className="mt-2 text-2xl font-semibold text-gray-900">{totals.remainingCapacity}</p>
-          <p className="mt-1 text-sm text-gray-600">Sobre {event.max_capacity} plazas totales</p>
+          <p className="mt-1 text-sm text-gray-600">De {event.max_capacity} lugares, restando titulares y acompañantes cargados</p>
         </div>
       </div>
 
@@ -1693,7 +1689,7 @@ export default function EventGuestsManager({
           <div>
             <span id="mobile-guest-senders" /><h2 id="invitation-delivery-heading" className="text-lg font-semibold text-sky-950">Seguimiento de envíos</h2>
             <p className="mt-1 max-w-3xl text-sm leading-6 text-sky-900/75">
-              Una invitación generada todavía no significa que haya sido enviada. Mamá y Alfonsina pueden compartir esta lista y marcar cada envío.
+              Una invitación generada todavía no significa que haya sido enviada. Las personas responsables de invitar pueden compartir esta lista y marcar cada envío.
             </p>
           </div>
           {invitationDeliveryAvailable && (
@@ -1874,7 +1870,7 @@ export default function EventGuestsManager({
         )}
       </section>
 
-      <div className="grid min-w-0 grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.7fr)_minmax(360px,1fr)]">
+      <div className="grid min-w-0 grid-cols-1 gap-6 2xl:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]">
         <section className="min-w-0 space-y-6">
           <div id="guest-types" className="hidden">
             <div className="flex items-center justify-between">

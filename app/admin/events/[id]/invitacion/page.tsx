@@ -1,6 +1,7 @@
 import Link from 'next/link'
+import AdminPageHeader from '@/components/admin/AdminPageHeader'
 import { notFound } from 'next/navigation'
-import { ArrowLeft, ExternalLink } from 'lucide-react'
+import { ExternalLink } from 'lucide-react'
 import AdminLayout from '@/components/admin/AdminLayout'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -92,39 +93,7 @@ export default async function InvitationEditorPage({ params }: { params: Promise
   return (
     <AdminLayout>
       <div className="px-4 py-6 sm:px-0">
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <Button asChild variant="ghost" size="sm" className="px-0 text-primary hover:bg-transparent">
-              <Link href={`/admin/events/${id}`}>
-                <ArrowLeft className="size-4" />
-                Volver al evento
-              </Link>
-            </Button>
-            <h1 className="admin-heading mt-2 text-3xl text-foreground">Personalizar invitación</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Editá la landing que recibe cada invitado. Los cambios se ven en vivo a la derecha.
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            {invitationPreviewToken ? (
-              <Button asChild variant="outline">
-                <Link href={`/invitacion/${invitationPreviewToken}`} target="_blank" rel="noreferrer">
-                  Ver invitación en vivo
-                  <ExternalLink className="size-4" />
-                </Link>
-              </Button>
-            ) : (
-              <p className="text-xs text-muted-foreground">Emití una invitación para habilitar la vista en vivo.</p>
-            )}
-            <Button asChild variant="ghost" size="sm">
-              <Link href={`/invitacion/preview/${id}?template=midnight`} target="_blank" rel="noreferrer">
-                Comparar template Noche
-                <ExternalLink className="size-3.5" />
-              </Link>
-            </Button>
-          </div>
-        </div>
-
+        <AdminPageHeader title="Diseño de la invitación" eyebrow={event.name} backHref={`/admin/events/${id}`} description="Personalizá su fiesta y revisá cómo la verá cada invitado antes de guardar." actions={<><Button asChild variant="outline"><Link href={invitationPreviewToken ? `/invitacion/${invitationPreviewToken}` : `/invitacion/preview/${id}`} target="_blank" rel="noreferrer">{invitationPreviewToken ? 'Ver invitación en vivo' : 'Abrir vista previa'} <ExternalLink className="size-4" /></Link></Button><Button asChild variant="ghost" size="sm"><Link href={`/invitacion/preview/${id}?template=midnight`} target="_blank" rel="noreferrer">Comparar Noche <ExternalLink className="size-3.5" /></Link></Button></>} />
         <InvitationEditor
           eventId={id}
           event={{

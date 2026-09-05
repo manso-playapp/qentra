@@ -1,5 +1,7 @@
 'use client'
 
+import AdminPageHeader from './AdminPageHeader'
+
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
 import { Search } from 'lucide-react'
@@ -68,25 +70,15 @@ export default function GlobalGuestsView({
     'rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20'
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 className="text-lg font-semibold text-gray-900">Todos los invitados</h2>
-          <p className="mt-1 text-sm text-gray-600">
-            Buscá entre eventos por nombre, email o teléfono.
-          </p>
-        </div>
-        <span className="w-fit rounded-full bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700">
-          {filtered.length} de {guests.length}
-        </span>
-      </div>
-
+    <div className="rounded-2xl border border-border/70 bg-white p-4 sm:p-6">
+      <AdminPageHeader title="Invitados" eyebrow="Todos tus eventos" description="Encontrá a una persona y accedé a la gestión de su fiesta." actions={<span className="rounded-full bg-slate-100 px-3 py-2 text-xs font-semibold text-primary">{filtered.length} de {guests.length} registros</span>} />
       {/* Controles de busqueda y filtro. */}
-      <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
+      <div className="mt-5 grid gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,.7fr)_minmax(0,.6fr)]">
         <div className="relative flex-1">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-gray-400" />
           <input
             type="search"
+            aria-label="Buscar invitados"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Buscar por nombre, email o teléfono"

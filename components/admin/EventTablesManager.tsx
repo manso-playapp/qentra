@@ -1,6 +1,6 @@
 'use client'
 
-import Link from 'next/link'
+import AdminPageHeader from './AdminPageHeader'
 import { useMemo, useState } from 'react'
 import { useGuests } from '@/lib/hooks'
 import type { GuestWithType } from '@/types'
@@ -79,31 +79,19 @@ export default function EventTablesManager({ event, initialGuests }: EventTables
 
   return (
     <div className="px-4 py-6 sm:px-0">
-      <div className="mb-6 flex flex-col gap-3 border-b border-gray-200 pb-5 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <Link href={`/admin/events/${event.id}/guests`} className="text-sm font-medium text-blue-700 hover:text-blue-900">
-            ← Volver a invitados
-          </Link>
-          <h1 className="mt-3 text-3xl font-bold text-gray-900">Conformación de mesas</h1>
-          <p className="mt-2 text-gray-600">{event.name} · asigná destinos solamente a grupos confirmados.</p>
-        </div>
-        <span className="rounded-full bg-sky-100 px-3 py-1.5 text-sm font-semibold text-sky-800">
-          {confirmedGuests.length} grupos confirmados
-        </span>
-      </div>
-
-      <div className="mb-6 grid gap-4 sm:grid-cols-3">
-        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+      <AdminPageHeader title="Mesas y sectores" eyebrow={event.name} backHref={`/admin/events/${event.id}`} description="Ubicá a cada grupo confirmado. La mesa incluye al titular y sus acompañantes." />
+      <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <div className="rounded-2xl border border-border/70 bg-white p-4 shadow-sm">
           <p className="text-sm text-gray-500">Sin mesa</p>
           <p className="mt-1 text-2xl font-semibold text-gray-950">{summary.unassignedGroups}</p>
           <p className="mt-1 text-sm text-gray-600">{summary.unassignedPeople} personas por ubicar</p>
         </div>
-        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+        <div className="rounded-2xl border border-border/70 bg-white p-4 shadow-sm">
           <p className="text-sm text-gray-500">Destinos armados</p>
           <p className="mt-1 text-2xl font-semibold text-gray-950">{summary.destinations.length}</p>
           <p className="mt-1 text-sm text-gray-600">mesas o sectores</p>
         </div>
-        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+        <div className="rounded-2xl border border-border/70 bg-white p-4 shadow-sm">
           <p className="text-sm text-gray-500">Personas confirmadas</p>
           <p className="mt-1 text-2xl font-semibold text-gray-950">
             {confirmedGuests.reduce((total, guest) => total + 1 + guest.plus_ones_confirmed, 0)}
@@ -112,12 +100,12 @@ export default function EventTablesManager({ event, initialGuests }: EventTables
         </div>
       </div>
 
-      {actionError && <p className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{actionError}</p>}
-      {error && <p className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">No se pudieron cargar algunos invitados: {error}</p>}
-      {notice && <p className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">{notice}</p>}
+      {actionError && <p role="alert" className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{actionError}</p>}
+      {error && <p role="alert" className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">No se pudieron cargar algunos invitados: {error}</p>}
+      {notice && <p role="status" className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">{notice}</p>}
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.55fr)_340px]">
-        <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+      <div className="grid min-w-0 grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
+        <section className="min-w-0 rounded-2xl border border-border/70 bg-white p-5 shadow-sm">
           <div className="flex flex-col gap-3 border-b border-gray-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-lg font-semibold text-gray-900">Asignar grupos</h2>
@@ -126,8 +114,9 @@ export default function EventTablesManager({ event, initialGuests }: EventTables
             <input
               value={query}
               onChange={(eventInput) => setQuery(eventInput.target.value)}
+              aria-label="Buscar invitado o mesa"
               placeholder="Buscar invitado o mesa"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20 sm:w-60"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20 sm:max-w-60"
             />
           </div>
 
@@ -145,7 +134,7 @@ export default function EventTablesManager({ event, initialGuests }: EventTables
                 const saving = savingGuestId === guest.id
 
                 return (
-                  <div key={guest.id} className="grid gap-3 border-b border-gray-200 px-3 py-3 last:border-b-0 md:grid-cols-[minmax(0,1fr)_minmax(250px,.9fr)] md:items-center">
+                  <div key={guest.id} className="grid min-w-0 grid-cols-1 gap-3 border-b border-gray-200 px-3 py-3 last:border-b-0 2xl:grid-cols-[minmax(0,1fr)_minmax(220px,.9fr)] 2xl:items-center">
                     <div className="min-w-0">
                       <p className="truncate font-semibold text-gray-900">{guest.first_name} {guest.last_name}</p>
                       <p className="mt-1 text-sm text-gray-500">
@@ -182,7 +171,7 @@ export default function EventTablesManager({ event, initialGuests }: EventTables
           )}
         </section>
 
-        <aside className="rounded-xl border border-sky-200 bg-sky-50/60 p-5 shadow-sm">
+        <aside className="rounded-xl border border-sky-200 bg-slate-50/80 p-5 xl:sticky xl:top-6">
           <h2 className="text-lg font-semibold text-slate-950">Resumen por destino</h2>
           <p className="mt-1 text-sm leading-6 text-slate-600">Cantidad de personas, incluyendo acompañantes.</p>
           <div className="mt-4 space-y-2">

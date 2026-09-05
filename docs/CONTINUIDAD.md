@@ -108,6 +108,101 @@ usuario permanecen en el código o en esta continuidad; no se copian al panel.
 **Fecha de este estado:** 2026-09-05.
 **Rama de trabajo:** `main`.
 
+### Resto del admin PC/móvil (aprobado para Git el 05/09/2026)
+
+Pedido: «hace lo mismo con todas las otras (excepto puerta)». Se interpreta como
+las demás pantallas del admin, consistente con los dos frentes anteriores.
+Problema: cabeceras, acciones y navegación inconsistentes; editores muy largos
+con vista previa y guardado difíciles de alcanzar en celular. Usuario: responsable
+y equipo que preparan la fiesta. Reduce tiempo de búsqueda y dudas sobre lo que
+se está editando, sin cambiar estrategia ni reglas de negocio.
+
+- Cabecera común `AdminPageHeader`: inicio, agenda, nueva fiesta, edición de datos,
+  invitación, marca/tótem, invitados, mesas, invitados globales y configuración.
+  Estado ALISTA conserva su cronología con cabecera más compacta.
+- Cuenta plegada por defecto hasta 1024px; controles legibles y sin márgenes
+  duplicados en móviles. CSS limitado al admin; excluye formularios de los lienzos
+  de preview. Puerta pública y su escáner no se modifican en este frente.
+- Invitación: secciones plegables, guardar arriba, alternar Editar/Vista previa
+  bajo 1280px sin desmontar el estado. Historial y comparación Noche conservados.
+  Personalización separa «4. Datos para confirmar» de «5. Música y efectos».
+- Marca/tótem: cabecera y guardado accesible, edición/vista previa en móvil.
+  `EditorPreviewFrame` mide el ancho para escalar el lienzo existente completo;
+  corrige el recorte horizontal en ambos editores sin alterar el diseño publicado.
+- Mesas: métricas, búsqueda/guardado y resumen; campos que caben a 320px. Invitados
+  conserva el companion móvil y agrega accesos directos en escritorio. Etiquetas
+  distinguen grupos, personas y margen de la lista frente al cupo real de check-in.
+- Nueva fiesta/datos: instrucciones simples y guardado arriba/abajo. Configuración
+  tiene accesos a operadores, alta y salud del email; permisos y acciones intactos.
+
+Aceptación: jerarquía común, vista previa completa, estado conservado al alternar
+paneles, recuperación tras errores de guardado, navegación sin scroll horizontal.
+QA: 30 escenarios (10 superficies reutilizando componentes reales por
+1440/390/320px), sin pageerrors ni overflow. PUT/PATCH de invitación, marca y mesas
+ficticios con error/reintento; edición conserva borrador tras fallo. Inicio real
+revisado en sólo lectura; fixture retirada. Evidencia local:
+`/private/tmp/alista-admin-suite`. Ninguna escritura a eventos reales, ningún
+mensaje enviado, sin cambios en APIs, auth o migraciones. Validación final:
+383 tests / 36 archivos, tsc, lint completo y build correctos.
+Owner autorizó commit y subida a Git de este frente junto a dashboard/check-in.
+La publicación de esta entrega en Vercel todavía no está verificada.
+
+### Check-In PC y móvil (aprobado para Git el 05/09/2026)
+
+El owner pidió revisión y mejoras visuales del Check-In durante el evento.
+Problema: el formulario técnico dominaba la página; búsqueda/resultado quedaban
+relegados y en móvil la cuenta consumía la primera pantalla. Usuario: recepción
+que valida y coordinación que supervisa. Razón: resolver cada llegada con menos
+búsqueda y sin interpretar confirmación como autorización. Reduce incertidumbre
+sobre el resultado de la acción y el cupo disponible.
+
+Jerarquía: personas ingresadas/lugares → último resultado del puesto → buscar
+al titular o acompañante y validar grupo → últimos ingresos de todos los puestos
+→ códigos manuales, conectar celulares y guía plegados. PC usa dos columnas;
+móvil pliega la cuenta, tiene acceso directo al escáner y botones grandes. Fechas
+de acceso concretas en cada resultado de búsqueda. Acompañantes identifican su
+grupo; no se habilitan entradas separadas ni se cambian reglas de acceso.
+
+Aceptación: resultado visible y anunciado, unidades sin ambigüedad, avisos desde
+3 lugares, errores de actualización separados de la aprobación/rechazo, sin
+scroll horizontal. Conteo usa `approvedCount` (personas admitidas del feed), no
+la suma editable del directorio. No se presentan ingresos como presencia actual.
+Si falla el feed, cupo desconocido; feed/directorio conservados se señalan como
+desactualizados. Sólo en admin, sus errores no pisan la última validación.
+
+QA con APIs ficticias 1440/1280/1024/390/320 px sin errores ni overflow; flujos
+1440/390 de aprobación, pago pendiente sin excepción, repetido con doble PIN y
+motivo, código inválido, error de solicitud, fallos de feed/directorio, cupo
+3/2/1/0 y QR para otro celular. Capturas locales /private/tmp/alista-checkin-qa.
+Fixture retirada. APIs, autorización, validación de servidor, modo puerta y tótem
+se conservan; ninguna escritura real de ingresos o invitados. Validación final:
+383 tests / 36 archivos, tsc, lint focalizado y build correctos. Incluido en la
+entrega del admin autorizada para Git; publicación pendiente de verificar.
+
+### Dashboard de escritorio (aprobado para Git el 05/09/2026)
+
+El owner pidió mejorar el resumen manteniendo la estética y aprobó implementarlo.
+La página conserva consultas y controles existentes; la presentación está en
+`components/admin/EventDashboard.tsx`. Indicadores con unidades explícitas,
+confirmaciones en anillo SVG y leyenda, pendientes accionables al costado, tarjetas
+para invitados/diseño/bienvenida. Cuenta y servicio abajo si está activo; bloqueo
+de activación arriba si corresponde. No cambian permisos, cobros ni recepción.
+
+El gráfico cuenta titulares/grupos: `registered`, `enabled` y `checked_in`
+confirmados; `link_sent` sin respuesta; `preinvited` sin invitación;
+`rejected`/`duplicate` no habilitados; estados desconocidos por revisar.
+Cada registro participa una vez del total. Acompañantes no inflan ese denominador;
+pago y habilitación de acceso siguen siendo conceptos distintos. Error de carga
+muestra indisponibilidad; lista vacía tiene estado propio, sin progreso ficticio.
+
+Verificación: 383 pruebas / 36 archivos (4 nuevas de agregación), tsc, lint
+de archivos modificados y build correctos.
+QA con datos ficticios en 1440/1280/1024/390/320 px, sin errores de navegador ni
+scroll horizontal; también lista vacía, error, nombre largo, estados adicionales,
+evento en curso y servicio sin activar. Capturas locales en
+`/private/tmp/alista-dashboard-qa`; fixture retirada. Incluido en la entrega del
+admin autorizada para Git; publicación pendiente de verificar.
+
 ### Versión autorizada para Git y publicación (05/09/2026)
 
 Entrega funcional: commit `49137b5`. Se integra en main y se sube a GitHub por

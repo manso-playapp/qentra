@@ -31,3 +31,12 @@
 
 - [x] Admin móvil: navegación, seguimiento, ficha breve y flujo de invitaciones con contexto persistente.
 - [x] QA móvil con fixtures, errores de guardado, vuelta de WhatsApp y regresión desktop.
+
+- [x] Dashboard escritorio: composición, gráfico de confirmaciones y QA visual con datos ficticios.
+- [x] Completar build final del dashboard y entregar vista local.
+
+- [x] Check-In PC/mobile: jerarquía operativa, búsqueda de acompañantes, resultado y errores diferenciados; QA con APIs ficticias.
+- [x] Compilar Check-In y entregar vista local revisable.
+
+- [x] Unificar las otras pantallas del admin en PC/mobile, excepto Puerta; 30 escenarios QA con APIs ficticias.
+- [x] Cerrar build y pruebas finales de la unificación del admin.

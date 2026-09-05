@@ -1,5 +1,8 @@
 'use client'
 
+import EditorPreviewFrame from './EditorPreviewFrame'
+import AdminPageHeader from './AdminPageHeader'
+
 import Link from 'next/link'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -56,6 +59,7 @@ function initialState(branding: EventBranding | null): BrandingState {
 export default function BrandingForm({ eventId, eventSlug, eventName, eventDate, startTime, branding }: BrandingFormProps) {
   const router = useRouter()
   const [form, setForm] = useState<BrandingState>(() => initialState(branding))
+  const [editorPane, setEditorPane] = useState<'edit' | 'preview'>('edit')
   const [previewState, setPreviewState] = useState<'idle' | 'approved'>('idle')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -102,8 +106,18 @@ export default function BrandingForm({ eventId, eventSlug, eventName, eventDate,
 
   return (
     <div className="px-4 py-6 sm:px-0">
-      <form onSubmit={handleSubmit} className="grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,1fr)]">
-        <div className="space-y-6">
+      <AdminPageHeader title="Pantalla de bienvenida" eyebrow={eventName} backHref={`/admin/events/${eventId}`} description="Prepará las imágenes y los mensajes que acompañan cada llegada." />
+      <form onSubmit={handleSubmit} className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="sticky top-2 z-30 col-span-full rounded-2xl border border-border/70 bg-white p-3 shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex gap-1 rounded-xl bg-slate-100 p-1 xl:hidden"><button type="button" aria-pressed={editorPane === 'edit'} onClick={() => setEditorPane('edit')} className={`min-h-10 rounded-lg px-4 text-sm font-semibold ${editorPane === 'edit' ? 'bg-white text-primary' : 'text-muted-foreground'}`}>Editar</button><button type="button" aria-pressed={editorPane === 'preview'} onClick={() => setEditorPane('preview')} className={`min-h-10 rounded-lg px-4 text-sm font-semibold ${editorPane === 'preview' ? 'bg-white text-primary' : 'text-muted-foreground'}`}>Vista previa</button></div>
+            <p className="hidden text-xs text-muted-foreground xl:block">Revisá los mensajes en espera y al recibir a un invitado.</p>
+            <Button type="submit" disabled={saving}><Save className="size-4" />{saving ? 'Guardando…' : 'Guardar diseño'}</Button>
+          </div>
+          {error ? <p role="alert" className="mt-3 text-sm text-rose-700">{error}</p> : null}
+          {saved && !error ? <p role="status" className="mt-3 text-sm text-emerald-700">Diseño guardado.</p> : null}
+        </div>
+        <div className={`${editorPane === 'edit' ? '' : 'hidden xl:block'} min-w-0 space-y-5`}>
           <Card id="identidad-visual" className="scroll-mt-24 bg-admin-panel">
             <CardHeader>
               <CardDescription>Identidad visual</CardDescription>
@@ -234,7 +248,7 @@ export default function BrandingForm({ eventId, eventSlug, eventName, eventDate,
                   />
                 </div>
                 <div>
-                  <Label htmlFor="return_to_idle_seconds">Segundos antes de volver a idle</Label>
+                  <Label htmlFor="return_to_idle_seconds">Segundos antes de volver a la bienvenida</Label>
                   <Input
                     id="return_to_idle_seconds"
                     type="number"
@@ -251,7 +265,7 @@ export default function BrandingForm({ eventId, eventSlug, eventName, eventDate,
         </div>
 
         {/* Preview + acciones, pegado arriba mientras se hace scroll del form. */}
-        <div className="space-y-6 xl:sticky xl:top-6 xl:self-start">
+        <div className={`${editorPane === 'preview' ? '' : 'hidden xl:block'} min-w-0 space-y-5 xl:sticky xl:top-28 xl:self-start`}>
           <Card className="overflow-hidden bg-admin-panel">
             <CardHeader>
               <CardDescription>Vista previa del tótem</CardDescription>
@@ -274,8 +288,7 @@ export default function BrandingForm({ eventId, eventSlug, eventName, eventDate,
                   Acceso aprobado
                 </button>
               </div>
-              <div className="totem-editor-thumbnail mx-auto h-[680px] w-full max-w-[360px] overflow-x-hidden overflow-y-auto overscroll-contain rounded-[36px] border-4 border-gray-900 bg-black shadow-2xl">
-                <div className="totem-editor-canvas">
+              <EditorPreviewFrame kind="totem">
               <div
                 className="relative flex min-h-[1020px] w-[540px] flex-col justify-between overflow-hidden border border-black/5 p-9 text-white"
                 style={{
@@ -323,8 +336,7 @@ export default function BrandingForm({ eventId, eventSlug, eventName, eventDate,
                   <p className="text-[10px] uppercase tracking-[0.22em] text-white/60">Alista · control de acceso</p>
                 </div>
               </div>
-                </div>
-              </div>
+              </EditorPreviewFrame>
 
               <div className="flex items-center gap-3">
                 <span
@@ -355,7 +367,7 @@ export default function BrandingForm({ eventId, eventSlug, eventName, eventDate,
 
               <Button type="submit" disabled={saving} className="w-full">
                 <Save className="size-4" />
-                {saving ? 'Guardando…' : 'Guardar branding'}
+                {saving ? 'Guardando…' : 'Guardar diseño'}
               </Button>
 
               <div className="grid gap-2">

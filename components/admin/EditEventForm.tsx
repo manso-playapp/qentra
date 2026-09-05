@@ -1,9 +1,10 @@
 'use client'
 
-import Link from 'next/link'
+import AdminPageHeader from './AdminPageHeader'
+
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Save } from 'lucide-react'
+import { Save } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -147,32 +148,8 @@ export default function EditEventForm({ event }: EditEventFormProps) {
   return (
     <div className="mx-auto max-w-5xl px-4 py-6 sm:px-0">
       <form onSubmit={handleSubmit} className="space-y-6">
-        <header className="flex flex-col gap-6 border-b border-border/70 pb-6 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-3xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">Datos del evento</p>
-            <h1 className="admin-heading mt-2 text-4xl leading-none text-foreground sm:text-5xl">
-              Editar {event.name}
-            </h1>
-            <p className="mt-3 text-sm leading-6 text-muted-foreground">
-              Esta información define cuándo empieza la fiesta y dónde será. Los días y horarios de cada acceso se configuran en Invitados.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-3">
-            <Button asChild variant="outline">
-              <Link href={`/admin/events/${event.id}`}>
-                <ArrowLeft className="size-4" />
-                Volver al resumen
-              </Link>
-            </Button>
-            <Button type="submit" size="lg" disabled={loading}>
-              <Save className="size-4" />
-              {loading ? 'Guardando...' : 'Guardar cambios'}
-            </Button>
-          </div>
-        </header>
-
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_360px]">
+        <AdminPageHeader title="Datos de la fiesta" eyebrow={event.name} backHref={`/admin/events/${event.id}`} description="Fecha, lugar y capacidad. Los horarios de cada acceso se definen en Invitados." actions={<Button type="submit" disabled={loading}><Save className="size-4" />{loading ? 'Guardando…' : 'Guardar cambios'}</Button>} />
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
           <Card className="bg-admin-panel">
             <CardHeader>
               <CardDescription>Información principal</CardDescription>
@@ -186,9 +163,9 @@ export default function EditEventForm({ event }: EditEventFormProps) {
                 </div>
 
                 <div>
-                  <Label htmlFor="slug">Slug</Label>
+                  <Label htmlFor="slug">Identificador del enlace</Label>
                   <Input id="slug" name="slug" required value={formData.slug} onChange={handleInputChange} className="mt-2" />
-                  <p className="mt-2 text-sm text-muted-foreground">URL del evento: /event/{formData.slug || 'slug-del-evento'}</p>
+                  <p className="mt-2 text-sm text-muted-foreground">Enlace del recibidor: /t/{formData.slug || 'slug-del-evento'}</p>
                 </div>
 
                 <div>
@@ -343,6 +320,7 @@ export default function EditEventForm({ event }: EditEventFormProps) {
             {notice}
           </div>
         )}
+        <div className="flex justify-end border-t border-border/60 pt-4"><Button type="submit" disabled={loading}><Save className="size-4" />{loading ? 'Guardando…' : 'Guardar cambios'}</Button></div>
       </form>
     </div>
   )

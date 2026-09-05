@@ -20,7 +20,7 @@ export default function DoorScannerLink({ eventId }: { eventId: string }) {
 
   return (
     <section className="rounded-[24px] border border-sky-300/60 bg-slate-950 p-4 text-white shadow-[0_18px_40px_rgba(2,8,23,0.32)]">
-      <div className="flex items-center gap-4">
+      <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
         <div className="flex size-24 shrink-0 items-center justify-center rounded-2xl bg-white p-2 shadow-sm">
           {qrImage ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -30,10 +30,10 @@ export default function DoorScannerLink({ eventId }: { eventId: string }) {
           )}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-sky-200">Escaner movil</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-sky-200">Escáner móvil</p>
           <h2 className="mt-1 text-base font-semibold text-white">Abrí el escáner desde otro celular</h2>
           <p className="mt-1 text-xs leading-5 text-sky-100/80">
-            Escaneá este código con el celular de control. La pantalla pide una sesión de operador antes de habilitar la cámara.
+            Escaneá este código con el celular de control. Iniciá sesión con una cuenta autorizada para recepción.
           </p>
           <Button asChild variant="outline" size="sm" className="mt-3 border-white bg-white text-slate-950 hover:bg-sky-100 hover:text-slate-950">
             <a href={doorPath} target="_blank" rel="noreferrer">

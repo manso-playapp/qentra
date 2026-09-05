@@ -20,6 +20,33 @@ export type AlistaChange = {
 
 export const ALISTA_CHANGELOG: AlistaChange[] = [
   {
+    commit: 'Sin commit',
+    date: '2026-09-05',
+    dateLabel: '5 sep 2026',
+    kind: 'experiencia',
+    area: 'Admin',
+    title: 'Una experiencia más clara en todas las pantallas de gestión',
+    summary: 'Inicio, eventos, invitados, mesas, datos y configuración comparten jerarquía visual. En celular la cuenta queda plegada; los editores permiten alternar ajustes y vista previa conservando los cambios, con guardado accesible y diseños completos al ancho disponible. La personalización separa los datos para confirmar de la música y los efectos. Puerta conserva su experiencia actual.',
+  },
+  {
+    commit: 'Sin commit',
+    date: '2026-09-05',
+    dateLabel: '5 sep 2026',
+    kind: 'experiencia',
+    area: 'Recepción',
+    title: 'Check-In pensado para operar durante la fiesta',
+    summary: 'En PC, búsqueda y últimos ingresos se ven en paralelo. En celular, el escáner tiene acceso directo y la cuenta queda plegada. El resultado de cada validación se destaca, el cupo se expresa en personas y la búsqueda incluye acompañantes. Los errores de actualización se muestran sin reemplazar el último resultado.',
+  },
+  {
+    commit: 'Sin commit',
+    date: '2026-09-05',
+    dateLabel: '5 sep 2026',
+    kind: 'experiencia',
+    area: 'Resumen del evento',
+    title: 'Un resumen más claro para preparar la fiesta',
+    summary: 'El escritorio reúne indicadores, un gráfico de confirmaciones y pendientes accionables. Distingue invitaciones de personas y confirmación de pago. Invitados, diseño y bienvenida tienen accesos propios; cuenta y servicio pasan abajo cuando la fiesta está activada.',
+  },
+  {
     commit: '49137b5',
     date: '2026-09-05',
     dateLabel: '5 sep 2026',

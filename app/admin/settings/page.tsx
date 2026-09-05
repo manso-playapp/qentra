@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import { useState } from 'react'
 import {
   Activity,
@@ -10,6 +9,7 @@ import {
   UserPlus,
   Users2,
 } from 'lucide-react'
+import AdminPageHeader from '@/components/admin/AdminPageHeader'
 import AdminLayout from '@/components/admin/AdminLayout'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -369,36 +369,12 @@ export default function SettingsPage() {
   return (
     <AdminLayout>
       <div className="px-4 py-6 sm:px-0">
-        <Card className="overflow-hidden bg-admin-panel">
-          <CardContent className="p-8">
-            <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-              <div className="max-w-3xl">
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant="default">Configuracion</Badge>
-                  <Badge variant="outline">Email de invitaciones</Badge>
-                  <Badge variant="outline">Operadores</Badge>
-                </div>
-                <h1 className="admin-heading mt-5 text-5xl leading-none text-foreground">
-                  Email, permisos y estado del sistema.
-                </h1>
-                <p className="mt-4 text-base leading-7 text-muted-foreground">
-                  Esta pantalla concentra la configuracion global del email, los usuarios operadores y los links de acceso. La trazabilidad de envios de cada evento vive dentro del evento.
-                </p>
-              </div>
-
-              <div className="flex flex-wrap gap-3">
-                <Button asChild variant="outline">
-                  <Link href="/admin">Volver al dashboard</Link>
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(360px,0.95fr)]">
-          <section className="space-y-6">
+        <AdminPageHeader title="Configuración" eyebrow="Equipo Alista" description="Administrá quién puede operar, revisá los accesos y comprobá el servicio de email." backHref="/admin" backLabel="Volver al inicio" />
+        <nav aria-label="Secciones de configuración" className="flex flex-wrap gap-2 rounded-2xl border border-border/70 bg-white p-3 text-sm font-semibold text-primary"><a href="#settings-operators" className="rounded-xl px-3 py-2 hover:bg-slate-50">Operadores</a><a href="#settings-create" className="rounded-xl px-3 py-2 hover:bg-slate-50">Agregar operador</a><a href="#settings-email" className="rounded-xl px-3 py-2 hover:bg-slate-50">Servicio de email</a></nav>
+        <div className="mt-6 grid gap-6 2xl:grid-cols-[minmax(0,1.25fr)_minmax(0,0.95fr)]">
+          <section id="settings-operators" className="scroll-mt-5 min-w-0 space-y-6">
             <Card className="bg-admin-panel">
-              <CardHeader className="flex-row items-start justify-between gap-4">
+              <CardHeader className="flex-wrap items-start justify-between gap-4 sm:flex-row">
                 <div>
                   <CardDescription>Acceso operativo</CardDescription>
                   <CardTitle className="flex items-center gap-2">
@@ -406,7 +382,7 @@ export default function SettingsPage() {
                     Operadores
                   </CardTitle>
                   <CardDescription>
-                    Usuarios de Supabase Auth con roles sobre admin, puerta y totem.
+                    Personas autorizadas para administrar eventos o trabajar en recepción.
                   </CardDescription>
                 </div>
                 <div className="flex items-center gap-3">
@@ -724,7 +700,7 @@ export default function SettingsPage() {
               </CardHeader>
 
               <CardContent>
-              <form onSubmit={handleOperatorSubmit} className="space-y-4">
+              <form id="settings-create" onSubmit={handleOperatorSubmit} className="space-y-4">
                 <div>
                   <Label htmlFor="operator-full-name" className="text-white">Nombre</Label>
                   <Input
@@ -831,10 +807,10 @@ export default function SettingsPage() {
               </CardContent>
             </Card>
 
-            <Card className="bg-admin-panel">
-              <CardHeader className="flex-row items-start justify-between gap-4">
+            <Card id="settings-email" className="scroll-mt-5 bg-admin-panel">
+              <CardHeader className="flex-wrap items-start justify-between gap-4 sm:flex-row">
                 <div>
-                  <CardDescription>Infraestructura</CardDescription>
+                  <CardDescription>Servicio de email</CardDescription>
                   <CardTitle className="flex items-center gap-2">
                     <Activity className="size-4 text-primary" />
                     Salud operativa

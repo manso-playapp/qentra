@@ -24,9 +24,9 @@ export default async function EventCheckinPage({ params }: EventCheckinPageProps
 
   if (error) {
     return (
-      <AdminLayout>
+      <AdminLayout mobileEventNavigation>
         <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-red-800">
-          No se pudo cargar el modulo de check-in. Verifica la conexion con Supabase y las politicas del proyecto.
+          No se pudo cargar el Check-In. Volvé a cargar la página para intentarlo otra vez.
         </div>
       </AdminLayout>
     )
@@ -37,8 +37,12 @@ export default async function EventCheckinPage({ params }: EventCheckinPageProps
   }
 
   return (
-    <AdminLayout>
-      <details className="mb-5 rounded-2xl border border-sky-200 bg-sky-50 p-5 text-slate-800">
+    <AdminLayout mobileEventNavigation>
+      <EventCheckinManager
+        event={data as Pick<Event, 'id' | 'name' | 'slug' | 'event_date' | 'start_time' | 'max_capacity' | 'guest_types'>}
+        sidebarSlot={<DoorScannerLink eventId={id} />}
+      />
+      <details className="my-6 rounded-2xl border border-border/70 bg-white/70 p-5 text-slate-800">
         <summary className="cursor-pointer text-base font-semibold">Preparar al equipo de recepción</summary>
         <p className="mt-3 text-sm leading-6">Repasá estos puntos con el equipo antes de abrir. Esta guía no reemplaza el ensayo con los equipos y la conexión del lugar.</p>
         <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm leading-6">
@@ -50,10 +54,6 @@ export default async function EventCheckinPage({ params }: EventCheckinPageProps
         </ol>
         <p className="mt-3 text-sm font-medium">El personal de recepción lo aporta la organización. Acordá previamente el alcance y horario del soporte de Alista.</p>
       </details>
-      <EventCheckinManager
-        event={data as Pick<Event, 'id' | 'name' | 'slug' | 'event_date' | 'start_time' | 'max_capacity' | 'guest_types'>}
-        sidebarSlot={<DoorScannerLink eventId={id} />}
-      />
     </AdminLayout>
   )
 }

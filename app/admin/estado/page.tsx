@@ -73,7 +73,7 @@ export default function AlistaStatusPage() {
     <AdminLayout>
       <div className="px-4 py-6 sm:px-0">
         <section className="rounded-3xl bg-admin-navy p-6 text-white shadow-[0_18px_50px_rgba(23,37,84,0.18)] sm:p-8">
-          <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+          <div className="flex flex-col gap-5 2xl:flex-row 2xl:items-end 2xl:justify-between">
             <div className="max-w-3xl">
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="info">Alista {APP_VERSION}</Badge>
@@ -82,11 +82,11 @@ export default function AlistaStatusPage() {
                   Actualizado {ALISTA_CHANGELOG_UPDATED_AT}
                 </span>
               </div>
-              <h1 className="admin-heading mt-5 text-4xl leading-tight text-white sm:text-5xl">
+              <h1 className="admin-heading mt-3 text-3xl leading-tight text-white sm:text-4xl">
                 Estado ALISTA
               </h1>
               <p className="mt-4 text-sm leading-7 text-slate-300 sm:text-base">
-                Registro de decisiones, mejoras y correcciones que mantienen la aplicación lista para operar.
+                Las mejoras y correcciones de Alista, ordenadas por fecha.
                 Cada entrada resume qué cambió y qué impacto tiene.
               </p>
             </div>
@@ -105,7 +105,7 @@ export default function AlistaStatusPage() {
         </section>
 
         <section className="mt-6 overflow-hidden rounded-3xl border border-border/70 bg-card text-card-foreground shadow-[0_18px_50px_rgba(69,46,24,0.06)]" aria-labelledby="changelog-title">
-          <header className="border-b border-border/60 px-6 py-6 sm:px-8">
+          <header className="border-b border-border/60 px-4 py-5 sm:px-6">
             <div className="flex items-start gap-3">
               <span className="grid size-10 flex-none place-items-center rounded-2xl bg-sky-50 text-sky-700 ring-1 ring-sky-100">
                 <History className="size-5" />
@@ -128,7 +128,7 @@ export default function AlistaStatusPage() {
                   <span className="text-xs text-muted-foreground">{group.changes.length} {group.changes.length === 1 ? 'cambio' : 'cambios'}</span>
                 </div>
                 <ol className="mt-5 space-y-6 border-l border-sky-200 pl-0">
-                  {group.changes.map((change) => <ChangeEntry key={change.commit} change={change} />)}
+                  {group.changes.map((change) => <ChangeEntry key={`${change.commit}-${change.title}`} change={change} />)}
                 </ol>
               </div>
             ))}
